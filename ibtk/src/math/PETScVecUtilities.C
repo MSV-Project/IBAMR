@@ -67,7 +67,8 @@ PETScVecUtilities::constructPatchVecWrapper(
     }
     const int nvals = data.getDepth()*CellGeometry<NDIM>::toCellBox(data.getGhostBox()).size();
     double* data_ptr = data.getPointer();
-    ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, nvals, data_ptr, &vec); IBTK_CHKERRQ(ierr);
+    // NOTE: rortiz: fixed missing block size parameter required in petsc 3.3
+    ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, 1, nvals, data_ptr, &vec); IBTK_CHKERRQ(ierr);
     return;
 }// constructPatchVecWrapper
 
@@ -85,7 +86,9 @@ PETScVecUtilities::constructPatchVecWrappers(
         }
         const int nvals = data.getDepth()*SideGeometry<NDIM>::toSideBox(data.getGhostBox(),component_axis).size();
         double* data_ptr = data.getPointer(component_axis);
-        ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, nvals, data_ptr, &vecs[component_axis]); IBTK_CHKERRQ(ierr);
+	
+	// NOTE: fixed missing block size parameter required in petsc 3.3
+        ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, 1, nvals, data_ptr, &vecs[component_axis]); IBTK_CHKERRQ(ierr);
     }
     return;
 }// constructPatchVecWrappers

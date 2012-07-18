@@ -1115,8 +1115,9 @@ CCPoissonFACOperator::initializeOperatorState(
 
                 Vec& e = d_patch_vec_e[ln][patch_counter];
                 Vec& f = d_patch_vec_f[ln][patch_counter];
-                ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, size, PETSC_NULL, &e);  IBTK_CHKERRQ(ierr);
-                ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, size, PETSC_NULL, &f);  IBTK_CHKERRQ(ierr);
+		// NOTE: fixed missing block size parameter required in petsc 3.3
+                ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, 1, size, PETSC_NULL, &e);  IBTK_CHKERRQ(ierr);
+                ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, 1, size, PETSC_NULL, &f);  IBTK_CHKERRQ(ierr);
 
                 Mat& A = d_patch_mat[ln][patch_counter];
                 buildPatchLaplaceOperator(A, d_poisson_spec, patch, d_gcw);
