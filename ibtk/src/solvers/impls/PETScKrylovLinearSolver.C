@@ -45,7 +45,7 @@
 #endif
 
 // PETSc INCLUDES
-#include <private/pcimpl.h>
+#include <petsc-private/pcimpl.h>
 
 // IBTK INCLUDES
 #include <ibtk/PETScSAMRAIVectorReal.h>
