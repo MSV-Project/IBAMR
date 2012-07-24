@@ -112,6 +112,6 @@ else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND MSVTK_SUPERBUILD_EP_ARGS -DSAMRAI_DIR:PATH=${SAMRAI_DIR})
+list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DSAMRAI_DIR:PATH=${SAMRAI_DIR})
 
 

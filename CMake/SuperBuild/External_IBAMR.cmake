@@ -101,6 +101,6 @@ else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND MSVTK_SUPERBUILD_EP_ARGS -DIBAMR_DIR:PATH=${IBAMR_DIR})
+list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DIBAMR_DIR:PATH=${IBAMR_DIR})
 
 

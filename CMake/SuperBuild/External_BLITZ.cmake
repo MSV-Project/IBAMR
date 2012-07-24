@@ -34,8 +34,6 @@ if(DEFINED BLITZ_DIR AND NOT EXISTS ${BLITZ_DIR})
   message(FATAL_ERROR "BLITZ_DIR variable is defined but corresponds to non-existing directory")
 endif()
 
-#set(BLITZ_enabling_variable BLITZ_LIBRARIES)
-
 set(BLITZ_DEPENDENCIES "")
 
 # Include dependent projects if any
@@ -90,6 +88,6 @@ else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND MSVTK_SUPERBUILD_EP_ARGS -DBLITZ_DIR:PATH=${BLITZ_DIR})
+list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DBLITZ_DIR:PATH=${BLITZ_DIR})
 
 

@@ -1,6 +1,6 @@
 ###########################################################################
 #
-#  Library: IBAMR
+#  Library: IBTK
 #
 #  Copyright (c) Kitware Inc.
 #
@@ -18,7 +18,7 @@
 #
 ###########################################################################
 
-set(IBAMR_DEPENDENCIES BLITZ PETSC SAMRAI SILO)
+set(IBTK_DEPENDENCIES BLITZ PETSC SAMRAI SILO)
 
 #-----------------------------------------------------------------------------
 # WARNING - No change should be required after this comment
@@ -28,10 +28,10 @@ set(IBAMR_DEPENDENCIES BLITZ PETSC SAMRAI SILO)
 #-----------------------------------------------------------------------------
 # Git protocol option
 #
-option(IBAMR_USE_GIT_PROTOCOL "If behind a firewall turn this OFF to use http instead." ON)
+option(IBTK_USE_GIT_PROTOCOL "If behind a firewall turn this OFF to use http instead." ON)
 
 set(git_protocol "git")
-if(NOT IBAMR_USE_GIT_PROTOCOL)
+if(NOT IBTK_USE_GIT_PROTOCOL)
   set(git_protocol "http")
 endif()
 
@@ -59,17 +59,17 @@ endif()
 set(sep "^^")
 
 # This variable will contain the list of CMake variable specific to each external project
-# that should passed to IBAMR.
+# that should passed to IBTK.
 # The item of this list should have the following form: -D<EP>_DIR:PATH=${<EP>_DIR}
 # where '<EP>' is an external project name.
-set(IBAMR_SUPERBUILD_EP_ARGS)
+set(IBTK_SUPERBUILD_EP_ARGS)
 
-CheckExternalProjectDependency(IBAMR)
+CheckExternalProjectDependency(IBTK)
 
 #-----------------------------------------------------------------------------
-# Makes sure ${IBAMR_BINARY_DIR}/IBAMR-build/bin exists
-IF(NOT EXISTS ${IBAMR_BINARY_DIR}/IBAMR-build/bin)
-  FILE(MAKE_DIRECTORY ${IBAMR_BINARY_DIR}/IBAMR-build/bin)
+# Makes sure ${IBTK_BINARY_DIR}/IBTK-build/bin exists
+IF(NOT EXISTS ${IBTK_BINARY_DIR}/IBTK-build/bin)
+  FILE(MAKE_DIRECTORY ${IBTK_BINARY_DIR}/IBTK-build/bin)
 ENDIF()
 
 #-----------------------------------------------------------------------------
@@ -85,72 +85,71 @@ endif()
 
 
 #-----------------------------------------------------------------------------
-# IBAMR Configure
+# IBTK Configure
 #
-SET(proj IBAMR-Configure)
+SET(proj IBTK-Configure)
 
 ExternalProject_Add(${proj}
   DOWNLOAD_COMMAND ""
   CMAKE_GENERATOR ${gen}
   CMAKE_ARGS
     ${CMAKE_OSX_EXTERNAL_PROJECT_ARGS}
-    -DIBAMR_SUPERBUILD:BOOL=OFF
+    -DIBTK_IBTK_BUILD_2D_LIBS:BOOL=OFF
+    -DIBTK_BUILD_SINGLE_LIBRARY:BOOL=ON
+    -DIBTK_SUPERBUILD:BOOL=OFF
     -DDOCUMENTATION_ARCHIVES_OUTPUT_DIRECTORY:PATH=${DOCUMENTATION_ARCHIVES_OUTPUT_DIRECTORY}
     -DDOXYGEN_EXECUTABLE:FILEPATH=${DOXYGEN_EXECUTABLE}
-    -DIBAMR_SUPERBUILD_BINARY_DIR:PATH=${IBAMR_BINARY_DIR}
-    -DIBAMR_CMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${IBAMR_CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
-    -DIBAMR_CMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${IBAMR_CMAKE_LIBRARY_OUTPUT_DIRECTORY}
-    -DIBAMR_CMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${IBAMR_CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-    -DIBAMR_INSTALL_BIN_DIR:STRING=${IBAMR_INSTALL_BIN_DIR}
-    -DIBAMR_INSTALL_LIB_DIR:STRING=${IBAMR_INSTALL_LIB_DIR}
-    -DIBAMR_INSTALL_INCLUDE_DIR:STRING=${IBAMR_INSTALL_INCLUDE_DIR}
-    -DIBAMR_INSTALL_DOC_DIR:STRING=${IBAMR_INSTALL_DOC_DIR}
-    -DIBAMR_BUILD_SHARED_LIBS:BOOL=${IBAMR_BUILD_SHARED_LIBS}
+    -DIBTK_SUPERBUILD_BINARY_DIR:PATH=${IBTK_BINARY_DIR}
+    -DIBTK_CMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${IBTK_CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
+    -DIBTK_CMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${IBTK_CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+    -DIBTK_CMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${IBTK_CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    -DIBTK_INSTALL_BIN_DIR:STRING=${IBTK_INSTALL_BIN_DIR}
+    -DIBTK_INSTALL_LIB_DIR:STRING=${IBTK_INSTALL_LIB_DIR}
+    -DIBTK_INSTALL_INCLUDE_DIR:STRING=${IBTK_INSTALL_INCLUDE_DIR}
+    -DIBTK_INSTALL_DOC_DIR:STRING=${IBTK_INSTALL_DOC_DIR}
+    -DIBTK_BUILD_SHARED_LIBS:BOOL=${IBTK_BUILD_SHARED_LIBS}
     -DCMAKE_INSTALL_PREFIX:PATH=${ep_install_dir}
     -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
-    -DIBAMR_CXX_FLAGS:STRING=${IBAMR_CXX_FLAGS}
-    -DIBAMR_C_FLAGS:STRING=${IBAMR_C_FLAGS}
-    -DIBAMR_F_FLAGS:STRING=${IBAMR_F_FLAGS}
-    -DIBAMR_EXTERNAL_LIBRARY_DIRS:STRING=${IBAMR_EXTERNAL_LIBRARY_DIRS}
+    -DIBTK_CXX_FLAGS:STRING=${IBTK_CXX_FLAGS}
+    -DIBTK_C_FLAGS:STRING=${IBTK_C_FLAGS}
+    -DIBTK_F_FLAGS:STRING=${IBTK_F_FLAGS}
+    -DIBTK_EXTERNAL_LIBRARY_DIRS:STRING=${IBTK_EXTERNAL_LIBRARY_DIRS}
     -DGIT_EXECUTABLE:FILEPATH=${GIT_EXECUTABLE}
-    -DIBTK_IBTK_BUILD_2D_LIBS:BOOL=OFF
-    -DWITH_SILO:BOOL=ON
-    -DIBTK_BUILD_SINGLE_LIBRARY:BOOL=ON
-    ${IBAMR_SUPERBUILD_EP_ARGS}
+    ${IBTK_SUPERBUILD_EP_ARGS}
     
-  SOURCE_DIR ${IBAMR_SOURCE_DIR}
-  BINARY_DIR ${IBAMR_BINARY_DIR}/IBAMR-build
+  SOURCE_DIR ${IBTK_SOURCE_DIR}
+  BINARY_DIR ${IBTK_BINARY_DIR}/IBTK-build
   BUILD_COMMAND ""
   INSTALL_COMMAND ""
   DEPENDS
-    ${IBAMR_DEPENDENCIES}
+    ${IBTK_DEPENDENCIES}
   )
 
 if(CMAKE_GENERATOR MATCHES ".*Makefiles.*")
   set(ibamr_build_cmd "$(MAKE)")
 else()
-  set(ibamr_build_cmd ${CMAKE_COMMAND} --build ${IBAMR_BINARY_DIR}/IBAMR-build --config ${CMAKE_CFG_INTDIR})
+  set(ibamr_build_cmd ${CMAKE_COMMAND} --build ${IBTK_BINARY_DIR}/IBTK-build --config ${CMAKE_CFG_INTDIR})
 endif()
 
 #-----------------------------------------------------------------------------
-# IBAMR
+# IBTK
 #
-if(NOT DEFINED SUPERBUILD_EXCLUDE_IBAMRBUILD_TARGET OR NOT SUPERBUILD_EXCLUDE_IBAMRBUILD_TARGET)
-  set(IBAMRBUILD_TARGET_ALL_OPTION "ALL")
+if(NOT DEFINED SUPERBUILD_EXCLUDE_IBTKBUILD_TARGET OR NOT SUPERBUILD_EXCLUDE_IBTKBUILD_TARGET)
+  set(IBTKBUILD_TARGET_ALL_OPTION "ALL")
 else()
-  set(IBAMRBUILD_TARGET_ALL_OPTION "")
+  set(IBTKBUILD_TARGET_ALL_OPTION "")
 endif()
 
-add_custom_target(IBAMR-build ${IBAMRBUILD_TARGET_ALL_OPTION}
+add_custom_target(IBTK-build ${IBTKBUILD_TARGET_ALL_OPTION}
   COMMAND ${ibamr_build_cmd}
-  WORKING_DIRECTORY ${IBAMR_BINARY_DIR}/IBAMR-build
+  WORKING_DIRECTORY ${IBTK_BINARY_DIR}/IBTK-build
   )
-add_dependencies(IBAMR-build IBAMR-Configure)
+add_dependencies(IBTK-build IBTK-Configure)
 
 #-----------------------------------------------------------------------------
-# Custom target allowing to drive the build of IBAMR project itself
+# Custom target allowing to drive the build of IBTK project itself
 #
-add_custom_target(IBAMR
+add_custom_target(IBTK
   COMMAND ${ibamr_build_cmd}
-  WORKING_DIRECTORY ${IBAMR_BINARY_DIR}/IBAMR-build
+  WORKING_DIRECTORY ${IBTK_BINARY_DIR}/IBTK-build
   )

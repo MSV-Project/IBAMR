@@ -1,6 +1,6 @@
 ###########################################################################
 #
-#  Library: MSVTK
+#  Library: IBTK
 #
 #  Copyright (c) Kitware Inc.
 #
@@ -90,5 +90,5 @@ else()
   msvMacroEmptyExternalProject(${proj} "${LAPACK_DEPENDENCIES}")
 endif()
 
-list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DLAPACK_DIR:PATH=${LAPACK_DIR})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DLAPACK_DIR:PATH=${LAPACK_DIR})
 

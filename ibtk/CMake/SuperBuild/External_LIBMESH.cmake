@@ -1,6 +1,6 @@
 ###########################################################################
 #
-#  Library: MSVTK
+#  Library: IBTK
 #
 #  Copyright (c) Kitware Inc.
 #
@@ -19,7 +19,7 @@
 ###########################################################################
 
 #
-# OpenMPI
+# LIBMESH
 #
 
 # Make sure this file is included only once
@@ -30,19 +30,23 @@ endif()
 set(${CMAKE_CURRENT_LIST_FILENAME}_FILE_INCLUDED 1)
 
 # Sanity checks
-if(DEFINED OPENMPI_DIR AND NOT EXISTS ${OPENMPI_DIR})
-  message(FATAL_ERROR "OPENMPI_DIR variable is defined but corresponds to non-existing directory")
+if(DEFINED LIBMESH_DIR AND NOT EXISTS ${LIBMESH_DIR})
+  message(FATAL_ERROR "LIBMESH_DIR variable is defined but corresponds to non-existing directory")
 endif()
 
-#set(OPENMPI_enabling_variable OPENMPI_LIBRARIES)
+#set(LIBMESH_enabling_variable LIBMESH_LIBRARIES)
 
-set(OPENMPI_DEPENDENCIES "")
+set(additional_vtk_cmakevars )
+if(MINGW)
+  list(APPEND additional_vtk_cmakevars -DCMAKE_USE_PTHREADS:BOOL=OFF)
+endif()
 
+set(LIBMESH_DEPENDENCIES "PETSC;OPENMPI;VTK")
 # Include dependent projects if any
-CheckExternalProjectDependency(OPENMPI)
-set(proj OPENMPI)
+CheckExternalProjectDependency(LIBMESH)
+set(proj LIBMESH)
 
-if(NOT DEFINED OPENMPI_DIR)
+if(NOT DEFINED LIBMESH_DIR)
 
   # Set CMake OSX variable to pass down the external project
   set(CMAKE_OSX_EXTERNAL_PROJECT_ARGS)
@@ -54,41 +58,47 @@ if(NOT DEFINED OPENMPI_DIR)
   endif()
 
 #     message(STATUS "Adding project:${proj}")
+#FindVTK
   ExternalProject_Add(${proj}
     SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
-    BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build
+    BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}
     PREFIX ${proj}${ep_suffix}
-    URL http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-1.6.tar.gz
+    SVN_REPOSITORY https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh
     UPDATE_COMMAND ""
-    INSTALL_COMMAND make install
+    INSTALL_COMMAND ""
     CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/${proj}/configure
-      CC=gcc
-      CXX=g++
-      FC=gfortran
-      F77=gfortran
       "CFLAGS=${ep_common_c_flags}"
       "CXXFLAGS=${ep_common_cxx_flags}"
       "FCFLAGS=${CMAKE_F_FLAGS}"
       "FFLAGS=${CMAKE_F_FLAGS}"
-      --libdir=${ep_install_dir}/lib
+      "LDFLAGS=-L${ep_install_dir}/lib -Wl,-rpath,${ep_install_dir}/lib"
       --prefix=${ep_install_dir}
-      --disable-dependency-tracking
-      --enable-silent-rules
-      --enable-orterun-prefix-by-default
-#     TEST_BEFORE_INSTALL 1
+      --libdir=${ep_install_dir}/lib
+      --with-cxx=${ep_install_dir}/bin/mpicxx
+      --with-cc=${ep_install_dir}/bin/mpicc
+      --with-fc=${ep_install_dir}/bin/mpif90 
+      --with-f77=${ep_install_dir}/bin/mpif90 
+      --enable-mpi
+      --enable-petsc
+      --enable-tetgen
+      --enable-triangle
+      --enable-vtk
+      --enable-shared
+      --with-mpi=${ep_install_dir}
+      --with-vtk-include=${ep_install_dir}/include/vtk-5.9
+      --with-vtk-lib=${ep_install_dir}/lib/vtk-5.9
     LOG_CONFIGURE 1
     LOG_BUILD 1
     LOG_INSTALL 1
-#     TEST_COMMAND make check
     DEPENDS
-      ${OPENMPI_DEPENDENCIES}
+      ${LIBMESH_DEPENDENCIES}
     )
   set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
-
+  
 else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DOPENMPI_DIR:PATH=${OPENMPI_DIR})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DLIBMESH_DIR:PATH=${LIBMESH_DIR})
 
 

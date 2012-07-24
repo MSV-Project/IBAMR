@@ -1,6 +1,6 @@
 ###########################################################################
 #
-#  Library: MSVTK
+#  Library: IBTK
 #
 #  Copyright (c) Kitware Inc.
 #
@@ -19,7 +19,7 @@
 ###########################################################################
 
 #
-# OpenMPI
+# IBAMR
 #
 
 # Make sure this file is included only once
@@ -30,19 +30,24 @@ endif()
 set(${CMAKE_CURRENT_LIST_FILENAME}_FILE_INCLUDED 1)
 
 # Sanity checks
-if(DEFINED OPENMPI_DIR AND NOT EXISTS ${OPENMPI_DIR})
-  message(FATAL_ERROR "OPENMPI_DIR variable is defined but corresponds to non-existing directory")
+if(DEFINED IBAMR_DIR AND NOT EXISTS ${IBAMR_DIR})
+  message(FATAL_ERROR "IBAMR_DIR variable is defined but corresponds to non-existing directory")
 endif()
 
-#set(OPENMPI_enabling_variable OPENMPI_LIBRARIES)
+#set(IBAMR_enabling_variable IBAMR_LIBRARIES)
 
-set(OPENMPI_DEPENDENCIES "")
+set(additional_vtk_cmakevars )
+if(MINGW)
+  list(APPEND additional_vtk_cmakevars -DCMAKE_USE_PTHREADS:BOOL=OFF)
+endif()
+
+set(IBAMR_DEPENDENCIES "OPENMPI;SAMRAI;HDF5;SILO;BLITZ;PETSC;HYPRE")
 
 # Include dependent projects if any
-CheckExternalProjectDependency(OPENMPI)
-set(proj OPENMPI)
+CheckExternalProjectDependency(IBAMR)
+set(proj IBAMR)
 
-if(NOT DEFINED OPENMPI_DIR)
+if(NOT DEFINED IBAMR_DIR)
 
   # Set CMake OSX variable to pass down the external project
   set(CMAKE_OSX_EXTERNAL_PROJECT_ARGS)
@@ -54,41 +59,48 @@ if(NOT DEFINED OPENMPI_DIR)
   endif()
 
 #     message(STATUS "Adding project:${proj}")
+
   ExternalProject_Add(${proj}
     SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
     BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build
     PREFIX ${proj}${ep_suffix}
-    URL http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-1.6.tar.gz
+    SVN_REPOSITORY https://ibamr.googlecode.com/svn/branches/ibamr-cmake
     UPDATE_COMMAND ""
-    INSTALL_COMMAND make install
-    CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/${proj}/configure
-      CC=gcc
-      CXX=g++
-      FC=gfortran
-      F77=gfortran
+    INSTALL_COMMAND ""
+    CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/${proj}/configure 
       "CFLAGS=${ep_common_c_flags}"
       "CXXFLAGS=${ep_common_cxx_flags}"
       "FCFLAGS=${CMAKE_F_FLAGS}"
       "FFLAGS=${CMAKE_F_FLAGS}"
-      --libdir=${ep_install_dir}/lib
-      --prefix=${ep_install_dir}
-      --disable-dependency-tracking
-      --enable-silent-rules
-      --enable-orterun-prefix-by-default
-#     TEST_BEFORE_INSTALL 1
+      CPPFLAGS=-DOMPI_SKIP_MPICXX
+      CC=${ep_install_dir}/bin/mpicc
+      CXX=${ep_install_dir}/bin/mpicxx
+      F77=${ep_install_dir}/bin/mpif90 
+      FC=${ep_install_dir}/bin/mpif90 
+      MPICC=${ep_install_dir}/bin/mpicc 
+      MPICXX=${ep_install_dir}/bin/mpicxx 
+      --with-samrai=${ep_install_dir}
+      --with-hdf5=${ep_install_dir}
+      --with-petsc=${PETSC_DIR}
+      --with-petsc-arch=${PETSC_ARCH}
+      --with-hypre=${ep_install_dir}
+      --with-blitz=${BLITZ_DIR}
+      --with-silo=${ep_install_dir}
+    TEST_BEFORE_INSTALL 1
     LOG_CONFIGURE 1
-    LOG_BUILD 1
+#     LOG_BUILD 1
     LOG_INSTALL 1
-#     TEST_COMMAND make check
+    TEST_COMMAND make check
+    BUILD_COMMAND make lib
     DEPENDS
-      ${OPENMPI_DEPENDENCIES}
+      ${IBAMR_DEPENDENCIES}
     )
   set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
-
+  
 else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DOPENMPI_DIR:PATH=${OPENMPI_DIR})
+list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DIBAMR_DIR:PATH=${IBAMR_DIR})
 
 

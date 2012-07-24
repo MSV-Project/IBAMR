@@ -1,6 +1,6 @@
 ###########################################################################
 #
-#  Library: MSVTK
+#  Library: IBTK
 #
 #  Copyright (c) Kitware Inc.
 #
@@ -19,7 +19,7 @@
 ###########################################################################
 
 #
-# LAPACK
+# OpenMPI
 #
 
 # Make sure this file is included only once
@@ -30,19 +30,19 @@ endif()
 set(${CMAKE_CURRENT_LIST_FILENAME}_FILE_INCLUDED 1)
 
 # Sanity checks
-if(DEFINED LAPACK_DIR AND NOT EXISTS ${LAPACK_DIR})
-  message(FATAL_ERROR "LAPACK_DIR variable is defined but corresponds to non-existing directory")
+if(DEFINED OPENMPI_DIR AND NOT EXISTS ${OPENMPI_DIR})
+  message(FATAL_ERROR "OPENMPI_DIR variable is defined but corresponds to non-existing directory")
 endif()
 
-# Set dependency list
-set(LAPACK_DEPENDENCIES "")
+#set(OPENMPI_enabling_variable OPENMPI_LIBRARIES)
+
+set(OPENMPI_DEPENDENCIES "")
 
 # Include dependent projects if any
-CheckExternalProjectDependency(LAPACK)
-set(proj LAPACK)
+CheckExternalProjectDependency(OPENMPI)
+set(proj OPENMPI)
 
-if(NOT DEFINED LAPACK_DIR)
-  #message(STATUS "${__indent}Adding project ${proj}")
+if(NOT DEFINED OPENMPI_DIR)
 
   # Set CMake OSX variable to pass down the external project
   set(CMAKE_OSX_EXTERNAL_PROJECT_ARGS)
@@ -53,42 +53,42 @@ if(NOT DEFINED LAPACK_DIR)
       -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
   endif()
 
+#     message(STATUS "Adding project:${proj}")
   ExternalProject_Add(${proj}
     SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
     BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build
     PREFIX ${proj}${ep_suffix}
-    SVN_REPOSITORY https://icl.cs.utk.edu/svn/lapack-dev/lapack/trunk
-    UPDATE_COMMAND svn up
+    URL http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-1.6.tar.gz
+    UPDATE_COMMAND ""
     INSTALL_COMMAND make install
-    CMAKE_GENERATOR ${gen}
-    CMAKE_ARGS
-      -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
-      -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
-      -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
-      -DCMAKE_INSTALL_PREFIX:PATH=${ep_install_dir}
-      ${CMAKE_OSX_EXTERNAL_PROJECT_ARGS}
-      -DADDITIONAL_C_FLAGS:STRING=${ADDITIONAL_C_FLAGS}
-      -DADDITIONAL_CXX_FLAGS:STRING=${ADDITIONAL_CXX_FLAGS}
-      -DBUILD_TESTING:BOOL=OFF
-      -DBUILD_COMPLEX:BOOL=ON
-      -DBUILD_COMPLEX16:BOOL=ON
-      -DBUILD_DOUBLE:BOOL=ON
-      -DBUILD_SHARED_LIBS:BOOL=OFF
-      -DBUILD_STATIC_LIBS:BOOL=ON
-      -DUSE_OPTIMIZED_BLAS:BOOL=OFF
-      -DUSE_OPTIMIZED_LAPACK:BOOL=OFF
-      -DUSE_XBLAS:BOOL=OFF
-      -DLAPACKE:BOOL=OFF
+    CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/${proj}/configure
+      CC=gcc
+      CXX=g++
+      FC=gfortran
+      F77=gfortran
+      "CFLAGS=${ep_common_c_flags}"
+      "CXXFLAGS=${ep_common_cxx_flags}"
+      "FCFLAGS=${CMAKE_F_FLAGS}"
+      "FFLAGS=${CMAKE_F_FLAGS}"
+      --libdir=${ep_install_dir}/lib
+      --prefix=${ep_install_dir}
+      --disable-dependency-tracking
+      --enable-silent-rules
+      --enable-orterun-prefix-by-default
+#     TEST_BEFORE_INSTALL 1
+    LOG_CONFIGURE 1
+    LOG_BUILD 1
+    LOG_INSTALL 1
+#     TEST_COMMAND make check
     DEPENDS
-      ${LAPACK_DEPENDENCIES}
+      ${OPENMPI_DEPENDENCIES}
     )
   set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
 
 else()
-  # The project is provided using LAPACK_DIR, nevertheless since other project may depend on LAPACK,
-  # let's add an 'empty' one
-  msvMacroEmptyExternalProject(${proj} "${LAPACK_DEPENDENCIES}")
+  msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DLAPACK_DIR:PATH=${LAPACK_DIR})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DOPENMPI_DIR:PATH=${OPENMPI_DIR})
+
 

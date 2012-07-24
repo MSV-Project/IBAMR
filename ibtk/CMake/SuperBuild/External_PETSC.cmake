@@ -1,6 +1,6 @@
 ###########################################################################
 #
-#  Library: MSVTK
+#  Library: IBTK
 #
 #  Copyright (c) Kitware Inc.
 #
@@ -19,7 +19,7 @@
 ###########################################################################
 
 #
-# OpenMPI
+# PETSc
 #
 
 # Make sure this file is included only once
@@ -30,19 +30,19 @@ endif()
 set(${CMAKE_CURRENT_LIST_FILENAME}_FILE_INCLUDED 1)
 
 # Sanity checks
-if(DEFINED OPENMPI_DIR AND NOT EXISTS ${OPENMPI_DIR})
-  message(FATAL_ERROR "OPENMPI_DIR variable is defined but corresponds to non-existing directory")
+if(DEFINED PETSC_DIR AND NOT EXISTS ${PETSC_DIR})
+  message(FATAL_ERROR "PETSC_DIR variable is defined but corresponds to non-existing directory")
 endif()
 
-#set(OPENMPI_enabling_variable OPENMPI_LIBRARIES)
+#set(PETSC_enabling_variable PETSC_LIBRARIES)
 
-set(OPENMPI_DEPENDENCIES "")
+set(PETSC_DEPENDENCIES "HYPRE;OPENMPI")
 
 # Include dependent projects if any
-CheckExternalProjectDependency(OPENMPI)
-set(proj OPENMPI)
+CheckExternalProjectDependency(PETSC)
+set(proj PETSC)
 
-if(NOT DEFINED OPENMPI_DIR)
+if(NOT DEFINED PETSC_DIR)
 
   # Set CMake OSX variable to pass down the external project
   set(CMAKE_OSX_EXTERNAL_PROJECT_ARGS)
@@ -54,41 +54,53 @@ if(NOT DEFINED OPENMPI_DIR)
   endif()
 
 #     message(STATUS "Adding project:${proj}")
+
+  # Set PETSc specific environment variables
+  set(ENV{PETSC_DIR} ${CMAKE_BINARY_DIR}/${proj})
+  
   ExternalProject_Add(${proj}
     SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
-    BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build
+    BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}
     PREFIX ${proj}${ep_suffix}
-    URL http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-1.6.tar.gz
+    URL http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.3-p2.tar.gz
     UPDATE_COMMAND ""
-    INSTALL_COMMAND make install
-    CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/${proj}/configure
-      CC=gcc
-      CXX=g++
-      FC=gfortran
-      F77=gfortran
-      "CFLAGS=${ep_common_c_flags}"
-      "CXXFLAGS=${ep_common_cxx_flags}"
-      "FCFLAGS=${CMAKE_F_FLAGS}"
-      "FFLAGS=${CMAKE_F_FLAGS}"
-      --libdir=${ep_install_dir}/lib
+    INSTALL_COMMAND ""
+#     INSTALL_COMMAND "export PETSC_DIR=${CMAKE_BINARY_DIR}/${proj} && export PETSC_ARCH=build  && make install"
+    CONFIGURE_COMMAND ./configure
       --prefix=${ep_install_dir}
-      --disable-dependency-tracking
-      --enable-silent-rules
-      --enable-orterun-prefix-by-default
+      --CFLAGS=${ep_common_c_flags}
+      --CXXFLAGS=${ep_common_cxx_flags}
+      --FCFLAGS=${CMAKE_F_FLAGS}
+      --FFLAGS=${CMAKE_F_FLAGS}
+      --COPTFLAGS=${CMAKE_C_FLAGS_RELEASE}
+      --CXXOPTFLAGS=${CMAKE_CXX_FLAGS_RELEASE}
+      --FOPTFLAGS=${CMAKE_F_FLAGS_RELEASE}
+      --LDFLAGS="-L${ep_install_dir}/lib -Wl,-rpath,${ep_install_dir}/lib"
+      --PETSC_ARCH=build
+      --with-default-arch=0 
+      --with-debugging=0 
+      --with-c++-support
+      --with-hypre=1
+      --with-hypre-dir=${ep_install_dir}
+      --with-mpi=1
+      --with-mpi-dir=${ep_install_dir}
+      --with-x=0
 #     TEST_BEFORE_INSTALL 1
     LOG_CONFIGURE 1
     LOG_BUILD 1
     LOG_INSTALL 1
-#     TEST_COMMAND make check
+#     TEST_COMMAND make PETSC_DIR=${CMAKE_BINARY_DIR}/${proj} PETSC_ARCH=build test
+    BUILD_COMMAND make PETSC_DIR=${CMAKE_BINARY_DIR}/${proj} PETSC_ARCH=build all
     DEPENDS
-      ${OPENMPI_DEPENDENCIES}
+      ${PETSC_DEPENDENCIES}
     )
-  set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
+    set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj})
+    set(${proj}_ARCH build)
 
 else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DOPENMPI_DIR:PATH=${OPENMPI_DIR})
-
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DPETSC_DIR:PATH=$ENV{PETSC_DIR})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DPETSC_ARCH:STRING="build")
 

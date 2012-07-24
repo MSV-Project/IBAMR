@@ -1,6 +1,6 @@
 ###########################################################################
 #
-#  Library: MSVTK
+#  Library: IBTK
 #
 #  Copyright (c) Kitware Inc.
 #
@@ -19,7 +19,7 @@
 ###########################################################################
 
 #
-# LAPACK
+# VTK
 #
 
 # Make sure this file is included only once
@@ -30,19 +30,30 @@ endif()
 set(${CMAKE_CURRENT_LIST_FILENAME}_FILE_INCLUDED 1)
 
 # Sanity checks
-if(DEFINED LAPACK_DIR AND NOT EXISTS ${LAPACK_DIR})
-  message(FATAL_ERROR "LAPACK_DIR variable is defined but corresponds to non-existing directory")
+if(DEFINED VTK_DIR AND NOT EXISTS ${VTK_DIR})
+  message(FATAL_ERROR "VTK_DIR variable is defined but corresponds to non-existing directory")
 endif()
 
-# Set dependency list
-set(LAPACK_DEPENDENCIES "")
+#set(VTK_enabling_variable VTK_LIBRARIES)
 
+set(additional_vtk_cmakevars )
+if(MINGW)
+  list(APPEND additional_vtk_cmakevars -DCMAKE_USE_PTHREADS:BOOL=OFF)
+endif()
+
+set(VTK_DEPENDENCIES "")
 # Include dependent projects if any
-CheckExternalProjectDependency(LAPACK)
-set(proj LAPACK)
+CheckExternalProjectDependency(VTK)
+set(proj VTK)
 
-if(NOT DEFINED LAPACK_DIR)
-  #message(STATUS "${__indent}Adding project ${proj}")
+if(NOT DEFINED VTK_DIR)
+
+  #set(revision_tag "v5.8.0")
+  #set(revision_tag fea2d622cf01dfd22f727330dbace97d4af892db)
+  set(revision_tag ad3fda67d01a3a58c715474ad81803ecb3d3ce1c)
+  if(${proj}_REVISION_TAG)
+    set(revision_tag ${${proj}_REVISION_TAG})
+  endif()
 
   # Set CMake OSX variable to pass down the external project
   set(CMAKE_OSX_EXTERNAL_PROJECT_ARGS)
@@ -53,12 +64,15 @@ if(NOT DEFINED LAPACK_DIR)
       -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
   endif()
 
+#     message(STATUS "Adding project:${proj}")
+
   ExternalProject_Add(${proj}
     SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
     BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build
     PREFIX ${proj}${ep_suffix}
-    SVN_REPOSITORY https://icl.cs.utk.edu/svn/lapack-dev/lapack/trunk
-    UPDATE_COMMAND svn up
+    GIT_REPOSITORY ${git_protocol}://vtk.org/VTK.git
+    GIT_TAG ${revision_tag}
+    UPDATE_COMMAND ""
     INSTALL_COMMAND make install
     CMAKE_GENERATOR ${gen}
     CMAKE_ARGS
@@ -67,28 +81,37 @@ if(NOT DEFINED LAPACK_DIR)
       -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
       -DCMAKE_INSTALL_PREFIX:PATH=${ep_install_dir}
       ${CMAKE_OSX_EXTERNAL_PROJECT_ARGS}
-      -DADDITIONAL_C_FLAGS:STRING=${ADDITIONAL_C_FLAGS}
-      -DADDITIONAL_CXX_FLAGS:STRING=${ADDITIONAL_CXX_FLAGS}
       -DBUILD_TESTING:BOOL=OFF
-      -DBUILD_COMPLEX:BOOL=ON
-      -DBUILD_COMPLEX16:BOOL=ON
-      -DBUILD_DOUBLE:BOOL=ON
-      -DBUILD_SHARED_LIBS:BOOL=OFF
-      -DBUILD_STATIC_LIBS:BOOL=ON
-      -DUSE_OPTIMIZED_BLAS:BOOL=OFF
-      -DUSE_OPTIMIZED_LAPACK:BOOL=OFF
-      -DUSE_XBLAS:BOOL=OFF
-      -DLAPACKE:BOOL=OFF
+      ${additional_vtk_cmakevars}
+      -DVTK_WRAP_TCL:BOOL=OFF
+      -DVTK_USE_TK:BOOL=OFF
+      -DVTK_WRAP_PYTHON:BOOL=${MSVTK_LIB_Scripting/Python/Core_PYTHONQT_USE_VTK}
+      -DVTK_WRAP_JAVA:BOOL=OFF
+      -DBUILD_SHARED_LIBS:BOOL=${BUILD_SHARED_LIBS}
+      -DDESIRED_QT_VERSION:STRING=4
+      -DVTK_USE_GUISUPPORT:BOOL=ON
+      -DVTK_USE_QVTK_QTOPENGL:BOOL=ON
+      -DVTK_USE_QT:BOOL=ON
+      -DVTK_LEGACY_REMOVE:BOOL=ON
+      -DHDF5_BUILD_HL_LIB:BOOL=ON
+      -DVTK_VISIT_BRIDGE:BOOL=ON
+      -DQT_QMAKE_EXECUTABLE:FILEPATH=${QT_QMAKE_EXECUTABLE}
+      -DLIBRARY_OUTPUT_PATH:STRING=${MSVTK_BINARY_DIR}/MSVTK-build/bin
+      -DEXECUTABLE_OUTPUT_PATH:STRING=${MSVTK_BINARY_DIR}/MSVTK-build/bin
+      
     DEPENDS
-      ${LAPACK_DEPENDENCIES}
+      ${VTK_DEPENDENCIES}
     )
   set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
 
+  # Since the link directories associated with VTK is used, it makes sens to
+  # update MSVTK_EXTERNAL_LIBRARY_DIRS with its associated library output directory
+  list(APPEND MSVTK_EXTERNAL_LIBRARY_DIRS ${VTK_DIR}/bin)
+
 else()
-  # The project is provided using LAPACK_DIR, nevertheless since other project may depend on LAPACK,
-  # let's add an 'empty' one
-  msvMacroEmptyExternalProject(${proj} "${LAPACK_DEPENDENCIES}")
+  msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DLAPACK_DIR:PATH=${LAPACK_DIR})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DVTK_DIR:PATH=${VTK_DIR})
+
 

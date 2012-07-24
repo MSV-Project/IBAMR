@@ -87,6 +87,6 @@ else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND MSVTK_SUPERBUILD_EP_ARGS -DSILO_DIR:PATH=${SILO_DIR})
+list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DSILO_DIR:PATH=${SILO_DIR})
 
 

@@ -13,6 +13,12 @@ option(BUILD_SHARED_LIBS "Build IBTK with shared libraries." ON)
 set(IBTK_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 mark_as_advanced(BUILD_SHARED_LIBS)
 
+#-----------------------------------------------------------------------------
+# Superbuild Option - Enabled by default
+#
+option(IBTK_SUPERBUILD "Build IBTK and the projects it depends on via SuperBuild.cmake." ON)
+mark_as_advanced(IBTK_SUPERBUILD)
+
 # -----------------------------------------------------------------------------
 # Set option to optionaly build 2d library as well (by default 
 # the 3D library is built)
@@ -23,6 +29,56 @@ option(IBTK_BUILD_2D_LIBS "Build the optional 2D libraries." OFF)
 # Path to IBTK cmake modules
 #
 set(IBTK_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+
+#-----------------------------------------------------------------------------
+# IBTK version number.  An even minor number corresponds to releases.
+#
+set(IBTK_MAJOR_VERSION 0)
+set(IBTK_MINOR_VERSION 1)
+set(IBTK_BUILD_VERSION 0)
+set(IBTK_VERSION
+    "${IBTK_MAJOR_VERSION}.${IBTK_MINOR_VERSION}.${IBTK_BUILD_VERSION}")
+
+# Append the library version information to the library target
+# properties.  A parent project may set its own properties and/or may
+# block this.
+if(NOT IBTK_NO_LIBRARY_VERSION)
+  set(IBTK_LIBRARY_PROPERTIES ${IBTK_LIBRARY_PROPERTIES}
+    VERSION "${IBTK_VERSION}"
+    SOVERSION "${IBTK_MAJOR_VERSION}.${IBTK_MINOR_VERSION}"
+    )
+endif()
+
+#-----------------------------------------------------------------------------
+# Install directories, used for install rules.
+#
+# TODO Rename with SUBDIR suffix
+if(NOT IBTK_INSTALL_BIN_DIR)
+  set(IBTK_INSTALL_BIN_DIR "bin")
+endif()
+if(NOT IBTK_INSTALL_LIB_DIR)
+  set(IBTK_INSTALL_LIB_DIR "lib/IBTK-${IBTK_MAJOR_VERSION}.${IBTK_MINOR_VERSION}")
+endif()
+if(NOT IBTK_INSTALL_INCLUDE_DIR)
+  set(IBTK_INSTALL_INCLUDE_DIR "include/IBTK-${IBTK_MAJOR_VERSION}.${IBTK_MINOR_VERSION}")
+endif()
+if(NOT IBTK_INSTALL_DOC_DIR)
+  set(IBTK_INSTALL_DOC_DIR "doc")
+endif()
+
+#-----------------------------------------------------------------------------
+# Update CMake module path
+#
+message(FATAL_ERROR "${CMAKE_CURRENT_SOURCE_DIR}/CMake")
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})
+
+#-----------------------------------------------------------------------------
+# Superbuild script
+#
+if(IBTK_SUPERBUILD)
+  add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/CMake/SuperBuild")
+  return()
+endif()
 
 # -----------------------------------------------------------------------------
 # FindMPI
@@ -121,7 +177,7 @@ set(BLITZ_LIBS -L${BLITZ_DIR}/lib -Wl,-rpath,${BLITZ_DIR}/lib -lblitz)
 # -----------------------------------------------------------------------------
 # Build with SILO support (default: YES)
 #
-option(WITH_SILO "Build IBTK with support." ON)
+option(WITH_SILO "Build with SILO support." ON)
 if(WITH_SILO)
   set(SILO_DIR CACHE PATH "SILO installation directory.")
   if(NOT SILO_DIR)
@@ -232,9 +288,9 @@ list(APPEND dirs
 # -----------------------------------------------------------------------------
 # Loop over list of sub-directories 
 # -----------------------------------------------------------------------------
-set(IBTK_LIBRARIES3D)
+set(IBTK_LIBRARIES3D CACHE INTERNAL "IBTK 3D library." FORCE)
 if(IBTK_BUILD_2D_LIBS)
-  set(IBTK_LIBRARIES2D)
+  set(IBTK_LIBRARIES2D CACHE INTERNAL "IBTK 2D library." FORCE)
 endif()
 foreach(dir ${dirs})
   message(STATUS "Configuring sub-library: ${dir}")
@@ -272,6 +328,17 @@ else()
 endif()
 
 # --------------------------------------------------------------------------
+# Export targets
+# --------------------------------------------------------------------------
+if(NOT DEFINED ${PROJECT_NAME}_EXPORT_FILE)
+  set(${PROJECT_NAME}_EXPORT_FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake)
+endif()
+export(TARGETS ${IBTK_LIBRARIES3D} APPEND FILE ${${PROJECT_NAME}_EXPORT_FILE})
+if(IBTK_BUILD_2D_LIBS)
+  export(TARGETS ${IBTK_LIBRARIES2D} APPEND FILE ${${PROJECT_NAME}_EXPORT_FILE})
+endif()
+
+# --------------------------------------------------------------------------
 # Append necessary libs to compile apps
 list(APPEND IBTK_LIBRARIES3D 
   ${SAMRAI_LIBS3D} 
@@ -305,3 +372,10 @@ INCLUDE(CTest)
 IF(BUILD_TESTING)
     ADD_SUBDIRECTORY(examples)
 ENDIF()
+
+# --------------------------------------------------------------------------
+# Set INCLUDE_DIRS variable
+# --------------------------------------------------------------------------
+set(${PROJECT_NAME}_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/include
+  CACHE INTERNAL "${PROJECT_NAME} include dirs" FORCE)
+  

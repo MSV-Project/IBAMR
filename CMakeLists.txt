@@ -18,55 +18,63 @@
 #
 ########################################################################### 
 
-cmake_minimum_required(VERSION 2.8.2)
+cmake_minimum_required(VERSION 2.8.8)
 
 #-----------------------------------------------------------------------------
 project(IBAMR CXX Fortran)
 #-----------------------------------------------------------------------------
 
-
-#-----------------------------------------------------------------------------
-# IBAMR specific options
+# ----------------------------------------------------------------------------
+# Specify IBTK library directory (default: current dir)
 #
-option(ENABLE_LARGE_GHOST_CELL_WIDTH "enable the use of large ghost 
+set(IBTK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ibtk CACHE FILEPATH "Path to IBTK.")
+
+# -----------------------------------------------------------------------------
+# Add options: USING_LARGE_GHOST_CELL_WIDTH (default 0) and 
+# 	USING_EXPENSIVE_CF_INTERPOLATION (default 0)
+#
+# if(NOT ENABLE_LARGE_GHOST_CELL_WIDTH)
+option(ENABLE_LARGE_GHOST_CELL_WIDTH "This enables the use of large ghost 
   cell regions (this feature must be enabled for certain types of physical 
   boundary condition routines to function properly)" OFF)
 if(ENABLE_LARGE_GHOST_CELL_WIDTH)
-  add_definitions(-DUSING_LARGE_GHOST_CELL_WIDTH)
-  message(WARNING "large ghost cell widths are ENABLED!")
+  add_definitions(-DUSING_LARGE_GHOST_CELL_WIDTH=1)
+  message(STATUS "Large ghost cell widths are ENABLED!")
 else()
-  message(WARNING "large ghost cell widths are DISABLED!
-    certain physical boundary condition handling routines may
+  add_definitions(-DUSING_LARGE_GHOST_CELL_WIDTH=0)
+  message(STATUS "Large ghost cell widths are DISABLED!
+    Certain physical boundary condition handling routines may
     not function properly if you wish to enable support for large 
     ghost cell widths, enable this option")
 endif()
 
-option(ENABLE_EXPENSIVE_CF_INTERPOLATION "enable the use of the expensive version 
-  of the quadratic coarse-fine interface interpolation code (this feature 
+option(ENABLE_EXPENSIVE_CF_INTERPOLATION "This enables the use of the expensive 
+  version of the quadratic coarse-fine interface interpolation code (this feature 
   must be enabled for certain use cases, e.g. general anisotropic 
   diffusion tensors)" OFF)
-
 if(ENABLE_EXPENSIVE_CF_INTERPOLATION)
-  add_definitions(-DUSING_EXPENSIVE_CF_INTERPOLATION)
-  message(WARNING "expensive version of the quadratic coarse-fine interface 
+  add_definitions(-DUSING_EXPENSIVE_CF_INTERPOLATION=1)
+  message(STATUS "Expensive version of the quadratic coarse-fine interface 
     interpolation code is ENABLED!")
 else()
-  message(WARNING "expensive version of the quadratic coarse-fine interface 
+  add_definitions(-DUSING_EXPENSIVE_CF_INTERPOLATION=0)
+  message(STATUS "Expensive version of the quadratic coarse-fine interface 
     interpolation code is DISABLED! this feature must be enabled for certain 
     use cases, e.g. general anisotropic diffusion tensors if you wish to 
     enable support for large ghost cell widths, enable this option")
-endif()  
-  
+endif() 
+
+# -----------------------------------------------------------------------------
+#
+#-----------------------------------------------------------------------------
 option(ENABLE_SUBDOMAIN_INDICES "enable the use of subdomain indices for 
   standard IB mechanical elements" OFF) 
-
 if(ENABLE_SUBDOMAIN_INDICES)
   add_definitions(-DUSING_SUBDOMAIN_INDICES)
-  message(WARNING "subdomain indices are ENABLED!")
+  message(STATUS "Subdomain indices are ENABLED!")
 else()
-  message(WARNING "subdomain indices are DISABLED!")
+  message(STATUS "Subdomain indices are DISABLED!")
 endif() 
-#-----------------------------------------------------------------------------
 
 #-----------------------------------------------------------------------------
 # Library mode: SHARED (default) or STATIC
@@ -127,8 +135,6 @@ set(IBAMR_MINOR_VERSION 1)
 set(IBAMR_BUILD_VERSION 0)
 set(IBAMR_VERSION
     "${IBAMR_MAJOR_VERSION}.${IBAMR_MINOR_VERSION}.${IBAMR_BUILD_VERSION}")
-
-# TODO Rename IBAMR_VERSION into IBAMR_VERSION_STR  -  IBAMR_VERSION should be hexadecimal one
 
 # Append the library version information to the library target
 # properties.  A parent project may set its own properties and/or may
@@ -227,6 +233,7 @@ if(NOT GIT_FOUND)
   message(FATAL_ERROR "error: Install Git and try to re-configure")
 endif()
 
+
 #-----------------------------------------------------------------------------
 # Superbuild script
 #
@@ -251,7 +258,4 @@ set(CMAKE_CXX_FLAGS ${IBAMR_CXX_FLAGS} CACHE STRING "CMake C Flags" FORCE)
 set(CMAKE_C_FLAGS ${IBAMR_C_FLAGS} CACHE STRING "CMake CXX Flags" FORCE)
 set(CMAKE_F_FLAGS ${IBAMR_F_FLAGS} CACHE STRING "CMake F Flags" FORCE)
 
-#-----------------------------------------------------------------------------
-# Add IBTK library subdirectories
-#
 add_subdirectory(ibtk)
