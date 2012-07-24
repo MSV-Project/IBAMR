@@ -33,9 +33,10 @@
 #include "CartCellDoubleQuadraticCFInterpolation.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
+#include "fortran_interfaces.h"
 
 #ifndef included_IBTK_config
-#include <IBTK_config.h>
+// #include <IBTK_config.h>
 #define included_IBTK_config
 #endif
 
@@ -60,12 +61,12 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define CC_QUAD_TANGENTIAL_INTERPOLATION_FC FC_FUNC(ccquadtangentialinterpolation2d,CCQUADTANGENTIALINTERPOLATION2D)
-#define CC_QUAD_NORMAL_INTERPOLATION_FC FC_FUNC(ccquadnormalinterpolation2d,CCQUADNORMALINTERPOLATION2D)
+#define CC_QUAD_TANGENTIAL_INTERPOLATION_FC FC_GLOBAL(ccquadtangentialinterpolation2d,CCQUADTANGENTIALINTERPOLATION2D)
+#define CC_QUAD_NORMAL_INTERPOLATION_FC FC_GLOBAL(ccquadnormalinterpolation2d,CCQUADNORMALINTERPOLATION2D)
 #endif
 #if (NDIM == 3)
-#define CC_QUAD_TANGENTIAL_INTERPOLATION_FC FC_FUNC(ccquadtangentialinterpolation3d,CCQUADTANGENTIALINTERPOLATION3D)
-#define CC_QUAD_NORMAL_INTERPOLATION_FC FC_FUNC(ccquadnormalinterpolation3d,CCQUADNORMALINTERPOLATION3D)
+#define CC_QUAD_TANGENTIAL_INTERPOLATION_FC FC_GLOBAL(ccquadtangentialinterpolation3d,CCQUADTANGENTIALINTERPOLATION3D)
+#define CC_QUAD_NORMAL_INTERPOLATION_FC FC_GLOBAL(ccquadnormalinterpolation3d,CCQUADNORMALINTERPOLATION3D)
 #endif
 
 // Function interfaces

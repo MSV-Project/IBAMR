@@ -36,7 +36,7 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 // IBTK INCLUDES
-#include <ibtk/CoarseFineBoundaryRefinePatchStrategy.h>
+#include "ibtk/CoarseFineBoundaryRefinePatchStrategy.h"
 
 // SAMRAI INCLUDES
 #include <CoarseFineBoundary.h>

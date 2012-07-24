@@ -33,9 +33,10 @@
 #include "CartSideDoubleDivPreservingRefine.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
+#include "fortran_interfaces.h"
 
 #ifndef included_IBTK_config
-#include <IBTK_config.h>
+// #include <IBTK_config.h>
 #define included_IBTK_config
 #endif
 
@@ -60,11 +61,11 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define DIV_PRESERVING_CORRECTION_FC FC_FUNC_(div_preserving_correction2d,DIV_PRESERVING_CORRECTION2D)
+#define DIV_PRESERVING_CORRECTION_FC FC_GLOBAL_(div_preserving_correction2d,DIV_PRESERVING_CORRECTION2D)
 #endif
 
 #if (NDIM == 3)
-#define DIV_PRESERVING_CORRECTION_FC FC_FUNC_(div_preserving_correction3d,DIV_PRESERVING_CORRECTION3D)
+#define DIV_PRESERVING_CORRECTION_FC FC_GLOBAL_(div_preserving_correction3d,DIV_PRESERVING_CORRECTION3D)
 #endif
 
 extern "C"

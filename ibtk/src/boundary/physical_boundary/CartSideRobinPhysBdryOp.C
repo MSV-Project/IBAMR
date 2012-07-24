@@ -35,9 +35,11 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 #ifndef included_IBTK_config
-#include <IBTK_config.h>
+// #include <IBTK_config.h>
 #define included_IBTK_config
 #endif
+
+#include "fortran_interfaces.h"
 
 #ifndef included_SAMRAI_config
 #include <SAMRAI_config.h>
@@ -68,23 +70,23 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define CC_ROBIN_PHYS_BDRY_OP_1_X_FC FC_FUNC(ccrobinphysbdryop1x2d, CCROBINPHYSBDRYOP1X2D)
-#define CC_ROBIN_PHYS_BDRY_OP_1_Y_FC FC_FUNC(ccrobinphysbdryop1y2d, CCROBINPHYSBDRYOP1Y2D)
-#define SC_ROBIN_PHYS_BDRY_OP_1_X_FC FC_FUNC(scrobinphysbdryop1x2d, SCROBINPHYSBDRYOP1X2D)
-#define SC_ROBIN_PHYS_BDRY_OP_1_Y_FC FC_FUNC(scrobinphysbdryop1y2d, SCROBINPHYSBDRYOP1Y2D)
-#define SC_ROBIN_PHYS_BDRY_OP_2_FC FC_FUNC(scrobinphysbdryop22d, SCROBINPHYSBDRYOP22D)
+#define CC_ROBIN_PHYS_BDRY_OP_1_X_FC FC_GLOBAL(ccrobinphysbdryop1x2d, CCROBINPHYSBDRYOP1X2D)
+#define CC_ROBIN_PHYS_BDRY_OP_1_Y_FC FC_GLOBAL(ccrobinphysbdryop1y2d, CCROBINPHYSBDRYOP1Y2D)
+#define SC_ROBIN_PHYS_BDRY_OP_1_X_FC FC_GLOBAL(scrobinphysbdryop1x2d, SCROBINPHYSBDRYOP1X2D)
+#define SC_ROBIN_PHYS_BDRY_OP_1_Y_FC FC_GLOBAL(scrobinphysbdryop1y2d, SCROBINPHYSBDRYOP1Y2D)
+#define SC_ROBIN_PHYS_BDRY_OP_2_FC FC_GLOBAL(scrobinphysbdryop22d, SCROBINPHYSBDRYOP22D)
 #endif // if (NDIM == 2)
 
 #if (NDIM == 3)
-#define CC_ROBIN_PHYS_BDRY_OP_1_X_FC FC_FUNC(ccrobinphysbdryop1x3d, CCROBINPHYSBDRYOP1X3D)
-#define CC_ROBIN_PHYS_BDRY_OP_1_Y_FC FC_FUNC(ccrobinphysbdryop1y3d, CCROBINPHYSBDRYOP1Y3D)
-#define CC_ROBIN_PHYS_BDRY_OP_1_Z_FC FC_FUNC(ccrobinphysbdryop1z3d, CCROBINPHYSBDRYOP1Z3D)
-#define SC_ROBIN_PHYS_BDRY_OP_1_X_FC FC_FUNC(scrobinphysbdryop1x3d, SCROBINPHYSBDRYOP1X3D)
-#define SC_ROBIN_PHYS_BDRY_OP_1_Y_FC FC_FUNC(scrobinphysbdryop1y3d, SCROBINPHYSBDRYOP1Y3D)
-#define SC_ROBIN_PHYS_BDRY_OP_1_Z_FC FC_FUNC(scrobinphysbdryop1z3d, SCROBINPHYSBDRYOP1Z3D)
-#define SC_ROBIN_PHYS_BDRY_OP_2_FC FC_FUNC(scrobinphysbdryop23d, SCROBINPHYSBDRYOP22D)
-#define CC_ROBIN_PHYS_BDRY_OP_2_FC FC_FUNC(ccrobinphysbdryop23d, CCROBINPHYSBDRYOP23D)
-#define SC_ROBIN_PHYS_BDRY_OP_3_FC FC_FUNC(scrobinphysbdryop33d, SCROBINPHYSBDRYOP32D)
+#define CC_ROBIN_PHYS_BDRY_OP_1_X_FC FC_GLOBAL(ccrobinphysbdryop1x3d, CCROBINPHYSBDRYOP1X3D)
+#define CC_ROBIN_PHYS_BDRY_OP_1_Y_FC FC_GLOBAL(ccrobinphysbdryop1y3d, CCROBINPHYSBDRYOP1Y3D)
+#define CC_ROBIN_PHYS_BDRY_OP_1_Z_FC FC_GLOBAL(ccrobinphysbdryop1z3d, CCROBINPHYSBDRYOP1Z3D)
+#define SC_ROBIN_PHYS_BDRY_OP_1_X_FC FC_GLOBAL(scrobinphysbdryop1x3d, SCROBINPHYSBDRYOP1X3D)
+#define SC_ROBIN_PHYS_BDRY_OP_1_Y_FC FC_GLOBAL(scrobinphysbdryop1y3d, SCROBINPHYSBDRYOP1Y3D)
+#define SC_ROBIN_PHYS_BDRY_OP_1_Z_FC FC_GLOBAL(scrobinphysbdryop1z3d, SCROBINPHYSBDRYOP1Z3D)
+#define SC_ROBIN_PHYS_BDRY_OP_2_FC FC_GLOBAL(scrobinphysbdryop23d, SCROBINPHYSBDRYOP22D)
+#define CC_ROBIN_PHYS_BDRY_OP_2_FC FC_GLOBAL(ccrobinphysbdryop23d, CCROBINPHYSBDRYOP23D)
+#define SC_ROBIN_PHYS_BDRY_OP_3_FC FC_GLOBAL(scrobinphysbdryop33d, SCROBINPHYSBDRYOP32D)
 #endif // if (NDIM == 3)
 
 extern "C"

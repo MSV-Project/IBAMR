@@ -34,8 +34,10 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
+#include "fortran_interfaces.h"
+
 #ifndef included_IBTK_config
-#include <IBTK_config.h>
+// #include <IBTK_config.h>
 #define included_IBTK_config
 #endif
 
@@ -66,12 +68,12 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define GS_SMOOTH_FC FC_FUNC(gssmooth2d,GSSMOOTH2D)
-#define RB_GS_SMOOTH_FC FC_FUNC(rbgssmooth2d,RBGSSMOOTH2D)
+#define GS_SMOOTH_FC FC_GLOBAL(gssmooth2d,GSSMOOTH2D)
+#define RB_GS_SMOOTH_FC FC_GLOBAL(rbgssmooth2d,RBGSSMOOTH2D)
 #endif
 #if (NDIM == 3)
-#define GS_SMOOTH_FC FC_FUNC(gssmooth3d,GSSMOOTH3D)
-#define RB_GS_SMOOTH_FC FC_FUNC(rbgssmooth3d,RBGSSMOOTH3D)
+#define GS_SMOOTH_FC FC_GLOBAL(gssmooth3d,GSSMOOTH3D)
+#define RB_GS_SMOOTH_FC FC_GLOBAL(rbgssmooth3d,RBGSSMOOTH3D)
 #endif
 
 // Function interfaces
