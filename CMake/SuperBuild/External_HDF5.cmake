@@ -39,7 +39,7 @@ endif()
 set(HDF5_DEPENDENCIES "")
 
 # Include dependent projects if any
-msvMacroCheckExternalProjectDependency(HDF5)
+CheckExternalProjectDependency(HDF5)
 set(proj HDF5)
 
 if(NOT DEFINED HDF5_DIR)

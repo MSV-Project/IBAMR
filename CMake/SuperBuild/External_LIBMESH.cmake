@@ -43,7 +43,7 @@ endif()
 
 set(LIBMESH_DEPENDENCIES "PETSC;OPENMPI;VTK")
 # Include dependent projects if any
-msvMacroCheckExternalProjectDependency(LIBMESH)
+CheckExternalProjectDependency(LIBMESH)
 set(proj LIBMESH)
 
 if(NOT DEFINED LIBMESH_DIR)

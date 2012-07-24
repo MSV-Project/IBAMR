@@ -39,7 +39,7 @@ endif()
 set(PETSC_DEPENDENCIES "HYPRE;OPENMPI")
 
 # Include dependent projects if any
-msvMacroCheckExternalProjectDependency(PETSC)
+CheckExternalProjectDependency(PETSC)
 set(proj PETSC)
 
 if(NOT DEFINED PETSC_DIR)
@@ -62,7 +62,7 @@ if(NOT DEFINED PETSC_DIR)
     SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
     BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}
     PREFIX ${proj}${ep_suffix}
-    URL http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.1-p8.tar.gz
+    URL http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.3-p2.tar.gz
     UPDATE_COMMAND ""
     INSTALL_COMMAND ""
 #     INSTALL_COMMAND "export PETSC_DIR=${CMAKE_BINARY_DIR}/${proj} && export PETSC_ARCH=build  && make install"

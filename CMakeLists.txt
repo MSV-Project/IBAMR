@@ -21,16 +21,60 @@
 cmake_minimum_required(VERSION 2.8.2)
 
 #-----------------------------------------------------------------------------
-project(MSVTK)
+project(IBAMR CXX Fortran)
+#-----------------------------------------------------------------------------
+
+
+#-----------------------------------------------------------------------------
+# IBAMR specific options
+#
+option(ENABLE_LARGE_GHOST_CELL_WIDTH "enable the use of large ghost 
+  cell regions (this feature must be enabled for certain types of physical 
+  boundary condition routines to function properly)" OFF)
+if(ENABLE_LARGE_GHOST_CELL_WIDTH)
+  add_definitions(-DUSING_LARGE_GHOST_CELL_WIDTH)
+  message(WARNING "large ghost cell widths are ENABLED!")
+else()
+  message(WARNING "large ghost cell widths are DISABLED!
+    certain physical boundary condition handling routines may
+    not function properly if you wish to enable support for large 
+    ghost cell widths, enable this option")
+endif()
+
+option(ENABLE_EXPENSIVE_CF_INTERPOLATION "enable the use of the expensive version 
+  of the quadratic coarse-fine interface interpolation code (this feature 
+  must be enabled for certain use cases, e.g. general anisotropic 
+  diffusion tensors)" OFF)
+
+if(ENABLE_EXPENSIVE_CF_INTERPOLATION)
+  add_definitions(-DUSING_EXPENSIVE_CF_INTERPOLATION)
+  message(WARNING "expensive version of the quadratic coarse-fine interface 
+    interpolation code is ENABLED!")
+else()
+  message(WARNING "expensive version of the quadratic coarse-fine interface 
+    interpolation code is DISABLED! this feature must be enabled for certain 
+    use cases, e.g. general anisotropic diffusion tensors if you wish to 
+    enable support for large ghost cell widths, enable this option")
+endif()  
+  
+option(ENABLE_SUBDOMAIN_INDICES "enable the use of subdomain indices for 
+  standard IB mechanical elements" OFF) 
+
+if(ENABLE_SUBDOMAIN_INDICES)
+  add_definitions(-DUSING_SUBDOMAIN_INDICES)
+  message(WARNING "subdomain indices are ENABLED!")
+else()
+  message(WARNING "subdomain indices are DISABLED!")
+endif() 
 #-----------------------------------------------------------------------------
 
 #-----------------------------------------------------------------------------
 # Library mode: SHARED (default) or STATIC
 #
-set(MSVTK_LIBRARY_MODE "SHARED")
+set(IBAMR_LIBRARY_MODE "SHARED")
 
-option(BUILD_SHARED_LIBS "Build MSVTK with shared libraries." ON)
-set(MSVTK_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
+option(BUILD_SHARED_LIBS "Build IBAMR with shared libraries." ON)
+set(IBAMR_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 mark_as_advanced(BUILD_SHARED_LIBS)
 
 #-----------------------------------------------------------------------------
@@ -47,52 +91,52 @@ endif()
 #-----------------------------------------------------------------------------
 # Superbuild Option - Enabled by default
 #
-option(MSVTK_SUPERBUILD "Build MSVTK and the projects it depends on via SuperBuild.cmake." ON)
-mark_as_advanced(MSVTK_SUPERBUILD)
+option(IBAMR_SUPERBUILD "Build IBAMR and the projects it depends on via SuperBuild.cmake." ON)
+mark_as_advanced(IBAMR_SUPERBUILD)
 
 #-----------------------------------------------------------------------------
 # Output directories.
 #
 foreach(type LIBRARY RUNTIME ARCHIVE)
   # Make sure the directory exists
-  if(DEFINED MSVTK_CMAKE_${type}_OUTPUT_DIRECTORY
-     AND NOT EXISTS ${MSVTK_CMAKE_${type}_OUTPUT_DIRECTORY})
-    message(FATAL_ERROR "MSVTK_CMAKE_${type}_OUTPUT_DIRECTORY is set to a non-existing directory [${MSVTK_CMAKE_${type}_OUTPUT_DIRECTORY}]")
+  if(DEFINED IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY
+     AND NOT EXISTS ${IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY})
+    message(FATAL_ERROR "IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY is set to a non-existing directory [${IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY}]")
   endif()
 
-  if(MSVTK_SUPERBUILD)
-    set(output_dir ${MSVTK_BINARY_DIR}/bin)
-    if(NOT DEFINED MSVTK_CMAKE_${type}_OUTPUT_DIRECTORY)
-      set(MSVTK_CMAKE_${type}_OUTPUT_DIRECTORY ${MSVTK_BINARY_DIR}/MSVTK-build/bin)
+  if(IBAMR_SUPERBUILD)
+    set(output_dir ${IBAMR_BINARY_DIR}/bin)
+    if(NOT DEFINED IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY)
+      set(IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY ${IBAMR_BINARY_DIR}/IBAMR-build/bin)
     endif()
   else()
-    if(NOT DEFINED MSVTK_CMAKE_${type}_OUTPUT_DIRECTORY)
-      set(output_dir ${MSVTK_BINARY_DIR}/bin)
+    if(NOT DEFINED IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY)
+      set(output_dir ${IBAMR_BINARY_DIR}/bin)
     else()
-      set(output_dir ${MSVTK_CMAKE_${type}_OUTPUT_DIRECTORY})
+      set(output_dir ${IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY})
     endif()
   endif()
   set(CMAKE_${type}_OUTPUT_DIRECTORY ${output_dir} CACHE INTERNAL "Single output directory for building all libraries.")
 endforeach()
 
 #-----------------------------------------------------------------------------
-# MSVTK version number.  An even minor number corresponds to releases.
+# IBAMR version number.  An even minor number corresponds to releases.
 #
-set(MSVTK_MAJOR_VERSION 0)
-set(MSVTK_MINOR_VERSION 1)
-set(MSVTK_BUILD_VERSION 0)
-set(MSVTK_VERSION
-    "${MSVTK_MAJOR_VERSION}.${MSVTK_MINOR_VERSION}.${MSVTK_BUILD_VERSION}")
+set(IBAMR_MAJOR_VERSION 0)
+set(IBAMR_MINOR_VERSION 1)
+set(IBAMR_BUILD_VERSION 0)
+set(IBAMR_VERSION
+    "${IBAMR_MAJOR_VERSION}.${IBAMR_MINOR_VERSION}.${IBAMR_BUILD_VERSION}")
 
-# TODO Rename MSVTK_VERSION into MSVTK_VERSION_STR  -  MSVTK_VERSION should be hexadecimal one
+# TODO Rename IBAMR_VERSION into IBAMR_VERSION_STR  -  IBAMR_VERSION should be hexadecimal one
 
 # Append the library version information to the library target
 # properties.  A parent project may set its own properties and/or may
 # block this.
-if(NOT MSVTK_NO_LIBRARY_VERSION)
-  set(MSVTK_LIBRARY_PROPERTIES ${MSVTK_LIBRARY_PROPERTIES}
-    VERSION "${MSVTK_VERSION}"
-    SOVERSION "${MSVTK_MAJOR_VERSION}.${MSVTK_MINOR_VERSION}"
+if(NOT IBAMR_NO_LIBRARY_VERSION)
+  set(IBAMR_LIBRARY_PROPERTIES ${IBAMR_LIBRARY_PROPERTIES}
+    VERSION "${IBAMR_VERSION}"
+    SOVERSION "${IBAMR_MAJOR_VERSION}.${IBAMR_MINOR_VERSION}"
     )
 endif()
 
@@ -100,121 +144,23 @@ endif()
 # Install directories, used for install rules.
 #
 # TODO Rename with SUBDIR suffix
-if(NOT MSVTK_INSTALL_BIN_DIR)
-  set(MSVTK_INSTALL_BIN_DIR "bin")
+if(NOT IBAMR_INSTALL_BIN_DIR)
+  set(IBAMR_INSTALL_BIN_DIR "bin")
 endif()
-if(NOT MSVTK_INSTALL_LIB_DIR)
-  set(MSVTK_INSTALL_LIB_DIR "lib/MSVTK-${MSVTK_MAJOR_VERSION}.${MSVTK_MINOR_VERSION}")
+if(NOT IBAMR_INSTALL_LIB_DIR)
+  set(IBAMR_INSTALL_LIB_DIR "lib/IBAMR-${IBAMR_MAJOR_VERSION}.${IBAMR_MINOR_VERSION}")
 endif()
-if(NOT MSVTK_INSTALL_INCLUDE_DIR)
-  set(MSVTK_INSTALL_INCLUDE_DIR "include/MSVTK-${MSVTK_MAJOR_VERSION}.${MSVTK_MINOR_VERSION}")
+if(NOT IBAMR_INSTALL_INCLUDE_DIR)
+  set(IBAMR_INSTALL_INCLUDE_DIR "include/IBAMR-${IBAMR_MAJOR_VERSION}.${IBAMR_MINOR_VERSION}")
 endif()
-if(NOT MSVTK_INSTALL_DOC_DIR)
-  set(MSVTK_INSTALL_DOC_DIR "doc")
+if(NOT IBAMR_INSTALL_DOC_DIR)
+  set(IBAMR_INSTALL_DOC_DIR "doc")
 endif()
 
 #-----------------------------------------------------------------------------
 # Update CMake module path
-# Note: FindXXX.cmake script specific to utility should be copied into Utilities/CMake
 #
-set(CMAKE_MODULE_PATH
-  "${CMAKE_CURRENT_SOURCE_DIR}/Utilities/CMake"
-  "${CMAKE_CURRENT_SOURCE_DIR}/CMake"
-  ${CMAKE_MODULE_PATH})
-
-#-----------------------------------------------------------------------------
-# Clear MSVTK_BASE_INCLUDE_DIRS, MSVTK_BASE_LIBRARIES and MSVTK_WRAPPED_LIBRARIES_PYTHONQT
-#
-#set(MSVTK_BASE_LIBRARIES CACHE INTERNAL "MSVTK base libraries" FORCE)
-#set(MSVTK_BASE_INCLUDE_DIRS CACHE INTERNAL "MSVTK includes" FORCE)
-# TODO Shouldn't be required .. was added to CTK before we rely on exported target
-
-# Variable use in MSVTKConfig.cmake.in
-set(MSVTK_LIBRARIES CACHE INTERNAL "MSVTK libraries" FORCE)
-set(MSVTK_PLUGIN_LIBRARIES CACHE INTERNAL "MSVTK plugins" FORCE)
-
-# Used by MSVTKGenerateMSVTKConfig.cmake and also used to reference script from other scripts
-set(MSVTK_CMAKE_DIR ${MSVTK_SOURCE_DIR}/CMake)
-set(MSVTK_CMAKE_UTILITIES_DIR ${MSVTK_SOURCE_DIR}/Utilities/CMake)
-
-#-----------------------------------------------------------------------------
-# CMake Function(s) and Macro(s)
-#
-#include(CMake/MSVTKMacroParseArguments.cmake)
-#include(CMake/MSVTKMacroSetPaths.cmake)
-#include(CMake/MSVTKMacroListFilter.cmake)
-#include(CMake/MSVTKMacroBuildLib.cmake)
-#include(CMake/MSVTKMacroBuildLibWrapper.cmake)
-#include(CMake/MSVTKMacroBuildPlugin.cmake)
-#include(CMake/MSVTKMacroBuildApp.cmake)
-#include(CMake/MSVTKMacroCompilePythonScript.cmake)
-#include(CMake/MSVTKMacroWrapPythonQt.cmake)
-#include(CMake/MSVTKMacroSetupQt.cmake)
-#include(CMake/MSVTKMacroTargetLibraries.cmake) # Import multiple macros
-#include(CMake/MSVTKFunctionExtractOptionNameAndValue.cmake)
-#include(CMake/MSVTKMacroValidateBuildOptions.cmake)
-#include(CMake/MSVTKMacroAddMSVTKLibraryOptions.cmake)
-#include(CMake/MSVTKFunctionGenerateDGraphInput.cmake)
-#include(CMake/MSVTKFunctionGenerateProjectXml.cmake)
-#include(CMake/MSVTKFunctionGeneratePluginManifest.cmake)
-#include(CMake/MSVTKMacroGeneratePluginResourceFile.cmake)
-#include(CMake/MSVTKFunctionCheckCompilerFlags.cmake)
-#include(CMake/MSVTKFunctionGetIncludeDirs.cmake)
-#include(CMake/MSVTKFunctionGetLibraryDirs.cmake)
-#include(CMake/MSVTKFunctionGetGccVersion.cmake)
-
-#-----------------------------------------------------------------------------
-# Qt Designer Plugins
-
-option(BUILD_QTDESIGNER_PLUGINS "Build Qt Designer plugins" OFF)
-if(BUILD_QTDESIGNER_PLUGINS)
-  include(CMake/MSVTKMacroBuildQtDesignerPlugin.cmake)
-endif()
-
-#-----------------------------------------------------------------------------
-# Testing
-#
-option(BUILD_TESTING "Test the project" ON)
-if(BUILD_TESTING)
-  enable_testing()
-  include(CTest)
-  set(CPP_TEST_PATH ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-
-  # DashBoard
-  configure_file(
-    ${MSVTK_SOURCE_DIR}/CTestConfig.cmake
-    ${MSVTK_BINARY_DIR}/CTestConfig.cmake
-    COPYONLY)
-
-  # Setup file for setting custom ctest vars
-  CONFIGURE_FILE(
-    CMake/CTestCustom.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/CTestCustom.cmake
-    @ONLY
-    )
-
-  # Configuration for the CMake-generated test driver
-  set(CMAKE_TESTDRIVER_EXTRA_INCLUDES "
-#include <stdexcept>
-#if defined(WIN32)
-#  pragma warning(disable : 4996)
-#endif")
-  set(CMAKE_TESTDRIVER_BEFORE_TESTMAIN "
-  try
-    {")
-  set(CMAKE_TESTDRIVER_AFTER_TESTMAIN "
-    }
-  catch( std::exception & excp )
-    {
-    fprintf(stderr, \"Test driver caught exception: [%s]\\n\", excp.what());
-    return EXIT_FAILURE;
-    }
-  catch( ... )
-    {
-    printf(\"Exception caught by the test driver\\n\");
-    return EXIT_FAILURE;
-    }")
-endif()
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})
 
 #-----------------------------------------------------------------------------
 # Documentation
@@ -229,23 +175,7 @@ mark_as_advanced(DOCUMENTATION_ARCHIVES_OUTPUT_DIRECTORY)
 #-----------------------------------------------------------------------------
 # Attempt to discover Doxygen so that DOXYGEN_EXECUTABLE is set to an appropriate default value
 #
-FIND_PACKAGE(Doxygen QUIET)
-
-#-----------------------------------------------------------------------------
-# Coverage
-#
-option(WITH_COVERAGE "Enable/Disable coverage" OFF)
-
-#-----------------------------------------------------------------------------
-# Set coverage Flags
-#
-if(WITH_COVERAGE)
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    set(coverage_flags "-g -fprofile-arcs -ftest-coverage -O0 -DNDEBUG")
-    set(COVERAGE_CXX_FLAGS ${coverage_flags})
-    set(COVERAGE_C_FLAGS ${coverage_flags})
-  endif()
-endif()
+find_package(Doxygen QUIET)
 
 #-----------------------------------------------------------------------------
 # Additional CXX/C Flags
@@ -254,109 +184,40 @@ set(ADDITIONAL_C_FLAGS "" CACHE STRING "Additional C Flags")
 mark_as_advanced(ADDITIONAL_C_FLAGS)
 set(ADDITIONAL_CXX_FLAGS "" CACHE STRING "Additional CXX Flags")
 mark_as_advanced(ADDITIONAL_CXX_FLAGS)
+set(ADDITIONAL_F_FLAGS "" CACHE STRING "Additional F Flags")
+mark_as_advanced(ADDITIONAL_F_FLAGS)
 
 #-----------------------------------------------------------------------------
-# Set symbol visibility Flags
+# IBAMR C/CXX Flags
 #
-# MinGW does not export all symbols automatically, so no need to set flags
-#if(CMAKE_COMPILER_IS_GNUCXX AND NOT MINGW)
-#  set(VISIBILITY_CXX_FLAGS "-fvisibility=hidden -fvisibility-inlines-hidden")
-#endif()
-
-#-----------------------------------------------------------------------------
-# MSVTK C/CXX Flags
-#
-set(MSVTK_C_FLAGS "${CMAKE_C_FLAGS_INIT} ${COVERAGE_C_FLAGS} ${ADDITIONAL_C_FLAGS}")
-set(MSVTK_CXX_FLAGS "${CMAKE_CXX_FLAGS_INIT} ${VISIBILITY_CXX_FLAGS} ${COVERAGE_CXX_FLAGS} ${ADDITIONAL_CXX_FLAGS}")
+set(IBAMR_C_FLAGS "${CMAKE_C_FLAGS_INIT} ${ADDITIONAL_C_FLAGS}")
+set(IBAMR_CXX_FLAGS "${CMAKE_CXX_FLAGS_INIT} ${VISIBILITY_CXX_FLAGS} ${ADDITIONAL_CXX_FLAGS}")
+set(IBAMR_F_FLAGS "${CMAKE_F_FLAGS_INIT} ${VISIBILITY_F_FLAGS} ${ADDITIONAL_F_FLAGS}")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
   set(cflags "-Wall -Wextra -Wpointer-arith -Winvalid-pch -Wcast-align -Wwrite-strings -D_FORTIFY_SOURCE=2")
 
-  #MSVTKFunctionCheckCompilerFlags("-fdiagnostics-show-option" cflags)
-  #MSVTKFunctionCheckCompilerFlags("-Wl,--no-undefined" cflags)
-
-  #MSVTKFunctionGetGccVersion(${CMAKE_CXX_COMPILER} GCC_VERSION)
-  # With older version of gcc supporting the flag -fstack-protector-all, an extra dependency to libssp.so
-  # is introduced. If gcc is smaller than 4.4.0 and the build type is Release let's not include the flag.
-  # Doing so should allow to build package made for distribution using older linux distro.
-  #if(${GCC_VERSION} VERSION_GREATER "4.4.0" OR (CMAKE_BUILD_TYPE STREQUAL "Debug" AND ${GCC_VERSION} VERSION_LESS "4.4.0"))
-  #  MSVTKFunctionCheckCompilerFlags("-fstack-protector-all" cflags)
-  #endif()
   if(MINGW)
     # suppress warnings about auto imported symbols
-    set(MSVTK_CXX_FLAGS "-Wl,--enable-auto-import ${MSVTK_CXX_FLAGS}")
+    set(IBAMR_CXX_FLAGS "-Wl,--enable-auto-import ${IBAMR_CXX_FLAGS}")
   endif()
 
-  set(MSVTK_C_FLAGS "${cflags} ${MSVTK_C_FLAGS}")
-  set(MSVTK_CXX_FLAGS "${cflags} -Woverloaded-virtual -Wold-style-cast -Wstrict-null-sentinel -Wsign-promo ${MSVTK_CXX_FLAGS}")
+  set(IBAMR_C_FLAGS "${cflags} ${IBAMR_C_FLAGS}")
+  set(IBAMR_CXX_FLAGS "${cflags} -Woverloaded-virtual -Wold-style-cast -Wstrict-null-sentinel -Wsign-promo ${IBAMR_CXX_FLAGS}")
 endif()
 
 if(MSVC)
   set(msvc_suppressed_warnings
     "/wd4290" # C++ exception specification ignored except to indicate a function is not __declspec(nothrow)
   )
-  set(MSVTK_CXX_FLAGS "${MSVTK_CXX_FLAGS} ${msvc_suppressed_warnings}")
+  set(IBAMR_CXX_FLAGS "${IBAMR_CXX_FLAGS} ${msvc_suppressed_warnings}")
 endif()
 
-add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE)
-
-#-----------------------------------------------------------------------------
-# QT
-#
-include(CMake/msvMacroSetupQt.cmake)
-msvMacroSetupQt()
-
-# Update MSVTK_BASE_LIBRARIES with QT libraries
-#if(QT4_FOUND)
-#  set(MSVTK_BASE_LIBRARIES ${MSVTK_BASE_LIBRARIES} ${QT_LIBRARIES} CACHE INTERNAL "MSVTK base libraries" FORCE)
-#endif()
-
-#-----------------------------------------------------------------------------
-# MSVTK Libraries - Use ON or OFF to indicate if the library should be built by default
-#
-#set(MSVTK_LIBS
-#  Core:ON
-#  Widgets:ON
-#  )
-
-#-----------------------------------------------------------------------------
-# MSVTK Plugins - Use ON or OFF to indicate if the plugin should be built by default
-#
-#set(MSVTK_PLUGINS
-#  )
-
-#-----------------------------------------------------------------------------
-# MSVTK Applications - Use ON or OFF to indicate if the application should be built by default
-#
-#set(MSVTK_APPLICATIONS
-#  )
-
-#-----------------------------------------------------------------------------
-# To make options show up in both MSVTK-SuperBuild and MSVTK regular build, let's add them
-# before the SuperBuild script is included
-#
+add_definitions(-D_CRT_NONSTDC_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_DEPRECATE -DOMPI_SKIP_MPICXX)
 
 # Let's mark as advanced some default properties
 mark_as_advanced(CMAKE_INSTALL_PREFIX)
 mark_as_advanced(DART_TESTING_TIMEOUT)
-
-# KWStyle
-option(MSVTK_USE_KWSTYLE     "Enable sourcecode-based style tests." OFF)
-#mark_as_advanced(MSVTK_USE_KWSTYLE)
-
-#---------------------------------------------------------------------------
-# Will contain a list of sub-directory without option ON or OFF
-#
-set(MSVTK_PLUGINS_SUBDIRS )
-set(MSVTK_APPLICATIONS_SUBDIRS
-  ECG
-  HAI
-  CAF
-)
-
-option(MSVTK_APP_ECG "ECG application to demonstrate vtkPipeline architecture and vtkButtons" ON)
-option(MSVTK_APP_HAI "HAI application to demonstrate vtkPipeline architecture and composite data set" ON)
-option(MSVTK_APP_CAF "CAF application to demonstrate the multiscale and simulation capabilities" ON)
 
 #-----------------------------------------------------------------------------
 # Prerequisites
@@ -369,94 +230,28 @@ endif()
 #-----------------------------------------------------------------------------
 # Superbuild script
 #
-
-if(MSVTK_SUPERBUILD)
+if(IBAMR_SUPERBUILD)
   add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/CMake/SuperBuild")
   return()
 endif()
 
 #-----------------------------------------------------------------------------
-# VTK
-#-----------------------------------------------------------------------------
-find_package(VTK REQUIRED)
-if(NOT VTK_USE_QVTK)
-  message(FATAL_ERROR "error: VTK was not configured to use QT, you probably need "
-                      "to recompile it with VTK_USE_GUISUPPORT ON, VTK_USE_QVTK ON, "
-                      "DESIRED_QT_VERSION 4 and QT_QMAKE_EXECUTABLE set appropriatly. "
-                      "Note that Qt >= ${Slicer_REQUIRED_QT_VERSION} is *required*")
+# IBAMR_SUPERBUILD_BINARY_DIR
+
+# If IBAMR_SUPERBUILD_BINARY_DIR isn't defined, it means IBAMR is *NOT* build using Superbuild.
+# In that specific case, IBAMR_SUPERBUILD_BINARY_DIR should default to IBAMR_BINARY_DIR
+if(NOT DEFINED IBAMR_SUPERBUILD_BINARY_DIR)
+  set(IBAMR_SUPERBUILD_BINARY_DIR ${IBAMR_BINARY_DIR})
 endif()
-include(${VTK_USE_FILE})
-
-#-----------------------------------------------------------------------------
-# CTK
-#-----------------------------------------------------------------------------
-find_package(CTK REQUIRED)
-include(${CTK_USE_FILE})
-
-#-----------------------------------------------------------------------------
-# MSVTK_SUPERBUILD_BINARY_DIR
-
-# If MSVTK_SUPERBUILD_BINARY_DIR isn't defined, it means MSVTK is *NOT* build using Superbuild.
-# In that specific case, MSVTK_SUPERBUILD_BINARY_DIR should default to MSVTK_BINARY_DIR
-if(NOT DEFINED MSVTK_SUPERBUILD_BINARY_DIR)
-  set(MSVTK_SUPERBUILD_BINARY_DIR ${MSVTK_BINARY_DIR})
-endif()
-
-#-----------------------------------------------------------------------------
-# Configure files with settings
-#
-
-#CONFIGURE_FILE(${MSVTK_SOURCE_DIR}/UseMSVTK.cmake.in
-#              ${MSVTK_SUPERBUILD_BINARY_DIR}/UseMSVTK.cmake COPYONLY IMMEDIATE)
 
 #-----------------------------------------------------------------------------
 # Set C/CXX Flags
 #
-set(CMAKE_CXX_FLAGS ${MSVTK_CXX_FLAGS} CACHE STRING "CMake C Flags" FORCE)
-set(CMAKE_C_FLAGS ${MSVTK_C_FLAGS} CACHE STRING "CMake CXX Flags" FORCE)
+set(CMAKE_CXX_FLAGS ${IBAMR_CXX_FLAGS} CACHE STRING "CMake C Flags" FORCE)
+set(CMAKE_C_FLAGS ${IBAMR_C_FLAGS} CACHE STRING "CMake CXX Flags" FORCE)
+set(CMAKE_F_FLAGS ${IBAMR_F_FLAGS} CACHE STRING "CMake F Flags" FORCE)
 
 #-----------------------------------------------------------------------------
-# Set the header template which defines custom export/import macros
-# for shared libraries
+# Add IBTK library subdirectories
 #
-set(MSVTK_EXPORT_HEADER_TEMPLATE "${MSVTK_SOURCE_DIR}/Libs/msvExport.h.in")
-
-#-----------------------------------------------------------------------------
-# Add MSVTK library subdirectories
-#
-add_subdirectory(Libs)
-
-#-----------------------------------------------------------------------------
-# Add MSVTK plugin subdirectories
-#
-foreach(plugin ${MSVTK_PLUGINS_SUBDIRS})
-  if(MSVTK_PLUGIN_${plugin})
-    add_subdirectory(Plugins/${plugin})
-  endif()
-endforeach()
-
-#-----------------------------------------------------------------------------
-# Add MSVTK application subdirectories
-#
-foreach(app ${MSVTK_APPLICATIONS_SUBDIRS})
-  IF (MSVTK_APP_${app})
-    add_subdirectory(Applications/${app})
-  endif()
-endforeach()
-
-#-----------------------------------------------------------------------------
-# Add MSVTK examples subdirectories
-#
-add_subdirectory(Examples)
-
-#-----------------------------------------------------------------------------
-# Style Checking configuration
-#
-if(MSVTK_USE_KWSTYLE)
-  include(Utilities/KWStyle/KWStyle.cmake)
-endif()
-
-#---------------------------------------------------------------------------
-# Documentation
-#
-add_subdirectory( Utilities/Documentation )
+add_subdirectory(ibtk)

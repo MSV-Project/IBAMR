@@ -39,7 +39,7 @@ endif()
 set(SAMRAI_DEPENDENCIES "SILO;OPENMPI;HDF5")
 
 # Include dependent projects if any
-msvMacroCheckExternalProjectDependency(SAMRAI)
+CheckExternalProjectDependency(SAMRAI)
 set(proj SAMRAI)
 
 if(NOT DEFINED SAMRAI_DIR)

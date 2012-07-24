@@ -2,7 +2,7 @@
 # generalized Laplace operator discretization yields the expected order
 # of accuracy.
 
-set(TEST_NAME VCLaplace2d)
+set(TEST_NAME VCLaplace)
 
 if(IBTK_BUILD_2D_LIBS)
   add_executable(${TEST_NAME}2d main.C)

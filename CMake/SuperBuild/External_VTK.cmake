@@ -43,7 +43,7 @@ endif()
 
 set(VTK_DEPENDENCIES "")
 # Include dependent projects if any
-msvMacroCheckExternalProjectDependency(VTK)
+CheckExternalProjectDependency(VTK)
 set(proj VTK)
 
 if(NOT DEFINED VTK_DIR)

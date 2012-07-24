@@ -24,7 +24,7 @@
 #! Doing so allows to keep the external project dependency system happy.
 #!
 #! \ingroup CMakeUtilities
-macro(msvMacroEmptyExternalProject proj dependencies)
+macro(EmptyExternalProject proj dependencies)
 
   ExternalProject_Add(${proj}
     SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}

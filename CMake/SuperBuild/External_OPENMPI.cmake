@@ -39,7 +39,7 @@ endif()
 set(OPENMPI_DEPENDENCIES "")
 
 # Include dependent projects if any
-msvMacroCheckExternalProjectDependency(OPENMPI)
+CheckExternalProjectDependency(OPENMPI)
 set(proj OPENMPI)
 
 if(NOT DEFINED OPENMPI_DIR)

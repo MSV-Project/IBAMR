@@ -37,7 +37,7 @@ endif()
 set(HYPRE_DEPENDENCIES "OPENMPI;LAPACK")
 
 # Include dependent projects if any
-msvMacroCheckExternalProjectDependency(HYPRE)
+CheckExternalProjectDependency(HYPRE)
 set(proj HYPRE)
 
 if(NOT DEFINED HYPRE_DIR)
@@ -57,7 +57,7 @@ if(NOT DEFINED HYPRE_DIR)
     SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
     BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}/src
     PREFIX ${proj}${ep_suffix}
-    URL http://ftp.mcs.anl.gov/pub/petsc/externalpackages/hypre-2.6.0b.tar.gz
+    URL http://ftp.mcs.anl.gov/pub/petsc/externalpackages/hypre-2.8.0b.tar.gz
     UPDATE_COMMAND ""
     INSTALL_COMMAND make install
     CONFIGURE_COMMAND ./configure

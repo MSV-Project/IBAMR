@@ -39,7 +39,7 @@ endif()
 set(SILO_DEPENDENCIES "")
 
 # Include dependent projects if any
-msvMacroCheckExternalProjectDependency(SILO)
+CheckExternalProjectDependency(SILO)
 set(proj SILO)
 
 if(NOT DEFINED SILO_DIR)

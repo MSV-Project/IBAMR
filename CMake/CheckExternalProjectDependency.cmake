@@ -1,6 +1,6 @@
 ###########################################################################
 #
-#  Library: MSVTK
+#  Library: IBAMR
 #
 #  Copyright (c) Kitware Inc.
 #
@@ -18,7 +18,7 @@
 #
 ###########################################################################
 
-macro(msvMacroCheckExternalProjectDependency proj)
+macro(CheckExternalProjectDependency proj)
   # Set indent variable if needed
   if(NOT DEFINED __indent)
     set(__indent "")
@@ -49,7 +49,7 @@ macro(msvMacroCheckExternalProjectDependency proj)
   # Include dependencies
   foreach(dep ${${proj}_DEPENDENCIES})
     if(NOT External_${dep}_FILE_INCLUDED)
-      include(${MSVTK_SOURCE_DIR}/CMake/SuperBuild/External_${dep}.cmake)
+      include(${IBAMR_SOURCE_DIR}/CMake/SuperBuild/External_${dep}.cmake)
     endif()
   endforeach()
 

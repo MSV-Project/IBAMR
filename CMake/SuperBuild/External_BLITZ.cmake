@@ -39,7 +39,7 @@ endif()
 set(BLITZ_DEPENDENCIES "")
 
 # Include dependent projects if any
-msvMacroCheckExternalProjectDependency(BLITZ)
+CheckExternalProjectDependency(BLITZ)
 set(proj BLITZ)
 
 if(NOT DEFINED BLITZ_DIR)

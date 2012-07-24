@@ -38,7 +38,7 @@ endif()
 set(LAPACK_DEPENDENCIES "")
 
 # Include dependent projects if any
-msvMacroCheckExternalProjectDependency(LAPACK)
+CheckExternalProjectDependency(LAPACK)
 set(proj LAPACK)
 
 if(NOT DEFINED LAPACK_DIR)

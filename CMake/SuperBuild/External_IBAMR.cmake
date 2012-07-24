@@ -44,7 +44,7 @@ endif()
 set(IBAMR_DEPENDENCIES "OPENMPI;SAMRAI;HDF5;SILO;BLITZ;PETSC;HYPRE")
 
 # Include dependent projects if any
-msvMacroCheckExternalProjectDependency(IBAMR)
+CheckExternalProjectDependency(IBAMR)
 set(proj IBAMR)
 
 if(NOT DEFINED IBAMR_DIR)
