@@ -49,7 +49,7 @@ macro(CheckExternalProjectDependency proj)
   # Include dependencies
   foreach(dep ${${proj}_DEPENDENCIES})
     if(NOT External_${dep}_FILE_INCLUDED)
-      include(${IBAMR_SOURCE_DIR}/CMake/SuperBuild/External_${dep}.cmake)
+      include(${IBTK_SOURCE_DIR}/CMake/SuperBuild/External_${dep}.cmake)
     endif()
   endforeach()
 

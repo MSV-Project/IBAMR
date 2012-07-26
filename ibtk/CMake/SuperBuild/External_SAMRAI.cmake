@@ -54,15 +54,15 @@ if(NOT DEFINED SAMRAI_DIR)
   endif()
   
 #   message(STATUS "Downloading SAMRAI-IBAMR patch")
-  file(DOWNLOAD http://ibamr.googlecode.com/files/SAMRAI-v2.4.4-patch-111217.gz
-	  ${CMAKE_CURRENT_BINARY_DIR}/${proj}${ep_suffix}/src/SAMRAI-v2.4.4-patch-111217.gz 
-	  STATUS _out)
-  list(GET _out 0 _out_error)
-  list(GET _out 1 _out_msg)
-  
-  if(NOT ${_out_error} EQUAL "0")
-    message(FATAL_ERROR "Error downloading SAMRAY-IBAMR patch: ${_out_msg}")
-  endif()
+#   file(DOWNLOAD http://ibamr.googlecode.com/files/SAMRAI-v2.4.4-patch-111217.gz
+# 	  ${CMAKE_CURRENT_BINARY_DIR}/${proj}${ep_suffix}/src/SAMRAI-v2.4.4-patch-111217.gz 
+# 	  STATUS _out)
+#   list(GET _out 0 _out_error)
+#   list(GET _out 1 _out_msg)
+#   
+#   if(NOT ${_out_error} EQUAL "0")
+#     message(FATAL_ERROR "Error downloading SAMRAY-IBAMR patch: ${_out_msg}")
+#   endif()
 
   ExternalProject_Add(${proj}
     SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
