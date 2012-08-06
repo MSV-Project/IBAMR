@@ -36,7 +36,7 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 #ifndef included_IBAMR_prefix_config
-#include <IBAMR_prefix_config.h>
+// #include <IBAMR_prefix_config.h>
 #define included_IBAMR_prefix_config
 #endif
 

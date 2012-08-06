@@ -20,5 +20,6 @@ set(qd_SRCS
   src/util.cpp
 )
 
+SET(CMAKE_Fortran_MODULE_DIRECTORY ${IBTK_BINARY_DIR}/bin)
 set(CMAKE_Fortran_FLAGS ${CMAKE_Fortran_FLAGS} -ffree-form)
 add_library(qd ${qd_SRCS})

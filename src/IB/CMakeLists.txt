@@ -19,7 +19,7 @@ set(kit_SRCS
   IBHierarchyIntegrator.C
   IBMethod.C
   IBMethodPostProcessStrategy.C
-  IBFEMethod.C
+#   IBFEMethod.C
   IBRodForceSpec.C
   IBLagrangianForceStrategy.C
   IBTargetPointForceSpecFactory.C

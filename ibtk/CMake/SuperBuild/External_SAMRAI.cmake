@@ -53,29 +53,25 @@ if(NOT DEFINED SAMRAI_DIR)
       -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
   endif()
   
-#   message(STATUS "Downloading SAMRAI-IBAMR patch")
-#   file(DOWNLOAD http://ibamr.googlecode.com/files/SAMRAI-v2.4.4-patch-111217.gz
-# 	  ${CMAKE_CURRENT_BINARY_DIR}/${proj}${ep_suffix}/src/SAMRAI-v2.4.4-patch-111217.gz 
-# 	  STATUS _out)
-#   list(GET _out 0 _out_error)
-#   list(GET _out 1 _out_msg)
-#   
-#   if(NOT ${_out_error} EQUAL "0")
-#     message(FATAL_ERROR "Error downloading SAMRAY-IBAMR patch: ${_out_msg}")
-#   endif()
+  set(IBTKSuperBuild_CMAKE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+  set(Samrai_source ${IBTK_BINARY_DIR}/SuperBuild/${proj})
+
+  configure_file(${IBTKSuperBuild_CMAKE_SOURCE_DIR}/samrai_patch_step.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/samrai_patch_step.cmake
+    @ONLY)
+    
+  set(Samrai_PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/samrai_patch_step.cmake)
 
   ExternalProject_Add(${proj}
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
-    BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build
+    SOURCE_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
+    BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build
     PREFIX ${proj}${ep_suffix}
-    URL /home/rortiz/Downloads/SAMRAI-v2.4.4.tar.gz
+    URL ${SAMRAI_URL}/${SAMRAI_GZ}
+    URL_MD5 ${SAMRAI_MD5}
     UPDATE_COMMAND ""
     INSTALL_COMMAND make install 
-    PATCH_COMMAND gunzip -c 
-	${CMAKE_CURRENT_BINARY_DIR}/${proj}${ep_suffix}/src/SAMRAI-v2.4.4-patch-111217.gz 
-	| patch -p2 &&
-	./source/scripts/includes --link
-    CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/${proj}/configure
+    PATCH_COMMAND ${Samrai_PATCH_COMMAND}
+    CONFIGURE_COMMAND ${IBTK_BINARY_DIR}/SuperBuild/${proj}/configure
       "CFLAGS=${ep_common_c_flags}"
       "CXXFLAGS=${ep_common_cxx_flags}"
       "FCFLAGS=${CMAKE_F_FLAGS}"
@@ -100,18 +96,24 @@ if(NOT DEFINED SAMRAI_DIR)
       --with-dot
       --enable-implicit-template-instantiation 
       --disable-deprecated
+#     LOG_DOWNLOAD 1
+    LOG_DOWNLOAD 1
     LOG_CONFIGURE 1
+    LOG_TEST 1
     LOG_BUILD 1
     LOG_INSTALL 1
     DEPENDS
       ${SAMRAI_DEPENDENCIES}
     )
-  set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
+  set(${proj}_DIR ${IBTK_BINARY_DIR}/${proj}-build)
 
 else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_DIR:PATH=${SAMRAI_DIR})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_DIR:PATH=${ep_install_dir} )
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_INCLUDE_PATH:PATH=${ep_install_dir}/include)
 
-
+list(APPEND INCLUDE_PATHS ${ep_install_dir}/include)
+list(APPEND EXTERNAL_LIBRARIES -lSAMRAI)
+set(SAMRAI_INCLUDE_PATH ${ep_install_dir}/include PARENT_SCOPE)

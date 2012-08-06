@@ -1,32 +1,22 @@
-set(KIT boundary)
-set(UKIT BOUNDARY)
+set(KIT adv_diff)
 
-set(kit_SRCS cf_interface/CartCellDoubleLinearCFInterpolation.C
-  cf_interface/CoarseFineBoundaryRefinePatchStrategy.C
-  cf_interface/CartSideDoubleQuadraticCFInterpolation.C
-  cf_interface/CartCellDoubleQuadraticCFInterpolation.C
-  physical_boundary/muParserRobinBcCoefs.C
-  physical_boundary/CartCellRobinPhysBdryOp.C
-  physical_boundary/CartExtrapPhysBdryOp.C
-  physical_boundary/CartSideRobinPhysBdryOp.C
-  physical_boundary/ExtendedRobinBcCoefStrategy.C
-  physical_boundary/PhysicalBoundaryUtilities.C
-  HierarchyGhostCellInterpolation.C
+set(kit_SRCS 
+  AdvDiffHypPatchOps.C
+  AdvDiffHierarchyIntegrator.C
   )
-
-set(kit_SRCS2D 
-  ${kit_SRCS} 
-  physical_boundary/fortran/cartphysbdryop2d.f
-  cf_interface/fortran/linearcfinterpolation2d.f
-  cf_interface/fortran/quadcfinterpolation2d.f
-  )
-
+    
+add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} fortran/adv_diff_consdiff3d.f.m4)
 set(kit_SRCS3D 
-  ${kit_SRCS} 
-  physical_boundary/fortran/cartphysbdryop3d.f
-  cf_interface/fortran/linearcfinterpolation3d.f
-  cf_interface/fortran/quadcfinterpolation3d.f
+  ${kit_SRCS}
+  ${FORTRAN_SRCS3D}
   )
 
-include(${IBTK_MODULE_PATH}/KitCommonBlock.cmake)  
- 
+if(IBAMR_BUILD_2D_LIBS)
+  add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} fortran/adv_diff_consdiff2d.f.m4)
+  set(kit_SRCS2D 
+    ${kit_SRCS}
+    ${FORTRAN_SRCS2D}
+    )
+endif()
+
+include(${IBAMR_MODULE_PATH}/KitCommonBlock.cmake)  

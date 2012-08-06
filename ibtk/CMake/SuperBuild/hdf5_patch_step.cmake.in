@@ -1,0 +1,5 @@
+
+# needs to happen regardless of platform.
+EXECUTE_PROCESS(
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/hdf5Patches/CMakeLists.txt" "@Hdf5_source@/CMakeLists.txt" OUTPUT_QUIET
+  )

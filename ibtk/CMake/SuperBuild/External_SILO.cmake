@@ -54,13 +54,14 @@ if(NOT DEFINED SILO_DIR)
 #     message(STATUS "Adding project:${proj}")
 
   ExternalProject_Add(${proj}
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
-    BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build
+    SOURCE_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
+    BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build
     PREFIX ${proj}${ep_suffix}
-    URL /home/rortiz/Downloads/silo-4.8-bsd.tar.gz
+    URL ${SILO_URL}/${SILO_GZ}
+    URL_MD5 ${SILO_MD5}
     UPDATE_COMMAND ""
     INSTALL_COMMAND make install
-    CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/${proj}/configure
+    CONFIGURE_COMMAND ${IBTK_BINARY_DIR}/SuperBuild/${proj}/configure
       "CFLAGS=${ep_common_c_flags}"
       "CXXFLAGS=${ep_common_cxx_flags}"
       "FCFLAGS=${CMAKE_F_FLAGS}"
@@ -73,18 +74,22 @@ if(NOT DEFINED SILO_DIR)
       --prefix=${ep_install_dir}
       --disable-silex
       --enable-shared
+    LOG_DOWNLOAD 1
     LOG_CONFIGURE 1
+    LOG_TEST 1
     LOG_BUILD 1
     LOG_INSTALL 1
     DEPENDS
       ${SILO_DEPENDENCIES}
     )
-  set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
+  set(${proj}_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build)
 
 else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSILO_DIR:PATH=${SILO_DIR})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSILO_DIR:PATH=${ep_install_dir})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSILO_INCLUDE_PATH:PATH=${ep_install_dir}/include)
 
-
+list(APPEND INCLUDE_PATHS ${ep_install_dir}/include)
+list(APPEND EXTERNAL_LIBRARIES -lsilo)

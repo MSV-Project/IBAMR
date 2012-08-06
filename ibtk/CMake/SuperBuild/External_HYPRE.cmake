@@ -54,10 +54,11 @@ if(NOT DEFINED HYPRE_DIR)
 #     message(STATUS "Adding project:${proj}")
 
   ExternalProject_Add(${proj}
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
-    BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}/src
+    SOURCE_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
+    BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}/src
     PREFIX ${proj}${ep_suffix}
-    URL http://ftp.mcs.anl.gov/pub/petsc/externalpackages/hypre-2.8.0b.tar.gz
+    URL ${HYPRE_URL}/${HYPRE_GZ}
+    URL_MD5 ${HYPRE_MD5}
     UPDATE_COMMAND ""
     INSTALL_COMMAND make install
     CONFIGURE_COMMAND ./configure
@@ -68,6 +69,7 @@ if(NOT DEFINED HYPRE_DIR)
       "CXXFLAGS=${ep_common_cxx_flags}"
       "FCFLAGS=${CMAKE_F_FLAGS}"
       "FFLAGS=${CMAKE_F_FLAGS}"
+      "LDFLAGS=-L${ep_install_dir}/lib -Wl,-rpath,${ep_install_dir}/lib"
       --libdir=${ep_install_dir}/lib
       --prefix=${ep_install_dir}
       --with-MPI-include=${ep_install_dir}/include
@@ -80,18 +82,23 @@ if(NOT DEFINED HYPRE_DIR)
       --without-mli 
       --without-fei 
       --without-superlu
+    LOG_DOWNLOAD 1
     LOG_CONFIGURE 1
+    LOG_TEST 1
     LOG_BUILD 1
     LOG_INSTALL 1
     DEPENDS
       ${HYPRE_DEPENDENCIES}
     )
-  set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}/src)
+  set(${proj}_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}/src)
 
 else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DHYPRE_DIR:PATH=${HYPRE_DIR})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS 
+  -DHYPRE_DIR:PATH=${HYPRE_DIR}
+  -DHYPRE_INCLUDE_PATH:PATH=${ep_install_dir}/include)
 
-
+list(APPEND INCLUDE_PATHS ${ep_install_dir}/include)
+list(APPEND EXTERNAL_LIBRARIES -lHYPRE)

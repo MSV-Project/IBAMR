@@ -1,0 +1,9 @@
+
+EXECUTE_PROCESS(
+  COMMAND patch -p2 -i "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/samraiPatches/SAMRAI-v2.4.4-patch-111217" OUTPUT_QUIET
+  )
+
+
+EXECUTE_PROCESS(
+  COMMAND cd @Samrai_source@ && includes --link OUTPUT_QUIET
+  )

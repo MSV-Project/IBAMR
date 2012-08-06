@@ -20,19 +20,85 @@
 
 cmake_minimum_required(VERSION 2.8.6)
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 project(IBAMR CXX Fortran)
-#-----------------------------------------------------------------------------
-
-# ----------------------------------------------------------------------------
-# Specify IBTK library directory (default: current dir)
-#
-set(IBTK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ibtk CACHE FILEPATH "Path to IBTK.")
+# -----------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------
+# Set option to optionaly build 2d library as well (by default the 
+# 3D library is built)
+# -----------------------------------------------------------------------------
+option(IBAMR_BUILD_2D_LIBS "Build the optional 2D libraries." OFF)
+
+# -----------------------------------------------------------------------------
+# IBAMR requires IBTK
+# -----------------------------------------------------------------------------
+set(IBTK_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/ibtk" CACHE PATH "Path to IBTK instalation.")
+set(IBTK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ibtk" CACHE PATH "Path to IBTK sources.")
+set(IBTK_INCLUDE_PATH "${IBTK_DIR}/include" CACHE PATH "IBTK include paths.")
+set(IBTK_EXTERNAL_LIBRARIES CACHE INTERNAL "IBTK external libraries.")
+set(IBTK_SUPERBUILD_DIR ${IBTK_BIN_DIR}/SuperBuild)
+set(SAMRAI_FORTDIR ${IBTK_SUPERBUILD_DIR}/include)
+
+if(IBAMR_BUILD_2D_LIBS)
+  set(IBTK_BUILD_2D_LIBS ON CACHE BOOL FORCE)
+endif()
+
+add_subdirectory(ibtk)
+
+set(IBTK_LIBRARIES3D   
+  -libtkfortran3D 
+  -libtkpatch_data3D 
+  -libtkrefine_ops3D 
+  -libtksolvers3D 
+  -libtkmath3D 
+  -libtkboundary3D
+  -libtkcoarsen_ops3D
+  -libtkutilities3D
+  -libtklagrangian3D
+  -lmuParser
+  -lqd
+  )
+  
+if(IBAMR_BUILD_2D_LIBS)
+  set(IBTK_LIBRARIES2D 
+    -libtkfortran2D 
+    -libtkpatch_data2D 
+    -libtkrefine_ops2D 
+    -libtksolvers2D 
+    -libtkmath2D 
+    -libtkboundary2D
+    -libtkcoarsen_ops2D
+    -libtkutilities2D
+    -libtklagrangian2D
+    -lmuParser  
+    -lqd
+    )
+endif()
+
+# message("SAMRAI_FORTDIR = ${SAMRAI_FORTDIR}")
+message("IBTK_SUPERBUILD_DIR = ${IBTK_SUPERBUILD_DIR}")
+# # message("IBTK_LIBRARIES3D = ${IBTK_LIBRARIES3D}")
+# message("IBTK_BIN_DIR = ${IBTK_BIN_DIR}")
+# message("IBTK_EXTERNAL_LIBRARIES = ${IBTK_EXTERNAL_LIBRARIES}")
+# message("IBTK_INCLUDE_PATH = ${IBTK_INCLUDE_PATH}")
+
+# ----------------------------------------------------------------------------
+# Set IBAMR include directories
+# ----------------------------------------------------------------------------
+include_directories(${IBTK_INCLUDE_PATH} include)
+  
+set(CMAKE_EXE_LINKER_FLAGS 
+  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_SUPERBUILD_DIR}/lib -Wl,--export-dynamic")
+set(CMAKE_EXE_LINKER_FLAGS 
+  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_SUPERBUILD_DIR}/PETSC/build/lib")
+set(CMAKE_EXE_LINKER_FLAGS 
+  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_BIN_DIR}/lib")
+  
+# -----------------------------------------------------------------------------
 # Add options: USING_LARGE_GHOST_CELL_WIDTH (default 0) and 
-# 	USING_EXPENSIVE_CF_INTERPOLATION (default 0)
-#
+# USING_EXPENSIVE_CF_INTERPOLATION (default 0)
+# -----------------------------------------------------------------------------
 option(ENABLE_LARGE_GHOST_CELL_WIDTH "This enables the use of large ghost 
   cell regions (this feature must be enabled for certain types of physical 
   boundary condition routines to function properly)" OFF)
@@ -66,8 +132,9 @@ endif()
 # ----------------------------------------------------------------------------
 # Set subdomain indices option
 #-----------------------------------------------------------------------------
-option(ENABLE_SUBDOMAIN_INDICES "Enable the use of subdomain indices for 
-  standard IB mechanical elements" OFF) 
+option(ENABLE_SUBDOMAIN_INDICES 
+  "Enable the use of subdomain indices for standard IB mechanical elements" 
+  OFF) 
 if(ENABLE_SUBDOMAIN_INDICES)
   add_definitions(-DENABLE_SUBDOMAIN_INDICES)
   message(STATUS "Subdomain indices are ENABLED!")
@@ -77,7 +144,7 @@ endif()
 
 #-----------------------------------------------------------------------------
 # Library mode: SHARED (default) or STATIC
-#
+#-----------------------------------------------------------------------------
 set(IBAMR_LIBRARY_MODE "SHARED")
 
 option(BUILD_SHARED_LIBS "Build IBAMR with shared libraries." ON)
@@ -86,7 +153,7 @@ mark_as_advanced(BUILD_SHARED_LIBS)
 
 #-----------------------------------------------------------------------------
 # Set a default build type if none was specified
-#
+#-----------------------------------------------------------------------------
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to 'Debug' as none was specified.")
   set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
@@ -95,31 +162,14 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "MinSizeRel" "RelWithDebInfo")
 endif()
 
-#-----------------------------------------------------------------------------
-# Output directories.
-#
-foreach(type LIBRARY RUNTIME ARCHIVE)
-  # Make sure the directory exists
-  if(DEFINED IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY
-     AND NOT EXISTS ${IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY})
-    message(FATAL_ERROR "IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY is set to a non-existing directory [${IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY}]")
-  endif()
-endforeach()
-
-# -----------------------------------------------------------------------------
-# Set option to optionaly build 2d library as well (by default 
-# the 3D library is built)
-#
-option(IBAMR_BUILD_2D_LIBS "Build the optional 2D libraries." OFF)
-
 # -----------------------------------------------------------------------------
 # Path to IBAMR cmake modules
-#
+#-----------------------------------------------------------------------------
 set(IBAMR_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 
 #-----------------------------------------------------------------------------
 # IBAMR version number.  An even minor number corresponds to releases.
-#
+#-----------------------------------------------------------------------------
 set(IBAMR_MAJOR_VERSION 0)
 set(IBAMR_MINOR_VERSION 1)
 set(IBAMR_BUILD_VERSION 0)
@@ -138,16 +188,18 @@ endif()
 
 #-----------------------------------------------------------------------------
 # Install directories, used for install rules.
-#
+#-----------------------------------------------------------------------------
 # TODO Rename with SUBDIR suffix
 if(NOT IBAMR_INSTALL_BIN_DIR)
   set(IBAMR_INSTALL_BIN_DIR "bin")
 endif()
 if(NOT IBAMR_INSTALL_LIB_DIR)
-  set(IBAMR_INSTALL_LIB_DIR "lib/IBAMR-${IBAMR_MAJOR_VERSION}.${IBAMR_MINOR_VERSION}")
+  set(IBAMR_INSTALL_LIB_DIR 
+    "lib/IBAMR-${IBAMR_MAJOR_VERSION}.${IBAMR_MINOR_VERSION}")
 endif()
 if(NOT IBAMR_INSTALL_INCLUDE_DIR)
-  set(IBAMR_INSTALL_INCLUDE_DIR "include/IBAMR-${IBAMR_MAJOR_VERSION}.${IBAMR_MINOR_VERSION}")
+  set(IBAMR_INSTALL_INCLUDE_DIR 
+    "include/IBAMR-${IBAMR_MAJOR_VERSION}.${IBAMR_MINOR_VERSION}")
 endif()
 if(NOT IBAMR_INSTALL_DOC_DIR)
   set(IBAMR_INSTALL_DOC_DIR "doc")
@@ -156,12 +208,13 @@ endif()
 #-----------------------------------------------------------------------------
 # Update CMake module path
 #
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH "${IBAMR_MODULE_PATH}" ${CMAKE_MODULE_PATH})
 
 #-----------------------------------------------------------------------------
 # Documentation
 #
-option(DOCUMENTATION_TARGET_IN_ALL "Include the custom target for building documentation in 'all'" OFF)
+option(DOCUMENTATION_TARGET_IN_ALL 
+  "Include the custom target for building documentation in 'all'" OFF)
 mark_as_advanced(DOCUMENTATION_TARGET_IN_ALL)
 
 set(DOCUMENTATION_ARCHIVES_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -172,6 +225,10 @@ mark_as_advanced(DOCUMENTATION_ARCHIVES_OUTPUT_DIRECTORY)
 # Attempt to discover Doxygen so that DOXYGEN_EXECUTABLE is set to an appropriate default value
 #
 find_package(Doxygen QUIET)
+
+# ----------------------------------------------------------------------------
+# We need the m4 macro preprocessor
+include(${CMAKE_MODULE_PATH}/FindM4.cmake)
 
 #-----------------------------------------------------------------------------
 # Additional CXX/C Flags
@@ -187,8 +244,10 @@ mark_as_advanced(ADDITIONAL_F_FLAGS)
 # IBAMR C/CXX Flags
 #
 set(IBAMR_C_FLAGS "${CMAKE_C_FLAGS_INIT} ${ADDITIONAL_C_FLAGS}")
-set(IBAMR_CXX_FLAGS "${CMAKE_CXX_FLAGS_INIT} ${VISIBILITY_CXX_FLAGS} ${ADDITIONAL_CXX_FLAGS}")
-set(IBAMR_F_FLAGS "${CMAKE_F_FLAGS_INIT} ${VISIBILITY_F_FLAGS} ${ADDITIONAL_F_FLAGS}")
+set(IBAMR_CXX_FLAGS 
+  "${CMAKE_CXX_FLAGS_INIT} ${VISIBILITY_CXX_FLAGS} ${ADDITIONAL_CXX_FLAGS}")
+set(IBAMR_F_FLAGS 
+  "${CMAKE_F_FLAGS_INIT} ${VISIBILITY_F_FLAGS} ${ADDITIONAL_F_FLAGS}")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
   set(cflags "-Wall -Wextra -Wpointer-arith -Winvalid-pch -Wcast-align -Wwrite-strings -D_FORTIFY_SOURCE=2")
@@ -220,10 +279,6 @@ add_definitions(
 mark_as_advanced(CMAKE_INSTALL_PREFIX)
 mark_as_advanced(DART_TESTING_TIMEOUT)
 
-
-add_subdirectory(ibtk)
-
-
 # -----------------------------------------------------------------------------
 # Set library sub-directories
 # Order of project directory matters. Project should be topologically ordered
@@ -234,12 +289,12 @@ set(dirs
 
 list(APPEND dirs 
     IB 
-#     adv_diff
-#     fortran 
-#     navier_stokes
+    adv_diff
+    advect
+    fortran 
+    navier_stokes
 #     solid_mechanics
 #     tools
-#     utilities   
     )
 
 # -----------------------------------------------------------------------------
@@ -264,8 +319,8 @@ endforeach()
 option(IBAMR_BUILD_SINGLE_LIBRARY "Build single library" OFF)
 if(IBAMR_BUILD_SINGLE_LIBRARY)
   message(STATUS "Single library build is enabled.")
-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lib.C "// Dummy file needed 
-    // to link sublibraries.")
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lib.C 
+    "// Dummy file needed to link sublibraries.")
   set(IBAMR_LIBRARY_TARGETS3D)
   foreach(lib ${IBAMR_LIBRARIES3D})
     list(APPEND IBAMR_LIBRARY_TARGETS3D $<TARGET_OBJECTS:${lib}>)
@@ -275,10 +330,12 @@ if(IBAMR_BUILD_SINGLE_LIBRARY)
     foreach(lib ${IBAMR_LIBRARIES2D})
       list(APPEND IBAMR_LIBRARY_TARGETS2D $<TARGET_OBJECTS:${lib}>)
     endforeach()
-    add_library(ibamr2D ${CMAKE_CURRENT_BINARY_DIR}/lib.C ${IBAMR_LIBRARY_TARGETS2D})
+    add_library(ibamr2D ${CMAKE_CURRENT_BINARY_DIR}/lib.C 
+      ${IBAMR_LIBRARY_TARGETS2D})
     set(IBAMR_LIBRARIES2D ibamr2D)
   endif()
-  add_library(ibamr3D ${CMAKE_CURRENT_BINARY_DIR}/lib.C ${IBAMR_LIBRARY_TARGETS3D})
+  add_library(ibamr3D ${CMAKE_CURRENT_BINARY_DIR}/lib.C 
+    ${IBAMR_LIBRARY_TARGETS3D})
   set(IBAMR_LIBRARIES3D ibamr3D)
 else()
   message(STATUS "Single library build is disabled.")
@@ -286,26 +343,47 @@ endif()
 
 # --------------------------------------------------------------------------
 # Append necessary libs to compile apps
+# --------------------------------------------------------------------------
 list(APPEND IBAMR_LIBRARIES3D 
   ${IBTK_LIBRARIES3D}
+  ${IBTK_EXTERNAL_LIBRARIES}
+  -lmpi_cxx 
+  -lmpi 
+  -lm 
+  -lrt 
+  -lnsl 
+  -lutil 
+  -ldl
   )
 if(IBAMR_BUILD_2D_LIBS)
   list(APPEND IBAMR_LIBRARIES2D 
     ${IBTK_LIBRARIES2D}
+    ${IBTK_EXTERNAL_LIBRARIES}
+    -lmpi_cxx 
+    -lmpi 
+    -lm 
+    -lrt 
+    -lnsl 
+    -lutil 
+    -ldl
     )
 endif()
+
+# # --------------------------------------------------------------------------
+# # Export all targets used here
+# # --------------------------------------------------------------------------
+# if(NOT DEFINED ${PROJECT_NAME}_EXPORT_FILE)
+#   set(${PROJECT_NAME}_EXPORT_FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake)
+# endif()
+# export(TARGETS ${IBAMR_LIBRARIES3D} FILE ${${PROJECT_NAME}_EXPORT_FILE})
+# if(IBAMR_BUILD_2D_LIBS)
+#   export(TARGETS ${IBAMR_LIBRARIES2D} APPEND FILE ${${PROJECT_NAME}_EXPORT_FILE})
+# endif()
 
 # --------------------------------------------------------------------------
 # add testing
 # --------------------------------------------------------------------------
 INCLUDE(CTest)
 IF(BUILD_TESTING)
-#     ADD_SUBDIRECTORY(examples)
-ENDIF()
-
-# --------------------------------------------------------------------------
-# Set INCLUDE_DIRS variable
-# --------------------------------------------------------------------------
-set(${PROJECT_NAME}_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR}/include
-  CACHE INTERNAL "${PROJECT_NAME} include dirs" FORCE)
-    
+    ADD_SUBDIRECTORY(examples)
+ENDIF()    

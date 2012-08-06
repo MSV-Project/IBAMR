@@ -56,26 +56,26 @@ if(NOT DEFINED PETSC_DIR)
 #     message(STATUS "Adding project:${proj}")
 
   # Set PETSc specific environment variables
-  set(ENV{PETSC_DIR} ${CMAKE_BINARY_DIR}/${proj})
+  set(ENV{PETSC_DIR} ${IBTK_BINARY_DIR}/${proj})
   
   ExternalProject_Add(${proj}
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
-    BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}
+    SOURCE_DIR ${IBTK_BINARY_DIR}/${proj}
+    BINARY_DIR ${IBTK_BINARY_DIR}/${proj}
     PREFIX ${proj}${ep_suffix}
-    URL http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.3-p2.tar.gz
+    URL ${PETSC_URL}/${PETSC_GZ}
+    URL_MD5 ${PETSC_MD5}
     UPDATE_COMMAND ""
     INSTALL_COMMAND ""
-#     INSTALL_COMMAND "export PETSC_DIR=${CMAKE_BINARY_DIR}/${proj} && export PETSC_ARCH=build  && make install"
     CONFIGURE_COMMAND ./configure
-      --prefix=${ep_install_dir}
-      --CFLAGS=${ep_common_c_flags}
-      --CXXFLAGS=${ep_common_cxx_flags}
-      --FCFLAGS=${CMAKE_F_FLAGS}
-      --FFLAGS=${CMAKE_F_FLAGS}
-      --COPTFLAGS=${CMAKE_C_FLAGS_RELEASE}
-      --CXXOPTFLAGS=${CMAKE_CXX_FLAGS_RELEASE}
-      --FOPTFLAGS=${CMAKE_F_FLAGS_RELEASE}
-      --LDFLAGS="-L${ep_install_dir}/lib -Wl,-rpath,${ep_install_dir}/lib"
+      "--CFLAGS=${ep_common_c_flags}"
+      "--CXXFLAGS=${ep_common_cxx_flags}"
+      "--FCFLAGS=${CMAKE_F_FLAGS}"
+      "--FFLAGS=${CMAKE_F_FLAGS}"
+      "--COPTFLAGS=${CMAKE_C_FLAGS_RELEASE}"
+      "--CXXOPTFLAGS=${CMAKE_CXX_FLAGS_RELEASE}"
+      "--FOPTFLAGS=${CMAKE_F_FLAGS_RELEASE}"
+      "--LDFLAGS=-Wl,-rpath -Wl,${ep_install_dir}/lib"
+      "--LIBS=-Wl,-rpath -Wl,${ep_install_dir}/lib"
       --PETSC_ARCH=build
       --with-default-arch=0 
       --with-debugging=0 
@@ -86,15 +86,17 @@ if(NOT DEFINED PETSC_DIR)
       --with-mpi-dir=${ep_install_dir}
       --with-x=0
 #     TEST_BEFORE_INSTALL 1
+    LOG_DOWNLOAD 1
     LOG_CONFIGURE 1
+    LOG_TEST 1
     LOG_BUILD 1
     LOG_INSTALL 1
-#     TEST_COMMAND make PETSC_DIR=${CMAKE_BINARY_DIR}/${proj} PETSC_ARCH=build test
-    BUILD_COMMAND make PETSC_DIR=${CMAKE_BINARY_DIR}/${proj} PETSC_ARCH=build all
+#     TEST_COMMAND make PETSC_DIR=${IBTK_BINARY_DIR}/${proj} PETSC_ARCH=build test
+    BUILD_COMMAND make PETSC_DIR=${IBTK_BINARY_DIR}/${proj} PETSC_ARCH=build all
     DEPENDS
       ${PETSC_DEPENDENCIES}
     )
-    set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj})
+    set(${proj}_DIR ${IBTK_BINARY_DIR}/${proj})
     set(${proj}_ARCH build)
 
 else()
@@ -102,5 +104,8 @@ else()
 endif()
 
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DPETSC_DIR:PATH=$ENV{PETSC_DIR})
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DPETSC_ARCH:STRING="build")
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DPETSC_ARCH:STRING=build)
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DPETSC_INCLUDE_PATH:PATH=$ENV{PETSC_DIR}/include)
 
+list(APPEND INCLUDE_PATHS $ENV{PETSC_DIR}/build/include $ENV{PETSC_DIR}/include)
+list(APPEND EXTERNAL_LIBRARIES -lpetsc)

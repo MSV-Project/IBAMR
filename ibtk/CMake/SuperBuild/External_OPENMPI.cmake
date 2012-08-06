@@ -55,13 +55,14 @@ if(NOT DEFINED OPENMPI_DIR)
 
 #     message(STATUS "Adding project:${proj}")
   ExternalProject_Add(${proj}
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
-    BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build
+    SOURCE_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
+    BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build
     PREFIX ${proj}${ep_suffix}
-    URL http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-1.6.tar.gz
+    URL ${OPENMPI_URL}/${OPENMPI_GZ}
+    URL_MD5 ${OPENMPI_MD5}
     UPDATE_COMMAND ""
     INSTALL_COMMAND make install
-    CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/${proj}/configure
+    CONFIGURE_COMMAND ${IBTK_BINARY_DIR}/SuperBuild/${proj}/configure
       CC=gcc
       CXX=g++
       FC=gfortran
@@ -76,19 +77,20 @@ if(NOT DEFINED OPENMPI_DIR)
       --enable-silent-rules
       --enable-orterun-prefix-by-default
 #     TEST_BEFORE_INSTALL 1
+    LOG_DOWNLOAD 1
     LOG_CONFIGURE 1
+    LOG_TEST 1
     LOG_BUILD 1
     LOG_INSTALL 1
 #     TEST_COMMAND make check
     DEPENDS
       ${OPENMPI_DEPENDENCIES}
     )
-  set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
+  set(${proj}_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build)
 
 else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DOPENMPI_DIR:PATH=${OPENMPI_DIR})
-
-
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMPI_CXX_COMPILER:PATH=${ep_install_dir}/bin/mpicxx)
+list(APPEND EXTERNAL_LIBRARIES -lmpi_cxx -lmpi)

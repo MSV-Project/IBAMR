@@ -60,13 +60,13 @@ if(NOT DEFINED LIBMESH_DIR)
 #     message(STATUS "Adding project:${proj}")
 #FindVTK
   ExternalProject_Add(${proj}
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
-    BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}
+    SOURCE_DIR ${IBTK_BINARY_DIR}/${proj}
+    BINARY_DIR ${IBTK_BINARY_DIR}/${proj}
     PREFIX ${proj}${ep_suffix}
     SVN_REPOSITORY https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh
     UPDATE_COMMAND ""
     INSTALL_COMMAND ""
-    CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/${proj}/configure
+    CONFIGURE_COMMAND ${IBTK_BINARY_DIR}/${proj}/configure
       "CFLAGS=${ep_common_c_flags}"
       "CXXFLAGS=${ep_common_cxx_flags}"
       "FCFLAGS=${CMAKE_F_FLAGS}"
@@ -93,12 +93,14 @@ if(NOT DEFINED LIBMESH_DIR)
     DEPENDS
       ${LIBMESH_DEPENDENCIES}
     )
-  set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
+  set(${proj}_DIR ${IBTK_BINARY_DIR}/${proj}-build)
   
 else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DLIBMESH_DIR:PATH=${LIBMESH_DIR})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DLIBMESH_INCLUDE_PATH:PATH=${ep_install_dir}/include)
 
+list(APPEND INCLUDE_PATHS $ENV{PETSC_DIR}/build/include ${ep_install_dir}/include)
 

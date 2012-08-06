@@ -6,7 +6,7 @@ set(TEST_NAME VCLaplace)
 
 if(IBTK_BUILD_2D_LIBS)
   add_executable(${TEST_NAME}2d main.C)
-  target_link_libraries(${TEST_NAME}2d ${IBTK_LIBRARIES2D})
+  target_link_libraries(${TEST_NAME}2d ${IBTK_LIBRARIES2D} ${IBTK_EXTERNAL_LIBRARIES})
   set_target_properties(${TEST_NAME}2d PROPERTIES COMPILE_FLAGS -DNDIM=2)
   if(BUILD_TESTING)
     add_test(${TEST_NAME}2d ${MPIEXEC} -np 2 ${CMAKE_CURRENT_BINARY_DIR}/${TEST_NAME}2d ${CMAKE_CURRENT_SOURCE_DIR}/input2d)

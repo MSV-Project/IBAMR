@@ -34,8 +34,10 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
+#include "fortran_interfaces.h"
+
 #ifndef included_IBAMR_config
-#include <IBAMR_config.h>
+// #include <IBAMR_config.h>
 #define included_IBAMR_config
 #endif
 
@@ -77,15 +79,15 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define ADVECT_CONSDIFF_FC FC_FUNC_(advect_consdiff2d, ADVECT_CONSDIFF2D)
-#define ADVECT_CONSDIFFWITHDIVSOURCE_FC FC_FUNC_(advect_consdiffwithdivsource2d, ADVECT_CONSDIFFWITHDIVSOURCE2D)
-#define ADVECT_DETECTGRAD_FC FC_FUNC_(advect_detectgrad2d, ADVECT_DETECTGRAD2D)
+#define ADVECT_CONSDIFF_FC FC_GLOBAL_(advect_consdiff2d, ADVECT_CONSDIFF2D)
+#define ADVECT_CONSDIFFWITHDIVSOURCE_FC FC_GLOBAL_(advect_consdiffwithdivsource2d, ADVECT_CONSDIFFWITHDIVSOURCE2D)
+#define ADVECT_DETECTGRAD_FC FC_GLOBAL_(advect_detectgrad2d, ADVECT_DETECTGRAD2D)
 #endif
 
 #if (NDIM == 3)
-#define ADVECT_CONSDIFF_FC FC_FUNC_(advect_consdiff3d, ADVECT_CONSDIFF3D)
-#define ADVECT_CONSDIFFWITHDIVSOURCE_FC FC_FUNC_(advect_consdiffwithdivsource3d, ADVECT_CONSDIFFWITHDIVSOURCE3D)
-#define ADVECT_DETECTGRAD_FC FC_FUNC_(advect_detectgrad3d, ADVECT_DETECTGRAD3D)
+#define ADVECT_CONSDIFF_FC FC_GLOBAL_(advect_consdiff3d, ADVECT_CONSDIFF3D)
+#define ADVECT_CONSDIFFWITHDIVSOURCE_FC FC_GLOBAL_(advect_consdiffwithdivsource3d, ADVECT_CONSDIFFWITHDIVSOURCE3D)
+#define ADVECT_DETECTGRAD_FC FC_GLOBAL_(advect_detectgrad3d, ADVECT_DETECTGRAD3D)
 #endif
 
 extern "C"

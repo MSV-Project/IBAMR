@@ -53,41 +53,53 @@ if(NOT DEFINED HDF5_DIR)
       -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
   endif()
 
+  set(IBTKSuperBuild_CMAKE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+  set(Hdf5_source ${IBTK_BINARY_DIR}/SuperBuild/${proj})
+
+  configure_file(${IBTKSuperBuild_CMAKE_SOURCE_DIR}/hdf5_patch_step.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/hdf5_patch_step.cmake
+    @ONLY)
+  
+  set(Hdf5_PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/hdf5_patch_step.cmake)
+  
 #     message(STATUS "Adding project:${proj}")
   ExternalProject_Add(${proj}
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
-    BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build
+    SOURCE_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
+    BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build
     PREFIX ${proj}${ep_suffix}
-    URL http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.9.tar.gz
+    URL ${HDF5_URL}/${HDF5_GZ}
+    URL_MD5 ${HDF5_MD5}
+    PATCH_COMMAND ${Hdf5_PATCH_COMMAND}
     UPDATE_COMMAND ""
     INSTALL_COMMAND make install
-    CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/${proj}/configure
-      CC=gcc 
-      CXX=g++ 
-      FC=gfortran 
-      F77=gfortran 
-      "CFLAGS=${ep_common_c_flags}"
-      "CXXFLAGS=${ep_common_cxx_flags}"
-      "FCFLAGS=${CMAKE_F_FLAGS}"
-      "FFLAGS=${CMAKE_F_FLAGS}"
-      --libdir=${ep_install_dir}/lib
-      --prefix=${ep_install_dir}
-      --enable-production 
-      --disable-debug 
-#     TEST_BEFORE_INSTALL 1
+    CMAKE_GENERATOR ${gen}
+    CMAKE_ARGS
+      ${CMAKE_OSX_EXTERNAL_PROJECT_ARGS}
+      -DBUILD_SHARED_LIBS:BOOL=${BUILD_SHARED_LIBS}
+      -DCMAKE_BUILD_TYPE:STRING=Release#${CMAKE_BUILD_TYPE}
+      -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
+      -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
+      -DCMAKE_INSTALL_PREFIX:PATH=${ep_install_dir}
+      -DADDITIONAL_C_FLAGS:STRING=${ADDITIONAL_C_FLAGS}
+      -DADDITIONAL_CXX_FLAGS:STRING=${ADDITIONAL_CXX_FLAGS}
+      -DHDF5_BUILD_HL_LIB:BOOL=ON
+    LOG_DOWNLOAD 1
     LOG_CONFIGURE 1
+    LOG_TEST 1
     LOG_BUILD 1
     LOG_INSTALL 1
 #     TEST_COMMAND make check
     DEPENDS
       ${HDF5_DEPENDENCIES}
     )
-  set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
+  set(${proj}_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build)
 
 else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DHDF5_DIR:PATH=${HDF5_DIR})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DHDF5_ROOT_DIR_HINT:PATH=${HDF5_DIR} -DHDF5_DIR:PATH=${HDF5_DIR})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DHDF5_INCLUDE_PATH:PATH=${ep_install_dir}/include)
 
-
+list(APPEND INCLUDE_PATHS ${ep_install_dir}/include)
+list(APPEND EXTERNAL_LIBRARIES -lhdf5 -lhdf5_hl)

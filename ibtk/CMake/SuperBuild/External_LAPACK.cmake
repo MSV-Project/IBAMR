@@ -54,35 +54,40 @@ if(NOT DEFINED LAPACK_DIR)
   endif()
 
   ExternalProject_Add(${proj}
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
-    BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build
+    SOURCE_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
+    BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build
     PREFIX ${proj}${ep_suffix}
-    SVN_REPOSITORY https://icl.cs.utk.edu/svn/lapack-dev/lapack/trunk
-    UPDATE_COMMAND svn up
+    URL ${LAPACK_URL}/${LAPACK_GZ}
+    URL_MD5 ${LAPACK_MD5}
+    UPDATE_COMMAND ""
     INSTALL_COMMAND make install
     CMAKE_GENERATOR ${gen}
     CMAKE_ARGS
+      ${CMAKE_OSX_EXTERNAL_PROJECT_ARGS}
       -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
       -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
       -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
       -DCMAKE_INSTALL_PREFIX:PATH=${ep_install_dir}
-      ${CMAKE_OSX_EXTERNAL_PROJECT_ARGS}
       -DADDITIONAL_C_FLAGS:STRING=${ADDITIONAL_C_FLAGS}
       -DADDITIONAL_CXX_FLAGS:STRING=${ADDITIONAL_CXX_FLAGS}
       -DBUILD_TESTING:BOOL=OFF
       -DBUILD_COMPLEX:BOOL=ON
       -DBUILD_COMPLEX16:BOOL=ON
       -DBUILD_DOUBLE:BOOL=ON
-      -DBUILD_SHARED_LIBS:BOOL=OFF
-      -DBUILD_STATIC_LIBS:BOOL=ON
+      -DBUILD_SHARED_LIBS:BOOL=${BUILD_SHARED_LIBS}
       -DUSE_OPTIMIZED_BLAS:BOOL=OFF
       -DUSE_OPTIMIZED_LAPACK:BOOL=OFF
       -DUSE_XBLAS:BOOL=OFF
       -DLAPACKE:BOOL=OFF
+    LOG_DOWNLOAD 1
+    LOG_CONFIGURE 1
+    LOG_TEST 1
+    LOG_BUILD 1
+    LOG_INSTALL 1
     DEPENDS
       ${LAPACK_DEPENDENCIES}
     )
-  set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
+  set(${proj}_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build)
 
 else()
   # The project is provided using LAPACK_DIR, nevertheless since other project may depend on LAPACK,
@@ -91,4 +96,5 @@ else()
 endif()
 
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DLAPACK_DIR:PATH=${LAPACK_DIR})
+list(APPEND EXTERNAL_LIBRARIES -llapack -lblas)
 

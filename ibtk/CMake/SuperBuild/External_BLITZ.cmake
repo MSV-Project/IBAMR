@@ -50,18 +50,27 @@ if(NOT DEFINED BLITZ_DIR)
       -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
       -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
   endif()
+  
+  set(IBTKSuperBuild_CMAKE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+  set(Blitz_source ${IBTK_BINARY_DIR}/SuperBuild/${proj})
 
+  configure_file(${IBTKSuperBuild_CMAKE_SOURCE_DIR}/blitz_patch_step.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/blitz_patch_step.cmake
+    @ONLY)
+  
+  set(Blitz_PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/blitz_patch_step.cmake)
 #     message(STATUS "Adding project:${proj}")
 
   ExternalProject_Add(${proj}
-    SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
-    BINARY_DIR ${CMAKE_BINARY_DIR}/${proj}-build
+    SOURCE_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
+    BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build
     PREFIX ${proj}${ep_suffix}
-    URL /home/rortiz/Downloads/blitz-0.9.tar.gz
+    URL ${BLITZ_URL}/${BLITZ_GZ}
+    URL_MD5 ${BLITZ_MD5}
     UPDATE_COMMAND ""
-    INSTALL_COMMAND ""
-    PATCH_COMMAND patch -p1 -i /home/rortiz/Downloads/blitz.patch    
-    CONFIGURE_COMMAND ${CMAKE_BINARY_DIR}/${proj}/configure
+    INSTALL_COMMAND make install
+    PATCH_COMMAND ${Blitz_PATCH_COMMAND}
+    CONFIGURE_COMMAND ${IBTK_BINARY_DIR}/SuperBuild/${proj}/configure
       CC=gcc
       CXX=g++
       F77=gfortran
@@ -75,19 +84,28 @@ if(NOT DEFINED BLITZ_DIR)
       --enable-optimize
       --disable-debug
       --enable-shared
+      --disable-dot
+      --disable-doxygen
+      --disable-html-docs
+      --disable-latex-docs
 #     TEST_BEFORE_INSTALL 1
+    LOG_DOWNLOAD 1
     LOG_CONFIGURE 1
+    LOG_TEST 1
     LOG_BUILD 1
+    LOG_INSTALL 1
 #     TEST_COMMAND make check-testsuite
     DEPENDS
       ${BLITZ_DEPENDENCIES}
     )
-  set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
+  set(${proj}_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build)
 
 else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DBLITZ_DIR:PATH=${BLITZ_DIR})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DBLITZ_INCLUDE_PATH:PATH=${BLITZ_DIR})
 
-
+list(APPEND INCLUDE_PATHS ${BLITZ_DIR})
+list(APPEND EXTERNAL_LIBRARIES -lblitz)

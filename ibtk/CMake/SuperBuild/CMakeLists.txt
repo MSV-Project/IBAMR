@@ -18,7 +18,7 @@
 #
 ###########################################################################
 
-set(IBTK_DEPENDENCIES PETSC SAMRAI SILO)
+set(IBTK_DEPENDENCIES SAMRAI PETSC SILO BLITZ)
 
 #-----------------------------------------------------------------------------
 # WARNING - No change should be required after this comment
@@ -35,6 +35,8 @@ if(NOT IBTK_USE_GIT_PROTOCOL)
   set(git_protocol "http")
 endif()
 
+include(PackageVersions)
+
 #-----------------------------------------------------------------------------
 # Enable and setup External project global properties
 #
@@ -42,7 +44,7 @@ include(ExternalProject)
 include(EmptyExternalProject)
 include(CheckExternalProjectDependency)
 
-set(ep_install_dir ${CMAKE_BINARY_DIR}/SuperBuild/Install)
+set(ep_install_dir ${IBTK_BINARY_DIR}/SuperBuild)
 set(ep_suffix      "-cmake")
 
 set(ep_common_c_flags "${CMAKE_C_FLAGS_INIT} ${ADDITIONAL_C_FLAGS}")
@@ -63,17 +65,28 @@ set(sep "^^")
 # The item of this list should have the following form: -D<EP>_DIR:PATH=${<EP>_DIR}
 # where '<EP>' is an external project name.
 set(IBTK_SUPERBUILD_EP_ARGS)
+set(EXTERNAL_LIBRARIES)
+set(INCLUDE_PATHS)
 
 CheckExternalProjectDependency(IBTK)
 
+list(REMOVE_DUPLICATES EXTERNAL_LIBRARIES)
+list(REMOVE_DUPLICATES INCLUDE_PATHS)
+set(IBTK_EXTERNAL_LIBRARIES ${IBTK_EXTERNAL_LIBRARIES} ${EXTERNAL_LIBRARIES} 
+  CACHE INTERNAL "IBTK external libraries.")
+set(IBTK_INCLUDE_PATH ${IBTK_INCLUDE_PATH} ${INCLUDE_PATHS} 
+  CACHE INTERNAL "IBTK include paths.")
+
 #-----------------------------------------------------------------------------
-# Makes sure ${IBTK_BINARY_DIR}/IBTK-build/bin exists
-IF(NOT EXISTS ${IBTK_BINARY_DIR}/IBTK-build/bin)
-  FILE(MAKE_DIRECTORY ${IBTK_BINARY_DIR}/IBTK-build/bin)
+# Makes sure ${IBTK_BINARY_DIR}/bin exists
+#-----------------------------------------------------------------------------
+IF(NOT EXISTS ${IBTK_BINARY_DIR}/bin)
+  FILE(MAKE_DIRECTORY ${IBTK_BINARY_DIR}/bin)
 ENDIF()
 
 #-----------------------------------------------------------------------------
 # Set CMake OSX variable to pass down the external project
+#-----------------------------------------------------------------------------
 set(CMAKE_OSX_EXTERNAL_PROJECT_ARGS)
 if(APPLE)
   list(APPEND CMAKE_OSX_EXTERNAL_PROJECT_ARGS
@@ -82,24 +95,17 @@ if(APPLE)
     -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
 endif()
 
-
-
 #-----------------------------------------------------------------------------
 # IBTK Configure
-#
-SET(proj IBTK-Configure)
-
-ExternalProject_Add(${proj}
+#-----------------------------------------------------------------------------
+message("IBTK_SOURCE_DIR = ${IBTK_SOURCE_DIR}")
+ExternalProject_Add(IBTK-Configure
   DOWNLOAD_COMMAND ""
   CMAKE_GENERATOR ${gen}
   CMAKE_ARGS
     ${CMAKE_OSX_EXTERNAL_PROJECT_ARGS}
     -DIBTK_BUILD_SINGLE_LIBRARY:BOOL=${IBTK_BUILD_SINGLE_LIBRARY}
-    -DIBTK_IBTK_BUILD_2D_LIBS:BOOL=${IBTK_BUILD_2D_LIBS}
-    -DIBTK_BUILD_SHARED_LIBS:BOOL=${IBTK_BUILD_SHARED_LIBS}
-    -DIBTK_SUPERBUILD:BOOL=OFF
-    -DDOCUMENTATION_ARCHIVES_OUTPUT_DIRECTORY:PATH=${DOCUMENTATION_ARCHIVES_OUTPUT_DIRECTORY}
-    -DDOXYGEN_EXECUTABLE:FILEPATH=${DOXYGEN_EXECUTABLE}
+    -DIBTK_BUILD_2D_LIBS:BOOL=${IBTK_BUILD_2D_LIBS}
     -DIBTK_SUPERBUILD_BINARY_DIR:PATH=${IBTK_BINARY_DIR}
     -DIBTK_CMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${IBTK_CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
     -DIBTK_CMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${IBTK_CMAKE_LIBRARY_OUTPUT_DIRECTORY}
@@ -113,8 +119,14 @@ ExternalProject_Add(${proj}
     -DIBTK_CXX_FLAGS:STRING=${IBTK_CXX_FLAGS}
     -DIBTK_C_FLAGS:STRING=${IBTK_C_FLAGS}
     -DIBTK_F_FLAGS:STRING=${IBTK_F_FLAGS}
-    -DIBTK_EXTERNAL_LIBRARY_DIRS:STRING=${IBTK_EXTERNAL_LIBRARY_DIRS}
-    -DGIT_EXECUTABLE:FILEPATH=${GIT_EXECUTABLE}
+    -DENABLE_LARGE_GHOST_CELL_WIDTH:BOOL=${ENABLE_LARGE_GHOST_CELL_WIDTH}
+    -DENABLE_EXPENSIVE_CF_INTERPOLATION:BOOL=${ENABLE_EXPENSIVE_CF_INTERPOLATION}
+    -DIBTK_CMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${IBTK_BINARY_DIR}/lib
+    -DIBTK_CMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${IBTK_BINARY_DIR}/lib
+    -DIBTK_CMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${IBTK_BINARY_DIR}/bin
+    -DCMAKE_Fortran_MODULE_DIRECTORY:PATH=${IBTK_BINARY_DIR}/lib
+    -DIBTK_INCLUDE_BINARY_PATH:PATH=${IBTK_BINARY_DIR}/include
+    -DIBTK_SUPERBUILD:BOOL=OFF
     ${IBTK_SUPERBUILD_EP_ARGS}
     
   SOURCE_DIR ${IBTK_SOURCE_DIR}
@@ -140,11 +152,11 @@ else()
   set(IBTKBUILD_TARGET_ALL_OPTION "")
 endif()
 
-add_custom_target(IBTK-build ${IBTKBUILD_TARGET_ALL_OPTION}
+add_custom_target(IBTK-Build ${IBTKBUILD_TARGET_ALL_OPTION}
   COMMAND ${ibamr_build_cmd}
   WORKING_DIRECTORY ${IBTK_BINARY_DIR}/IBTK-build
   )
-add_dependencies(IBTK-build IBTK-Configure)
+add_dependencies(IBTK-Build IBTK-Configure )
 
 #-----------------------------------------------------------------------------
 # Custom target allowing to drive the build of IBTK project itself
@@ -153,3 +165,4 @@ add_custom_target(IBTK
   COMMAND ${ibamr_build_cmd}
   WORKING_DIRECTORY ${IBTK_BINARY_DIR}/IBTK-build
   )
+  

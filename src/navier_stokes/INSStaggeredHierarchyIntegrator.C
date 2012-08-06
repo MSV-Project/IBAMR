@@ -34,8 +34,10 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
+#include "fortran_interfaces.h"
+
 #ifndef included_IBAMR_config
-#include <IBAMR_config.h>
+// #include <IBAMR_config.h>
 #define included_IBAMR_config
 #endif
 
@@ -70,19 +72,19 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define NAVIER_STOKES_SC_STABLEDT_FC FC_FUNC_(navier_stokes_sc_stabledt2d, NAVIER_STOKES_SC_STABLEDT2D)
-#define NAVIER_STOKES_SIDE_TO_FACE_FC FC_FUNC_(navier_stokes_side_to_face2d, NAVIER_STOKES_SIDE_TO_FACE2D)
-#define NAVIER_STOKES_STAGGERED_ADV_SOURCE_FC FC_FUNC_(navier_stokes_staggered_adv_source2d, NAVIER_STOKES_STAGGERED_ADV_SOURCE2D)
-#define NAVIER_STOKES_STAGGERED_CONS_SOURCE_FC FC_FUNC_(navier_stokes_staggered_cons_source2d, NAVIER_STOKES_STAGGERED_CONS_SOURCE2D)
-#define NAVIER_STOKES_STAGGERED_SKEW_SYM_SOURCE_FC FC_FUNC_(navier_stokes_staggered_skew_sym_source2d, NAVIER_STOKES_STAGGERED_SKEW_SYM_SOURCE2D)
+#define NAVIER_STOKES_SC_STABLEDT_FC FC_GLOBAL_(navier_stokes_sc_stabledt2d, NAVIER_STOKES_SC_STABLEDT2D)
+#define NAVIER_STOKES_SIDE_TO_FACE_FC FC_GLOBAL_(navier_stokes_side_to_face2d, NAVIER_STOKES_SIDE_TO_FACE2D)
+#define NAVIER_STOKES_STAGGERED_ADV_SOURCE_FC FC_GLOBAL_(navier_stokes_staggered_adv_source2d, NAVIER_STOKES_STAGGERED_ADV_SOURCE2D)
+#define NAVIER_STOKES_STAGGERED_CONS_SOURCE_FC FC_GLOBAL_(navier_stokes_staggered_cons_source2d, NAVIER_STOKES_STAGGERED_CONS_SOURCE2D)
+#define NAVIER_STOKES_STAGGERED_SKEW_SYM_SOURCE_FC FC_GLOBAL_(navier_stokes_staggered_skew_sym_source2d, NAVIER_STOKES_STAGGERED_SKEW_SYM_SOURCE2D)
 #endif
 
 #if (NDIM == 3)
-#define NAVIER_STOKES_SC_STABLEDT_FC FC_FUNC_(navier_stokes_sc_stabledt3d, NAVIER_STOKES_SC_STABLEDT3D)
-#define NAVIER_STOKES_SIDE_TO_FACE_FC FC_FUNC_(navier_stokes_side_to_face3d, NAVIER_STOKES_SIDE_TO_FACE3D)
-#define NAVIER_STOKES_STAGGERED_ADV_SOURCE_FC FC_FUNC_(navier_stokes_staggered_adv_source3d, NAVIER_STOKES_STAGGERED_ADV_SOURCE3D)
-#define NAVIER_STOKES_STAGGERED_CONS_SOURCE_FC FC_FUNC_(navier_stokes_staggered_cons_source3d, NAVIER_STOKES_STAGGERED_CONS_SOURCE3D)
-#define NAVIER_STOKES_STAGGERED_SKEW_SYM_SOURCE_FC FC_FUNC_(navier_stokes_staggered_skew_sym_source3d, NAVIER_STOKES_STAGGERED_SKEW_SYM_SOURCE3D)
+#define NAVIER_STOKES_SC_STABLEDT_FC FC_GLOBAL_(navier_stokes_sc_stabledt3d, NAVIER_STOKES_SC_STABLEDT3D)
+#define NAVIER_STOKES_SIDE_TO_FACE_FC FC_GLOBAL_(navier_stokes_side_to_face3d, NAVIER_STOKES_SIDE_TO_FACE3D)
+#define NAVIER_STOKES_STAGGERED_ADV_SOURCE_FC FC_GLOBAL_(navier_stokes_staggered_adv_source3d, NAVIER_STOKES_STAGGERED_ADV_SOURCE3D)
+#define NAVIER_STOKES_STAGGERED_CONS_SOURCE_FC FC_GLOBAL_(navier_stokes_staggered_cons_source3d, NAVIER_STOKES_STAGGERED_CONS_SOURCE3D)
+#define NAVIER_STOKES_STAGGERED_SKEW_SYM_SOURCE_FC FC_GLOBAL_(navier_stokes_staggered_skew_sym_source3d, NAVIER_STOKES_STAGGERED_SKEW_SYM_SOURCE3D)
 #endif
 
 extern "C"

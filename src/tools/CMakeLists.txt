@@ -1,22 +1,16 @@
-set(KIT navier_stokes)
+set(KIT tools)
 
 set(kit_SRCS 
   m3D_hdf5_marker_converter.C
   m3D_hdf5_strain_analyzer.C
   marker_flooder.C
   m3D_hdf5_fiber_converter.C
-  hdf2vertex.C
+#   hdf2vertex.C
   ascii2hdf.C
   )
-  
-set(kit_SRCS3D 
-  ${kit_SRCS}
-  )
-  
-if(IBTK_BUILD_2D_LIBRARY)
-  set(kit_SRCS2D 
-    ${kit_SRCS}
-    )
-endif()    
-
-include(${IBAMR_MODULE_PATH}/KitCommonBlock.cmake)  
+    
+add_executable(m3D_hdf5_marker_converter m3D_hdf5_marker_converter.C)
+add_executable(m3D_hdf5_strain_analyzer m3D_hdf5_strain_analyzer.C)
+add_executable(marker_flooder marker_flooder.C)
+add_executable(m3D_hdf5_fiber_converter m3D_hdf5_fiber_converter.C)
+add_executable(ascii2hdf ascii2hdf.C)
