@@ -98,7 +98,6 @@ endif()
 #-----------------------------------------------------------------------------
 # IBTK Configure
 #-----------------------------------------------------------------------------
-message("IBTK_SOURCE_DIR = ${IBTK_SOURCE_DIR}")
 ExternalProject_Add(IBTK-Configure
   DOWNLOAD_COMMAND ""
   CMAKE_GENERATOR ${gen}
