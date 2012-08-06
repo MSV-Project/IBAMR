@@ -76,9 +76,14 @@ if(IBAMR_BUILD_2D_LIBS)
     )
 endif()
 
+# ----------------------------------------------------------------------------
+# We need the m4 macro preprocessor and utility macro
+# ----------------------------------------------------------------------------
+include(${IBTK_DIR}/CMake/FindM4.cmake)
+
 # message("SAMRAI_FORTDIR = ${SAMRAI_FORTDIR}")
-message("IBTK_SUPERBUILD_DIR = ${IBTK_SUPERBUILD_DIR}")
-# # message("IBTK_LIBRARIES3D = ${IBTK_LIBRARIES3D}")
+# message("IBTK_SUPERBUILD_DIR = ${IBTK_SUPERBUILD_DIR}")
+# message("IBTK_LIBRARIES3D = ${IBTK_LIBRARIES3D}")
 # message("IBTK_BIN_DIR = ${IBTK_BIN_DIR}")
 # message("IBTK_EXTERNAL_LIBRARIES = ${IBTK_EXTERNAL_LIBRARIES}")
 # message("IBTK_INCLUDE_PATH = ${IBTK_INCLUDE_PATH}")
@@ -165,7 +170,7 @@ endif()
 # -----------------------------------------------------------------------------
 # Path to IBAMR cmake modules
 #-----------------------------------------------------------------------------
-set(IBAMR_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+set(IBAMR_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${IBTK_DIR}/CMake)
 
 #-----------------------------------------------------------------------------
 # IBAMR version number.  An even minor number corresponds to releases.
@@ -225,10 +230,6 @@ mark_as_advanced(DOCUMENTATION_ARCHIVES_OUTPUT_DIRECTORY)
 # Attempt to discover Doxygen so that DOXYGEN_EXECUTABLE is set to an appropriate default value
 #
 find_package(Doxygen QUIET)
-
-# ----------------------------------------------------------------------------
-# We need the m4 macro preprocessor
-include(${CMAKE_MODULE_PATH}/FindM4.cmake)
 
 #-----------------------------------------------------------------------------
 # Additional CXX/C Flags

@@ -56,11 +56,11 @@ if(NOT DEFINED PETSC_DIR)
 #     message(STATUS "Adding project:${proj}")
 
   # Set PETSc specific environment variables
-  set(ENV{PETSC_DIR} ${IBTK_BINARY_DIR}/${proj})
+  set(ENV{PETSC_DIR} ${IBTK_BINARY_DIR}/SuperBuild/${proj})
   
   ExternalProject_Add(${proj}
-    SOURCE_DIR ${IBTK_BINARY_DIR}/${proj}
-    BINARY_DIR ${IBTK_BINARY_DIR}/${proj}
+    SOURCE_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
+    BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
     PREFIX ${proj}${ep_suffix}
     URL ${PETSC_URL}/${PETSC_GZ}
     URL_MD5 ${PETSC_MD5}
@@ -92,11 +92,11 @@ if(NOT DEFINED PETSC_DIR)
     LOG_BUILD 1
     LOG_INSTALL 1
 #     TEST_COMMAND make PETSC_DIR=${IBTK_BINARY_DIR}/${proj} PETSC_ARCH=build test
-    BUILD_COMMAND make PETSC_DIR=${IBTK_BINARY_DIR}/${proj} PETSC_ARCH=build all
+    BUILD_COMMAND make PETSC_DIR=${IBTK_BINARY_DIR}/SuperBuild/${proj} PETSC_ARCH=build all
     DEPENDS
       ${PETSC_DEPENDENCIES}
     )
-    set(${proj}_DIR ${IBTK_BINARY_DIR}/${proj})
+    set(${proj}_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj})
     set(${proj}_ARCH build)
 
 else()

@@ -37,12 +37,22 @@ set(kit_SRCS
 
 )
 
-set(kit_SRCS2D ${kit_SRCS}
-  impls/fortran/patchsmoothers2d.f
-)
+add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}
+  impls/fortran/patchsmoothers3d.f.m4)
+  
+set(kit_SRCS3D 
+  ${kit_SRCS}
+  ${FORTRAN_SRCS3D}
+  )
 
-set(kit_SRCS3D ${kit_SRCS}
-  impls/fortran/patchsmoothers3d.f
-)
+if(IBTK_BUILD_2D_LIBS)
+  add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}
+    impls/fortran/patchsmoothers2d.m4)
+  set(kit_SRCS2D 
+    ${kit_SRCS}
+    ${FORTRAN_SRCS2D}
+    )  
+endif()
+
 
 include(${IBTK_MODULE_PATH}/KitCommonBlock.cmake)

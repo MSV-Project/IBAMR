@@ -113,6 +113,7 @@ endif()
 
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_DIR:PATH=${ep_install_dir} )
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_INCLUDE_PATH:PATH=${ep_install_dir}/include)
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_FORTDIR:PATH=${ep_install_dir}/include)
 
 list(APPEND INCLUDE_PATHS ${ep_install_dir}/include)
 list(APPEND EXTERNAL_LIBRARIES -lSAMRAI)

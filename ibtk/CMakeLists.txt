@@ -78,7 +78,7 @@ mark_as_advanced(IBTK_SUPERBUILD)
 
 #----------------------------------------------------------------------------
 # Output directories.
-#
+#----------------------------------------------------------------------------
 foreach(type LIBRARY ARCHIVE RUNTIME)
   # Make sure the directory exists
   if(DEFINED IBTK_CMAKE_${type}_OUTPUT_DIRECTORY
@@ -127,17 +127,18 @@ endif()
 #
 set(IBTK_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 
-#-----------------------------------------------------------------------------
-# Update CMake module path
-#
 #------------------------------------------------------------------------------
 # Update CMake module path
 #------------------------------------------------------------------------------
-
 set(CMAKE_MODULE_PATH 
   ${IBTK_MODULE_PATH} 
   ${IBTK_MODULE_PATH}/SuperBuild
   ${CMAKE_MODULE_PATH})
+  
+# ----------------------------------------------------------------------------
+# We need the m4 macro preprocessor and utility macro
+# ----------------------------------------------------------------------------
+include(${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindM4.cmake)
 
 #-----------------------------------------------------------------------------
 # IBTK version number.  An even minor number corresponds to releases.

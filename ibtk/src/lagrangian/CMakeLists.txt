@@ -52,15 +52,22 @@ set_target_properties(qd_fortran PROPERTIES COMPILE_FLAGS "-ffree-form")
 
 add_library(qd ${qd_SRCS})
 
-if(IBTK_BUILD_2D_LIBS)
-  set(kit_SRCS2D ${kit_SRCS}
-    fortran/lagrangian_interaction2d.f
+add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}  
+  fortran/lagrangian_interaction3d.f.m4)
+  
+set(kit_SRCS3D 
+  ${kit_SRCS}
+  ${FORTRAN_SRCS3D}
   )
-endif()
 
-set(kit_SRCS3D ${kit_SRCS}
-  fortran/lagrangian_interaction3d.f
-  )
+if(IBTK_BUILD_2D_LIBS)
+  add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}
+    fortran/lagrangian_interaction2d.f.m4)
+  set(kit_SRCS2D 
+    ${kit_SRCS}
+    ${FORTRAN_SRCS2D}
+    )  
+endif()
 
 
 include(${IBTK_MODULE_PATH}/KitCommonBlock.cmake)  

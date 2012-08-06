@@ -13,20 +13,25 @@ set(kit_SRCS cf_interface/CartCellDoubleLinearCFInterpolation.C
   physical_boundary/PhysicalBoundaryUtilities.C
   HierarchyGhostCellInterpolation.C
   )
-
-set(kit_SRCS2D 
-  ${kit_SRCS} 
-  physical_boundary/fortran/cartphysbdryop2d.f
-  cf_interface/fortran/linearcfinterpolation2d.f
-  cf_interface/fortran/quadcfinterpolation2d.f
-  )
-
+  
+add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} 
+  physical_boundary/fortran/cartphysbdryop3d.f.m4
+  cf_interface/fortran/linearcfinterpolation3d.f.m4
+  cf_interface/fortran/quadcfinterpolation3d.f.m4)
+  
 set(kit_SRCS3D 
-  ${kit_SRCS} 
-  physical_boundary/fortran/cartphysbdryop3d.f
-  cf_interface/fortran/linearcfinterpolation3d.f
-  cf_interface/fortran/quadcfinterpolation3d.f
+  ${kit_SRCS}
+  ${FORTRAN_SRCS3D}
   )
+  
+add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}
+  physical_boundary/fortran/cartphysbdryop2d.f.m4
+  cf_interface/fortran/linearcfinterpolation2d.f.m4
+  cf_interface/fortran/quadcfinterpolation2d.f.m4)
+  
+set(kit_SRCS2D 
+  ${kit_SRCS}
+  ${FORTRAN_SRCS2D}
+  )    
 
 include(${IBTK_MODULE_PATH}/KitCommonBlock.cmake)  
- 

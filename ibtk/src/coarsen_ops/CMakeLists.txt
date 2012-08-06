@@ -8,12 +8,21 @@ set(kit_SRCS LMarkerCoarsen.C
   CartSideDoubleCubicCoarsen.C
 )
 
-set(kit_SRCS2D ${kit_SRCS}
-  fortran/cubiccoarsen2d.f
-)
+add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}  
+  fortran/cubiccoarsen3d.f.m4)
+  
+set(kit_SRCS3D 
+  ${kit_SRCS}
+  ${FORTRAN_SRCS3D}
+  )
+  
+add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}
+  fortran/cubiccoarsen2d.f.m4)
+  
+set(kit_SRCS2D 
+  ${kit_SRCS}
+  ${FORTRAN_SRCS2D}
+  )  
 
-set(kit_SRCS3D ${kit_SRCS}
-  fortran/cubiccoarsen3d.f
-)
 
 include(${IBTK_MODULE_PATH}/KitCommonBlock.cmake) 
