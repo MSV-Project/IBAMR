@@ -61,7 +61,12 @@ if(NOT DEFINED SAMRAI_DIR)
     @ONLY)
     
   set(Samrai_PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/samrai_patch_step.cmake)
-
+  set(SHARED_LIB_CONF)
+  if(BUILD_SHARED_LIBS)
+    set(SHARED_LIB_CONF --enable-shared --disable-static)
+  else()
+    set(SHARED_LIB_CONF --enable-static --disable-shared)
+  endif()
   ExternalProject_Add(${proj}
     SOURCE_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
     BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build
@@ -73,19 +78,22 @@ if(NOT DEFINED SAMRAI_DIR)
     PATCH_COMMAND ${Samrai_PATCH_COMMAND}
     CONFIGURE_COMMAND ${IBTK_BINARY_DIR}/SuperBuild/${proj}/configure
       "CFLAGS=${ep_common_c_flags}"
+#       "FLIBS=-lgfortran -lm -lquadmath"
       "CXXFLAGS=${ep_common_cxx_flags}"
-      "FCFLAGS=${CMAKE_F_FLAGS}"
-      "FFLAGS=${CMAKE_F_FLAGS}"
+      "FCFLAGS=${CMAKE_Fortran_FLAGS}"
+      "FFLAGS=${CMAKE_Fortran_FLAGS}"
+      CC=${CMAKE_C_COMPILER}
+      CXX=${CMAKE_CXX_COMPILER}
+      F77=${CMAKE_Fortran_COMPILER}
+      FC=${CMAKE_Fortran_COMPILER}
+      --srcdir=<SOURCE_DIR>
+      --with-MPICC=${ep_install_dir}/bin/mpicc 
       --libdir=${ep_install_dir}/lib
       --prefix=${ep_install_dir} 
-      --with-CC=gcc 
-      --with-CXX=g++ 
-      --with-F77=gfortran 
-      --with-MPICC=${ep_install_dir}/bin/mpicc 
       --with-hdf5=${ep_install_dir}
+      --with-silo=${ep_install_dir}
       --without-petsc 
       --without-hypre 
-      --with-silo=${ep_install_dir}
       --without-blaslapack 
       --without-cubes 
       --without-eleven 
@@ -96,6 +104,8 @@ if(NOT DEFINED SAMRAI_DIR)
       --with-dot
       --enable-implicit-template-instantiation 
       --disable-deprecated
+#       --enable-shared
+#       --disable-static
 #     LOG_DOWNLOAD 1
     LOG_DOWNLOAD 1
     LOG_CONFIGURE 1
@@ -116,5 +126,5 @@ list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_INCLUDE_PATH:PATH=${ep_install_dir}
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_FORTDIR:PATH=${ep_install_dir}/include)
 
 list(APPEND INCLUDE_PATHS ${ep_install_dir}/include)
-list(APPEND EXTERNAL_LIBRARIES -lSAMRAI)
+list(INSERT EXTERNAL_LIBRARIES 0 -lSAMRAI)
 set(SAMRAI_INCLUDE_PATH ${ep_install_dir}/include PARENT_SCOPE)

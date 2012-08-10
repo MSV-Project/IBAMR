@@ -58,7 +58,13 @@ if(NOT DEFINED LIBMESH_DIR)
   endif()
 
 #     message(STATUS "Adding project:${proj}")
-#FindVTK
+  set(SHARED_LIB_CONF)
+  if(BUILD_SHARED_LIBS)
+    set(SHARED_LIB_CONF --enable-shared --disable-static)
+  else()
+    set(SHARED_LIB_CONF --enable-static --disable-shared)
+  endif() 
+  
   ExternalProject_Add(${proj}
     SOURCE_DIR ${IBTK_BINARY_DIR}/${proj}
     BINARY_DIR ${IBTK_BINARY_DIR}/${proj}
@@ -69,8 +75,8 @@ if(NOT DEFINED LIBMESH_DIR)
     CONFIGURE_COMMAND ${IBTK_BINARY_DIR}/${proj}/configure
       "CFLAGS=${ep_common_c_flags}"
       "CXXFLAGS=${ep_common_cxx_flags}"
-      "FCFLAGS=${CMAKE_F_FLAGS}"
-      "FFLAGS=${CMAKE_F_FLAGS}"
+      "FCFLAGS=${CMAKE_Fortran_FLAGS}"
+      "FFLAGS=${CMAKE_Fortran_FLAGS}"
       "LDFLAGS=-L${ep_install_dir}/lib -Wl,-rpath,${ep_install_dir}/lib"
       --prefix=${ep_install_dir}
       --libdir=${ep_install_dir}/lib
@@ -78,12 +84,12 @@ if(NOT DEFINED LIBMESH_DIR)
       --with-cc=${ep_install_dir}/bin/mpicc
       --with-fc=${ep_install_dir}/bin/mpif90 
       --with-f77=${ep_install_dir}/bin/mpif90 
+      ${SHARED_LIB_CONF}
       --enable-mpi
       --enable-petsc
       --enable-tetgen
       --enable-triangle
-      --enable-vtk
-      --enable-shared
+      --enable-vtk      
       --with-mpi=${ep_install_dir}
       --with-vtk-include=${ep_install_dir}/include/vtk-5.9
       --with-vtk-lib=${ep_install_dir}/lib/vtk-5.9

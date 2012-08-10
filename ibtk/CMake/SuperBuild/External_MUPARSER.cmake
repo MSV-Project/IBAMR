@@ -19,7 +19,7 @@
 ###########################################################################
 
 #
-# OpenMPI
+# MUPARSER
 #
 
 # Make sure this file is included only once
@@ -30,19 +30,17 @@ endif()
 set(${CMAKE_CURRENT_LIST_FILENAME}_FILE_INCLUDED 1)
 
 # Sanity checks
-if(DEFINED OPENMPI_DIR AND NOT EXISTS ${OPENMPI_DIR})
-  message(FATAL_ERROR "OPENMPI_DIR variable is defined but corresponds to non-existing directory")
+if(DEFINED MUPARSER_DIR AND NOT EXISTS ${MUPARSER_DIR})
+  message(FATAL_ERROR "MUPARSER_DIR variable is defined but corresponds to non-existing directory")
 endif()
 
-#set(OPENMPI_enabling_variable OPENMPI_LIBRARIES)
-
-set(OPENMPI_DEPENDENCIES "")
+set(MUPARSER_DEPENDENCIES "")
 
 # Include dependent projects if any
-CheckExternalProjectDependency(OPENMPI)
-set(proj OPENMPI)
+CheckExternalProjectDependency(MUPARSER)
+set(proj MUPARSER)
 
-if(NOT DEFINED OPENMPI_DIR)
+if(NOT DEFINED MUPARSER_DIR)
 
   # Set CMake OSX variable to pass down the external project
   set(CMAKE_OSX_EXTERNAL_PROJECT_ARGS)
@@ -64,34 +62,29 @@ if(NOT DEFINED OPENMPI_DIR)
     SOURCE_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
     BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build
     PREFIX ${proj}${ep_suffix}
-    URL ${OPENMPI_URL}/${OPENMPI_GZ}
-    URL_MD5 ${OPENMPI_MD5}
+    URL ${MUPARSER_URL}/${MUPARSER_GZ}
+    URL_MD5 ${MUPARSER_MD5}
     UPDATE_COMMAND ""
     INSTALL_COMMAND make install
     CONFIGURE_COMMAND ${IBTK_BINARY_DIR}/SuperBuild/${proj}/configure
-      CC=gcc
-      CXX=g++
-      FC=gfortran
-      F77=gfortran
       "CFLAGS=${ep_common_c_flags}"
       "CXXFLAGS=${ep_common_cxx_flags}"
-      "FCFLAGS=${CMAKE_Fortran_FLAGS}"
-      "FFLAGS=${CMAKE_Fortran_FLAGS}"
+      "FCFLAGS=${CMAKE_F_FLAGS}"
+      "FFLAGS=${CMAKE_F_FLAGS}"
+      CC=${CMAKE_C_COMPILER}
+      CXX=${CMAKE_CXX_COMPILER}
+      F77=${CMAKE_Fortran_COMPILER}
+      FC=${CMAKE_Fortran_COMPILER}
       --libdir=${ep_install_dir}/lib
       --prefix=${ep_install_dir}
-      --disable-dependency-tracking
-      --enable-silent-rules
-      --enable-orterun-prefix-by-default
       ${SHARED_LIB_CONF}
-#     TEST_BEFORE_INSTALL 1
     LOG_DOWNLOAD 1
     LOG_CONFIGURE 1
     LOG_TEST 1
     LOG_BUILD 1
     LOG_INSTALL 1
-#     TEST_COMMAND make check
     DEPENDS
-      ${OPENMPI_DEPENDENCIES}
+      ${MUPARSER_DEPENDENCIES}
     )
   set(${proj}_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build)
 
@@ -99,5 +92,8 @@ else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMPI_CXX_COMPILER:PATH=${ep_install_dir}/bin/mpicxx)
-list(APPEND EXTERNAL_LIBRARIES -lmpi_cxx -lmpi)
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMUPARSER_DIR:PATH=${ep_install_dir})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMUPARSER_INCLUDE_PATH:PATH=${ep_install_dir}/include)
+
+list(APPEND INCLUDE_PATHS ${ep_install_dir}/include)
+list(INSERT EXTERNAL_LIBRARIES 0 -lmuparser)

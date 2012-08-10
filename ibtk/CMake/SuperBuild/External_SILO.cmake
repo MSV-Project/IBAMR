@@ -52,7 +52,12 @@ if(NOT DEFINED SILO_DIR)
   endif()
 
 #     message(STATUS "Adding project:${proj}")
-
+  set(SHARED_LIB_CONF)
+  if(BUILD_SHARED_LIBS)
+    set(SHARED_LIB_CONF --enable-shared --disable-static)
+  else()
+    set(SHARED_LIB_CONF --enable-static --disable-shared)
+  endif()   
   ExternalProject_Add(${proj}
     SOURCE_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
     BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build
@@ -64,16 +69,16 @@ if(NOT DEFINED SILO_DIR)
     CONFIGURE_COMMAND ${IBTK_BINARY_DIR}/SuperBuild/${proj}/configure
       "CFLAGS=${ep_common_c_flags}"
       "CXXFLAGS=${ep_common_cxx_flags}"
-      "FCFLAGS=${CMAKE_F_FLAGS}"
-      "FFLAGS=${CMAKE_F_FLAGS}"
-      CC=gcc
-      CXX=g++
-      F77=gfortran
-      FC=gfortran
+      "FCFLAGS=${CMAKE_Fortran_FLAGS}"
+      "FFLAGS=${CMAKE_Fortran_FLAGS}"
+      CC=${CMAKE_C_COMPILER}
+      CXX=${CMAKE_CXX_COMPILER}
+      F77=${CMAKE_Fortran_COMPILER}
+      FC=${CMAKE_Fortran_COMPILER}
       --libdir=${ep_install_dir}/lib
       --prefix=${ep_install_dir}
       --disable-silex
-      --enable-shared
+      ${SHARED_LIB_CONF}
     LOG_DOWNLOAD 1
     LOG_CONFIGURE 1
     LOG_TEST 1
@@ -92,4 +97,4 @@ list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSILO_DIR:PATH=${ep_install_dir})
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSILO_INCLUDE_PATH:PATH=${ep_install_dir}/include)
 
 list(APPEND INCLUDE_PATHS ${ep_install_dir}/include)
-list(APPEND EXTERNAL_LIBRARIES -lsilo)
+list(INSERT EXTERNAL_LIBRARIES 0 -lsilo)

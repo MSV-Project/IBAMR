@@ -18,7 +18,7 @@
 #
 ###########################################################################
 
-macro(CheckExternalProjectDependency proj)
+macro(CheckExternalProjectDependency project)
   # Set indent variable if needed
   if(NOT DEFINED __indent)
     set(__indent "")
@@ -27,35 +27,35 @@ macro(CheckExternalProjectDependency proj)
   endif()
 
   # Sanity checks
-  if(NOT DEFINED ${proj}_DEPENDENCIES)
-    message(FATAL_ERROR "${__indent}${proj}_DEPENDENCIES variable is NOT defined !")
+  if(NOT DEFINED ${project}_DEPENDENCIES)
+    message(FATAL_ERROR "${__indent}${project}_DEPENDENCIES variable is NOT defined !")
   endif()
 
-  # Display dependency of project being processed
-  if("${${proj}_DEPENDENCIES}" STREQUAL "")
-    message(STATUS "SuperBuild - ${__indent}${proj}[OK]")
+  # Display dependency of projectect being processed
+  if("${${project}_DEPENDENCIES}" STREQUAL "")
+    message(STATUS "SuperBuild - ${__indent}${project}[OK]")
   else()
     set(dependency_str " ")
-    foreach(dep ${${proj}_DEPENDENCIES})
+    foreach(dep ${${project}_DEPENDENCIES})
       if(External_${dep}_FILE_INCLUDED)
         set(dependency_str "${dependency_str}${dep}[INCLUDED], ")
       else()
         set(dependency_str "${dependency_str}${dep}, ")
       endif()
     endforeach()
-    message(STATUS "SuperBuild - ${__indent}${proj} => Requires${dependency_str}")
+    message(STATUS "SuperBuild - ${__indent}${project} => Requires${dependency_str}")
   endif()
 
   # Include dependencies
-  foreach(dep ${${proj}_DEPENDENCIES})
+  foreach(dep ${${project}_DEPENDENCIES})
     if(NOT External_${dep}_FILE_INCLUDED)
       include(${IBTK_SOURCE_DIR}/CMake/SuperBuild/External_${dep}.cmake)
     endif()
   endforeach()
 
-  # If project being process has dependencies, indicates it has also been added.
-  if(NOT "${${proj}_DEPENDENCIES}" STREQUAL "")
-    message(STATUS "SuperBuild - ${__indent}${proj}[OK]")
+  # If projectect being process has dependencies, indicates it has also been added.
+  if(NOT "${${project}_DEPENDENCIES}" STREQUAL "")
+    message(STATUS "SuperBuild - ${__indent}${project}[OK]")
   endif()
 
   # Update indent variable

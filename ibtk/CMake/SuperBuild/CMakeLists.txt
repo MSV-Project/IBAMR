@@ -18,7 +18,7 @@
 #
 ###########################################################################
 
-set(IBTK_DEPENDENCIES SAMRAI PETSC SILO BLITZ)
+set(IBTK_DEPENDENCIES MUPARSER QD SAMRAI PETSC SILO BLITZ)
 
 #-----------------------------------------------------------------------------
 # WARNING - No change should be required after this comment
@@ -78,12 +78,14 @@ set(IBTK_INCLUDE_PATH ${IBTK_INCLUDE_PATH} ${INCLUDE_PATHS}
   CACHE INTERNAL "IBTK include paths.")
 
 #-----------------------------------------------------------------------------
-# Makes sure ${IBTK_BINARY_DIR}/bin exists
+# Makes sure ${IBTK_BINARY_DIR}/bin and ${IBTK_BINARY_DIR}/lib exists
 #-----------------------------------------------------------------------------
 IF(NOT EXISTS ${IBTK_BINARY_DIR}/bin)
   FILE(MAKE_DIRECTORY ${IBTK_BINARY_DIR}/bin)
 ENDIF()
-
+IF(NOT EXISTS ${IBTK_BINARY_DIR}/lib)
+  FILE(MAKE_DIRECTORY ${IBTK_BINARY_DIR}/lib)
+ENDIF()
 #-----------------------------------------------------------------------------
 # Set CMake OSX variable to pass down the external project
 #-----------------------------------------------------------------------------
@@ -123,7 +125,6 @@ ExternalProject_Add(IBTK-Configure
     -DIBTK_CMAKE_LIBRARY_OUTPUT_DIRECTORY:PATH=${IBTK_BINARY_DIR}/lib
     -DIBTK_CMAKE_ARCHIVE_OUTPUT_DIRECTORY:PATH=${IBTK_BINARY_DIR}/lib
     -DIBTK_CMAKE_RUNTIME_OUTPUT_DIRECTORY:PATH=${IBTK_BINARY_DIR}/bin
-    -DCMAKE_Fortran_MODULE_DIRECTORY:PATH=${IBTK_BINARY_DIR}/lib
     -DIBTK_INCLUDE_BINARY_PATH:PATH=${IBTK_BINARY_DIR}/include
     -DIBTK_SUPERBUILD:BOOL=OFF
     ${IBTK_SUPERBUILD_EP_ARGS}

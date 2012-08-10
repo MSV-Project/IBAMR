@@ -60,6 +60,12 @@ if(NOT DEFINED BLITZ_DIR)
   
   set(Blitz_PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/blitz_patch_step.cmake)
 #     message(STATUS "Adding project:${proj}")
+  set(SHARED_LIB_CONF)
+  if(BUILD_SHARED_LIBS)
+    set(SHARED_LIB_CONF --enable-shared --disable-static)
+  else()
+    set(SHARED_LIB_CONF --enable-static --disable-shared)
+  endif()    
 
   ExternalProject_Add(${proj}
     SOURCE_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
@@ -77,13 +83,13 @@ if(NOT DEFINED BLITZ_DIR)
       FC=gfortran
       "CFLAGS=${ep_common_c_flags}"
       "CXXFLAGS=${ep_common_cxx_flags}"
-      "FCFLAGS=${CMAKE_F_FLAGS}"
-      "FFLAGS=${CMAKE_F_FLAGS}"
+      "FCFLAGS=${CMAKE_Fortran_FLAGS}"
+      "FFLAGS=${CMAKE_Fortran_FLAGS}"
+      ${SHARED_LIB_CONF}
       --libdir=${ep_install_dir}/lib
       --prefix=${ep_install_dir}
       --enable-optimize
       --disable-debug
-      --enable-shared
       --disable-dot
       --disable-doxygen
       --disable-html-docs

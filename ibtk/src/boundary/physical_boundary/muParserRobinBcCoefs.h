@@ -36,7 +36,7 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 // IBTK THIRD-PARTY INCLUDES
-#include <ibtk/muParser.h>
+#include <muParser.h>
 
 // SAMRAI INCLUDES
 #include <CartesianGridGeometry.h>

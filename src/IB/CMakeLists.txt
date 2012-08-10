@@ -20,6 +20,7 @@ set(kit_SRCS
   IBMethod.C
   IBMethodPostProcessStrategy.C
 #   IBFEMethod.C
+
   IBRodForceSpec.C
   IBLagrangianForceStrategy.C
   IBTargetPointForceSpecFactory.C
@@ -45,5 +46,5 @@ set(kit_SRCS3D
   ${kit_SRCS} 
   )
 
-include(${IBAMR_MODULE_PATH}/KitCommonBlock.cmake)  
+include(KitCommonBlock)
  

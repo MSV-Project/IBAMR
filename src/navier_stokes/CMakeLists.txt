@@ -49,4 +49,4 @@ if(IBTK_BUILD_2D_LIBRARY)
     )
 endif()    
 
-include(${IBAMR_MODULE_PATH}/KitCommonBlock.cmake)  
+include(KitCommonBlock) 

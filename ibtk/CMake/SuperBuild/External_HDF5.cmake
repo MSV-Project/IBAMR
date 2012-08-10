@@ -92,14 +92,14 @@ if(NOT DEFINED HDF5_DIR)
     DEPENDS
       ${HDF5_DEPENDENCIES}
     )
-  set(${proj}_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build)
+  set(${proj}_DIR ${IBTK_BINARY_DIR}/SuperBuild)
 
 else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DHDF5_ROOT_DIR_HINT:PATH=${HDF5_DIR} -DHDF5_DIR:PATH=${HDF5_DIR})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DHDF5_ROOT_DIR_HINT:PATH=${IBTK_BINARY_DIR}/SuperBuild -DHDF5_DIR:PATH=${HDF5_DIR})
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DHDF5_INCLUDE_PATH:PATH=${ep_install_dir}/include)
 
 list(APPEND INCLUDE_PATHS ${ep_install_dir}/include)
-list(APPEND EXTERNAL_LIBRARIES -lhdf5 -lhdf5_hl)
+list(INSERT EXTERNAL_LIBRARIES 0 -lhdf5 -lhdf5_hl)

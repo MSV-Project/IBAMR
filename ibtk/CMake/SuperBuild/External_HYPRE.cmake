@@ -51,6 +51,12 @@ if(NOT DEFINED HYPRE_DIR)
       -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
   endif()
 
+  set(SHARED_LIB_CONF)
+  if(BUILD_SHARED_LIBS)
+    set(SHARED_LIB_CONF --enable-shared --disable-static)
+  else()
+    set(SHARED_LIB_CONF --enable-static --disable-shared)
+  endif() 
 #     message(STATUS "Adding project:${proj}")
 
   ExternalProject_Add(${proj}
@@ -67,17 +73,20 @@ if(NOT DEFINED HYPRE_DIR)
       FC=${ep_install_dir}/bin/mpif90 
       "CFLAGS=${ep_common_c_flags}"
       "CXXFLAGS=${ep_common_cxx_flags}"
-      "FCFLAGS=${CMAKE_F_FLAGS}"
-      "FFLAGS=${CMAKE_F_FLAGS}"
+      "FCFLAGS=${CMAKE_Fortran_FLAGS}"
+      "FFLAGS=${CMAKE_Fortran_FLAGS}"
       "LDFLAGS=-L${ep_install_dir}/lib -Wl,-rpath,${ep_install_dir}/lib"
+      ${SHARED_LIB_CONF}
       --libdir=${ep_install_dir}/lib
       --prefix=${ep_install_dir}
       --with-MPI-include=${ep_install_dir}/include
       --with-MPI-libs=nsl;aio;rt
-      --with-blas=yes 
-      --with-lapack=yes 
+#       --with-blas=yes 
+#       --with-lapack=yes 
       --with-blas-lib-dirs=${LAPACK_DIR}
       --with-lapack-lib-dirs=${LAPACK_DIR}
+      --with-lapack-libs=lapack
+      --with-blas-libs=blas
       --without-babel 
       --without-mli 
       --without-fei 

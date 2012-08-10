@@ -22,6 +22,8 @@
 # VTK
 #
 
+find_package(Qt4)
+
 # Make sure this file is included only once
 get_filename_component(CMAKE_CURRENT_LIST_FILENAME ${CMAKE_CURRENT_LIST_FILE} NAME_WE)
 if(${CMAKE_CURRENT_LIST_FILENAME}_FILE_INCLUDED)
@@ -41,10 +43,14 @@ if(MINGW)
   list(APPEND additional_vtk_cmakevars -DCMAKE_USE_PTHREADS:BOOL=OFF)
 endif()
 
-set(VTK_DEPENDENCIES "")
+set(VTK_DEPENDENCIES HDF5)
 # Include dependent projects if any
 CheckExternalProjectDependency(VTK)
 set(proj VTK)
+
+# Try to find hdf5 dependency
+set(HDF5_ROOT ${HDF5_DIR})
+find_package(HDF5 COMPONENTS C HL)
 
 if(NOT DEFINED VTK_DIR)
 
@@ -67,13 +73,13 @@ if(NOT DEFINED VTK_DIR)
 #     message(STATUS "Adding project:${proj}")
 
   ExternalProject_Add(${proj}
-    SOURCE_DIR ${IBTK_BINARY_DIR}/${proj}
-    BINARY_DIR ${IBTK_BINARY_DIR}/${proj}-build
+    SOURCE_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
+    BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build
     PREFIX ${proj}${ep_suffix}
     GIT_REPOSITORY ${git_protocol}://vtk.org/VTK.git
     GIT_TAG ${revision_tag}
     UPDATE_COMMAND ""
-    INSTALL_COMMAND make install
+    INSTALL_COMMAND ""
     CMAKE_GENERATOR ${gen}
     CMAKE_ARGS
       -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
@@ -88,21 +94,22 @@ if(NOT DEFINED VTK_DIR)
       -DVTK_WRAP_PYTHON:BOOL=${MSVTK_LIB_Scripting/Python/Core_PYTHONQT_USE_VTK}
       -DVTK_WRAP_JAVA:BOOL=OFF
       -DBUILD_SHARED_LIBS:BOOL=${BUILD_SHARED_LIBS}
-      -DDESIRED_QT_VERSION:STRING=4
+      -DVTK_USE_SYSTEM_HDF5:BOOL=ON
+      -DHDF5_INCLUDE_DIR:STRING=${HDF5_INCLUDE_DIRS}
+      -DHDF5_LIBRARIES:STRING=${HDF5_LIBRARIES}
       -DVTK_USE_GUISUPPORT:BOOL=ON
       -DVTK_USE_QVTK_QTOPENGL:BOOL=ON
       -DVTK_USE_QT:BOOL=ON
       -DVTK_LEGACY_REMOVE:BOOL=ON
       -DHDF5_BUILD_HL_LIB:BOOL=ON
-      -DVTK_VISIT_BRIDGE:BOOL=ON
       -DQT_QMAKE_EXECUTABLE:FILEPATH=${QT_QMAKE_EXECUTABLE}
-      -DLIBRARY_OUTPUT_PATH:STRING=${MSVTK_BINARY_DIR}/MSVTK-build/bin
-      -DEXECUTABLE_OUTPUT_PATH:STRING=${MSVTK_BINARY_DIR}/MSVTK-build/bin
+      -DLIBRARY_OUTPUT_PATH:STRING=${IBTK_BINARY_DIR}/lib
+      -DEXECUTABLE_OUTPUT_PATH:STRING=${IBTK_BINARY_DIR}/bin
       
     DEPENDS
       ${VTK_DEPENDENCIES}
     )
-  set(${proj}_DIR ${IBTK_BINARY_DIR}/${proj}-build)
+  set(${proj}_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build)
 
   # Since the link directories associated with VTK is used, it makes sens to
   # update MSVTK_EXTERNAL_LIBRARY_DIRS with its associated library output directory

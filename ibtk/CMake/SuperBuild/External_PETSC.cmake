@@ -54,7 +54,12 @@ if(NOT DEFINED PETSC_DIR)
   endif()
 
 #     message(STATUS "Adding project:${proj}")
-
+  set(SHARED_LIB_CONF)
+  if(BUILD_SHARED_LIBS)
+    set(SHARED_LIB_CONF --with-shared-libraries=1)
+  else()
+    set(SHARED_LIB_CONF --with-shared-libraries=0)
+  endif() 
   # Set PETSc specific environment variables
   set(ENV{PETSC_DIR} ${IBTK_BINARY_DIR}/SuperBuild/${proj})
   
@@ -69,8 +74,8 @@ if(NOT DEFINED PETSC_DIR)
     CONFIGURE_COMMAND ./configure
       "--CFLAGS=${ep_common_c_flags}"
       "--CXXFLAGS=${ep_common_cxx_flags}"
-      "--FCFLAGS=${CMAKE_F_FLAGS}"
-      "--FFLAGS=${CMAKE_F_FLAGS}"
+      "--FCFLAGS=${CMAKE_Fortran_FLAGS}"
+      "--FFLAGS=${CMAKE_Fortran_FLAGS}"
       "--COPTFLAGS=${CMAKE_C_FLAGS_RELEASE}"
       "--CXXOPTFLAGS=${CMAKE_CXX_FLAGS_RELEASE}"
       "--FOPTFLAGS=${CMAKE_F_FLAGS_RELEASE}"
@@ -85,6 +90,7 @@ if(NOT DEFINED PETSC_DIR)
       --with-mpi=1
       --with-mpi-dir=${ep_install_dir}
       --with-x=0
+      ${SHARED_LIB_CONF}
 #     TEST_BEFORE_INSTALL 1
     LOG_DOWNLOAD 1
     LOG_CONFIGURE 1
@@ -108,4 +114,4 @@ list(APPEND IBTK_SUPERBUILD_EP_ARGS -DPETSC_ARCH:STRING=build)
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DPETSC_INCLUDE_PATH:PATH=$ENV{PETSC_DIR}/include)
 
 list(APPEND INCLUDE_PATHS $ENV{PETSC_DIR}/build/include $ENV{PETSC_DIR}/include)
-list(APPEND EXTERNAL_LIBRARIES -lpetsc)
+list(INSERT EXTERNAL_LIBRARIES 0 -lpetsc)

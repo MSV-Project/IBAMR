@@ -106,7 +106,7 @@ endforeach()
 
 #-----------------------------------------------------------------------------
 # Install directories, used for install rules.
-#
+#----------------------------------------------------------------------------
 if(NOT IBTK_INSTALL_BIN_DIR)
   set(IBTK_INSTALL_BIN_DIR "bin")
 endif()
@@ -124,7 +124,7 @@ endif()
 
 # -----------------------------------------------------------------------------
 # Path to IBTK cmake modules
-#
+# -----------------------------------------------------------------------------
 set(IBTK_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 
 #------------------------------------------------------------------------------
@@ -252,7 +252,9 @@ set(MPI_LIBS ${MPI_CXX_LIBRARIES})
 list(APPEND IBTK_INCLUDE_PATH ${MPI_CXX_INCLUDE_PATH})
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_CXX_LINK_FLAGS}")
 list(APPEND IBTK_EXTERNAL_LIBRARIES
-  ${MPI_LIBS}
+  ${MPI_CXX_LIBRARIES}
+  ${MPI_Fortran_LIBRARIES}
+  ${MPI_C_LIBRARIES}
   )
 
 # -----------------------------------------------------------------------------
@@ -292,7 +294,8 @@ if(NOT PETSC_DIR)
 endif()  
 set(PETSC_LIBS -lpetsc -lX11)
 list(APPEND IBTK_INCLUDE_PATH ${PETSC_INCLUDE_PATH} ${PETSC_DIR}/${PETSC_ARCH}/include)
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${PETSC_DIR}/${PETSC_ARCH}/lib")
+set(CMAKE_EXE_LINKER_FLAGS 
+  "${CMAKE_EXE_LINKER_FLAGS} -L${PETSC_DIR}/${PETSC_ARCH}/lib -Wl,-rpath,${PETSC_DIR}/${PETSC_ARCH}/lib ")
 list(APPEND IBTK_EXTERNAL_LIBRARIES
   ${PETSC_LIBS} 
   )
@@ -362,17 +365,27 @@ list(APPEND IBTK_EXTERNAL_LIBRARIES
 # --------------------------------------------------------------------------
 # Find qd library
 # --------------------------------------------------------------------------
-set(QD_DIR ${PROJECT_SOURCE_DIR}/third_party/qd-2.3.11)
-set(QD_LIBS qd qd_fortran)
+set(QD_DIR CACHE PATH "QD Directory.")
+if(NOT QD_DIR)
+  message(FATAL_ERROR "Must specify QD installation directory.")
+endif() 
+set(QD_LIBS -lqdmod -lqd)
+list(APPEND IBTK_INCLUDE_PATH ${QD_INCLUDE_PATH})
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${QD_DIR}/lib")
 list(APPEND IBTK_EXTERNAL_LIBRARIES
   ${QD_LIBS} 
   )
+
 # --------------------------------------------------------------------------
 # Find muParser library
 # --------------------------------------------------------------------------
-set(MUPARSER_DIR src/third_party/muParser)
-add_subdirectory(${MUPARSER_DIR})
-set(MUPARSER_LIBS muParser)
+set(MUPARSER_DIR CACHE PATH "MUPARSER Directory.")
+if(NOT MUPARSER_DIR)
+  message(FATAL_ERROR "Must specify MUPARSER installation directory.")
+endif() 
+set(MUPARSER_LIBS -lmuparser)
+list(APPEND IBTK_INCLUDE_PATH ${MUPARSER_INCLUDE_PATH})
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${MUPARSER_DIR}/lib")
 list(APPEND IBTK_EXTERNAL_LIBRARIES
   ${MUPARSER_LIBS} 
   )
@@ -485,7 +498,7 @@ endif()
 if(NOT DEFINED ${PROJECT_NAME}_EXPORT_FILE)
   set(${PROJECT_NAME}_EXPORT_FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake)
 endif()
-export(TARGETS ${IBTK_LIBRARIES3D} ${QD_LIBS} ${MUPARSER_LIBS} FILE ${${PROJECT_NAME}_EXPORT_FILE})
+export(TARGETS ${IBTK_LIBRARIES3D} FILE ${${PROJECT_NAME}_EXPORT_FILE})
 if(IBTK_BUILD_2D_LIBS)
   export(TARGETS ${IBTK_LIBRARIES2D} APPEND FILE ${${PROJECT_NAME}_EXPORT_FILE})
 endif()

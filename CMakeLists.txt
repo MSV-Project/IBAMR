@@ -37,8 +37,10 @@ set(IBTK_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/ibtk" CACHE PATH "Path to IBTK ins
 set(IBTK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ibtk" CACHE PATH "Path to IBTK sources.")
 set(IBTK_INCLUDE_PATH "${IBTK_DIR}/include" CACHE PATH "IBTK include paths.")
 set(IBTK_EXTERNAL_LIBRARIES CACHE INTERNAL "IBTK external libraries.")
-set(IBTK_SUPERBUILD_DIR ${IBTK_BIN_DIR}/SuperBuild)
-set(SAMRAI_FORTDIR ${IBTK_SUPERBUILD_DIR}/include)
+if(IBTK_SUPERBUILD)
+  set(IBTK_SUPERBUILD_DIR ${IBTK_BIN_DIR}/SuperBuild)
+  set(SAMRAI_FORTDIR ${IBTK_SUPERBUILD_DIR}/include)
+endif()  
 
 if(IBAMR_BUILD_2D_LIBS)
   set(IBTK_BUILD_2D_LIBS ON CACHE BOOL FORCE)
@@ -56,8 +58,6 @@ set(IBTK_LIBRARIES3D
   -libtkcoarsen_ops3D
   -libtkutilities3D
   -libtklagrangian3D
-  -lmuParser
-  -lqd
   )
   
 if(IBAMR_BUILD_2D_LIBS)
@@ -71,8 +71,6 @@ if(IBAMR_BUILD_2D_LIBS)
     -libtkcoarsen_ops2D
     -libtkutilities2D
     -libtklagrangian2D
-    -lmuParser  
-    -lqd
     )
 endif()
 
@@ -88,18 +86,68 @@ include(${IBTK_DIR}/CMake/FindM4.cmake)
 # message("IBTK_EXTERNAL_LIBRARIES = ${IBTK_EXTERNAL_LIBRARIES}")
 # message("IBTK_INCLUDE_PATH = ${IBTK_INCLUDE_PATH}")
 
+
+# ----------------------------------------------------------------------------
+# MPI is needed. Force it to find one used by ibtk
+# FindMPI
+# ----------------------------------------------------------------------------
+if(IBTK_SUPERBUILD)
+  set(MPI_CXX_COMPILER ${IBTK_SUPERBUILD_DIR}/bin/mpicxx)
+  set(MPIEXEC ${IBTK_SUPERBUILD_DIR}/bin/mpiexec)
+endif()  
+find_package(MPI REQUIRED)
+
+#----------------------------------------------------------------------------
+# Output directories.
+#----------------------------------------------------------------------------
+
+# Makes sure ${IBAMR_BINARY_DIR}/bin exists
+IF(NOT EXISTS ${IBAMR_BINARY_DIR}/bin)
+  FILE(MAKE_DIRECTORY ${IBAMR_BINARY_DIR}/bin)
+ENDIF()
+
+set(IBAMR_CMAKE_RUNTIME_OUTPUT_DIRECTORY ${IBAMR_BINARY_DIR}/bin CACHE PATH "")
+foreach(type LIBRARY ARCHIVE RUNTIME)
+  # Make sure the directory exists
+  if(DEFINED IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY
+     AND NOT EXISTS ${IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY})
+    message(FATAL_ERROR 
+      "IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY is set to a non-existing 
+      directory [${IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY}]")
+  endif()
+
+  if(IBAMR_SUPERBUILD)
+    set(output_dir ${IBAMR_BINARY_DIR}/lib)
+    if(NOT DEFINED IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY)
+      set(IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY ${IBAMR_BINARY_DIR}/lib)
+    endif()
+  else()
+    if(NOT DEFINED IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY)
+      set(output_dir ${IBAMR_BINARY_DIR}/lib)
+    else()
+      set(output_dir ${IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY})
+    endif()
+  endif()
+  set(CMAKE_${type}_OUTPUT_DIRECTORY ${output_dir} CACHE INTERNAL 
+    "Single output directory for building all libraries.")
+endforeach()
+
 # ----------------------------------------------------------------------------
 # Set IBAMR include directories
 # ----------------------------------------------------------------------------
-include_directories(${IBTK_INCLUDE_PATH} include)
+include_directories(${IBTK_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH} include)
   
 set(CMAKE_EXE_LINKER_FLAGS 
-  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_SUPERBUILD_DIR}/lib -Wl,--export-dynamic")
+  "${CMAKE_EXE_LINKER_FLAGS} ${MPI_CXX_LINK_FLAGS}")  
 set(CMAKE_EXE_LINKER_FLAGS 
-  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_SUPERBUILD_DIR}/PETSC/build/lib")
+  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_SUPERBUILD_DIR}/PETSC/build/lib -Wl,-rpath,${IBTK_SUPERBUILD_DIR}/PETSC/build/lib")
 set(CMAKE_EXE_LINKER_FLAGS 
-  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_BIN_DIR}/lib")
+  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_BIN_DIR}/lib -Wl,-rpath,${IBTK_BIN_DIR}/lib")
+set(CMAKE_EXE_LINKER_FLAGS 
+  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_SUPERBUILD_DIR}/lib -Wl,-rpath,${IBTK_SUPERBUILD_DIR}/lib")
   
+set(CMAKE_SHARED_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS})
+
 # -----------------------------------------------------------------------------
 # Add options: USING_LARGE_GHOST_CELL_WIDTH (default 0) and 
 # USING_EXPENSIVE_CF_INTERPOLATION (default 0)
@@ -133,6 +181,11 @@ else()
     use cases, e.g. general anisotropic diffusion tensors if you wish to 
     enable support for large ghost cell widths, enable this option")
 endif() 
+
+option(CHECK_ASSERTIONS "Debug flag to check assertions in IBAMR." OFF)
+if(CHECK_ASSERTIONS)
+  add_definitions(-DDEBUG_CHECK_ASSERTIONS)
+endif()
 
 # ----------------------------------------------------------------------------
 # Set subdomain indices option
@@ -173,6 +226,11 @@ endif()
 set(IBAMR_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${IBTK_DIR}/CMake)
 
 #-----------------------------------------------------------------------------
+# Update CMake module path
+#
+set(CMAKE_MODULE_PATH "${IBAMR_MODULE_PATH}" ${CMAKE_MODULE_PATH})
+
+#-----------------------------------------------------------------------------
 # IBAMR version number.  An even minor number corresponds to releases.
 #-----------------------------------------------------------------------------
 set(IBAMR_MAJOR_VERSION 0)
@@ -211,11 +269,6 @@ if(NOT IBAMR_INSTALL_DOC_DIR)
 endif()
 
 #-----------------------------------------------------------------------------
-# Update CMake module path
-#
-set(CMAKE_MODULE_PATH "${IBAMR_MODULE_PATH}" ${CMAKE_MODULE_PATH})
-
-#-----------------------------------------------------------------------------
 # Documentation
 #
 option(DOCUMENTATION_TARGET_IN_ALL 
@@ -251,7 +304,8 @@ set(IBAMR_F_FLAGS
   "${CMAKE_F_FLAGS_INIT} ${VISIBILITY_F_FLAGS} ${ADDITIONAL_F_FLAGS}")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-  set(cflags "-Wall -Wextra -Wpointer-arith -Winvalid-pch -Wcast-align -Wwrite-strings -D_FORTIFY_SOURCE=2")
+  set(cflags 
+    "-Wall -Wextra -Wpointer-arith -Winvalid-pch -Wcast-align -Wwrite-strings -D_FORTIFY_SOURCE=2")
 
   if(MINGW)
     # suppress warnings about auto imported symbols
@@ -259,7 +313,8 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   endif()
 
   set(IBAMR_C_FLAGS "${cflags} ${IBAMR_C_FLAGS}")
-  set(IBAMR_CXX_FLAGS "${cflags} -Woverloaded-virtual -Wold-style-cast -Wstrict-null-sentinel -Wsign-promo ${IBAMR_CXX_FLAGS}")
+  set(IBAMR_CXX_FLAGS 
+    "${cflags} -Woverloaded-virtual -Wold-style-cast -Wstrict-null-sentinel -Wsign-promo ${IBAMR_CXX_FLAGS}")
 endif()
 
 if(MSVC)
@@ -348,25 +403,17 @@ endif()
 list(APPEND IBAMR_LIBRARIES3D 
   ${IBTK_LIBRARIES3D}
   ${IBTK_EXTERNAL_LIBRARIES}
-  -lmpi_cxx 
-  -lmpi 
-  -lm 
-  -lrt 
-  -lnsl 
-  -lutil 
-  -ldl
+  ${MPI_CXX_LIBRARIES}
+  ${MPI_C_LIBRARIES}
+  ${MPI_Fortran_LIBRARIES}
   )
 if(IBAMR_BUILD_2D_LIBS)
   list(APPEND IBAMR_LIBRARIES2D 
     ${IBTK_LIBRARIES2D}
     ${IBTK_EXTERNAL_LIBRARIES}
-    -lmpi_cxx 
-    -lmpi 
-    -lm 
-    -lrt 
-    -lnsl 
-    -lutil 
-    -ldl
+    ${MPI_CXX_LIBRARIES}
+    ${MPI_C_LIBRARIES}
+    ${MPI_Fortran_LIBRARIES}
     )
 endif()
 
