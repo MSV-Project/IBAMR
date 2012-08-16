@@ -33,9 +33,9 @@ option(IBAMR_BUILD_2D_LIBS "Build the optional 2D libraries." OFF)
 # --------------------------------------------------------------------------
 # Single or multiple (default) library build (needs CMake 2.8.8)
 # -------------------------------------------------------------------------- 
-option(IBAMR_BUILD_SINGLE_LIBRARY "Build single library" OFF)
+option(IBAMR_BUILD_SINGLE_LIBRARY "Build IBAMR single library" OFF)
 if(IBAMR_BUILD_SINGLE_LIBRARY)
-  set(IBTK_BUILD_SINGLE_LIBRARY ON CACHE INTERNAL "" FORCE)
+  set(IBTK_BUILD_SINGLE_LIBRARY ON CACHE INTERNAL "Build IBTK single library" FORCE)
 endif(IBAMR_BUILD_SINGLE_LIBRARY)  
 
 # -----------------------------------------------------------------------------
@@ -54,49 +54,57 @@ if(IBAMR_BUILD_2D_LIBS)
   set(IBTK_BUILD_2D_LIBS ON CACHE BOOL FORCE)
 endif()
 
+# Build IBTK first
+
 add_subdirectory(ibtk)
 
 if(NOT IBAMR_BUILD_SINGLE_LIBRARY)
   set(IBTK_LIBRARIES3D   
-    -libtkfortran3D 
-    -libtkpatch_data3D 
-    -libtkrefine_ops3D 
-    -libtksolvers3D 
-    -libtkmath3D 
-    -libtkboundary3D
-    -libtkcoarsen_ops3D
-    -libtkutilities3D
-    -libtklagrangian3D
+    ibtkfortran3D 
+    ibtkpatch_data3D 
+    ibtkrefine_ops3D 
+    ibtksolvers3D 
+    ibtkmath3D 
+    ibtkboundary3D
+    ibtkcoarsen_ops3D
+    ibtkutilities3D
+    ibtklagrangian3D
     )
     
   if(IBAMR_BUILD_2D_LIBS)
     set(IBTK_LIBRARIES2D 
-      -libtkfortran2D 
-      -libtkpatch_data2D 
-      -libtkrefine_ops2D 
-      -libtksolvers2D 
-      -libtkmath2D 
-      -libtkboundary2D
-      -libtkcoarsen_ops2D
-      -libtkutilities2D
-      -libtklagrangian2D
+      ibtkfortran2D 
+      ibtkpatch_data2D 
+      ibtkrefine_ops2D 
+      ibtksolvers2D 
+      ibtkmath2D 
+      ibtkboundary2D
+      ibtkcoarsen_ops2D
+      ibtkutilities2D
+      ibtklagrangian2D
       )
   endif()
 else()
   set(IBTK_LIBRARIES3D   
-    -libtk3D
+    ibtk3D
     )
     
   if(IBAMR_BUILD_2D_LIBS)
     set(IBTK_LIBRARIES2D 
-      -libtk2D
+      ibtk2D
       )
   endif()
 endif()
 
+# -----------------------------------------------------------------------------
+# FindMPI -- Find MPI used by IBTK
+#
+set(MPI_CXX_COMPILER ${IBTK_SUPERBUILD_DIR}/bin/mpicxx)
 set(MPIEXEC ${IBTK_SUPERBUILD_DIR}/bin/mpiexec)
-set(MPIEXEC_NUMPROC_FLAG "-np")
-
+find_package(MPI)
+if(NOT MPI_CXX_FOUND OR NOT MPI_Fortran_FOUND OR NOT MPI_C_FOUND)
+  message(FATAL_ERROR "MPI not found.")
+endif()
 
 # ----------------------------------------------------------------------------
 # We need the m4 macro preprocessor and utility macro
@@ -140,8 +148,21 @@ endforeach()
 # ----------------------------------------------------------------------------
 # Set IBAMR include directories
 # ----------------------------------------------------------------------------
-include_directories(${IBTK_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH} include src/utilities)
+set(IBAMR_INCLUDE_DIRS 
+  ${IBTK_INCLUDE_PATH} 
+  ${MPI_CXX_INCLUDE_PATH} 
+  ${CMAKE_CURRENT_SOURCE_DIR}/include 
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/utilities)
   
+include_directories(${IBAMR_INCLUDE_DIRS})
+  
+set(IBAMR_LIBRARY_DIRS 
+  ${CMAKE_CURRENT_BINARY_DIR}/lib
+  ${IBTK_SUPERBUILD_DIR}/lib
+  ${IBTK_SUPERBUILD_DIR}/PETSC/build/lib 
+  ${IBTK_BIN_DIR}/lib
+  )
+
 set(CMAKE_EXE_LINKER_FLAGS 
   "${CMAKE_EXE_LINKER_FLAGS} ${MPI_CXX_LINK_FLAGS}")  
 set(CMAKE_EXE_LINKER_FLAGS 
@@ -228,12 +249,12 @@ endif()
 # -----------------------------------------------------------------------------
 # Path to IBAMR cmake modules
 #-----------------------------------------------------------------------------
-set(IBAMR_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${IBTK_DIR}/CMake)
+set(IBAMR_CMAKE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${IBTK_DIR}/CMake)
 
 #-----------------------------------------------------------------------------
 # Update CMake module path
 #
-set(CMAKE_MODULE_PATH "${IBAMR_MODULE_PATH}" ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH "${IBAMR_CMAKE_DIRS}" ${CMAKE_MODULE_PATH})
 
 #-----------------------------------------------------------------------------
 # IBAMR version number.  An even minor number corresponds to releases.
@@ -392,50 +413,73 @@ if(IBAMR_BUILD_SINGLE_LIBRARY)
     endforeach()
     add_library(ibamr2D ${CMAKE_CURRENT_BINARY_DIR}/lib.C 
       ${IBAMR_LIBRARY_TARGETS2D})
+    add_dependencies(ibamr2D IBTK)
     set(IBAMR_LIBRARIES2D ibamr2D)
   endif(IBAMR_BUILD_2D_LIBS)
   add_library(ibamr3D ${CMAKE_CURRENT_BINARY_DIR}/lib.C 
     ${IBAMR_LIBRARY_TARGETS3D})
+  add_dependencies(ibamr3D IBTK)
   set(IBAMR_LIBRARIES3D ibamr3D)
 else(IBAMR_BUILD_SINGLE_LIBRARY)
   message(STATUS "Single library build is disabled.")
 endif(IBAMR_BUILD_SINGLE_LIBRARY)
 
 # --------------------------------------------------------------------------
+# Export all targets created
+# --------------------------------------------------------------------------
+if(NOT DEFINED IBAMR_TARGETS_FILE)
+  set(IBAMR_TARGETS_FILE ${CMAKE_CURRENT_BINARY_DIR}/IBAMRTargets.cmake)
+endif()
+export(TARGETS ${IBAMR_LIBRARIES3D} FILE ${IBAMR_TARGETS_FILE})
+if(IBAMR_BUILD_2D_LIBS)
+  export(TARGETS ${IBAMR_LIBRARIES2D} APPEND FILE ${IBAMR_EXPORT_FILE})
+endif()
+
+set(IBAMR_USE_FILE "${IBAMR_SOURCE_DIR}/UseIBAMR.cmake")
+
+# --------------------------------------------------------------------------
+# Configuration variables
+#
+set(IBAMR_LIBRARIES ${IBAMR_LIBRARIES3D} ${IBTK_LIBRARIES3D} ${IBAMR_LIBRARIES2D} ${IBTK_LIBRARIES2D})
+configure_file(
+    ${IBAMR_SOURCE_DIR}/CMake/IBAMRConfig.cmake.in
+    ${IBAMR_BINARY_DIR}/IBAMRConfig.cmake 
+    @ONLY IMMEDIATE)
+    
+# --------------------------------------------------------------------------
 # Append necessary libs to compile apps
 # --------------------------------------------------------------------------
 list(APPEND IBAMR_LIBRARIES3D 
-  ${IBTK_LIBRARIES3D}
   ${IBTK_EXTERNAL_LIBRARIES}
   ${MPI_CXX_LIBRARIES}
   ${MPI_C_LIBRARIES}
   ${MPI_Fortran_LIBRARIES}
+  ${MPI_EXTRA_LIBRARY}
   )
+foreach(lib ${IBTK_LIBRARIES3D})  
+  list(INSERT IBAMR_LIBRARIES3D 0 -l${lib})
+endforeach()
+
 if(IBAMR_BUILD_2D_LIBS)
   list(APPEND IBAMR_LIBRARIES2D 
-    ${IBTK_LIBRARIES2D}
     ${IBTK_EXTERNAL_LIBRARIES}
     ${MPI_CXX_LIBRARIES}
     ${MPI_C_LIBRARIES}
     ${MPI_Fortran_LIBRARIES}
+    ${MPI_EXTRA_LIBRARY}
     )
+  foreach(lib ${IBTK_LIBRARIES2D})  
+    list(INSERT IBAMR_LIBRARIES2D 0 -l${lib})
+  endforeach()
 endif()
 
-# # --------------------------------------------------------------------------
-# # Export all targets used here
-# # --------------------------------------------------------------------------
-# if(NOT DEFINED ${PROJECT_NAME}_EXPORT_FILE)
-#   set(${PROJECT_NAME}_EXPORT_FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake)
-# endif()
-# export(TARGETS ${IBAMR_LIBRARIES3D} FILE ${${PROJECT_NAME}_EXPORT_FILE})
-# if(IBAMR_BUILD_2D_LIBS)
-#   export(TARGETS ${IBAMR_LIBRARIES2D} APPEND FILE ${${PROJECT_NAME}_EXPORT_FILE})
-# endif()
 
 # --------------------------------------------------------------------------
 # add testing
 # --------------------------------------------------------------------------
-INCLUDE(CTest)
-IF(BUILD_TESTING)
-    ADD_SUBDIRECTORY(examples)
-ENDIF()    
+include(CTest)
+if(BUILD_TESTING)
+    add_subdirectory(examples)
+endif()    
+
+

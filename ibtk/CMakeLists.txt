@@ -35,8 +35,8 @@ endif()
 # -----------------------------------------------------------------------------
 # Set export file location
 # -----------------------------------------------------------------------------
-set(${PROJECT_NAME}_EXPORT_FILE 
-  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake 
+set(IBTK_TARGETS_FILE 
+  ${CMAKE_CURRENT_BINARY_DIR}/IBTKTargets.cmake 
   CACHE INTERNAL "IBTK library export file.")
 
 # -----------------------------------------------------------------------------
@@ -180,7 +180,7 @@ mark_as_advanced(ADDITIONAL_F_FLAGS)
 #
 set(IBTK_C_FLAGS "${CMAKE_C_FLAGS_INIT} ${ADDITIONAL_C_FLAGS}")
 set(IBTK_CXX_FLAGS "${CMAKE_CXX_FLAGS_INIT} ${VISIBILITY_CXX_FLAGS} ${ADDITIONAL_CXX_FLAGS}")
-set(IBTK_F_FLAGS "${CMAKE_F_FLAGS_INIT} ${VISIBILITY_F_FLAGS} ${ADDITIONAL_F_FLAGS}")
+set(IBTK_Fortran_FLAGS "${CMAKE_F_FLAGS_INIT} ${VISIBILITY_F_FLAGS} ${ADDITIONAL_F_FLAGS}")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
   set(cflags "-Wall -Wextra -Wpointer-arith -Winvalid-pch -Wcast-align -Wwrite-strings -D_FORTIFY_SOURCE=2")
@@ -254,7 +254,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_CXX_LINK_FLAGS}")
 list(APPEND IBTK_EXTERNAL_LIBRARIES
   ${MPI_CXX_LIBRARIES}
   ${MPI_Fortran_LIBRARIES}
-  ${MPI_C_LIBRARIES}
+  ${MPI_C_LIBRARIES} -lopen-rte -lopen-pal
   )
 
 # -----------------------------------------------------------------------------
@@ -495,12 +495,12 @@ endif()
 # --------------------------------------------------------------------------
 # Export all targets used here
 # --------------------------------------------------------------------------
-if(NOT DEFINED ${PROJECT_NAME}_EXPORT_FILE)
-  set(${PROJECT_NAME}_EXPORT_FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake)
+if(NOT DEFINED IBTK_TARGETS_FILE)
+  set(IBTK_TARGETS_FILE ${CMAKE_CURRENT_BINARY_DIR}/IBTKTargets.cmake)
 endif()
-export(TARGETS ${IBTK_LIBRARIES3D} FILE ${${PROJECT_NAME}_EXPORT_FILE})
+export(TARGETS ${IBTK_LIBRARIES3D} FILE ${IBTK_TARGETS_FILE})
 if(IBTK_BUILD_2D_LIBS)
-  export(TARGETS ${IBTK_LIBRARIES2D} APPEND FILE ${${PROJECT_NAME}_EXPORT_FILE})
+  export(TARGETS ${IBTK_LIBRARIES2D} APPEND FILE ${IBTK_TARGETS_FILE})
 endif()
 
 # --------------------------------------------------------------------------
