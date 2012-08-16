@@ -71,5 +71,5 @@ endif()
 
 
 include(${IBTK_MODULE_PATH}/KitCommonBlock.cmake)  
-target_link_libraries(ibtk${KIT}3D -L${QD_DIR}/lib ${QD_LIBS})
+# target_link_libraries(ibtk${KIT}3D -L${QD_DIR}/lib ${QD_LIBS})
 

@@ -19609,6 +19609,14 @@ echo $ECHO_N "checking for SILO library... $ECHO_C" >&6; }
       silo_LIBS='-lsilo'
       { echo "$as_me:$LINENO: result: using $silo_LIBS" >&5
 echo "${ECHO_T}using $silo_LIBS" >&6; }
+   elif test -f ${silo_PREFIX}/lib/libsilo.so; then
+      silo_LIBS='-lsilo'
+      { echo "$as_me:$LINENO: result: using $silo_LIBS" >&5
+echo "${ECHO_T}using $silo_LIBS" >&6; }
+   elif test -f ${silo_PREFIX}/lib/libsiloh5.so; then
+      silo_LIBS='-lsiloh5'
+      { echo "$as_me:$LINENO: result: using $silo_LIBS" >&5
+echo "${ECHO_T}using $silo_LIBS" >&6; }
    elif test -f ${silo_PREFIX}/lib/libsiloh5.a; then
       silo_LIBS='-lsiloh5'
       { echo "$as_me:$LINENO: result: using $silo_LIBS" >&5

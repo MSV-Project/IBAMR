@@ -42,15 +42,6 @@ set(proj QD)
 
 if(NOT DEFINED QD_DIR)
 
-  # Set CMake OSX variable to pass down the external project
-  set(CMAKE_OSX_EXTERNAL_PROJECT_ARGS)
-  if(APPLE)
-    list(APPEND CMAKE_OSX_EXTERNAL_PROJECT_ARGS
-      -DCMAKE_OSX_ARCHITECTURES=${CMAKE_OSX_ARCHITECTURES}
-      -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
-      -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
-  endif()
-
 #     message(STATUS "Adding project:${proj}")
   set(SHARED_LIB_CONF)
   if(BUILD_SHARED_LIBS)
@@ -77,9 +68,7 @@ if(NOT DEFINED QD_DIR)
       FC=${CMAKE_Fortran_COMPILER}
       --libdir=${ep_install_dir}/lib
       --prefix=${ep_install_dir}
-      --enable-shared
       --enable-fortran
-      --disable-static
       ${SHARED_LIB_CONF}
     LOG_DOWNLOAD 1
     LOG_CONFIGURE 1

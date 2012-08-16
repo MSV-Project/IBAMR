@@ -18,7 +18,7 @@
 #
 ########################################################################### 
 
-cmake_minimum_required(VERSION 2.8.6)
+cmake_minimum_required(VERSION 2.8.8)
 
 # -----------------------------------------------------------------------------
 project(IBAMR CXX Fortran)
@@ -29,6 +29,14 @@ project(IBAMR CXX Fortran)
 # 3D library is built)
 # -----------------------------------------------------------------------------
 option(IBAMR_BUILD_2D_LIBS "Build the optional 2D libraries." OFF)
+
+# --------------------------------------------------------------------------
+# Single or multiple (default) library build (needs CMake 2.8.8)
+# -------------------------------------------------------------------------- 
+option(IBAMR_BUILD_SINGLE_LIBRARY "Build single library" OFF)
+if(IBAMR_BUILD_SINGLE_LIBRARY)
+  set(IBTK_BUILD_SINGLE_LIBRARY ON CACHE INTERNAL "" FORCE)
+endif(IBAMR_BUILD_SINGLE_LIBRARY)  
 
 # -----------------------------------------------------------------------------
 # IBAMR requires IBTK
@@ -48,31 +56,47 @@ endif()
 
 add_subdirectory(ibtk)
 
-set(IBTK_LIBRARIES3D   
-  -libtkfortran3D 
-  -libtkpatch_data3D 
-  -libtkrefine_ops3D 
-  -libtksolvers3D 
-  -libtkmath3D 
-  -libtkboundary3D
-  -libtkcoarsen_ops3D
-  -libtkutilities3D
-  -libtklagrangian3D
-  )
-  
-if(IBAMR_BUILD_2D_LIBS)
-  set(IBTK_LIBRARIES2D 
-    -libtkfortran2D 
-    -libtkpatch_data2D 
-    -libtkrefine_ops2D 
-    -libtksolvers2D 
-    -libtkmath2D 
-    -libtkboundary2D
-    -libtkcoarsen_ops2D
-    -libtkutilities2D
-    -libtklagrangian2D
+if(NOT IBAMR_BUILD_SINGLE_LIBRARY)
+  set(IBTK_LIBRARIES3D   
+    -libtkfortran3D 
+    -libtkpatch_data3D 
+    -libtkrefine_ops3D 
+    -libtksolvers3D 
+    -libtkmath3D 
+    -libtkboundary3D
+    -libtkcoarsen_ops3D
+    -libtkutilities3D
+    -libtklagrangian3D
     )
+    
+  if(IBAMR_BUILD_2D_LIBS)
+    set(IBTK_LIBRARIES2D 
+      -libtkfortran2D 
+      -libtkpatch_data2D 
+      -libtkrefine_ops2D 
+      -libtksolvers2D 
+      -libtkmath2D 
+      -libtkboundary2D
+      -libtkcoarsen_ops2D
+      -libtkutilities2D
+      -libtklagrangian2D
+      )
+  endif()
+else()
+  set(IBTK_LIBRARIES3D   
+    -libtk3D
+    )
+    
+  if(IBAMR_BUILD_2D_LIBS)
+    set(IBTK_LIBRARIES2D 
+      -libtk2D
+      )
+  endif()
 endif()
+
+set(MPIEXEC ${IBTK_SUPERBUILD_DIR}/bin/mpiexec)
+set(MPIEXEC_NUMPROC_FLAG "-np")
+
 
 # ----------------------------------------------------------------------------
 # We need the m4 macro preprocessor and utility macro
@@ -86,21 +110,9 @@ include(${IBTK_DIR}/CMake/FindM4.cmake)
 # message("IBTK_EXTERNAL_LIBRARIES = ${IBTK_EXTERNAL_LIBRARIES}")
 # message("IBTK_INCLUDE_PATH = ${IBTK_INCLUDE_PATH}")
 
-
-# ----------------------------------------------------------------------------
-# MPI is needed. Force it to find one used by ibtk
-# FindMPI
-# ----------------------------------------------------------------------------
-if(IBTK_SUPERBUILD)
-  set(MPI_CXX_COMPILER ${IBTK_SUPERBUILD_DIR}/bin/mpicxx)
-  set(MPIEXEC ${IBTK_SUPERBUILD_DIR}/bin/mpiexec)
-endif()  
-find_package(MPI REQUIRED)
-
 #----------------------------------------------------------------------------
 # Output directories.
 #----------------------------------------------------------------------------
-
 # Makes sure ${IBAMR_BINARY_DIR}/bin exists
 IF(NOT EXISTS ${IBAMR_BINARY_DIR}/bin)
   FILE(MAKE_DIRECTORY ${IBAMR_BINARY_DIR}/bin)
@@ -116,17 +128,10 @@ foreach(type LIBRARY ARCHIVE RUNTIME)
       directory [${IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY}]")
   endif()
 
-  if(IBAMR_SUPERBUILD)
+  if(NOT DEFINED IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY)
     set(output_dir ${IBAMR_BINARY_DIR}/lib)
-    if(NOT DEFINED IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY)
-      set(IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY ${IBAMR_BINARY_DIR}/lib)
-    endif()
   else()
-    if(NOT DEFINED IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY)
-      set(output_dir ${IBAMR_BINARY_DIR}/lib)
-    else()
-      set(output_dir ${IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY})
-    endif()
+    set(output_dir ${IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY})
   endif()
   set(CMAKE_${type}_OUTPUT_DIRECTORY ${output_dir} CACHE INTERNAL 
     "Single output directory for building all libraries.")
@@ -372,7 +377,6 @@ endforeach()
 # --------------------------------------------------------------------------
 # Single or multiple (default) library build (needs CMake 2.8.8)
 # -------------------------------------------------------------------------- 
-option(IBAMR_BUILD_SINGLE_LIBRARY "Build single library" OFF)
 if(IBAMR_BUILD_SINGLE_LIBRARY)
   message(STATUS "Single library build is enabled.")
   file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lib.C 
@@ -389,13 +393,13 @@ if(IBAMR_BUILD_SINGLE_LIBRARY)
     add_library(ibamr2D ${CMAKE_CURRENT_BINARY_DIR}/lib.C 
       ${IBAMR_LIBRARY_TARGETS2D})
     set(IBAMR_LIBRARIES2D ibamr2D)
-  endif()
+  endif(IBAMR_BUILD_2D_LIBS)
   add_library(ibamr3D ${CMAKE_CURRENT_BINARY_DIR}/lib.C 
     ${IBAMR_LIBRARY_TARGETS3D})
   set(IBAMR_LIBRARIES3D ibamr3D)
-else()
+else(IBAMR_BUILD_SINGLE_LIBRARY)
   message(STATUS "Single library build is disabled.")
-endif()
+endif(IBAMR_BUILD_SINGLE_LIBRARY)
 
 # --------------------------------------------------------------------------
 # Append necessary libs to compile apps

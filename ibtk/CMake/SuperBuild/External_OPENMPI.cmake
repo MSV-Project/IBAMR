@@ -69,10 +69,10 @@ if(NOT DEFINED OPENMPI_DIR)
     UPDATE_COMMAND ""
     INSTALL_COMMAND make install
     CONFIGURE_COMMAND ${IBTK_BINARY_DIR}/SuperBuild/${proj}/configure
-      CC=gcc
-      CXX=g++
-      FC=gfortran
-      F77=gfortran
+      CC=${CMAKE_C_COMPILER}
+      CXX=${CMAKE_CXX_COMPILER}
+      F77=${CMAKE_Fortran_COMPILER}
+      FC=${CMAKE_Fortran_COMPILER}
       "CFLAGS=${ep_common_c_flags}"
       "CXXFLAGS=${ep_common_cxx_flags}"
       "FCFLAGS=${CMAKE_Fortran_FLAGS}"
