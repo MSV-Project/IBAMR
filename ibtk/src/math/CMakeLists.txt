@@ -43,5 +43,14 @@ if(IBTK_BUILD_2D_LIBS)
     )  
 endif()
 
-include(${IBTK_MODULE_PATH}/KitCommonBlock.cmake)
+#
+# Include the common target module
+#
+include(${IBTK_MODULE_PATH}/KitCommonBlock.cmake)  
+
+
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  
+  )
 

@@ -100,4 +100,6 @@ else()
 endif()
 
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMPI_CXX_COMPILER:PATH=${ep_install_dir}/bin/mpicxx)
-list(APPEND EXTERNAL_LIBRARIES -lmpi_cxx -lmpi)
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMPI_C_COMPILER:PATH=${ep_install_dir}/bin/mpicc)
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMPI_Fortran_COMPILER:PATH=${ep_install_dir}/bin/mpif90)
+list(APPEND EXTERNAL_LIBRARIES -lmpi_cxx -lmpi_f90 -lmpi)

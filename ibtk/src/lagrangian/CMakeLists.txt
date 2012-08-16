@@ -69,7 +69,14 @@ if(IBTK_BUILD_2D_LIBS)
     )  
 endif()
 
-
+#
+# Include the common target module
+#
 include(${IBTK_MODULE_PATH}/KitCommonBlock.cmake)  
 # target_link_libraries(ibtk${KIT}3D -L${QD_DIR}/lib ${QD_LIBS})
+
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  
+  )
 

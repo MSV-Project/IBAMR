@@ -140,7 +140,7 @@ endforeach()
 # ----------------------------------------------------------------------------
 # Set IBAMR include directories
 # ----------------------------------------------------------------------------
-include_directories(${IBTK_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH} include)
+include_directories(${IBTK_INCLUDE_PATH} ${MPI_CXX_INCLUDE_PATH} include src/utilities)
   
 set(CMAKE_EXE_LINKER_FLAGS 
   "${CMAKE_EXE_LINKER_FLAGS} ${MPI_CXX_LINK_FLAGS}")  

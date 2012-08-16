@@ -8,4 +8,13 @@ set(kit_SRCS3D
   ${kit_SRCS}
   )  
 
-include(KitCommonBlock)
+#
+# Include the common target module
+#
+include(KitCommonBlock)  
+
+
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  
+  )

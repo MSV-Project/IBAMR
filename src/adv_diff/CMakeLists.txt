@@ -19,4 +19,13 @@ if(IBAMR_BUILD_2D_LIBS)
     )
 endif()
 
+#
+# Include the common target module
+#
 include(KitCommonBlock)  
+
+
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  
+  )

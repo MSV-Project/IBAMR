@@ -16,4 +16,13 @@ endif()
 set(kit_SRCS3D ${kit_SRCS}
   )
 
+#
+# Include the common target module
+#
 include(${IBTK_MODULE_PATH}/KitCommonBlock.cmake)  
+
+
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  
+  )
