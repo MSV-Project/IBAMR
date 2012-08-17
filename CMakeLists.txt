@@ -101,7 +101,7 @@ endif()
 #
 set(MPI_CXX_COMPILER ${IBTK_SUPERBUILD_DIR}/bin/mpicxx)
 set(MPIEXEC ${IBTK_SUPERBUILD_DIR}/bin/mpiexec)
-find_package(MPI)
+find_package(MPI REQUIRED)
 if(NOT MPI_CXX_FOUND OR NOT MPI_Fortran_FOUND OR NOT MPI_C_FOUND)
   message(FATAL_ERROR "MPI not found.")
 endif()
