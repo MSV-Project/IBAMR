@@ -47,7 +47,7 @@ set(kit_SRCS3D
 
 if(IBTK_BUILD_2D_LIBS)
   add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}
-    impls/fortran/patchsmoothers2d.m4)
+    impls/fortran/patchsmoothers2d.f.m4)
   set(kit_SRCS2D 
     ${kit_SRCS}
     ${FORTRAN_SRCS2D}

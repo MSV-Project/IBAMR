@@ -42,8 +42,8 @@ set(IBTK_TARGETS_FILE
 # -----------------------------------------------------------------------------
 # Set option to build 2d library as well (by default the 3D library is built)
 # -----------------------------------------------------------------------------
-if(NOT DEFINED IBTK_BUILD_2D_LIBS)
-  option(IBTK_BUILD_2D_LIBS "Build the optional 2D libraries." OFF)
+if(NOT DEFINED IBTK_BUILD_2D_LIBRARY)
+  option(IBTK_BUILD_2D_LIBRARY "Build the optional 2D libraries." OFF)
 endif()  
 
 # --------------------------------------------------------------------------
@@ -65,7 +65,7 @@ set(IBTK_INCLUDE_PATH ${PROJECT_SOURCE_DIR}/include
 #
 set(IBTK_EXTERNAL_LIBRARIES CACHE INTERNAL "IBTK external libraries.")
 set(IBTK_LIBRARIES3D CACHE INTERNAL "IBTK 3D library.")
-if(IBTK_BUILD_2D_LIBS)
+if(IBTK_BUILD_2D_LIBRARY)
   set(IBTK_LIBRARIES2D CACHE INTERNAL "IBTK 2D library.")
 endif()
 
@@ -460,7 +460,7 @@ foreach(dir ${dirs})
   message(STATUS "Configuring sub-library: ${dir}")
   add_subdirectory(src/${dir})
   list(APPEND IBTK_LIBRARIES3D ibtk${dir}3D)
-  if(IBTK_BUILD_2D_LIBS)
+  if(IBTK_BUILD_2D_LIBRARY)
     list(APPEND IBTK_LIBRARIES2D ibtk${dir}2D)
   endif()
 endforeach()
@@ -476,7 +476,7 @@ if(IBTK_BUILD_SINGLE_LIBRARY)
   foreach(lib ${IBTK_LIBRARIES3D})
     list(APPEND IBTK_LIBRARY_TARGETS3D $<TARGET_OBJECTS:${lib}>)
   endforeach()
-  if(IBTK_BUILD_2D_LIBS)
+  if(IBTK_BUILD_2D_LIBRARY)
     set(IBTK_LIBRARY_TARGETS2D)
     foreach(lib ${IBTK_LIBRARIES2D})
       list(APPEND IBTK_LIBRARY_TARGETS2D $<TARGET_OBJECTS:${lib}>)
@@ -499,7 +499,7 @@ if(NOT DEFINED IBTK_TARGETS_FILE)
   set(IBTK_TARGETS_FILE ${CMAKE_CURRENT_BINARY_DIR}/IBTKTargets.cmake)
 endif()
 export(TARGETS ${IBTK_LIBRARIES3D} FILE ${IBTK_TARGETS_FILE})
-if(IBTK_BUILD_2D_LIBS)
+if(IBTK_BUILD_2D_LIBRARY)
   export(TARGETS ${IBTK_LIBRARIES2D} APPEND FILE ${IBTK_TARGETS_FILE})
 endif()
 

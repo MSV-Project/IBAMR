@@ -1,7 +1,7 @@
 
 set(TEST_NAME IBexplicit_ex2)
 
-if(IBAMR_BUILD_2D_LIBS)
+if(IBAMR_BUILD_2D_LIBRARY)
   build_2d_target(input2d.cylinder) 
 endif()
 

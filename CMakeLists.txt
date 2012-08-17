@@ -28,7 +28,7 @@ project(IBAMR CXX Fortran)
 # Set option to optionaly build 2d library as well (by default the 
 # 3D library is built)
 # -----------------------------------------------------------------------------
-option(IBAMR_BUILD_2D_LIBS "Build the optional 2D libraries." OFF)
+option(IBAMR_BUILD_2D_LIBRARY "Build the optional 2D libraries." OFF)
 
 # --------------------------------------------------------------------------
 # Single or multiple (default) library build (needs CMake 2.8.8)
@@ -50,8 +50,8 @@ if(IBTK_SUPERBUILD)
   set(SAMRAI_FORTDIR ${IBTK_SUPERBUILD_DIR}/include)
 endif()  
 
-if(IBAMR_BUILD_2D_LIBS)
-  set(IBTK_BUILD_2D_LIBS ON CACHE BOOL FORCE)
+if(IBAMR_BUILD_2D_LIBRARY)
+  set(IBTK_BUILD_2D_LIBRARY ON CACHE BOOL "Build the 2D version of the library." FORCE)
 endif()
 
 # Build IBTK first
@@ -71,7 +71,7 @@ if(NOT IBAMR_BUILD_SINGLE_LIBRARY)
     ibtklagrangian3D
     )
     
-  if(IBAMR_BUILD_2D_LIBS)
+  if(IBAMR_BUILD_2D_LIBRARY)
     set(IBTK_LIBRARIES2D 
       ibtkfortran2D 
       ibtkpatch_data2D 
@@ -89,7 +89,7 @@ else()
     ibtk3D
     )
     
-  if(IBAMR_BUILD_2D_LIBS)
+  if(IBAMR_BUILD_2D_LIBRARY)
     set(IBTK_LIBRARIES2D 
       ibtk2D
       )
@@ -383,14 +383,14 @@ list(APPEND dirs
 # Loop over list of sub-directories 
 # -----------------------------------------------------------------------------
 set(IBAMR_LIBRARIES3D CACHE INTERNAL "IBAMR 3D library." FORCE)
-if(IBAMR_BUILD_2D_LIBS)
+if(IBAMR_BUILD_2D_LIBRARY)
   set(IBAMR_LIBRARIES2D CACHE INTERNAL "IBAMR 2D library." FORCE)
 endif()
 foreach(dir ${dirs})
   message(STATUS "Configuring sub-library: ${dir}")
   add_subdirectory(src/${dir})
   list(APPEND IBAMR_LIBRARIES3D ibamr${dir}3D)
-  if(IBAMR_BUILD_2D_LIBS)
+  if(IBAMR_BUILD_2D_LIBRARY)
     list(APPEND IBAMR_LIBRARIES2D ibamr${dir}2D)
   endif()
 endforeach()    
@@ -406,7 +406,7 @@ if(IBAMR_BUILD_SINGLE_LIBRARY)
   foreach(lib ${IBAMR_LIBRARIES3D})
     list(APPEND IBAMR_LIBRARY_TARGETS3D $<TARGET_OBJECTS:${lib}>)
   endforeach()
-  if(IBAMR_BUILD_2D_LIBS)
+  if(IBAMR_BUILD_2D_LIBRARY)
     set(IBAMR_LIBRARY_TARGETS2D)
     foreach(lib ${IBAMR_LIBRARIES2D})
       list(APPEND IBAMR_LIBRARY_TARGETS2D $<TARGET_OBJECTS:${lib}>)
@@ -415,7 +415,7 @@ if(IBAMR_BUILD_SINGLE_LIBRARY)
       ${IBAMR_LIBRARY_TARGETS2D})
     add_dependencies(ibamr2D IBTK)
     set(IBAMR_LIBRARIES2D ibamr2D)
-  endif(IBAMR_BUILD_2D_LIBS)
+  endif(IBAMR_BUILD_2D_LIBRARY)
   add_library(ibamr3D ${CMAKE_CURRENT_BINARY_DIR}/lib.C 
     ${IBAMR_LIBRARY_TARGETS3D})
   add_dependencies(ibamr3D IBTK)
@@ -431,8 +431,8 @@ if(NOT DEFINED IBAMR_TARGETS_FILE)
   set(IBAMR_TARGETS_FILE ${CMAKE_CURRENT_BINARY_DIR}/IBAMRTargets.cmake)
 endif()
 export(TARGETS ${IBAMR_LIBRARIES3D} FILE ${IBAMR_TARGETS_FILE})
-if(IBAMR_BUILD_2D_LIBS)
-  export(TARGETS ${IBAMR_LIBRARIES2D} APPEND FILE ${IBAMR_EXPORT_FILE})
+if(IBAMR_BUILD_2D_LIBRARY)
+  export(TARGETS ${IBAMR_LIBRARIES2D} APPEND FILE ${IBAMR_TARGETS_FILE})
 endif()
 
 set(IBAMR_USE_FILE "${IBAMR_SOURCE_DIR}/UseIBAMR.cmake")
@@ -460,7 +460,7 @@ foreach(lib ${IBTK_LIBRARIES3D})
   list(INSERT IBAMR_LIBRARIES3D 0 -l${lib})
 endforeach()
 
-if(IBAMR_BUILD_2D_LIBS)
+if(IBAMR_BUILD_2D_LIBRARY)
   list(APPEND IBAMR_LIBRARIES2D 
     ${IBTK_EXTERNAL_LIBRARIES}
     ${MPI_CXX_LIBRARIES}

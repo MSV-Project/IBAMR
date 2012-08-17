@@ -1,7 +1,7 @@
 
 set(TEST_NAME adv_diff)
 
-if(IBAMR_BUILD_2D_LIBS)
+if(IBAMR_BUILD_2D_LIBRARY)
   add_library(adv_diff_functions2d STATIC QInit.C UFunction.C)
   target_link_libraries(adv_diff_functions2d)
   set_target_properties(adv_diff_functions2d PROPERTIES COMPILE_FLAGS -DNDIM=2)

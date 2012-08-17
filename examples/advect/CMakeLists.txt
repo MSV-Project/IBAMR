@@ -1,7 +1,7 @@
 
 set(TEST_NAME advect)
 
-if(IBAMR_BUILD_2D_LIBS)
+if(IBAMR_BUILD_2D_LIBRARY)
   add_library(advection_functions2d STATIC QInit.C UFunction.C)
   target_link_libraries(advection_functions2d ${IBAMR_LIBRARIES2D})
   set_target_properties(advection_functions2d PROPERTIES COMPILE_FLAGS -DNDIM=2)

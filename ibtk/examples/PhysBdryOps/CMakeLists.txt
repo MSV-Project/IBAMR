@@ -3,7 +3,7 @@
 
 set(TEST_NAME PhysBdryOps)
 
-if(IBAMR_BUILD_2D_LIBS)
+if(IBTK_BUILD_2D_LIBRARY)
   build_2d_target(input2d) 
 endif()
 
