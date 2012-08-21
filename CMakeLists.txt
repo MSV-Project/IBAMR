@@ -34,29 +34,27 @@ option(IBAMR_BUILD_2D_LIBRARY "Build the optional 2D libraries." OFF)
 # Single or multiple (default) library build (needs CMake 2.8.8)
 # -------------------------------------------------------------------------- 
 option(IBAMR_BUILD_SINGLE_LIBRARY "Build IBAMR single library" OFF)
-if(IBAMR_BUILD_SINGLE_LIBRARY)
-  set(IBTK_BUILD_SINGLE_LIBRARY ON CACHE INTERNAL "Build IBTK single library" FORCE)
-endif(IBAMR_BUILD_SINGLE_LIBRARY)  
 
 # -----------------------------------------------------------------------------
 # IBAMR requires IBTK
 # -----------------------------------------------------------------------------
-set(IBTK_BIN_DIR "${CMAKE_CURRENT_BINARY_DIR}/ibtk" CACHE PATH "Path to IBTK instalation.")
-set(IBTK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ibtk" CACHE PATH "Path to IBTK sources.")
-set(IBTK_INCLUDE_PATH "${IBTK_DIR}/include" CACHE PATH "IBTK include paths.")
-set(IBTK_EXTERNAL_LIBRARIES CACHE INTERNAL "IBTK external libraries.")
-if(IBTK_SUPERBUILD)
-  set(IBTK_SUPERBUILD_DIR ${IBTK_BIN_DIR}/SuperBuild)
-  set(SAMRAI_FORTDIR ${IBTK_SUPERBUILD_DIR}/include)
-endif()  
-
 if(IBAMR_BUILD_2D_LIBRARY)
   set(IBTK_BUILD_2D_LIBRARY ON CACHE BOOL "Build the 2D version of the library." FORCE)
 endif()
 
-# Build IBTK first
+if(IBAMR_BUILD_SINGLE_LIBRARY)
+  set(IBTK_BUILD_SINGLE_LIBRARY ON CACHE INTERNAL "Build IBTK single library" FORCE)
+endif(IBAMR_BUILD_SINGLE_LIBRARY) 
 
+# In-tree IBTK build.  
+# If IBTK is built out of tree then use its use and configuration 
+# files.
 add_subdirectory(ibtk)
+
+if(IBTK_SUPERBUILD)
+  set(IBTK_SUPERBUILD_BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild)
+  set(SAMRAI_FORTDIR ${IBTK_SUPERBUILD_BINARY_DIR}/include)
+endif()  
 
 if(NOT IBAMR_BUILD_SINGLE_LIBRARY)
   set(IBTK_LIBRARIES3D   
@@ -96,25 +94,15 @@ else()
   endif()
 endif()
 
-# -----------------------------------------------------------------------------
-# FindMPI -- Find MPI used by IBTK
-#
-set(MPI_CXX_COMPILER ${IBTK_SUPERBUILD_DIR}/bin/mpicxx)
-set(MPIEXEC ${IBTK_SUPERBUILD_DIR}/bin/mpiexec)
-find_package(MPI REQUIRED)
-if(NOT MPI_CXX_FOUND OR NOT MPI_Fortran_FOUND OR NOT MPI_C_FOUND)
-  message(FATAL_ERROR "MPI not found.")
-endif()
-
 # ----------------------------------------------------------------------------
 # We need the m4 macro preprocessor and utility macro
 # ----------------------------------------------------------------------------
-include(${IBTK_DIR}/CMake/FindM4.cmake)
+include(${IBTK_SOURCE_DIR}/CMake/FindM4.cmake)
 
 # message("SAMRAI_FORTDIR = ${SAMRAI_FORTDIR}")
-# message("IBTK_SUPERBUILD_DIR = ${IBTK_SUPERBUILD_DIR}")
+# message("IBTK_SUPERBUILD_BINARY_DIR = ${IBTK_SUPERBUILD_BINARY_DIR}")
 # message("IBTK_LIBRARIES3D = ${IBTK_LIBRARIES3D}")
-# message("IBTK_BIN_DIR = ${IBTK_BIN_DIR}")
+# message("IBTK_BINARY_DIR = ${IBTK_BINARY_DIR}")
 # message("IBTK_EXTERNAL_LIBRARIES = ${IBTK_EXTERNAL_LIBRARIES}")
 # message("IBTK_INCLUDE_PATH = ${IBTK_INCLUDE_PATH}")
 
@@ -150,7 +138,6 @@ endforeach()
 # ----------------------------------------------------------------------------
 set(IBAMR_INCLUDE_DIRS 
   ${IBTK_INCLUDE_PATH} 
-  ${MPI_CXX_INCLUDE_PATH} 
   ${CMAKE_CURRENT_SOURCE_DIR}/include 
   ${CMAKE_CURRENT_SOURCE_DIR}/src/utilities)
   
@@ -158,19 +145,17 @@ include_directories(${IBAMR_INCLUDE_DIRS})
   
 set(IBAMR_LIBRARY_DIRS 
   ${CMAKE_CURRENT_BINARY_DIR}/lib
-  ${IBTK_SUPERBUILD_DIR}/lib
-  ${IBTK_SUPERBUILD_DIR}/PETSC/build/lib 
-  ${IBTK_BIN_DIR}/lib
+  ${IBTK_SUPERBUILD_BINARY_DIR}/lib
+  ${IBTK_SUPERBUILD_BINARY_DIR}/PETSC/build/lib 
+  ${IBTK_BINARY_DIR}/lib
   )
 
 set(CMAKE_EXE_LINKER_FLAGS 
-  "${CMAKE_EXE_LINKER_FLAGS} ${MPI_CXX_LINK_FLAGS}")  
+  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_SUPERBUILD_BINARY_DIR}/PETSC/build/lib -Wl,-rpath,${IBTK_SUPERBUILD_BINARY_DIR}/PETSC/build/lib")
 set(CMAKE_EXE_LINKER_FLAGS 
-  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_SUPERBUILD_DIR}/PETSC/build/lib -Wl,-rpath,${IBTK_SUPERBUILD_DIR}/PETSC/build/lib")
+  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_BINARY_DIR}/lib -Wl,-rpath,${IBTK_BINARY_DIR}/lib")
 set(CMAKE_EXE_LINKER_FLAGS 
-  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_BIN_DIR}/lib -Wl,-rpath,${IBTK_BIN_DIR}/lib")
-set(CMAKE_EXE_LINKER_FLAGS 
-  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_SUPERBUILD_DIR}/lib -Wl,-rpath,${IBTK_SUPERBUILD_DIR}/lib")
+  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_SUPERBUILD_BINARY_DIR}/lib -Wl,-rpath,${IBTK_SUPERBUILD_BINARY_DIR}/lib")
   
 set(CMAKE_SHARED_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS})
 
@@ -249,7 +234,7 @@ endif()
 # -----------------------------------------------------------------------------
 # Path to IBAMR cmake modules
 #-----------------------------------------------------------------------------
-set(IBAMR_CMAKE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${IBTK_DIR}/CMake)
+set(IBAMR_CMAKE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${IBTK_SOURCE_DIR}/CMake)
 
 #-----------------------------------------------------------------------------
 # Update CMake module path
@@ -451,10 +436,6 @@ configure_file(
 # --------------------------------------------------------------------------
 list(APPEND IBAMR_LIBRARIES3D 
   ${IBTK_EXTERNAL_LIBRARIES}
-  ${MPI_CXX_LIBRARIES}
-  ${MPI_C_LIBRARIES}
-  ${MPI_Fortran_LIBRARIES}
-  ${MPI_EXTRA_LIBRARY}
   )
 foreach(lib ${IBTK_LIBRARIES3D})  
   list(INSERT IBAMR_LIBRARIES3D 0 -l${lib})
@@ -463,10 +444,6 @@ endforeach()
 if(IBAMR_BUILD_2D_LIBRARY)
   list(APPEND IBAMR_LIBRARIES2D 
     ${IBTK_EXTERNAL_LIBRARIES}
-    ${MPI_CXX_LIBRARIES}
-    ${MPI_C_LIBRARIES}
-    ${MPI_Fortran_LIBRARIES}
-    ${MPI_EXTRA_LIBRARY}
     )
   foreach(lib ${IBTK_LIBRARIES2D})  
     list(INSERT IBAMR_LIBRARIES2D 0 -l${lib})

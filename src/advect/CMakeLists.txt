@@ -18,19 +18,19 @@ set(kit_SRCS3D
   ${kit_SRCS}
   ${FORTRAN_SRCS3D}
   )
-if(IBTK_BUILD_2D_LIBRARY)
-  add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}  
-    fortran/godunov_predictors2d.f.m4
-    fortran/advect_centered_derivatives2d.f.m4
-    fortran/advect_detect2d.f.m4
-    fortran/advect_stable2d.f.m4
-    fortran/advect_diff2d.f.m4
+
+add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}  
+  fortran/godunov_predictors2d.f.m4
+  fortran/advect_centered_derivatives2d.f.m4
+  fortran/advect_detect2d.f.m4
+  fortran/advect_stable2d.f.m4
+  fortran/advect_diff2d.f.m4
   )
-  set(kit_SRCS2D 
-    ${kit_SRCS}
-    ${FORTRAN_SRCS2D}
-    )
-endif()    
+set(kit_SRCS2D 
+  ${kit_SRCS}
+  ${FORTRAN_SRCS2D}
+  )
+  
 #
 # Include the common target module
 #

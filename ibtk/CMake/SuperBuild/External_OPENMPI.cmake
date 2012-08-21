@@ -99,7 +99,15 @@ else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMPI_CXX_COMPILER:PATH=${ep_install_dir}/bin/mpicxx)
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMPI_C_COMPILER:PATH=${ep_install_dir}/bin/mpicc)
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMPI_Fortran_COMPILER:PATH=${ep_install_dir}/bin/mpif90)
+set(MPI_CXX_COMPILER ${ep_install_dir}/bin/mpicxx CACHE INTERNAL "" FORCE)
+set(MPI_C_COMPILER ${ep_install_dir}/bin/mpicc CACHE INTERNAL "" FORCE)
+set(MPI_Fortran_COMPILER ${ep_install_dir}/bin/mpif90 CACHE INTERNAL "" FORCE)
+set(MPIEXEC ${ep_install_dir}/bin/mpiexec CACHE INTERNAL "" FORCE)
+
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMPI_CXX_COMPILER:PATH=${MPI_CXX_COMPILER})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMPI_C_COMPILER:PATH=${MPI_C_COMPILER})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMPI_Fortran_COMPILER:PATH=${MPI_Fortran_COMPILER})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMPIEXEC:PATH=${MPIEXEC})
 list(APPEND EXTERNAL_LIBRARIES -lmpi_cxx -lmpi_f90 -lmpi_f77 -lmpi -lopen-rte -lopen-pal)
+
+
