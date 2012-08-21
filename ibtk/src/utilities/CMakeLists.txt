@@ -36,10 +36,7 @@ set(kit_SRCS StreamableFactory.C
 
 )
 
-
-if(IBTK_BUILD_2D_LIBS)
-  set(kit_SRCS2D ${kit_SRCS})
-endif()
+set(kit_SRCS2D ${kit_SRCS})
 
 set(kit_SRCS3D ${kit_SRCS})
 

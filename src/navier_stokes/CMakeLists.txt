@@ -35,19 +35,17 @@ set(kit_SRCS3D
   ${FORTRAN_SRCS3D}
   )
   
-if(IBTK_BUILD_2D_LIBRARY)
-  add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} 
-    fortran/navier_stokes_stabledt2d.f.m4
-    fortran/navier_stokes_staggered_helpers2d.f.m4
-    fortran/navier_stokes_staggered_derivatives2d.f.m4
-    fortran/navier_stokes_bdryop2d.f.m4
-    fortran/navier_stokes_divsource2d.f.m4
-  )
-  set(kit_SRCS2D 
-    ${kit_SRCS}
-    ${FORTRAN_SRCS2D}
-    )
-endif()    
+add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} 
+  fortran/navier_stokes_stabledt2d.f.m4
+  fortran/navier_stokes_staggered_helpers2d.f.m4
+  fortran/navier_stokes_staggered_derivatives2d.f.m4
+  fortran/navier_stokes_bdryop2d.f.m4
+  fortran/navier_stokes_divsource2d.f.m4
+)
+set(kit_SRCS2D 
+  ${kit_SRCS}
+  ${FORTRAN_SRCS2D}
+  )  
 
 #
 # Include the common target module

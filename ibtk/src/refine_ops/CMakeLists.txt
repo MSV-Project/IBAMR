@@ -21,15 +21,13 @@ set(kit_SRCS3D
   ${FORTRAN_SRCS3D}
   )
 
-if(IBTK_BUILD_2D_LIBS)
-  add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}
-    fortran/cart_side_refine2d.f.m4
-    fortran/divpreservingrefine2d.f.m4)
-  set(kit_SRCS2D 
-    ${kit_SRCS}
-    ${FORTRAN_SRCS2D}
-    )
-endif()
+add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}
+  fortran/cart_side_refine2d.f.m4
+  fortran/divpreservingrefine2d.f.m4)
+set(kit_SRCS2D 
+  ${kit_SRCS}
+  ${FORTRAN_SRCS2D}
+  )
 
 #
 # Include the common target module

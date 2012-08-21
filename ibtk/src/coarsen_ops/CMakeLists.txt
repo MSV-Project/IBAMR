@@ -24,7 +24,6 @@ set(kit_SRCS2D
   ${FORTRAN_SRCS2D}
   )  
 
-
 #
 # Include the common target module
 #

@@ -7,6 +7,7 @@ set(kit_SRCS
 set(kit_SRCS3D 
   ${kit_SRCS}
   )  
+  
 set(kit_SRCS2D 
   ${kit_SRCS}
   )  

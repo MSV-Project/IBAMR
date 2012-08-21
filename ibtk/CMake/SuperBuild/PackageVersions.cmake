@@ -1,4 +1,4 @@
-set(IBTK_DEPENDENCY_URL "/home/rortiz/Downloads" CACHE PATH "Path for external packages." )
+set(IBTK_DEPENDENCY_URL "$ENV{HOME}/Downloads" CACHE PATH "Path for external packages." )
 
 set(LAPACK_MAJOR 3)
 set(LAPACK_MINOR 4)

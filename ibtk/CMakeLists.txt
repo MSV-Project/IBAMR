@@ -213,6 +213,9 @@ add_definitions(
 mark_as_advanced(CMAKE_INSTALL_PREFIX)
 mark_as_advanced(DART_TESTING_TIMEOUT)
 
+#
+set(IBTK_SUPERBUILD_BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild CACHE INTERNAL 
+  "")
 
 #-----------------------------------------------------------------------------
 # Superbuild script
@@ -232,14 +235,6 @@ FortranCInterface_HEADER(${IBTK_INCLUDE_BINARY_PATH}/fortran_interfaces.h MACRO_
 
 list(APPEND IBTK_INCLUDE_PATH ${IBTK_INCLUDE_BINARY_PATH})
 
-
-# If IBTK_SUPERBUILD_BINARY_DIR isn't defined, it means IBTK is *NOT* 
-# build using Superbuild.
-# In that case, IBTK_SUPERBUILD_BINARY_DIR should default to 
-# IBTK_BINARY_DIR
-if(NOT DEFINED IBTK_SUPERBUILD_BINARY_DIR)
-  set(IBTK_SUPERBUILD_BINARY_DIR ${IBTK_BINARY_DIR})
-endif()
 
 # -----------------------------------------------------------------------------
 # FindMPI
