@@ -35,9 +35,11 @@ endif()
 # -----------------------------------------------------------------------------
 # Set export file location
 # -----------------------------------------------------------------------------
-set(IBTK_TARGETS_FILE 
-  ${CMAKE_CURRENT_BINARY_DIR}/IBTKTargets.cmake 
-  CACHE INTERNAL "IBTK library export file.")
+if(NOT DEFINED IBTK_TARGETS_FILE)
+  set(IBTK_TARGETS_FILE 
+    ${CMAKE_CURRENT_BINARY_DIR}/IBTKTargets.cmake 
+    CACHE INTERNAL "IBTK library export file.")
+endif()
 
 # -----------------------------------------------------------------------------
 # Set option to build 2d library as well (by default the 3D library is built)
@@ -493,11 +495,8 @@ else()
 endif()
 
 # --------------------------------------------------------------------------
-# Export all targets used here
+# Export all targets used here 
 # --------------------------------------------------------------------------
-if(NOT DEFINED IBTK_TARGETS_FILE)
-  set(IBTK_TARGETS_FILE ${CMAKE_CURRENT_BINARY_DIR}/IBTKTargets.cmake)
-endif()
 export(TARGETS ${IBTK_LIBRARIES3D} FILE ${IBTK_TARGETS_FILE})
 if(IBTK_BUILD_2D_LIBRARY)
   export(TARGETS ${IBTK_LIBRARIES2D} APPEND FILE ${IBTK_TARGETS_FILE})
@@ -509,5 +508,4 @@ endif()
 INCLUDE(CTest)
 IF(BUILD_TESTING)
     ADD_SUBDIRECTORY(examples)
-ENDIF()
-  
+ENDIF()  
