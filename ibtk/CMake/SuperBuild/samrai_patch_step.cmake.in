@@ -1,7 +1,14 @@
 EXECUTE_PROCESS(
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/samraiPatches/configure" "@Samrai_source@"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/samraiPatches/CMakeLists.txt" "@Samrai_source@"
   )
 
+if(NOT EXISTS @Samrai_build@/include)
+  file(MAKE_DIRECTORY @Samrai_build@/include)
+endif()  
+EXECUTE_PROCESS(
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/samraiPatches/SAMRAI_config.h" "@Samrai_build@/include"
+  )
+  
 EXECUTE_PROCESS(
   COMMAND cd @Samrai_source@ && sh ./source/scripts/includes --link
   )
@@ -9,3 +16,5 @@ EXECUTE_PROCESS(
 EXECUTE_PROCESS(
   COMMAND patch -p2 -i "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/samraiPatches/SAMRAI-v2.4.4-patch-111217"
   )
+
+  

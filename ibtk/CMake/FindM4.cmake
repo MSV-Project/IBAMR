@@ -29,7 +29,12 @@ function( ADD_M4_SOURCES OUTVAR M4ARGS)
      # get the relative path of the file to the current source dir
      file( RELATIVE_PATH rf "${CMAKE_CURRENT_SOURCE_DIR}" "${f}" )
      # strip the .m4 off the end if present and prepend the current binary dir
-     string( REGEX REPLACE "\\.m4$" ""  of "${CMAKE_CURRENT_BINARY_DIR}/${rf}" )
+     get_filename_component( file_ext ${f} EXT )
+     if(${file_ext} MATCHES ".m4")
+      string( REGEX REPLACE "\\.m4$" ".f"  of "${CMAKE_CURRENT_BINARY_DIR}/${rf}" )
+     else()
+      string( REGEX REPLACE "\\.m4$" ""  of "${CMAKE_CURRENT_BINARY_DIR}/${rf}" )
+     endif()      
      # append the output file to the list of outputs
      list( APPEND outfiles "${of}" )
      # create the output directory if it doesn't exist
@@ -37,10 +42,13 @@ function( ADD_M4_SOURCES OUTVAR M4ARGS)
      if( NOT IS_DIRECTORY "${d}" )
        file( MAKE_DIRECTORY "${d}" )
      endif()
+     
      # now add the custom command to generate the output file
+     get_filename_component(file_path ${f} PATH)
      add_custom_command( OUTPUT "${of}"
        COMMAND ${M4_EXECUTABLE} ARGS "${M4ARGS}" "${f}" > "${of}"
        DEPENDS "${f}"
+       WORKING_DIRECTORY ${file_path}
        )
    endforeach( f )
    # set the output list in the calling scope

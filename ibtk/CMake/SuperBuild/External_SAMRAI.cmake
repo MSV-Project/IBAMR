@@ -55,63 +55,38 @@ if(NOT DEFINED SAMRAI_DIR)
   
   set(IBTKSuperBuild_CMAKE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
   set(Samrai_source ${IBTK_BINARY_DIR}/SuperBuild/${proj})
+  set(Samrai_build ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build)
 
   configure_file(${IBTKSuperBuild_CMAKE_SOURCE_DIR}/samrai_patch_step.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/samrai_patch_step.cmake
     @ONLY)
-    
+
   set(Samrai_PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/samrai_patch_step.cmake)
-  set(SHARED_LIB_CONF)
-  if(BUILD_SHARED_LIBS)
-    set(SHARED_LIB_CONF --enable-shared --disable-static)
-  else()
-    set(SHARED_LIB_CONF --enable-static --disable-shared)
-  endif()
+
   ExternalProject_Add(${proj}
-    SOURCE_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
-    BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build
+    SOURCE_DIR ${Samrai_source}
+    BINARY_DIR ${Samrai_build}
     PREFIX ${proj}${ep_suffix}
     URL ${SAMRAI_URL}/${SAMRAI_GZ}
     URL_MD5 ${SAMRAI_MD5}
-    UPDATE_COMMAND ""
-    INSTALL_COMMAND make install 
     PATCH_COMMAND ${Samrai_PATCH_COMMAND}
-    CONFIGURE_COMMAND ${IBTK_BINARY_DIR}/SuperBuild/${proj}/configure
-      "CFLAGS=${ep_common_c_flags}"
-#       "FLIBS=-lgfortran -lm -lquadmath"
-      "CXXFLAGS=${ep_common_cxx_flags}"
-      "FCFLAGS=${CMAKE_Fortran_FLAGS}"
-      "FFLAGS=${CMAKE_Fortran_FLAGS}"
-      CC=${CMAKE_C_COMPILER}
-      CXX=${CMAKE_CXX_COMPILER}
-      F77=${CMAKE_Fortran_COMPILER}
-      FC=${CMAKE_Fortran_COMPILER}
-      --srcdir=<SOURCE_DIR>
-      --with-MPICC=${ep_install_dir}/bin/mpicc 
-      --libdir=${ep_install_dir}/lib
-      --prefix=${ep_install_dir} 
-      --with-hdf5=${ep_install_dir}
-      --with-silo=${ep_install_dir}
-      --without-petsc 
-      --without-hypre 
-      --without-blaslapack 
-      --without-cubes 
-      --without-eleven 
-      --without-kinsol 
-      --without-sundials 
-      --without-x 
-      --with-doxygen 
-      --with-dot
-      --enable-implicit-template-instantiation 
-      --disable-deprecated
-#       --enable-shared
-#       --disable-static
-#     LOG_DOWNLOAD 1
+    UPDATE_COMMAND ""
+    INSTALL_COMMAND make install
+    CMAKE_GENERATOR ${gen}
+    CMAKE_ARGS
+      ${CMAKE_OSX_EXTERNAL_PROJECT_ARGS}
+      -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
+      -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
+      -DCMAKE_INSTALL_PREFIX:PATH=${ep_install_dir}
+      -DBUILD_SHARED_LIBS:BOOL=${BUILD_SHARED_LIBS}
+      -DFIND_M4=${IBTK_MODULE_PATH}/FindM4.cmake
+      -DHDF5_ROOT=${ep_install_dir}
+      -DSILO_ROOT=${ep_install_dir}
+      -DMPI_CXX_COMPILER=${ep_install_dir}/bin/mpicxx
     LOG_DOWNLOAD 1
     LOG_CONFIGURE 1
-    LOG_TEST 1
-    LOG_BUILD 1
     LOG_INSTALL 1
+    LOG_PATCH 1
     DEPENDS
       ${SAMRAI_DEPENDENCIES}
     )

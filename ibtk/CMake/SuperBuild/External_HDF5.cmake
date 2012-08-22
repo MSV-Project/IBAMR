@@ -98,7 +98,7 @@ else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DHDF5_ROOT_DIR_HINT:PATH=${IBTK_BINARY_DIR}/SuperBuild -DHDF5_DIR:PATH=${HDF5_DIR})
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DHDF5_DIR:PATH=${HDF5_DIR})
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DHDF5_INCLUDE_PATH:PATH=${ep_install_dir}/include)
 
 list(APPEND INCLUDE_PATHS ${ep_install_dir}/include)
