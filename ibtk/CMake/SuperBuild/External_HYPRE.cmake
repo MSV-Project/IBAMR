@@ -1,7 +1,5 @@
 ###########################################################################
 #
-#  Library: IBTK
-#
 #  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -110,4 +108,5 @@ list(APPEND IBTK_SUPERBUILD_EP_ARGS
   -DHYPRE_INCLUDE_PATH:PATH=${ep_install_dir}/include)
 
 list(APPEND INCLUDE_PATHS ${ep_install_dir}/include)
+list(APPEND LIBRARY_PATHS ${ep_install_dir}/lib)
 list(APPEND EXTERNAL_LIBRARIES -lHYPRE)

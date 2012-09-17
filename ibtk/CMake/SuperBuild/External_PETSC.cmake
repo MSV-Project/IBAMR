@@ -1,7 +1,5 @@
 ###########################################################################
 #
-#  Library: IBTK
-#
 #  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -91,13 +89,11 @@ if(NOT DEFINED PETSC_DIR)
       --with-mpi-dir=${ep_install_dir}
       --with-x=0
       ${SHARED_LIB_CONF}
-#     TEST_BEFORE_INSTALL 1
     LOG_DOWNLOAD 1
     LOG_CONFIGURE 1
     LOG_TEST 1
     LOG_BUILD 1
     LOG_INSTALL 1
-#     TEST_COMMAND make PETSC_DIR=${IBTK_BINARY_DIR}/${proj} PETSC_ARCH=build test
     BUILD_COMMAND make PETSC_DIR=${IBTK_BINARY_DIR}/SuperBuild/${proj} PETSC_ARCH=build all
     DEPENDS
       ${PETSC_DEPENDENCIES}
@@ -114,4 +110,5 @@ list(APPEND IBTK_SUPERBUILD_EP_ARGS -DPETSC_ARCH:STRING=build)
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DPETSC_INCLUDE_PATH:PATH=$ENV{PETSC_DIR}/include)
 
 list(APPEND INCLUDE_PATHS $ENV{PETSC_DIR}/build/include $ENV{PETSC_DIR}/include)
+list(APPEND LIBRARY_PATHS $ENV{PETSC_DIR}/build/lib)
 list(INSERT EXTERNAL_LIBRARIES 0 -lpetsc)

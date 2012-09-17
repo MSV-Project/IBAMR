@@ -21,7 +21,8 @@ endif( NOT M4_EXECUTABLE )
 #  add_m4_sources( SRCS src/test1.cxx.m4 src/test2.cxx.m4 )
 #  add_executable( test ${SRCS} )
 #
-function( ADD_M4_SOURCES OUTVAR M4ARGS)
+
+function( ADD_M4_SOURCES OUTVAR M4ARGS FILE_EXT)
    set( outfiles )
    foreach( f ${ARGN} )
      # first we might need to make the input file absolute
@@ -30,11 +31,8 @@ function( ADD_M4_SOURCES OUTVAR M4ARGS)
      file( RELATIVE_PATH rf "${CMAKE_CURRENT_SOURCE_DIR}" "${f}" )
      # strip the .m4 off the end if present and prepend the current binary dir
      get_filename_component( file_ext ${f} EXT )
-     if(${file_ext} MATCHES ".m4")
-      string( REGEX REPLACE "\\.m4$" ".f"  of "${CMAKE_CURRENT_BINARY_DIR}/${rf}" )
-     else()
-      string( REGEX REPLACE "\\.m4$" ""  of "${CMAKE_CURRENT_BINARY_DIR}/${rf}" )
-     endif()      
+     string( REGEX REPLACE "\\${file_ext}$" "${FILE_EXT}"  of "${CMAKE_CURRENT_BINARY_DIR}/${rf}" )
+     
      # append the output file to the list of outputs
      list( APPEND outfiles "${of}" )
      # create the output directory if it doesn't exist

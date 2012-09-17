@@ -1,22 +1,4 @@
-###########################################################################
-#
-#  Library: IBTK
-#
-#  Copyright (c) Kitware Inc.
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0.txt
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-#
-########################################################################### 
+
 cmake_minimum_required(VERSION 2.8.8)
 #
 project(IBTK C CXX Fortran)
@@ -62,9 +44,9 @@ set(IBTK_INCLUDE_PATH ${PROJECT_SOURCE_DIR}/include
     ${IBTK_BINARY_DIR}/include
     CACHE INTERNAL "IBTK include paths.") 
 
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Set library names 
-#
+# ---------------------------------------------------------------------------
 set(IBTK_EXTERNAL_LIBRARIES CACHE INTERNAL "IBTK external libraries.")
 set(IBTK_LIBRARIES3D CACHE INTERNAL "IBTK 3D library.")
 if(IBTK_BUILD_2D_LIBRARY)
@@ -138,13 +120,13 @@ set(CMAKE_MODULE_PATH
   ${CMAKE_MODULE_PATH})
   
 # ----------------------------------------------------------------------------
-# We need the m4 macro preprocessor and utility macro
+# We need the m4 macro preprocessor and helper macros
 # ----------------------------------------------------------------------------
 include(${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindM4.cmake)
 
-#-----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # IBTK version number.  An even minor number corresponds to releases.
-#
+# ----------------------------------------------------------------------------
 set(IBTK_MAJOR_VERSION 0)
 set(IBTK_MINOR_VERSION 0)
 set(IBTK_BUILD_VERSION 1)
@@ -221,7 +203,7 @@ set(IBTK_SUPERBUILD_BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild CACHE INTERNAL
 
 #-----------------------------------------------------------------------------
 # Superbuild script
-#
+# -----------------------------------------------------------------------------
 if(IBTK_SUPERBUILD)
   add_subdirectory("${IBTK_MODULE_PATH}/SuperBuild")
   return()
@@ -230,7 +212,7 @@ endif()
 # -----------------------------------------------------------------------------
 # Detect the API by which C and Fortran languages interact.
 # Creates the header file fortran_interfaces.h containing macro definitions
-#
+# -----------------------------------------------------------------------------
 include(FortranCInterface)
 FortranCInterface_VERIFY(CXX QUIET)
 FortranCInterface_HEADER(${IBTK_INCLUDE_BINARY_PATH}/fortran_interfaces.h MACRO_NAMESPACE "FC_")
@@ -240,7 +222,7 @@ list(APPEND IBTK_INCLUDE_PATH ${IBTK_INCLUDE_BINARY_PATH})
 
 # -----------------------------------------------------------------------------
 # FindMPI
-#
+# -----------------------------------------------------------------------------
 find_package(MPI)
 if(NOT MPI_CXX_FOUND OR NOT MPI_Fortran_FOUND OR NOT MPI_C_FOUND)
   message(FATAL_ERROR "MPI not found.")
@@ -256,7 +238,7 @@ list(APPEND IBTK_EXTERNAL_LIBRARIES
 
 # -----------------------------------------------------------------------------
 # Find HDF5
-#
+# -----------------------------------------------------------------------------
 find_package(HDF5)
 if(NOT HDF5_FOUND)
   message(FATAL_ERROR "Must specify HDF5 installation directory.")
@@ -270,7 +252,7 @@ list(APPEND IBTK_EXTERNAL_LIBRARIES
 
 # -----------------------------------------------------------------------------
 # Find LAPACK
-#
+# -----------------------------------------------------------------------------
 set(LAPACK_DIR CACHE PATH "LAPACK installation directory.")
 if(NOT LAPACK_DIR)
   message(FATAL_ERROR "Must specify LAPACK installation directory.")
@@ -283,7 +265,7 @@ list(APPEND IBTK_EXTERNAL_LIBRARIES
 
 # -----------------------------------------------------------------------------
 # Find PETSc 
-#
+# -----------------------------------------------------------------------------
 set(PETSC_DIR CACHE PATH "Petsc installation directory.")
 set(PETSC_ARCH CACHE STRING "Petsc architecture.")
 if(NOT PETSC_DIR)
@@ -299,7 +281,7 @@ list(APPEND IBTK_EXTERNAL_LIBRARIES
 
 # -----------------------------------------------------------------------------
 # Find SAMRAI
-#
+# -----------------------------------------------------------------------------
 set(SAMRAI_DIR CACHE PATH "SAMRAI installation directory.")
 if(NOT SAMRAI_DIR)
   message(FATAL_ERROR "Must specify SAMRAI installation directory.")
@@ -315,7 +297,7 @@ list(APPEND IBTK_EXTERNAL_LIBRARIES
 
 # -----------------------------------------------------------------------------
 # Find HYPRE
-#
+# -----------------------------------------------------------------------------
 set(HYPRE_DIR CACHE PATH "HYPRE installation directory.")
 if(NOT HYPRE_DIR)
   message(FATAL_ERROR "Must specify HYPRE installation directory.")
@@ -343,7 +325,7 @@ list(APPEND IBTK_EXTERNAL_LIBRARIES
 
 # -----------------------------------------------------------------------------
 # Build with SILO support (default: YES)
-#
+# -----------------------------------------------------------------------------
 option(WITH_SILO "Build with SILO support." ON)
 if(WITH_SILO)
   set(SILO_DIR CACHE PATH "SILO installation directory.")
@@ -389,7 +371,7 @@ list(APPEND IBTK_EXTERNAL_LIBRARIES
 
 # -----------------------------------------------------------------------------
 # Set some gcc optimizations
-#
+# -----------------------------------------------------------------------------
 if(CMAKE_COMPILER_IS_GNUCXX)
   add_definitions(-DIBTK_HAVE_BUILTIN_EXPECT -DIBTK_HAVE_BUILTIN_PREFETCH)
 endif()
@@ -399,7 +381,7 @@ include_directories(${IBTK_INCLUDE_PATH})
 # -----------------------------------------------------------------------------
 # Add options: USING_LARGE_GHOST_CELL_WIDTH (default 0) and 
 # 		USING_EXPENSIVE_CF_INTERPOLATION (default 0)
-#
+# -----------------------------------------------------------------------------
 if(NOT DEFINED ENABLE_LARGE_GHOST_CELL_WIDTH)
   option(ENABLE_LARGE_GHOST_CELL_WIDTH "This enables the use of large ghost 
     cell regions (this feature must be enabled for certain types of physical 
@@ -450,7 +432,7 @@ list(APPEND dirs
   lagrangian
   )
 
-#------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Loop over list of sub-directories 
 # -----------------------------------------------------------------------------
 foreach(dir ${dirs})

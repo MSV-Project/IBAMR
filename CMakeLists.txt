@@ -24,6 +24,17 @@ cmake_minimum_required(VERSION 2.8.8)
 project(IBAMR CXX Fortran)
 # -----------------------------------------------------------------------------
 
+#-----------------------------------------------------------------------------
+# Set a default build type if none was specified
+#-----------------------------------------------------------------------------
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to 'Debug' as none was specified.")
+  set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
+    "MinSizeRel" "RelWithDebInfo")
+endif()
+
 # -----------------------------------------------------------------------------
 # Set option to optionaly build 2d library as well (by default the 
 # 3D library is built)
@@ -53,7 +64,7 @@ add_subdirectory(ibtk)
 
 if(IBTK_SUPERBUILD)
   set(IBTK_SUPERBUILD_BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild)
-  set(SAMRAI_FORTDIR ${IBTK_SUPERBUILD_BINARY_DIR}/include)
+  set(SAMRAI_FORTDIR ${IBTK_SUPERBUILD_BINARY_DIR}/samrai/include)
 endif()  
 
 if(NOT IBAMR_BUILD_SINGLE_LIBRARY)
@@ -99,13 +110,6 @@ endif()
 # ----------------------------------------------------------------------------
 include(${IBTK_SOURCE_DIR}/CMake/FindM4.cmake)
 
-# message("SAMRAI_FORTDIR = ${SAMRAI_FORTDIR}")
-# message("IBTK_SUPERBUILD_BINARY_DIR = ${IBTK_SUPERBUILD_BINARY_DIR}")
-# message("IBTK_LIBRARIES3D = ${IBTK_LIBRARIES3D}")
-# message("IBTK_BINARY_DIR = ${IBTK_BINARY_DIR}")
-# message("IBTK_EXTERNAL_LIBRARIES = ${IBTK_EXTERNAL_LIBRARIES}")
-# message("IBTK_INCLUDE_PATH = ${IBTK_INCLUDE_PATH}")
-
 #----------------------------------------------------------------------------
 # Output directories.
 #----------------------------------------------------------------------------
@@ -145,19 +149,22 @@ include_directories(${IBAMR_INCLUDE_DIRS})
   
 set(IBAMR_LIBRARY_DIRS 
   ${CMAKE_CURRENT_BINARY_DIR}/lib
-  ${IBTK_SUPERBUILD_BINARY_DIR}/lib
-  ${IBTK_SUPERBUILD_BINARY_DIR}/PETSC/build/lib 
+  ${IBTK_LIBRARY_PATH}
   ${IBTK_BINARY_DIR}/lib
   )
-
-set(CMAKE_EXE_LINKER_FLAGS 
-  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_SUPERBUILD_BINARY_DIR}/PETSC/build/lib -Wl,-rpath,${IBTK_SUPERBUILD_BINARY_DIR}/PETSC/build/lib")
-set(CMAKE_EXE_LINKER_FLAGS 
-  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_BINARY_DIR}/lib -Wl,-rpath,${IBTK_BINARY_DIR}/lib")
-set(CMAKE_EXE_LINKER_FLAGS 
-  "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_SUPERBUILD_BINARY_DIR}/lib -Wl,-rpath,${IBTK_SUPERBUILD_BINARY_DIR}/lib")
   
-set(CMAKE_SHARED_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS})
+foreach(dir ${IBAMR_LIBRARY_DIRS})
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${dir}")
+endforeach()
+# set(CMAKE_SHARED_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS})
+
+# set(CMAKE_EXE_LINKER_FLAGS 
+#   "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_SUPERBUILD_BINARY_DIR}/PETSC/build/lib -Wl,-rpath,${IBTK_SUPERBUILD_BINARY_DIR}/PETSC/build/lib")
+# set(CMAKE_EXE_LINKER_FLAGS 
+#   "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_BINARY_DIR}/lib -Wl,-rpath,${IBTK_BINARY_DIR}/lib")
+# set(CMAKE_EXE_LINKER_FLAGS 
+#   "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_SUPERBUILD_BINARY_DIR}/lib/samrai/lib -L${IBTK_SUPERBUILD_BINARY_DIR}/lib -Wl,-rpath,${IBTK_SUPERBUILD_BINARY_DIR}/lib")
+#   
 
 # -----------------------------------------------------------------------------
 # Add options: USING_LARGE_GHOST_CELL_WIDTH (default 0) and 
@@ -219,17 +226,6 @@ set(IBAMR_LIBRARY_MODE "SHARED")
 option(BUILD_SHARED_LIBS "Build IBAMR with shared libraries." ON)
 set(IBAMR_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 mark_as_advanced(BUILD_SHARED_LIBS)
-
-#-----------------------------------------------------------------------------
-# Set a default build type if none was specified
-#-----------------------------------------------------------------------------
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  message(STATUS "Setting build type to 'Debug' as none was specified.")
-  set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
-  # Set the possible values of build type for cmake-gui
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release"
-    "MinSizeRel" "RelWithDebInfo")
-endif()
 
 # -----------------------------------------------------------------------------
 # Path to IBAMR cmake modules
@@ -424,8 +420,13 @@ set(IBAMR_USE_FILE "${IBAMR_SOURCE_DIR}/UseIBAMR.cmake")
 
 # --------------------------------------------------------------------------
 # Configuration variables
-#
-set(IBAMR_LIBRARIES ${IBAMR_LIBRARIES3D} ${IBTK_LIBRARIES3D} ${IBAMR_LIBRARIES2D} ${IBTK_LIBRARIES2D})
+# --------------------------------------------------------------------------
+set(IBAMR_LIBRARIES 
+  ${IBAMR_LIBRARIES3D} 
+  ${IBTK_LIBRARIES3D} 
+  ${IBAMR_LIBRARIES2D} 
+  ${IBTK_LIBRARIES2D})
+  
 configure_file(
     ${IBAMR_SOURCE_DIR}/CMake/IBAMRConfig.cmake.in
     ${IBAMR_BINARY_DIR}/IBAMRConfig.cmake 

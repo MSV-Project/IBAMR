@@ -1,5 +1,73 @@
+###########################################################################
+#
+#  Copyright (c) Kitware Inc.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0.txt
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+###########################################################################
+
 cmake_minimum_required(VERSION 2.8.8)
 project(SAMRAI C CXX Fortran)
+
+set(KITS algorithm apputils geometry hierarchy mathops mesh patchdata solvers toolbox transfer)
+
+set(DBL_SNAN_IS_BROKEN 1)
+set(FLT_SNAN_IS_BROKEN 1)
+set(HAVE_CMATH 1)
+set(HAVE_CMATH_ISNAN 1)
+set(HAVE_EXCEPTION_HANDLING 1)
+set(HAVE_HDF5 1)
+set(HAVE_INTTYPES_H 1)
+set(HAVE_IOMANIP_LEFT 1)
+set(HAVE_ISO_SSTREAM 1)
+set(HAVE_MALLINFO 1)
+set(HAVE_MALLOC_H 1)
+set(HAVE_MEMBER_FUNCTION_SPECIALIZATION 1)
+set(HAVE_MEMORY_H 1)
+set(HAVE_MPI 1)
+set(HAVE_NAMESPACE 1)
+set(HAVE_NEW_PLACEMENT_OPERATOR 1)
+set(HAVE_SILO 1)
+set(HAVE_SSTREAM 1)
+set(HAVE_STANDARD_STATIC_DATA_SPECIALIZATION 1)
+set(HAVE_STATIC_DATA_INSTANTIATION 1)
+set(HAVE_STDINT_H 1)
+set(HAVE_STDLIB_H 1)
+set(HAVE_STRINGIZE 1)
+set(HAVE_STRINGS_H 1)
+set(HAVE_STRING_H 1)
+set(HAVE_SYS_STAT_H 1)
+set(HAVE_SYS_TYPES_H 1)
+set(HAVE_TEMPLATE_COMPLEX 1)
+set(HAVE_UNISTD_H 1)
+set(LACKS_CUBES 1)
+set(LACKS_ELEVEN 1)
+set(LACKS_HYPRE 1)
+set(LACKS_ISNAN_TEMPLATE 1)
+set(LACKS_PROPER_XDR_HEADER 1)
+set(LACKS_SUNDIALS 1)
+set(LACKS_TAU 1)
+set(LACKS_VAMPIR 1)
+set(LACKS_X11 1)
+set(NAN_IS_BROKEN 1)
+set(OSTRSTREAM_TYPE_IS_BROKEN 1)
+set(STDC_HEADERS 1)
+set(X_DISPLAY_MISSING 1)
+set(REQUIRES_CMATH 1)
+set(INCLUDE_TEMPLATE_IMPLEMENTATION 1)
+
+configure_file(${CMAKE_CURRENT_BINARY_DIR}/SAMRAI_config.h.in 
+  ${CMAKE_CURRENT_BINARY_DIR}/include/SAMRAI_config.h)
 
 include(${FIND_M4})
 
@@ -47,15 +115,12 @@ set(FortranM4_SRCS
   source/apputils/boundary/appu_cartbdry3d.m4
   source/apputils/boundary/appu_cartbdry2d.m4
 )
-add_m4_sources(samrai_fortran_SRCS "" ${FortranM4_SRCS})
-set_source_files_properties(${samrai_fortran_SRCS} PROPERTIES LANGUAGE Fortran)
 
-add_library(SAMRAI_FORTRAN OBJECT ${samrai_fortran_SRCS})
-if(BUILD_SHARED_LIBS)
-    set_target_properties(SAMRAI_FORTRAN PROPERTIES COMPILE_FLAGS "-fPIC")
-endif()
+set(M4ARGS "")
+set(F_EXT ".f")
+add_m4_sources(samrai_fortran_SRCS "" .f ${FortranM4_SRCS})
 
-set(samrai_solvers_SRCS
+set(samrai_solvers_inlined_SRCS
   source/solvers/vectors/SAMRAIVectorReal.C
   source/solvers/vectors/Sundials_SAMRAIVector.C
   source/solvers/vectors/PETSc_SAMRAIVectorReal.C
@@ -66,28 +131,27 @@ set(samrai_solvers_SRCS
   source/solvers/poisson/CartesianRobinBcHelper.C
   source/solvers/poisson/LocationIndexRobinBcCoefs.C
   source/solvers/poisson/GhostCellRobinBcCoefs.C
-  source/solvers/poisson/CellPoissonFACSolver.C
-  source/solvers/poisson/PoissonSpecifications.C
+  source/solvers/poisson/CellPoissonFACSolver.C  
   source/solvers/poisson/CellPoissonHypreSolver.C
   source/solvers/packages/petsc/PETScAbstractVectorReal.C
-  source/solvers/packages/petsc/SNESAbstractFunctions.C
   source/solvers/packages/petsc/SNES_SAMRAIContext.C
-  source/solvers/packages/sundials/kinsol/KINSOLAbstractFunctions.C
   source/solvers/packages/sundials/kinsol/KINSOL_SAMRAIContext.C
+  source/solvers/FAC/FACOperatorStrategy.C
+  source/solvers/FAC/FACPreconditioner.C
+  )
+  
+set(samrai_solvers_SRCS 
+  source/solvers/packages/sundials/kinsol/KINSOLAbstractFunctions.C
   source/solvers/packages/sundials/kinsol/KINSOLSolver.C
   source/solvers/packages/sundials/vector/SundialsAbstractVector.C
   source/solvers/packages/sundials/vector/solv_NVector.C
   source/solvers/packages/sundials/cvode/CVODESolver.C
   source/solvers/packages/sundials/cvode/CVODEAbstractFunctions.C
-  source/solvers/FAC/FACOperatorStrategy.C
-  source/solvers/FAC/FACPreconditioner.C
-  )
-add_library(SAMRAI_SOLVERS OBJECT ${samrai_solvers_SRCS})
-set_target_properties(SAMRAI_SOLVERS PROPERTIES COMPILE_DEFINITIONS NDIM=3)
-if(BUILD_SHARED_LIBS)
-    set_target_properties(SAMRAI_SOLVERS PROPERTIES COMPILE_FLAGS "-fPIC")
-endif()  
-set(samrai_algorithm_SRCS
+  source/solvers/packages/petsc/SNESAbstractFunctions.C
+  source/solvers/poisson/PoissonSpecifications.C
+  )  
+
+set(samrai_algorithm_inlined_SRCS
   source/algorithm/hyperbolic/HyperbolicLevelIntegrator.C
   source/algorithm/hyperbolic/HyperbolicPatchStrategy.C
   source/algorithm/time_refinement/TimeRefinementLevelStrategy.C
@@ -108,12 +172,17 @@ set(samrai_algorithm_SRCS
   source/algorithm/method_of_lines/MethodOfLinesIntegrator.C
   source/algorithm/method_of_lines/MethodOfLinesPatchStrategy.C
   )
-add_library(SAMRAI_ALGORITHM OBJECT ${samrai_algorithm_SRCS})
-set_target_properties(SAMRAI_ALGORITHM PROPERTIES COMPILE_DEFINITIONS NDIM=3)
-if(BUILD_SHARED_LIBS)
-    set_target_properties(SAMRAI_ALGORITHM PROPERTIES COMPILE_FLAGS "-fPIC")
-endif()   
+  
+set(samrai_algorithm_SRCS)
+  
 set(samrai_hierarchy_SRCS
+  source/hierarchy/variables/ComponentSelector.C
+  source/hierarchy/variables/PatchDescriptor.C
+  source/hierarchy/patches/ProcessorMapping.C
+  source/hierarchy/variables/VariableContext.C
+  )
+  
+set(samrai_hierarchy_inlined_SRCS
   source/hierarchy/boxes/BoxList.C
   source/hierarchy/boxes/BoxArray.C
   source/hierarchy/boxes/BoxTreeNode.C
@@ -133,7 +202,6 @@ set(samrai_hierarchy_SRCS
   source/hierarchy/patches/CoarseFineBoundary.C
   source/hierarchy/patches/BoundaryLookupTable.C
   source/hierarchy/patches/PatchGeometry.C
-  source/hierarchy/patches/ProcessorMapping.C
   source/hierarchy/patches/GridGeometry.C
   source/hierarchy/patches/PatchFactory.C
   source/hierarchy/patches/BasePatchLevel.C
@@ -143,10 +211,7 @@ set(samrai_hierarchy_SRCS
   source/hierarchy/patches/BoundaryBoxUtils.C
   source/hierarchy/patches/PatchLevelFactory.C
   source/hierarchy/patches/PatchConfigurationUtilities.C
-  source/hierarchy/variables/PatchDescriptor.C
-  source/hierarchy/variables/ComponentSelector.C
   source/hierarchy/variables/LocallyActiveDataPatchLevelManager.C
-  source/hierarchy/variables/VariableContext.C
   source/hierarchy/variables/LocallyActiveVariableDatabase.C
   source/hierarchy/variables/BoxOverlap.C
   source/hierarchy/variables/PatchData.C
@@ -164,12 +229,8 @@ set(samrai_hierarchy_SRCS
   source/hierarchy/dlbg/LayerNodeSet.C
   source/hierarchy/dlbg/LayerNode.C
   )
-add_library(SAMRAI_HIERARCHY OBJECT ${samrai_hierarchy_SRCS})
-set_target_properties(SAMRAI_HIERARCHY PROPERTIES COMPILE_DEFINITIONS NDIM=3)
-if(BUILD_SHARED_LIBS)
-    set_target_properties(SAMRAI_HIERARCHY PROPERTIES COMPILE_FLAGS "-fPIC")
-endif()   
-set(samrai_geometry_SRCS  
+    
+set(samrai_geometry_inlined_SRCS  
   source/geometry/skeleton/patch_geom/SkeletonPatchGeometry.C
   source/geometry/skeleton/operators/SkeletonRefine.C
   source/geometry/skeleton/operators/SkeletonCoarsen.C
@@ -210,22 +271,26 @@ set(samrai_geometry_SRCS
   source/geometry/multiblock/patch_geom/BlockPatchGeometry.C
   source/geometry/multiblock/grid_geom/BlockGridGeometry.C
   )
-add_library(SAMRAI_GEOMETRY OBJECT ${samrai_geometry_SRCS})
-set_target_properties(SAMRAI_GEOMETRY PROPERTIES COMPILE_DEFINITIONS NDIM=3)
-if(BUILD_SHARED_LIBS)
-    set_target_properties(SAMRAI_GEOMETRY PROPERTIES COMPILE_FLAGS "-fPIC")
-endif()    
+
+set(samrai_geometry_SRCS)
+  
+set(samrai_toolbox_inlined_SRCS 
+  source/toolbox/memory/Array.C
+  source/toolbox/memory/ConstPointer.C
+  source/toolbox/memory/Pointer.C
+  source/toolbox/base/MathUtilities.C
+  source/toolbox/base/List.C
+  )
+    
 set(samrai_toolbox_SRCS  
   source/toolbox/base/PIO.C
-  source/toolbox/base/List.C
   source/toolbox/base/SAMRAIManager.C
   source/toolbox/base/Logger.C
   source/toolbox/base/ParallelBuffer.C
   source/toolbox/base/ShutdownRegistry.C
-  source/toolbox/base/MathUtilitiesSpecial.C
   source/toolbox/base/Utilities.C
   source/toolbox/base/IEEE.C
-  source/toolbox/base/MathUtilities.C
+  source/toolbox/base/MathUtilitiesSpecial.C
   source/toolbox/base/Tracer.C
   source/toolbox/timers/TimerManager.C
   source/toolbox/timers/Timer.C
@@ -249,19 +314,16 @@ set(samrai_toolbox_SRCS
   source/toolbox/restartdb/SiloDatabaseFactory.C
   source/toolbox/restartdb/NullDatabase.C
   source/toolbox/restartdb/HDFDatabase.C
-  source/toolbox/memory/Array.C
+  source/toolbox/memory/Arena.C
   source/toolbox/memory/MemoryUtilities.C
   source/toolbox/memory/DescribedClass.C
   source/toolbox/memory/ArenaManager.C
-  source/toolbox/memory/Arena.C
   source/toolbox/memory/FixedArena.C
   source/toolbox/memory/ConstPointerBase.C
-  source/toolbox/memory/ConstPointer.C
   source/toolbox/memory/StandardArena.C
   source/toolbox/memory/ScratchArena.C
   source/toolbox/memory/ReferenceCounter.C
   source/toolbox/memory/PointerBase.C
-  source/toolbox/memory/Pointer.C
   source/toolbox/memory/ArraySpecial.C
   source/toolbox/inputdb/Parser.C
   source/toolbox/inputdb/InputManager.C
@@ -273,15 +335,10 @@ set(samrai_toolbox_SRCS
   source/toolbox/database/DatabaseBox.C
   source/toolbox/database/MemoryDatabase.C
   )
-add_library(SAMRAI_TOOLBOX OBJECT ${samrai_toolbox_SRCS})
-set_target_properties(SAMRAI_TOOLBOX PROPERTIES COMPILE_DEFINITIONS NDIM=3)
-if(BUILD_SHARED_LIBS)
-    set_target_properties(SAMRAI_TOOLBOX PROPERTIES COMPILE_FLAGS "-fPIC")
-endif()    
-set(samrai_mesh_SRCS  
+  
+set(samrai_mesh_inlined_SRCS  
   source/mesh/load_balance/LoadBalanceStrategy.C
   source/mesh/load_balance/BalanceUtilities.C
-  source/mesh/load_balance/SpatialKey.C
   source/mesh/load_balance/LoadBalancer.C
   source/mesh/gridding/TagAndInitializeStrategy.C
   source/mesh/gridding/GriddingAlgorithm.C
@@ -296,12 +353,12 @@ set(samrai_mesh_SRCS
   source/mesh/multiblock/MultiblockGriddingTagger.C
   source/mesh/multiblock/MultiblockGriddingAlgorithm.C
   )
-add_library(SAMRAI_MESH OBJECT ${samrai_mesh_SRCS})
-set_target_properties(SAMRAI_MESH PROPERTIES COMPILE_DEFINITIONS NDIM=3)
-if(BUILD_SHARED_LIBS)
-    set_target_properties(SAMRAI_MESH PROPERTIES COMPILE_FLAGS "-fPIC")
-endif() 
-set(samrai_patchdata_SRCS  
+  
+set(samrai_mesh_SRCS
+  source/mesh/load_balance/SpatialKey.C
+  )
+  
+set(samrai_patchdata_inlined_SRCS  
   source/patchdata/outeredge/OuteredgeVariable.C
   source/patchdata/outeredge/OuteredgeDataFactory.C
   source/patchdata/outeredge/OuteredgeData.C
@@ -419,12 +476,10 @@ set(samrai_patchdata_SRCS
   source/patchdata/face/FaceIterator.C
   source/patchdata/face/FaceData.C
   )
-add_library(SAMRAI_PATCHDATA OBJECT ${samrai_patchdata_SRCS})
-set_target_properties(SAMRAI_PATCHDATA PROPERTIES COMPILE_DEFINITIONS NDIM=3)
-if(BUILD_SHARED_LIBS)
-    set_target_properties(SAMRAI_PATCHDATA PROPERTIES COMPILE_FLAGS "-fPIC")
-endif() 
-set(samrai_mathops_SRCS  
+  
+set(samrai_patchdata_SRCS)
+  
+set(samrai_mathops_inlined_SRCS  
   source/mathops/hierarchy/HierarchyDataOpsComplex.C
   source/mathops/hierarchy/HierarchyDataOpsReal.C
   source/mathops/hierarchy/HierarchyDataOpsInteger.C
@@ -485,12 +540,10 @@ set(samrai_mathops_SRCS
   source/mathops/face/PatchFaceDataBasicOps.C
   source/mathops/face/PatchFaceDataOpsReal.C
   )
-add_library(SAMRAI_MATHOPS OBJECT ${samrai_mathops_SRCS})
-set_target_properties(SAMRAI_MATHOPS PROPERTIES COMPILE_DEFINITIONS NDIM=3)
-if(BUILD_SHARED_LIBS)
-    set_target_properties(SAMRAI_MATHOPS PROPERTIES COMPILE_FLAGS "-fPIC")
-endif() 
-set(samrai_transfer_SRCS  
+  
+set(samrai_mathops_SRCS)
+  
+set(samrai_transfer_inlined_SRCS  
   source/transfer/multiblock/MultiblockRefineSchedule.C
   source/transfer/multiblock/MultiblockRefinePatchStrategy.C
   source/transfer/multiblock/MultiblockCoarsenAlgorithm.C
@@ -532,1184 +585,44 @@ set(samrai_transfer_SRCS
   source/transfer/operators/VariableFillPattern.C
   source/transfer/operators/RefineOperator.C
   )
-add_library(SAMRAI_TRANSFER OBJECT ${samrai_transfer_SRCS})
-set_target_properties(SAMRAI_TRANSFER PROPERTIES COMPILE_DEFINITIONS NDIM=3)
-if(BUILD_SHARED_LIBS)
-    set_target_properties(SAMRAI_TRANSFER PROPERTIES COMPILE_FLAGS "-fPIC")
-endif() 
-set(samrai_apputils_SRCS  
-  source/apputils/plotting/CartesianVizamraiDataWriter.C
-  source/apputils/plotting/VisItDataWriter.C
-  source/apputils/plotting/VisDerivedDataStrategy.C
-  source/apputils/plotting/VisMaterialsDataStrategy.C
+  
+set(samrai_transfer_SRCS)
+  
+set(samrai_apputils_inlined_SRCS
+  source/apputils/embedded_boundary/BoundaryNode.C
   source/apputils/embedded_boundary/EmbeddedBoundaryShapeSphere.C
   source/apputils/embedded_boundary/EmbeddedBoundaryShape.C
   source/apputils/embedded_boundary/EmbeddedBoundaryShapePolygon.C
-  source/apputils/embedded_boundary/BoundaryNode.C
   source/apputils/embedded_boundary/EmbeddedBoundaryGeometry.C
   source/apputils/embedded_boundary/ElevenPatchInterface.C
   source/apputils/embedded_boundary/CubesPatchInterface.C
   source/apputils/embedded_boundary/CutCell.C
+  source/apputils/plotting/CartesianVizamraiDataWriter.C
+  source/apputils/plotting/VisItDataWriter.C
+  source/apputils/plotting/VisDerivedDataStrategy.C
+  source/apputils/plotting/VisMaterialsDataStrategy.C
+  )  
+
+set(samrai_apputils_SRCS  
   source/apputils/boundary/BoundaryUtilityStrategy.C
   source/apputils/boundary/CartesianBoundaryUtilities3.C
   source/apputils/boundary/CartesianBoundaryUtilities2.C
   source/apputils/plotting/appu_cpdat2buf2d.f
   source/apputils/plotting/appu_cpdat2buf3d.f
 )
-add_library(SAMRAI_APPUTILS OBJECT ${samrai_apputils_SRCS})
-set_target_properties(SAMRAI_APPUTILS PROPERTIES COMPILE_DEFINITIONS NDIM=3)
-if(BUILD_SHARED_LIBS)
-    set_target_properties(SAMRAI_APPUTILS PROPERTIES COMPILE_FLAGS "-fPIC")
-endif() 
 
-set(samrai_templates_SRCS
-  source/solvers/templates/automaticXd/SAMRAIVectorReal-NDIM_floatX.C
-  source/solvers/templates/automaticXd/FACPreconditioner-NDIMX.C
-  source/solvers/templates/automaticXd/FACOperatorStrategy-NDIMX.C
-  source/solvers/templates/automaticXd/Sundials_SAMRAIVector-NDIMX.C
-  source/solvers/templates/automaticXd/SNES_SAMRAIContext-NDIMX.C
-  source/solvers/templates/automaticXd/tbox__Pointer-solv__SAMRAIVectorReal-NDIM_floatX.C
-  source/solvers/templates/automaticXd/NonlinearSolverStrategy-NDIMX.C
-  source/solvers/templates/automaticXd/LocationIndexRobinBcCoefs-NDIMX.C
-  source/solvers/templates/automaticXd/GhostCellRobinBcCoefs-NDIMX.C
-  source/solvers/templates/automaticXd/CellPoissonFACSolver-NDIMX.C
-  source/solvers/templates/automaticXd/RobinBcCoefStrategy-NDIMX.C
-  source/solvers/templates/automaticXd/CartesianRobinBcHelper-NDIMX.C
-  source/solvers/templates/automaticXd/CellPoissonFACOps-NDIMX.C
-  source/solvers/templates/automaticXd/SAMRAIVectorReal-NDIM_doubleX.C
-  source/solvers/templates/automaticXd/PETSc_SAMRAIVectorReal-NDIM_doubleX.C
-  source/solvers/templates/automaticXd/CellPoissonHypreSolver-NDIMX.C
-  source/solvers/templates/automaticXd/KINSOL_SAMRAIContext-NDIMX.C
-  source/solvers/templates/automaticXd/SimpleCellRobinBcCoefs-NDIMX.C
-  source/solvers/templates/automaticXd/tbox__Pointer-solv__SAMRAIVectorReal-NDIM_doubleX.C
-  source/solvers/templates/EmptySolversX.C
-  source/solvers/templates/automaticNond/PETScAbstractVectorReal-double.C
-  source/algorithm/templates/automaticXd/OuteredgeSumTransaction-NDIMX.C
-  source/algorithm/templates/automaticXd/MethodOfLinesIntegrator-NDIMX.C
-  source/algorithm/templates/automaticXd/tbox__Array-tbox__Pointer-algs__LocallyActiveDataPatchBoundaryNodeSum-NDIMX.C
-  source/algorithm/templates/automaticXd/tbox__Array-tbox__Pointer-algs__LocallyActiveDataPatchBoundaryEdgeSum-NDIMX.C
-  source/algorithm/templates/automaticXd/OuternodeSumTransaction-NDIMX.C
-  source/algorithm/templates/automaticXd/HyperbolicLevelIntegrator-NDIMX.C
-  source/algorithm/templates/automaticXd/tbox__Pointer-algs__PatchBoundaryNodeSum-NDIMX.C
-  source/algorithm/templates/automaticXd/ImplicitIntegrator-NDIMX.C
-  source/algorithm/templates/automaticXd/tbox__Pointer-algs__MblkPatchBoundaryNodeSum-NDIMX.C
-  source/algorithm/templates/automaticXd/PatchBoundaryNodeSum-NDIMX.C
-  source/algorithm/templates/automaticXd/tbox__Pointer-algs__TimeRefinementLevelStrategy-NDIMX.C
-  source/algorithm/templates/automaticXd/tbox__Pointer-algs__HyperbolicLevelIntegrator-NDIMX.C
-  source/algorithm/templates/automaticXd/tbox__Pointer-algs__LocallyActiveDataPatchBoundaryNodeSum-NDIMX.C
-  source/algorithm/templates/automaticXd/tbox__Array-tbox__Pointer-algs__PatchBoundaryEdgeSum-NDIMX.C
-  source/algorithm/templates/automaticXd/MblkPatchBoundaryNodeSum-NDIMX.C
-  source/algorithm/templates/automaticXd/PatchBoundaryEdgeSum-NDIMX.C
-  source/algorithm/templates/automaticXd/LocallyActiveDataPatchBoundaryNodeSum-NDIMX.C
-  source/algorithm/templates/automaticXd/LocallyActiveDataPatchBoundaryEdgeSum-NDIMX.C
-  source/algorithm/templates/automaticXd/ImplicitEquationStrategy-NDIMX.C
-  source/algorithm/templates/automaticXd/tbox__Array-tbox__Pointer-algs__PatchBoundaryNodeSum-NDIMX.C
-  source/algorithm/templates/automaticXd/LocallyActiveDataOuternodeSumTransactionFactory-NDIMX.C
-  source/algorithm/templates/automaticXd/tbox__Pointer-algs__LocallyActiveDataPatchBoundaryEdgeSum-NDIMX.C
-  source/algorithm/templates/automaticXd/tbox__Pointer-algs__MethodOfLinesIntegrator-NDIMX.C
-  source/algorithm/templates/automaticXd/TimeRefinementIntegrator-NDIMX.C
-  source/algorithm/templates/automaticXd/tbox__Pointer-algs__TimeRefinementIntegrator-NDIMX.C
-  source/algorithm/templates/automaticXd/TimeRefinementLevelStrategy-NDIMX.C
-  source/algorithm/templates/automaticXd/LocallyActiveDataOuteredgeSumTransactionFactory-NDIMX.C
-  source/algorithm/templates/automaticXd/MethodOfLinesPatchStrategy-NDIMX.C
-  source/algorithm/templates/automaticXd/OuternodeSumTransactionFactory-NDIMX.C
-  source/algorithm/templates/automaticXd/OuteredgeSumTransactionFactory-NDIMX.C
-  source/algorithm/templates/automaticXd/tbox__Pointer-algs__PatchBoundaryEdgeSum-NDIMX.C
-  source/algorithm/templates/automaticXd/HyperbolicPatchStrategy-NDIMX.C
-  source/algorithm/templates/EmptyAlgorithmX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-hier__Box-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Pointer-hier__PatchDataFactory-NDIMX.C
-  source/hierarchy/templates/automaticXd/LayerHierarchy-NDIMX.C
-  source/hierarchy/templates/automaticXd/BoxTreeNode-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-hier__PatchConfigurationUtilities_NDIM___PatchLevelInfoX.C
-  source/hierarchy/templates/automaticXd/BoxGeometry-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__List-hier__BoxTreeNode_NDIM___TripleX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__BoxOverlap-NDIMX.C
-  source/hierarchy/templates/automaticXd/BinaryTree-NDIMX.C
-  source/hierarchy/templates/automaticXd/BoxUtilities-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__MultiblockGridGeometry-NDIMX.C
-  source/hierarchy/templates/automaticXd/BoxGraphUtilities-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__MultiblockPatchHierarchy-NDIMX.C
-  source/hierarchy/templates/automaticXd/BasePatchLevel-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__List-hier__MultiblockPatchHierarchy_NDIM___NeighborX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Pointer-hier__PatchConfigurationUtilities-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Pointer-hier__PatchLevel-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-hier__LayerNodeSet-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__BasePatchHierarchy-NDIMX.C
-  source/hierarchy/templates/automaticXd/Patch-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Pointer-hier__Variable-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__BoxGraph-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__PatchHierarchy-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-hier__IntVector-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Array-hier__BoundaryBox-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__List-tbox__Pointer-hier__Variable-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-hier__PatchConfigurationUtilities_NDIM___PatchInfoPointerX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__Variable-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-hier__Index-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-hier__BoundaryBox-NDIMX.C
-  source/hierarchy/templates/automaticXd/MBUtilities-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__PatchConfigurationUtilities-NDIMX.C
-  source/hierarchy/templates/automaticXd/BasePatchHierarchy-NDIMX.C
-  source/hierarchy/templates/automaticXd/PatchConfigurationUtilities-NDIMX.C
-  source/hierarchy/templates/automaticXd/BoundaryBox-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Array-tbox__Array-tbox__Pointer-hier__PatchLevel-NDIMX.C
-  source/hierarchy/templates/automaticXd/PatchLevelFactory-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__PatchLevel-NDIMX.C
-  source/hierarchy/templates/automaticXd/LayerEdgeSet-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__Index-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__List-hier__BoundaryBox-NDIMX.C
-  source/hierarchy/templates/automaticXd/IntVector-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-hier__CoarseFineBoundary-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-hier__BoxArray-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__List-hier__Index-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__BoxList-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__PatchDescriptor-NDIMX.C
-  source/hierarchy/templates/automaticXd/VariableDatabase-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Pointer-hier__Patch-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__PatchLevelFactory-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__PatchDataFactory-NDIMX.C
-  source/hierarchy/templates/automaticXd/BoxTree-NDIMX.C
-  source/hierarchy/templates/automaticXd/CoarseFineBoundary-NDIMX.C
-  source/hierarchy/templates/automaticXd/MultiblockPatchHierarchy-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Pointer-hier__ComponentSelector.C
-  source/hierarchy/templates/automaticXd/BoxList-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__CoarseFineBoundary-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__MultiblockPatchLevel-NDIMX.C
-  source/hierarchy/templates/automaticXd/LayerNodeSet-NDIMX.C
-  source/hierarchy/templates/automaticXd/BoundaryLookupTable-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Array-hier__Box-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-hier__ComponentSelector.C
-  source/hierarchy/templates/automaticXd/Variable-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__BoxTree-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Array-hier__BoxArray-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Pointer-hier__BoxTree-NDIMX.C
-  source/hierarchy/templates/automaticXd/MultiblockDataTranslator-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Pointer-hier__MultiblockPatchLevel-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Array-tbox__Pointer-hier__PatchLevel-NDIMX.C
-  source/hierarchy/templates/automaticXd/GridGeometry-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__List-hier__MultiblockPatchHierarchy_NDIM___NeighborX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Pointer-hier__Index-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-hier__BinaryTree_NDIM___binTreeNodeX.C
-  source/hierarchy/templates/automaticXd/MultiblockGridGeometry-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Array-hier__BoxList-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__List-hier__IntVector-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__PatchFactory-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__BoxGeometry-NDIMX.C
-  source/hierarchy/templates/automaticXd/PatchDescriptor-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-hier__BoxGraph_NDIM___GraphNodeX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Array-hier__IntVector-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__GridGeometry-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__PatchData-NDIMX.C
-  source/hierarchy/templates/automaticXd/BoxTop-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__Patch-NDIMX.C
-  source/hierarchy/templates/automaticXd/BoxArray-NDIMX.C
-  source/hierarchy/templates/automaticXd/LocallyActiveDataPatchLevelManager-NDIMX.C
-  source/hierarchy/templates/automaticXd/Index-NDIMX.C
-  source/hierarchy/templates/automaticXd/BoxGraph-NDIMX.C
-  source/hierarchy/templates/automaticXd/PatchGeometry-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-hier__BoxList-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Pointer-hier__PatchHierarchy-NDIMX.C
-  source/hierarchy/templates/automaticXd/PatchData-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-hier__LayerEdgeSet-NDIMX.C
-  source/hierarchy/templates/automaticXd/PatchDataFactory-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Array-hier__CoarseFineBoundary-NDIMX.C
-  source/hierarchy/templates/automaticXd/BoundaryBoxUtils-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-hier__PatchConfigurationUtilities_NDIM___NeighborPatchInfoX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__LocallyActiveDataPatchLevelManager-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Pointer-hier__BoxOverlap-NDIMX.C
-  source/hierarchy/templates/automaticXd/PatchHierarchy-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Pointer-hier__VariableContext.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Array-hier__Index-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Pointer-hier__GridGeometry-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__BoxTop-NDIMX.C
-  source/hierarchy/templates/automaticXd/LayerNode-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__ComponentSelector.C
-  source/hierarchy/templates/automaticXd/LocallyActiveVariableDatabase-NDIMX.C
-  source/hierarchy/templates/automaticXd/PatchFactory-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Pointer-hier__LocallyActiveDataPatchLevelManager-NDIMX.C
-  source/hierarchy/templates/automaticXd/PatchLevel-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__List-hier__Box-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__List-hier__IntVector-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__PatchGeometry-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__BoxTreeNode-NDIMX.C
-  source/hierarchy/templates/automaticXd/BoxOverlap-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__BasePatchLevel-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Array-tbox__Array-hier__BoundaryBox-NDIMX.C
-  source/hierarchy/templates/automaticXd/BoxComm-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__VariableContext.C
-  source/hierarchy/templates/automaticXd/tbox__Pointer-hier__BinaryTree-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Pointer-hier__PatchData-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-tbox__Array-tbox__Pointer-hier__MultiblockPatchLevel-NDIMX.C
-  source/hierarchy/templates/automaticXd/BoxIOUtility-NDIMX.C
-  source/hierarchy/templates/automaticXd/tbox__Array-hier__BoxTreeNode_NDIM___TripleX.C
-  source/hierarchy/templates/automaticXd/Box-NDIMX.C
-  source/hierarchy/templates/automaticXd/MultiblockPatchLevel-NDIMX.C
-  source/hierarchy/templates/special/stl-LayerNode-NDIMX.C
-  source/hierarchy/templates/special/stl-LayerEdgeSet-NDIMX.C
-  source/hierarchy/templates/EmptyHierarchyX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianNodeFloatLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__BlockGridGeometry-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianFaceFloatWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Array-tbox__Pointer-geom__SkeletonGridGeometry-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianOuterfaceDoubleWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianSideDoubleWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianSideDoubleConservativeLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianSideFloatConservativeLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianCellComplexConservativeLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianCellFloatLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianEdgeFloatWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/SkeletonCoarsen-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianCellDoubleLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianEdgeDoubleConservativeLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianFaceFloatConservativeLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/SkeletonGridGeometry-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianOuterfaceComplexWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianEdgeDoubleConservativeLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianSideFloatWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianSideFloatWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianPatchGeometry-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianCellComplexLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianGridGeometry-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianOutersideDoubleWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianSideFloatConservativeLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianSideDoubleConservativeLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianCellComplexWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianCellDoubleConservativeLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/BlockPatchGeometry-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianPatchGeometry-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianFaceComplexWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianCellComplexLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianCellFloatWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianNodeComplexLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianOuterfaceDoubleWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianFaceDoubleWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianNodeComplexLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianFaceDoubleConservativeLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__SkeletonPatchGeometry-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianCellFloatConservativeLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianCellComplexWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianEdgeFloatConservativeLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__BlockPatchGeometry-NDIMX.C
-  source/geometry/templates/automaticXd/SkeletonRefine-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__SkeletonGridGeometry-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianFaceDoubleWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianSideDoubleWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianFaceFloatWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianCellFloatLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/SkeletonPatchGeometry-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianSideComplexWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianCellFloatConservativeLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianEdgeFloatConservativeLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianEdgeDoubleWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianCellDoubleConservativeLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianEdgeFloatWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianNodeDoubleLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianNodeDoubleLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianCellDoubleLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianSideComplexWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianCellFloatWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianEdgeComplexWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianCellDoubleWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianOuterfaceFloatWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianGridGeometry-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianEdgeComplexWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianCellComplexConservativeLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianOuterfaceFloatWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/BlockGridGeometry-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianNodeFloatLinearRefine-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianEdgeDoubleWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/CartesianCellDoubleWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianOuterfaceComplexWeightedAverage-NDIMX.C
-  source/geometry/templates/automaticXd/tbox__Pointer-geom__CartesianFaceComplexWeightedAverage-NDIMX.C
-  source/geometry/templates/EmptyGeometryX.C
-  source/toolbox/templates/special/StringInst.C
-  source/toolbox/templates/special/MathUtilitiesInst.C
-  source/toolbox/templates/special/stl-FundamentalTypes.C
-  source/toolbox/templates/special/tbox_List-tbox_TimerPointer.C
-  source/toolbox/templates/special/ComplexInst.C
-  source/toolbox/templates/automaticNond/tbox__Pointer-tbox__NullDatabase.C
-  source/toolbox/templates/automaticNond/tbox__MathUtilities-double.C
-  source/toolbox/templates/automaticNond/tbox__Array-int.C
-  source/toolbox/templates/automaticNond/tbox__List-tbox__Statistic__PatchStatRecord.C
-  source/toolbox/templates/automaticNond/tbox__MathUtilities-int.C
-  source/toolbox/templates/automaticNond/tbox__Pointer-tbox__InputDatabase.C
-  source/toolbox/templates/automaticNond/tbox__Array-dcomplex.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__SAMRAI_MPI__status.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__Pointer-tbox__Timer.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__List-int.C
-  source/toolbox/templates/automaticNond/tbox__Pointer-tbox__DatabaseFactory.C
-  source/toolbox/templates/automaticNond/tbox__List-tbox__MemoryDatabase__KeyData.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__AsyncCommGroupPointer.C
-  source/toolbox/templates/automaticNond/tbox__Array-bool.C
-  source/toolbox/templates/automaticNond/tbox__List-tbox__RestartManager__RestartItem.C
-  source/toolbox/templates/automaticNond/tbox__List-string.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__Pointer-tbox__Database.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__Array-double.C
-  source/toolbox/templates/automaticNond/tbox__Pointer-tbox__Statistic.C
-  source/toolbox/templates/automaticNond/tbox__Pointer-tbox__Arena.C
-  source/toolbox/templates/automaticNond/tbox__List-double.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__SAMRAI_MPI__request.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__List-tbox__Pointer-tbox__Transaction.C
-  source/toolbox/templates/automaticNond/tbox__Pointer-tbox__FixedArena.C
-  source/toolbox/templates/automaticNond/tbox__Pointer-tbox__MessageStream.C
-  source/toolbox/templates/automaticNond/tbox__List-int.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__Array-tbox__Array-double.C
-  source/toolbox/templates/automaticNond/tbox__MathUtilities-char.C
-  source/toolbox/templates/automaticNond/tbox__Pointer-tbox__MemoryDatabaseFactory.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__Pointer-tbox__SiloDatabase.C
-  source/toolbox/templates/automaticNond/tbox__Array-charPointer.C
-  source/toolbox/templates/automaticNond/tbox__Array-string.C
-  source/toolbox/templates/automaticNond/tbox__Pointer-tbox__Transaction.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__Array-bool.C
-  source/toolbox/templates/automaticNond/tbox__List-tbox__Parser__ParseData.C
-  source/toolbox/templates/automaticNond/tbox__MathUtilities-dcomplex.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__Pointer-tbox__HDFDatabase.C
-  source/toolbox/templates/automaticNond/tbox__Pointer-tbox__Schedule.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__Pointer-tbox__Statistic.C
-  source/toolbox/templates/automaticNond/tbox__Pointer-tbox__HDFDatabase.C
-  source/toolbox/templates/automaticNond/tbox__Pointer-tbox__Database.C
-  source/toolbox/templates/automaticNond/tbox__Pointer-tbox__Logger__Appender.C
-  source/toolbox/templates/automaticNond/tbox__Array-char.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__RelaunchableJobPointer.C
-  source/toolbox/templates/automaticNond/tbox__List-tbox__TimerPointer.C
-  source/toolbox/templates/automaticNond/tbox__MathUtilities-bool.C
-  source/toolbox/templates/automaticNond/tbox__Array-double.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__Array-tbox__Array-bool.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__DatabaseBox.C
-  source/toolbox/templates/automaticNond/tbox__List-tbox__InputDatabase__KeyData.C
-  source/toolbox/templates/automaticNond/tbox__Pointer-tbox__MemoryDatabase.C
-  source/toolbox/templates/automaticNond/tbox__MathUtilities-float.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__Statistic__PatchStat.C
-  source/toolbox/templates/automaticNond/tbox__Array-float.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__Statistic__ProcStat.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__Array-int.C
-  source/toolbox/templates/automaticNond/tbox__List-tbox__Pointer-tbox__Transaction.C
-  source/toolbox/templates/automaticNond/tbox__List-tbox__Pointer-tbox__Database.C
-  source/toolbox/templates/automaticNond/tbox__Pointer-tbox__SiloDatabase.C
-  source/toolbox/templates/automaticNond/tbox__List-tbox__RelaunchableJobPointer.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__AsyncCommStage__StagedGroupPointer.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__Schedule__ScheduleMessageStream.C
-  source/toolbox/templates/automaticNond/tbox__Array-tbox__Array-tbox__Array-int.C
-  source/toolbox/templates/automaticNond/tbox__Pointer-tbox__Timer.C
-  source/toolbox/templates/automaticNond/tbox__List-tbox__HDFDatabase__KeyData.C
-  source/mesh/templates/automaticXd/tbox__Pointer-mesh__BoxGeneratorStrategy-NDIMX.C
-  source/mesh/templates/automaticXd/tbox__Pointer-mesh__BaseGriddingAlgorithm-NDIMX.C
-  source/mesh/templates/automaticXd/LoadBalanceStrategy-NDIMX.C
-  source/mesh/templates/automaticXd/BalanceUtilities-NDIMX.C
-  source/mesh/templates/automaticXd/tbox__Pointer-mesh__GriddingAlgorithm-NDIMX.C
-  source/mesh/templates/automaticXd/tbox__Pointer-mesh__LoadBalanceStrategy-NDIMX.C
-  source/mesh/templates/automaticXd/LoadBalancer-NDIMX.C
-  source/mesh/templates/automaticXd/tbox__Pointer-mesh__TagAndInitializeStrategy-NDIMX.C
-  source/mesh/templates/automaticXd/MultiblockGriddingAlgorithm-NDIMX.C
-  source/mesh/templates/automaticXd/GriddingAlgorithm-NDIMX.C
-  source/mesh/templates/automaticXd/tbox__Pointer-mesh__StandardTagAndInitStrategy-NDIMX.C
-  source/mesh/templates/automaticXd/AsyncBergerRigoutsos-NDIMX.C
-  source/mesh/templates/automaticXd/BaseGriddingAlgorithm-NDIMX.C
-  source/mesh/templates/automaticXd/tbox__Pointer-mesh__MultiblockGriddingAlgorithm-NDIMX.C
-  source/mesh/templates/automaticXd/AsyncBergerRigoutsosNode-NDIMX.C
-  source/mesh/templates/automaticXd/MultiblockGriddingTagger-NDIMX.C
-  source/mesh/templates/automaticXd/BoxGeneratorStrategy-NDIMX.C
-  source/mesh/templates/automaticXd/tbox__Pointer-mesh__AsyncBergerRigoutsos-NDIMX.C
-  source/mesh/templates/automaticXd/tbox__Pointer-mesh__LoadBalancer-NDIMX.C
-  source/mesh/templates/automaticXd/HistogramBox-NDIMX.C
-  source/mesh/templates/automaticXd/BergerRigoutsos-NDIMX.C
-  source/mesh/templates/automaticXd/tbox__Pointer-mesh__BergerRigoutsos-NDIMX.C
-  source/mesh/templates/automaticXd/StandardTagAndInitialize-NDIMX.C
-  source/mesh/templates/automaticXd/TagAndInitializeStrategy-NDIMX.C
-  source/mesh/templates/automaticXd/tbox__Pointer-mesh__StandardTagAndInitialize-NDIMX.C
-  source/mesh/templates/automaticXd/StandardTagAndInitStrategy-NDIMX.C
-  source/mesh/templates/EmptyMeshX.C
-  source/mesh/templates/automaticNond/tbox__Array-mesh__SpatialKey.C
-  source/patchdata/templates/automaticXd/pdat__CellVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeIntegerInjection-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__FaceDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__FaceDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__FaceData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__FaceDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/NodeDoubleInjection-NDIMX.C
-  source/patchdata/templates/automaticXd/NodeDoubleLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/OuterfaceComplexLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/FaceComplexLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/EdgeComplexLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__FaceData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/EdgeOverlap-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellComplexConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockCellDataTranslator-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockNodeDataTranslator-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/NodeIndex-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockCellDataTranslator-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__FaceVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__SideData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SecondLayerNodeFillPattern-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideComplexConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellDoubleConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__NodeVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/FaceOverlap-NDIMX.C
-  source/patchdata/templates/automaticXd/NodeIterator-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockFaceDataTranslator-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__NodeVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/CellGeometry-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__ArrayData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceComplexConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/EdgeDoubleLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockCellDataTranslator-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__SideVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/OuternodeDoubleConstantCoarsen-NDIMX.C
-  source/patchdata/templates/automaticXd/NodeFloatLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideFloatConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeDoubleConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/EdgeIterator-NDIMX.C
-  source/patchdata/templates/automaticXd/OuterfaceDoubleLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/OuterfaceFloatLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/OuterfaceDoubleConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__CellDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellFloatConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__NodeVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__NodeDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__FaceDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Array-tbox__Pointer-pdat__ArrayData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/EdgeDoubleConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockFaceDataTranslator-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/FirstLayerNodeFillPattern-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__FaceVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__FaceVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__SideDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockFaceDataTranslator-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__CellData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__NodeVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/OuterfaceFloatConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/NodeComplexInjection-NDIMX.C
-  source/patchdata/templates/automaticXd/SideDoubleLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__NodeDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/FaceDoubleConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/FaceIndex-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__CellVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/EdgeFloatLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/CellIntegerConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/OuteredgeGeometry-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/FaceGeometry-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayDataOperationUtilities-NDIM_int_CopyOperation-intX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockEdgeDataTranslator-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__ArrayData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/CellOverlap-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeDoubleInjection-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeFloatConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceDoubleConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/EdgeFloatConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__CellVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceFloatConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/FirstLayerCellFillPattern-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__SideVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/FaceIntegerConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__NodeData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockCellDataTranslator-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockEdgeDataTranslator-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceComplexConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__FaceData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__FaceData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__CellDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellIntegerConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__NodeData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__FaceData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockNodeDataTranslator-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__CellData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/SideIterator-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeComplexConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__NodeData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/OutersideFloatLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/NodeGeometry-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/EdgeIntegerConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/SecondLayerNodeFillPattern-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__NodeData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__SideDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__NodeData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/CellComplexLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__MBDataUtilities-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/SideIndex-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__SideData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/SideGeometry-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockSideDataTranslator-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__MBDataUtilities-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockSideDataTranslator-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeComplexInjection-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__ArrayData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/CellDoubleConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FirstLayerCellFillPattern-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/CellDoubleLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockSideDataTranslator-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__CellVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/SideComplexLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayDataOperationUtilities-NDIM_float_CopyOperation-floatX.C
-  source/patchdata/templates/automaticXd/pdat__SideDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayDataOperationUtilities-NDIM_char_SumOperation-charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockEdgeDataTranslator-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockEdgeDataTranslator-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/FaceFloatLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/OuterfaceComplexConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayDataOperationUtilities-NDIM_int_SumOperation-intX.C
-  source/patchdata/templates/automaticXd/pdat__CellData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__ArrayData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SecondLayerNodeNoCornersFillPattern-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__SideDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/OutersideComplexLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/FirstLayerCellNoCornersFillPattern-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__SideData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/NodeFloatInjection-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/SideDoubleConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/SideIntegerConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__CellVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__CellVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceFloatConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayDataOperationUtilities-NDIM_char_CopyOperation-charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__SideVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__FaceVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__SideVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Array-tbox__Pointer-pdat__ArrayData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayDataOperationUtilities-NDIM_double_CopyOperation-doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__CellDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__MBDataUtilities-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__CellDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__SideDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeFloatInjection-NDIMX.C
-  source/patchdata/templates/automaticXd/OuterfaceGeometry-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockSideDataTranslator-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/CellComplexConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/EdgeComplexConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/OutersideGeometry-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__ArrayData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/FaceDoubleLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayDataOperationUtilities-NDIM_dcomplex_CopyOperation-dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeDoubleConstantCoarsen-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/NodeComplexLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/CellIterator-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/OutersideDoubleLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockNodeDataTranslator-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/CellFloatConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockFaceDataTranslator-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__MBDataUtilities-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__CellDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__SideData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__FaceVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayDataOperationUtilities-NDIM_float_SumOperation-floatX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__NodeVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/SideOverlap-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FirstLayerNodeFillPattern-NDIMX.C
-  source/patchdata/templates/automaticXd/EdgeGeometry-NDIMX.C
-  source/patchdata/templates/automaticXd/SecondLayerNodeNoCornersFillPattern-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__CellData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__NodeDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockNodeDataTranslator-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockFaceDataTranslator-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__CellData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/FaceIterator-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__SideData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__SideData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/NodeOverlap-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceIntegerConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeIntegerConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__SideVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceDoubleConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__FaceData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockNodeDataTranslator-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Array-tbox__Pointer-pdat__ArrayData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__FaceDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/FaceFloatConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__NodeDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/SideFloatLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__FaceVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/CellFloatLinearTimeInterpolateOp-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideDoubleConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockEdgeDataTranslator-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideIntegerConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__SideVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/NodeIntegerInjection-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockCellDataTranslator-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Array-tbox__Pointer-pdat__ArrayData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/EdgeIndex-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeDataFactory-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceVariable-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__FaceDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__CellDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__NodeVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__EdgeDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/OuterfaceIntegerConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/ArrayDataIterator-NDIMX.C
-  source/patchdata/templates/automaticXd/FaceComplexConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__CellVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceVariable-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceDataFactory-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeData-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__CellData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__NodeDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/SideComplexConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceVariable-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FirstLayerCellNoCornersFillPattern-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Array-tbox__Pointer-pdat__ArrayData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__SideDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__MBDataUtilities-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayDataOperationUtilities-NDIM_double_SumOperation-doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__SideDataFactory-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/SideFloatConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/tbox__Array-tbox__Pointer-pdat__ArrayData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__FaceIntegerConstantRefine-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__NodeData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/OuternodeGeometry-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayDataOperationUtilities-NDIM_bool_CopyOperation-boolX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/CellIndex-NDIMX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayData-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__NodeDataFactory-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__OutersideVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayDataOperationUtilities-NDIM_bool_SumOperation-boolX.C
-  source/patchdata/templates/automaticXd/pdat__OuterfaceDataFactory-NDIM_intX.C
-  source/patchdata/templates/automaticXd/pdat__NodeData-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeVariable-NDIM_intX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__EdgeVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__ArrayData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuteredgeVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceData-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuternodeData-NDIM_doubleX.C
-  source/patchdata/templates/automaticXd/pdat__ArrayDataOperationUtilities-NDIM_dcomplex_SumOperation-dcomplexX.C
-  source/patchdata/templates/automaticXd/pdat__OuternodeDataFactory-NDIM_boolX.C
-  source/patchdata/templates/automaticXd/pdat__OuteredgeVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OutersideVariable-NDIM_dcomplexX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceData-NDIM_floatX.C
-  source/patchdata/templates/automaticXd/tbox__Pointer-pdat__OuterfaceVariable-NDIM_charX.C
-  source/patchdata/templates/automaticXd/pdat__MultiblockSideDataTranslator-NDIM_intX.C
-  source/patchdata/templates/special/pdat__ArrayDataAccess-NDIM_intX.C
-  source/patchdata/templates/special/pdat__ArrayDataAccess-NDIM_doubleX.C
-  source/patchdata/templates/special/pdat__ArrayDataAccess-NDIM_charX.C
-  source/patchdata/templates/EmptyPatchDataX.C
-  source/patchdata/templates/automaticNond/pdat__SumOperation-float.C
-  source/patchdata/templates/automaticNond/pdat__CopyOperation-char.C
-  source/patchdata/templates/automaticNond/pdat__CopyOperation-int.C
-  source/patchdata/templates/automaticNond/pdat__SumOperation-bool.C
-  source/patchdata/templates/automaticNond/pdat__CopyOperation-float.C
-  source/patchdata/templates/automaticNond/pdat__CopyOperation-double.C
-  source/patchdata/templates/automaticNond/pdat__SumOperation-double.C
-  source/patchdata/templates/automaticNond/pdat__SumOperation-dcomplex.C
-  source/patchdata/templates/automaticNond/pdat__CopyOperation-dcomplex.C
-  source/patchdata/templates/automaticNond/pdat__SumOperation-char.C
-  source/patchdata/templates/automaticNond/pdat__SumOperation-int.C
-  source/patchdata/templates/automaticNond/pdat__CopyOperation-bool.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchySideDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/math__PatchFaceDataNormOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/math__HierarchyCellDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchFaceDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchSideDataMiscellaneousOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/math__HierarchyCellDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchCellDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/math__HierarchySideDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyFaceDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/PatchEdgeDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchSideDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyEdgeDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/ArrayDataNormOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/HierarchyCellDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/ArrayDataBasicOps-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchySideDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/math__HierarchyEdgeDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/math__PatchEdgeDataBasicOps-NDIM_dcomplexX.C
-  source/mathops/templates/automaticXd/math__HierarchyFaceDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/math__PatchEdgeDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchySideDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyNodeDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyEdgeDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/ArrayDataNormOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyCellDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchFaceDataMiscellaneousOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/ArrayDataNormOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/math__PatchFaceDataNormOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchEdgeDataMiscellaneousOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/HierarchyDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/PatchEdgeDataNormOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchNodeDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchFaceDataBasicOps-NDIM_dcomplexX.C
-  source/mathops/templates/automaticXd/math__PatchSideDataBasicOps-NDIM_intX.C
-  source/mathops/templates/automaticXd/math__PatchSideDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/HierarchyDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchNodeDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchEdgeDataBasicOps-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/ArrayDataBasicOps-NDIM_dcomplexX.C
-  source/mathops/templates/automaticXd/tbox__Array-tbox__Pointer-math__HierarchyDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchEdgeDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/math__HierarchyNodeDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/math__PatchSideDataNormOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/math__PatchCellDataBasicOps-NDIM_intX.C
-  source/mathops/templates/automaticXd/math__PatchNodeDataBasicOps-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/HierarchyDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/PatchNodeDataNormOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchEdgeDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/HierarchyEdgeDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchFaceDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/math__HierarchyNodeDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/PatchFaceDataNormOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchCellDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchCellDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/math__PatchSideDataMiscellaneousOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/math__PatchCellDataMiscellaneousOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchCellDataBasicOps-NDIM_floatX.C
-  source/mathops/templates/automaticXd/PatchCellDataNormOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/PatchCellDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchNodeDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/math__PatchSideDataNormOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/HierarchyFaceDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchNodeDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/HierarchyDataOpsManager-NDIMX.C
-  source/mathops/templates/automaticXd/ArrayDataMiscellaneousOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/math__HierarchySideDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/math__PatchNodeDataNormOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/math__PatchEdgeDataMiscellaneousOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/math__PatchNodeDataMiscellaneousOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/math__PatchCellDataBasicOps-NDIM_dcomplexX.C
-  source/mathops/templates/automaticXd/ArrayDataMiscellaneousOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/math__PatchFaceDataBasicOps-NDIM_floatX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyFaceDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/math__PatchFaceDataBasicOps-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/math__PatchNodeDataMiscellaneousOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/math__PatchNodeDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/math__PatchCellDataMiscellaneousOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyCellDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/PatchSideDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/math__HierarchyEdgeDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/PatchCellDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchySideDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyEdgeDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchFaceDataBasicOps-NDIM_intX.C
-  source/mathops/templates/automaticXd/math__PatchNodeDataBasicOps-NDIM_floatX.C
-  source/mathops/templates/automaticXd/PatchEdgeDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchEdgeDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/PatchSideDataNormOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchSideDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchCellDataNormOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchSideDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyFaceDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchCellDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyEdgeDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/PatchFaceDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchCellDataNormOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/ArrayDataNormOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchCellDataBasicOps-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/HierarchyDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/math__PatchNodeDataNormOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/HierarchySideDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/math__HierarchyFaceDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Array-tbox__Pointer-math__HierarchyDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/HierarchyNodeDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchFaceDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchEdgeDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchSideDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/HierarchyFaceDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchCellDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/tbox__Array-tbox__Pointer-math__HierarchyDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchEdgeDataBasicOps-NDIM_intX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyCellDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/math__PatchCellDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/math__PatchEdgeDataBasicOps-NDIM_floatX.C
-  source/mathops/templates/automaticXd/HierarchyCellDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/HierarchyEdgeDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchFaceDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/PatchNodeDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/ArrayDataBasicOps-NDIM_intX.C
-  source/mathops/templates/automaticXd/HierarchyNodeDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyNodeDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/PatchFaceDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Array-tbox__Pointer-math__HierarchyDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchFaceDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchEdgeDataNormOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/math__PatchFaceDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/PatchNodeDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchFaceDataMiscellaneousOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/HierarchySideDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchSideDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/PatchSideDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchEdgeDataNormOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/math__PatchNodeDataBasicOps-NDIM_intX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyNodeDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/ArrayDataBasicOps-NDIM_floatX.C
-  source/mathops/templates/automaticXd/math__PatchNodeDataOpsReal-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyCellDataOpsReal-NDIM_floatX.C
-  source/mathops/templates/automaticXd/math__PatchSideDataBasicOps-NDIM_doubleX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyNodeDataOpsInteger-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchSideDataBasicOps-NDIM_dcomplexX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__HierarchyFaceDataOpsComplex-NDIMX.C
-  source/mathops/templates/automaticXd/math__PatchNodeDataBasicOps-NDIM_dcomplexX.C
-  source/mathops/templates/automaticXd/math__PatchSideDataBasicOps-NDIM_floatX.C
-  source/mathops/templates/automaticXd/tbox__Pointer-math__PatchEdgeDataOpsComplex-NDIMX.C
-  source/mathops/templates/EmptyMathOpsX.C
-  source/transfer/templates/automaticXd/FillBoxSet-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Array-tbox__Array-tbox__Pointer-xfer__MultiblockRefineSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__List-tbox__Pointer-xfer__CoarsenOperator-NDIMX.C
-  source/transfer/templates/automaticXd/StandardRefineTransactionFactory-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Array-tbox__Array-xfer__FillBoxSet-NDIMX.C
-  source/transfer/templates/automaticXd/MultiblockCoarsenPatchStrategy-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__List-xfer__LocallyActiveDataFillBox-NDIMX.C
-  source/transfer/templates/automaticXd/LocallyActiveDataCoarsenSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__CoarsenSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__MultiblockCoarsenAlgorithm-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__List-xfer__CoarsenClasses_NDIM___DataX.C
-  source/transfer/templates/automaticXd/tbox__Array-tbox__Pointer-xfer__RefineSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/CoarsenOperator-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Array-tbox__Array-tbox__Pointer-xfer__LocallyActiveDataRefineSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__VariableFillPattern-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__StandardLocallyActiveDataRefineTransactionFactory-NDIMX.C
-  source/transfer/templates/automaticXd/MultiblockRefineSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__StandardCoarsenTransactionFactory-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__RefineSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/LocallyActiveDataCoarsenPatchStrategy-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__LocallyActiveDataCoarsenTransactionFactory-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Array-tbox__Pointer-xfer__MultiblockRefineSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__LocallyActiveDataCoarsenAlgorithm-NDIMX.C
-  source/transfer/templates/automaticXd/RefineAlgorithm-NDIMX.C
-  source/transfer/templates/automaticXd/RefineTransactionFactory-NDIMX.C
-  source/transfer/templates/automaticXd/CoarsenAlgorithm-NDIMX.C
-  source/transfer/templates/automaticXd/StandardLocallyActiveDataRefineTransactionFactory-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__List-xfer__MultiblockRefineSchedule_NDIM___SingularityPatchX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__CoarsenClasses-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__MultiblockRefineSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__TimeInterpolateOperator-NDIMX.C
-  source/transfer/templates/automaticXd/Geometry-NDIMX.C
-  source/transfer/templates/automaticXd/CoarsenTransactionFactory-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__LocallyActiveDataCoarsenSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__BoxGeometryFillPattern-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__MultiblockCoarsenSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Array-tbox__List-xfer__CoarsenClasses_NDIM___DataX.C
-  source/transfer/templates/automaticXd/LocallyActiveDataFillBoxSet-NDIMX.C
-  source/transfer/templates/automaticXd/RefineTimeTransaction-NDIMX.C
-  source/transfer/templates/automaticXd/RefineOperator-NDIMX.C
-  source/transfer/templates/automaticXd/MultiblockRefineAlgorithm-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__List-tbox__Pointer-xfer__RefineOperator-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__RefineAlgorithm-NDIMX.C
-  source/transfer/templates/automaticXd/LocallyActiveDataCoarsenAlgorithm-NDIMX.C
-  source/transfer/templates/automaticXd/RefineSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__MultiblockRefineAlgorithm-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Array-tbox__Pointer-xfer__CoarsenSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__RefineClasses-NDIMX.C
-  source/transfer/templates/automaticXd/StandardLocallyActiveDataCoarsenTransactionFactory-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Array-xfer__FillBoxSet-NDIMX.C
-  source/transfer/templates/automaticXd/MultiblockRefinePatchStrategy-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Array-tbox__Pointer-xfer__LocallyActiveDataCoarsenSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Array-tbox__List-xfer__MultiblockRefineSchedule_NDIM___SingularityPatchX.C
-  source/transfer/templates/automaticXd/tbox__Array-tbox__Array-tbox__Array-tbox__Pointer-xfer__RefineSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Array-tbox__Pointer-xfer__LocallyActiveDataRefineSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__Geometry-NDIMX.C
-  source/transfer/templates/automaticXd/VariableFillPattern-NDIMX.C
-  source/transfer/templates/automaticXd/LocallyActiveDataRefineAlgorithm-NDIMX.C
-  source/transfer/templates/automaticXd/StandardCoarsenTransactionFactory-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__List-tbox__Pointer-xfer__RefineSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/RefinePatchStrategy-NDIMX.C
-  source/transfer/templates/automaticXd/LocallyActiveDataRefinePatchStrategy-NDIMX.C
-  source/transfer/templates/automaticXd/RefineCopyTransaction-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__LocallyActiveDataRefineTransactionFactory-NDIMX.C
-  source/transfer/templates/automaticXd/CoarsenClasses-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__LocallyActiveDataRefineSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__CoarsenAlgorithm-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__List-tbox__Pointer-xfer__TimeInterpolateOperator-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__LocallyActiveDataRefineAlgorithm-NDIMX.C
-  source/transfer/templates/automaticXd/LocallyActiveDataRefineSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__StandardRefineTransactionFactory-NDIMX.C
-  source/transfer/templates/automaticXd/LocallyActiveDataRefineTransactionFactory-NDIMX.C
-  source/transfer/templates/automaticXd/TimeInterpolateOperator-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Array-tbox__List-xfer__RefineClasses_NDIM___DataX.C
-  source/transfer/templates/automaticXd/tbox__List-xfer__RefineClasses_NDIM___DataX.C
-  source/transfer/templates/automaticXd/tbox__Array-tbox__Array-tbox__Pointer-xfer__RefineSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Array-xfer__LocallyActiveDataFillBoxSet-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__CoarsenOperator-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__RefineTransactionFactory-NDIMX.C
-  source/transfer/templates/automaticXd/BoxGeometryFillPattern-NDIMX.C
-  source/transfer/templates/automaticXd/LocallyActiveDataFillBox-NDIMX.C
-  source/transfer/templates/automaticXd/CoarsenSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__List-tbox__Pointer-xfer__LocallyActiveDataRefineSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/MultiblockCoarsenSchedule-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__StandardLocallyActiveDataCoarsenTransactionFactory-NDIMX.C
-  source/transfer/templates/automaticXd/CoarsenPatchStrategy-NDIMX.C
-  source/transfer/templates/automaticXd/LocallyActiveDataCoarsenTransactionFactory-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__RefineOperator-NDIMX.C
-  source/transfer/templates/automaticXd/MultiblockCoarsenAlgorithm-NDIMX.C
-  source/transfer/templates/automaticXd/tbox__Pointer-xfer__CoarsenTransactionFactory-NDIMX.C
-  source/transfer/templates/automaticXd/CoarsenCopyTransaction-NDIMX.C
-  source/transfer/templates/automaticXd/RefineClasses-NDIMX.C
-  source/transfer/templates/special/tbox_List-xfer_RefineClasses_NDIM__Data-PtrX.C
-  source/transfer/templates/special/tbox_List-xfer_CoarsenClasses_NDIM__Data-PtrX.C
-  source/transfer/templates/EmptyTransferX.C
-  source/apputils/templates/automaticXd/tbox__List-appu__VisItDataWriter_NDIM___VisItItemX.C
-  source/apputils/templates/automaticXd/VisDerivedDataStrategy-NDIMX.C
-  source/apputils/templates/automaticXd/EmbeddedBoundaryShapeSphere-NDIMX.C
-  source/apputils/templates/automaticXd/VisMaterialsDataStrategy-NDIMX.C
-  source/apputils/templates/automaticXd/EmbeddedBoundaryShape-NDIMX.C
-  source/apputils/templates/automaticXd/tbox__Pointer-appu__CutCell_NDIM_X.C
-  source/apputils/templates/automaticXd/tbox__Array-tbox__Pointer-appu__EmbeddedBoundaryShape-NDIMX.C
-  source/apputils/templates/automaticXd/CartesianVizamraiDataWriter-NDIMX.C
-  source/apputils/templates/automaticXd/CutCell-NDIMX.C
-  source/apputils/templates/automaticXd/ElevenPatchInterface-NDIMX.C
-  source/apputils/templates/automaticXd/tbox__Pointer-appu__EmbeddedBoundaryGeometry-NDIMX.C
-  source/apputils/templates/automaticXd/EmbeddedBoundaryShapePolygon-NDIMX.C
-  source/apputils/templates/automaticXd/tbox__Array-appu__BoundaryNode-NDIMX.C
-  source/apputils/templates/automaticXd/tbox__Array-appu__CutCell_NDIM_X.C
-  source/apputils/templates/automaticXd/VisItDataWriter-NDIMX.C
-  source/apputils/templates/automaticXd/tbox__Pointer-pdat__IndexVariable-NDIM_appu__CutCell_NDIM__pdat__CellGeometry_NDIM_X.C
-  source/apputils/templates/automaticXd/BoundaryNode-NDIMX.C
-  source/apputils/templates/automaticXd/tbox__Pointer-appu__CartesianVizamraiDataWriter-NDIMX.C
-  source/apputils/templates/automaticXd/EmbeddedBoundaryGeometry-NDIMX.C
-  source/apputils/templates/automaticXd/tbox__Pointer-appu__ElevenPatchInterface-NDIMX.C
-  source/apputils/templates/automaticXd/pdat__IndexData-NDIM_appu__CutCell_NDIM__pdat__CellGeometry_NDIM_X.C
-  source/apputils/templates/automaticXd/pdat__IndexDataFactory-NDIM_appu__CutCell_NDIM__pdat__CellGeometry_NDIM_X.C
-  source/apputils/templates/automaticXd/tbox__Pointer-appu__CubesPatchInterface-NDIMX.C
-  source/apputils/templates/automaticXd/pdat__IndexVariable-NDIM_appu__CutCell_NDIM__pdat__CellGeometry_NDIM_X.C
-  source/apputils/templates/automaticXd/tbox__Pointer-appu__VisItDataWriter-NDIMX.C
-  source/apputils/templates/automaticXd/tbox__Pointer-pdat__IndexDataFactory-NDIM_appu__CutCell_NDIM__pdat__CellGeometry_NDIM_X.C
-  source/apputils/templates/automaticXd/CubesPatchInterface-NDIMX.C
-  source/apputils/templates/automaticXd/tbox__List-appu__CartesianVizamraiDataWriter_NDIM___VizamraiItem-NDIMX.C
-  source/apputils/templates/automaticXd/tbox__Pointer-pdat__IndexData-NDIM_appu__CutCell_NDIM__pdat__CellGeometry_NDIM_X.C
-  source/apputils/templates/automaticXd/tbox__Array-tbox__Pointer-appu__CutCell_NDIM_X.C
-  source/apputils/templates/automaticXd/tbox__Pointer-appu__EmbeddedBoundaryShape-NDIMX.C
-  source/apputils/templates/special/IndexData_special_NDIM_X.C
-  source/apputils/templates/special/tbox__Array-pdat__NodeIndex_NDIM_X.C
-  source/apputils/templates/EmptyAppUtilsX.C
-)
-# add_library(SAMRAI_TEMPLATES OBJECT ${samrai_templates_SRCS})
-# set_target_properties(SAMRAI_TEMPLATES PROPERTIES COMPILE_DEFINITIONS NDIM=3)
-# if(BUILD_SHARED_LIBS)
-#     set_target_properties(SAMRAI_TEMPLATES PROPERTIES COMPILE_FLAGS "-fPIC")
-# endif()
+if(NOT DEFINED INCLUDE_TEMPLATE_IMPLEMENTATION)
+
+  foreach(kit ${KITS})
+    set(samrai_${kit}_SRCS 
+      ${samrai_${kit}_inlined_SRCS}
+      ${samrai_${kit}_SRCS} 
+    )
+  endforeach()
+
+endif()  
+
+#include(templates.cmake)
 
 include_directories(
   source/solvers
@@ -1856,27 +769,33 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/include
   )
 
+add_library(samrai_fortran_lib OBJECT ${samrai_fortran_SRCS})
+if(BUILD_SHARED_LIBS)
+    set_target_properties(samrai_fortran_lib PROPERTIES COMPILE_FLAGS "-fPIC")
+endif()
+
+set(SAMRAI_KIT_OBJECTS $<TARGET_OBJECTS:samrai_fortran_lib>)
+foreach(kit ${KITS})
+  if(DEFINED samrai_${kit}_SRCS)
+    
+    add_library(samrai_${kit}_lib OBJECT ${samrai_${kit}_SRCS})
+    set_target_properties(samrai_${kit}_lib PROPERTIES COMPILE_DEFINITIONS NDIM=3)
+    if(BUILD_SHARED_LIBS)
+      set_target_properties(samrai_${kit}_lib PROPERTIES COMPILE_FLAGS "-fPIC")
+    endif()
+    list(APPEND SAMRAI_KIT_OBJECTS $<TARGET_OBJECTS:samrai_${kit}_lib>)
+  endif()
+
+endforeach()
+
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/SAMRAI.C 
     "// Dummy file needed to drive single lib build.")
-  
+
 add_library(SAMRAI ${CMAKE_CURRENT_BINARY_DIR}/SAMRAI.C 
-  $<TARGET_OBJECTS:SAMRAI_ALGORITHM>
-  $<TARGET_OBJECTS:SAMRAI_APPUTILS>
-  $<TARGET_OBJECTS:SAMRAI_GEOMETRY>
-  $<TARGET_OBJECTS:SAMRAI_HIERARCHY>
-  $<TARGET_OBJECTS:SAMRAI_MATHOPS>
-  $<TARGET_OBJECTS:SAMRAI_MESH>
-  $<TARGET_OBJECTS:SAMRAI_PATCHDATA>
-  $<TARGET_OBJECTS:SAMRAI_MATHOPS>
-  $<TARGET_OBJECTS:SAMRAI_SOLVERS>
-  $<TARGET_OBJECTS:SAMRAI_TOOLBOX>
-  $<TARGET_OBJECTS:SAMRAI_TRANSFER>
-  $<TARGET_OBJECTS:SAMRAI_FORTRAN>
-#   $<TARGET_OBJECTS:SAMRAI_TEMPLATES>
+  ${SAMRAI_KIT_OBJECTS}
   )
 
-# Installation rules
-
+# Installation targets
 set(samrai_HEADERS 
   source/solvers/vectors/SAMRAIVectorReal.h
   source/solvers/vectors/Sundials_SAMRAIVector.h
@@ -2392,30 +1311,6 @@ set(samrai_toolbox_HEADERS
   source/toolbox/base/IEEE.I
   source/toolbox/base/Tracer.I
   source/toolbox/base/MathUtilities.I
-  source/toolbox/timers/Timer.I
-  source/toolbox/timers/Statistic.I
-  source/toolbox/parallel/SAMRAI_MPI.I
-  source/toolbox/parallel/AsyncCommGroup.I
-  source/toolbox/stream/XDRStream.I
-  source/toolbox/stream/MessageStream.I
-  source/toolbox/stream/FileStream.I
-  source/toolbox/stream/AbstractStream.I
-  source/toolbox/restartdb/RestartManager.I
-  source/toolbox/restartdb/NullDatabase.I
-  source/toolbox/memory/PointerBase.I
-  source/toolbox/memory/ScratchArena.I
-  source/toolbox/memory/StandardArena.I
-  source/toolbox/memory/Array.I
-  source/toolbox/memory/Pointer.I
-  source/toolbox/memory/Arena.I
-  source/toolbox/memory/ConstPointerBase.I
-  source/toolbox/memory/ConstPointer.I
-  source/toolbox/memory/ReferenceCounter.I
-  source/toolbox/inputdb/Parser.I
-  source/toolbox/database/Serializable.I
-  source/toolbox/database/Database.I
-  source/toolbox/database/MemoryDatabase.I
-  source/toolbox/database/DatabaseBox.I 
   source/toolbox/base/Boolean.h
   source/toolbox/base/Logger.h
   source/toolbox/base/PIO.h
@@ -2428,12 +1323,16 @@ set(samrai_toolbox_HEADERS
   source/toolbox/base/SAMRAIManager.h
   source/toolbox/base/List.h
   source/toolbox/base/Utilities.h
+  source/toolbox/timers/Timer.I
+  source/toolbox/timers/Statistic.I
   source/toolbox/timers/Clock.h
   source/toolbox/timers/StatTransaction.h
   source/toolbox/timers/Statistic.h
   source/toolbox/timers/Statistician.h
   source/toolbox/timers/TimerManager.h
   source/toolbox/timers/Timer.h
+  source/toolbox/parallel/SAMRAI_MPI.I
+  source/toolbox/parallel/AsyncCommGroup.I
   source/toolbox/parallel/SAMRAI_MPI.h
   source/toolbox/parallel/Transaction.h
   source/toolbox/parallel/Schedule.h
@@ -2441,17 +1340,47 @@ set(samrai_toolbox_HEADERS
   source/toolbox/parallel/JobRelauncher.h
   source/toolbox/parallel/AsyncCommStage.h
   source/toolbox/parallel/RelaunchableJob.h
+  source/toolbox/stream/XDRStream.I
+  source/toolbox/stream/MessageStream.I
+  source/toolbox/stream/FileStream.I
+  source/toolbox/stream/AbstractStream.I
   source/toolbox/stream/AbstractStream.h
   source/toolbox/stream/FileStream.h
   source/toolbox/stream/IOStream.h
   source/toolbox/stream/MessageStream.h
   source/toolbox/stream/XDRStream.h
+  source/toolbox/restartdb/RestartManager.I
+  source/toolbox/restartdb/NullDatabase.I
   source/toolbox/restartdb/RestartManager.h
   source/toolbox/restartdb/HDFDatabaseFactory.h
   source/toolbox/restartdb/SiloDatabaseFactory.h
   source/toolbox/restartdb/NullDatabase.h
   source/toolbox/restartdb/SiloDatabase.h
   source/toolbox/restartdb/HDFDatabase.h
+  source/toolbox/inputdb/Parser.I
+  source/toolbox/inputdb/InputDatabase.h
+  source/toolbox/inputdb/Grammar.h
+  source/toolbox/inputdb/Parser.h
+  source/toolbox/inputdb/InputManager.h
+  source/toolbox/database/Serializable.I
+  source/toolbox/database/Database.I
+  source/toolbox/database/MemoryDatabase.I
+  source/toolbox/database/DatabaseBox.I 
+  source/toolbox/database/MemoryDatabaseFactory.h
+  source/toolbox/database/DatabaseFactory.h
+  source/toolbox/database/Database.h
+  source/toolbox/database/MemoryDatabase.h
+  source/toolbox/database/DatabaseBox.h
+  source/toolbox/database/Serializable.h  
+  source/toolbox/memory/PointerBase.I
+  source/toolbox/memory/ScratchArena.I
+  source/toolbox/memory/StandardArena.I
+  source/toolbox/memory/Array.I
+  source/toolbox/memory/Pointer.I
+  source/toolbox/memory/Arena.I
+  source/toolbox/memory/ConstPointerBase.I
+  source/toolbox/memory/ConstPointer.I
+  source/toolbox/memory/ReferenceCounter.I
   source/toolbox/memory/MemoryUtilities.h
   source/toolbox/memory/StandardArena.h
   source/toolbox/memory/ReferenceCounter.h
@@ -2465,30 +1394,18 @@ set(samrai_toolbox_HEADERS
   source/toolbox/memory/DescribedClass.h
   source/toolbox/memory/ConstPointerBase.h
   source/toolbox/memory/ConstPointer.h
-  source/toolbox/inputdb/InputDatabase.h
-  source/toolbox/inputdb/Grammar.h
-  source/toolbox/inputdb/Parser.h
-  source/toolbox/inputdb/InputManager.h
-  source/toolbox/database/MemoryDatabaseFactory.h
-  source/toolbox/database/DatabaseFactory.h
-  source/toolbox/database/Database.h
-  source/toolbox/database/MemoryDatabase.h
-  source/toolbox/database/DatabaseBox.h
-  source/toolbox/database/Serializable.h  
-)
+  )
 
-install(TARGETS SAMRAI DESTINATION lib)
-install(FILES 
-  ${samrai_HEADERS} 
-  ${samrai_algorithm_SRCS} 
-  ${samrai_apputils_SRCS} 
-  ${samrai_geometry_SRCS} 
-  ${samrai_hierarchy_SRCS} 
-  ${samrai_mathops_SRCS}  
-  ${samrai_mesh_SRCS}
-  ${samrai_patchdata_SRCS}
-  ${samrai_solvers_SRCS}
-  ${samrai_transfer_SRCS}
-  DESTINATION include)
-install(FILES ${samrai_toolbox_HEADERS} DESTINATION include/tbox)
+if(DEFINED INCLUDE_TEMPLATE_IMPLEMENTATION)
+  set(samrai_toolbox_HEADERS 
+    ${samrai_toolbox_HEADERS}
+    ${samrai_toolbox_inlined_SRCS}
+  )
+  foreach(kit ${KITS})
+    list(APPEND samrai_HEADERS ${samrai_${kit}_inlined_SRCS})
+  endforeach()
+endif()
 
+install(TARGETS SAMRAI DESTINATION lib/samrai/lib)
+install(FILES ${samrai_HEADERS} DESTINATION include/samrai/include)
+install(FILES ${samrai_toolbox_HEADERS} DESTINATION include/samrai/include/tbox)

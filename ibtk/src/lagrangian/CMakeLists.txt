@@ -52,7 +52,7 @@ set(kit_SRCS LSiloDataWriter.C
 
 # add_library(qd ${qd_SRCS})
 
-add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}  
+add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
   fortran/lagrangian_interaction3d.f.m4)
   
 set(kit_SRCS3D 
@@ -60,7 +60,7 @@ set(kit_SRCS3D
   ${FORTRAN_SRCS3D}
   )
 
-add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}
+add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
   fortran/lagrangian_interaction2d.f.m4)
 set(kit_SRCS2D 
   ${kit_SRCS}

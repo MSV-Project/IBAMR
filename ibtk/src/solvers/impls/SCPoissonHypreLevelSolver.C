@@ -644,7 +644,7 @@ SCPoissonHypreLevelSolver::setMatrixCoefficients_constant_coefficients()
                     // Restore the original patch geometry object.
                     patch->setPatchGeometry(pgeom);
 
-                    for (Box<NDIM>::Iterator b(bc_coef_box); b; b++)
+                    for (Box<NDIM>::Iterator it(bc_coef_box); it; it++)
                     {
                         // Modify the diagonal and off-diagonal entries to
                         // account for homogeneous boundary conditions.
@@ -665,7 +665,7 @@ SCPoissonHypreLevelSolver::setMatrixCoefficients_constant_coefficients()
                         // then
                         //
                         //     u_o = -((a*h - 2*b)/(a*h + 2*b))*u_i
-                        const Index<NDIM>& i = b();
+                        const Index<NDIM>& i = it();
                         const double& a = acoef_data(i,0);
                         const double& b = bcoef_data(i,0);
                         const double& h = dx[bdry_normal_axis];
@@ -728,9 +728,9 @@ SCPoissonHypreLevelSolver::setMatrixCoefficients_constant_coefficients()
                         *patch, trimmed_bdry_box, d_apply_time);
                     if (extended_bc_coef != NULL) extended_bc_coef->setHomogeneousBc(d_homogeneous_bc);
 
-                    for (Box<NDIM>::Iterator b(bc_coef_box); b; b++)
+                    for (Box<NDIM>::Iterator it(bc_coef_box); it; it++)
                     {
-                        const Index<NDIM>& i = b();
+                        const Index<NDIM>& i = it();
                         const double& a = acoef_data(i,0);
                         const double& b = bcoef_data(i,0);
                         const bool dirichlet_bc = MathUtilities<double>::equalEps(a,1.0);
@@ -1384,9 +1384,9 @@ SCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_constant_coefficients(
                     acoef_data_ptr, bcoef_data_ptr, gcoef_data_ptr, NULL,
                     *patch, trimmed_bdry_box, d_apply_time);
 
-                for (Box<NDIM>::Iterator b(bc_coef_box); b; b++)
+                for (Box<NDIM>::Iterator it(bc_coef_box); it; it++)
                 {
-                    const Index<NDIM>& i = b();
+                    const Index<NDIM>& i = it();
                     const SideIndex<NDIM> i_s_bdry(i, bdry_normal_axis, SideIndex<NDIM>::Lower);
                     const double& a = acoef_data(i,0);
                     const double& b = bcoef_data(i,0);

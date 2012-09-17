@@ -1,7 +1,5 @@
 ###########################################################################
 #
-#  Library: IBTK
-#
 #  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -91,4 +89,5 @@ list(APPEND IBTK_SUPERBUILD_EP_ARGS -DCMAKE_Fortran_MODULE_DIRECTORY:PATH=${IBTK
     
 
 list(APPEND INCLUDE_PATHS ${ep_install_dir}/include)
+list(APPEND LIBRARY_PATHS ${ep_install_dir}/lib)
 list(INSERT EXTERNAL_LIBRARIES 0 -lqdmod -lqd)

@@ -2,20 +2,6 @@
 #
 #  Library: IBTK
 #
-#  Copyright (c) Kitware Inc.
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0.txt
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-#
 ###########################################################################
 
 #
@@ -96,10 +82,10 @@ else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_DIR:PATH=${ep_install_dir} )
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_INCLUDE_PATH:PATH=${ep_install_dir}/include)
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_FORTDIR:PATH=${ep_install_dir}/include)
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_DIR:PATH=${ep_install_dir}/samrai )
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_INCLUDE_PATH:PATH=${ep_install_dir}/samrai/include)
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_FORTDIR:PATH=${ep_install_dir}/samrai/include)
 
-list(APPEND INCLUDE_PATHS ${ep_install_dir}/include)
+list(APPEND INCLUDE_PATHS ${ep_install_dir}/samrai/include)
+list(APPEND LIBRARY_PATHS ${ep_install_dir}/samrai/lib)
 list(INSERT EXTERNAL_LIBRARIES 0 -lSAMRAI)
-set(SAMRAI_INCLUDE_PATH ${ep_install_dir}/include PARENT_SCOPE)

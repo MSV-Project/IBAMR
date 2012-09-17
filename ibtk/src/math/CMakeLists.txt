@@ -11,7 +11,7 @@ set(kit_SRCS PETScMatUtilities.C
   PatchVecCellDataOpsReal.C
 )
 
-add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}  
+add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
   fortran/miscmath3d.f.m4
   fortran/div3d.f.m4
   fortran/flux3d.f.m4
@@ -26,7 +26,7 @@ set(kit_SRCS3D
   ${FORTRAN_SRCS3D}
   )
 
-add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}
+add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
   fortran/laplace2d.f.m4
   fortran/div2d.f.m4
   fortran/graddetect2d.f.m4

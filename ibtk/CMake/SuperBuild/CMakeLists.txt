@@ -1,7 +1,5 @@
 ###########################################################################
 #
-#  Library: IBTK
-#
 #  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +17,7 @@
 ###########################################################################
 
 set(IBTK_DEPENDENCIES MUPARSER QD SAMRAI PETSC SILO BLITZ)
+
 
 #-----------------------------------------------------------------------------
 # WARNING - No change should be required after this comment
@@ -66,16 +65,20 @@ set(sep "^^")
 # where '<EP>' is an external project name.
 set(IBTK_SUPERBUILD_EP_ARGS)
 set(EXTERNAL_LIBRARIES)
+set(LIBRARY_PATHS)
 set(INCLUDE_PATHS)
 
 CheckExternalProjectDependency(IBTK)
 
 list(REMOVE_DUPLICATES EXTERNAL_LIBRARIES)
 list(REMOVE_DUPLICATES INCLUDE_PATHS)
+list(REMOVE_DUPLICATES LIBRARY_PATHS)
 set(IBTK_EXTERNAL_LIBRARIES ${IBTK_EXTERNAL_LIBRARIES} ${EXTERNAL_LIBRARIES} 
   CACHE INTERNAL "IBTK external libraries.")
 set(IBTK_INCLUDE_PATH ${IBTK_INCLUDE_PATH} ${INCLUDE_PATHS} 
   CACHE INTERNAL "IBTK include paths.")
+set(IBTK_LIBRARY_PATH ${IBTK_LIBRARY_PATH} ${LIBRARY_PATHS} 
+  CACHE INTERNAL "IBTK library paths.")
 
 #-----------------------------------------------------------------------------
 # Makes sure ${IBTK_BINARY_DIR}/bin and ${IBTK_BINARY_DIR}/lib exists

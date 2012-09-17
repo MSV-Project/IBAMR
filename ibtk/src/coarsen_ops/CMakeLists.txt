@@ -8,7 +8,7 @@ set(kit_SRCS LMarkerCoarsen.C
   CartSideDoubleCubicCoarsen.C
 )
 
-add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}  
+add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
   fortran/cubiccoarsen3d.f.m4)
   
 set(kit_SRCS3D 
@@ -16,7 +16,7 @@ set(kit_SRCS3D
   ${FORTRAN_SRCS3D}
   )
   
-add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}
+add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
   fortran/cubiccoarsen2d.f.m4)
   
 set(kit_SRCS2D 

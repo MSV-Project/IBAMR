@@ -37,7 +37,7 @@ set(kit_SRCS
 
 )
 
-add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}
+add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
   impls/fortran/patchsmoothers3d.f.m4)
   
 set(kit_SRCS3D 
@@ -45,13 +45,12 @@ set(kit_SRCS3D
   ${FORTRAN_SRCS3D}
   )
   
-add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}
+add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
   impls/fortran/patchsmoothers2d.f.m4)
 set(kit_SRCS2D 
   ${kit_SRCS}
   ${FORTRAN_SRCS2D}
   )  
-
 #
 # Include the common target module
 #

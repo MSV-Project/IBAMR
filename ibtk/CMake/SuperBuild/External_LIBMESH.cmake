@@ -1,7 +1,5 @@
 ###########################################################################
 #
-#  Library: IBTK
-#
 #  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -109,4 +107,5 @@ list(APPEND IBTK_SUPERBUILD_EP_ARGS -DLIBMESH_DIR:PATH=${LIBMESH_DIR})
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DLIBMESH_INCLUDE_PATH:PATH=${ep_install_dir}/include)
 
 list(APPEND INCLUDE_PATHS $ENV{PETSC_DIR}/build/include ${ep_install_dir}/include)
+list(APPEND LIBRARY_PATHS ${ep_install_dir}/lib)
 

@@ -1,7 +1,5 @@
 ###########################################################################
 #
-#  Library: IBTK
-#
 #  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -109,5 +107,6 @@ list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMPI_C_COMPILER:PATH=${MPI_C_COMPILER})
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMPI_Fortran_COMPILER:PATH=${MPI_Fortran_COMPILER})
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DMPIEXEC:PATH=${MPIEXEC})
 list(APPEND EXTERNAL_LIBRARIES -lmpi_cxx -lmpi_f90 -lmpi_f77 -lmpi -lopen-rte -lopen-pal)
+list(APPEND LIBRARY_PATHS ${ep_install_dir}/lib)
 
 

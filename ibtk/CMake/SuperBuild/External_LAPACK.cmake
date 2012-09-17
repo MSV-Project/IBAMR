@@ -1,7 +1,5 @@
 ###########################################################################
 #
-#  Library: IBTK
-#
 #  Copyright (c) Kitware Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -96,5 +94,6 @@ else()
 endif()
 
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DLAPACK_DIR:PATH=${LAPACK_DIR})
+list(APPEND LIBRARY_PATHS ${ep_install_dir}/lib)
 list(INSERT EXTERNAL_LIBRARIES 0 -llapack -lblas)
 

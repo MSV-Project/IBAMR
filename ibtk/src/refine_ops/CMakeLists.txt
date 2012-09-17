@@ -12,7 +12,7 @@ set(kit_SRCS CartCellDoubleBoundsPreservingConservativeLinearRefine.C
 
 )
 
-add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}
+add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
   fortran/divpreservingrefine3d.f.m4
   fortran/cart_side_refine3d.f.m4)
   
@@ -21,7 +21,7 @@ set(kit_SRCS3D
   ${FORTRAN_SRCS3D}
   )
 
-add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}
+add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
   fortran/cart_side_refine2d.f.m4
   fortran/divpreservingrefine2d.f.m4)
 set(kit_SRCS2D 

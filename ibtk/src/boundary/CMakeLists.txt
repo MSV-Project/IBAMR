@@ -14,7 +14,7 @@ set(kit_SRCS cf_interface/CartCellDoubleLinearCFInterpolation.C
   HierarchyGhostCellInterpolation.C
   )
   
-add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} 
+add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
   physical_boundary/fortran/cartphysbdryop3d.f.m4
   cf_interface/fortran/linearcfinterpolation3d.f.m4
   cf_interface/fortran/quadcfinterpolation3d.f.m4)
@@ -24,7 +24,7 @@ set(kit_SRCS3D
   ${FORTRAN_SRCS3D}
   )
     
-add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}
+add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
   physical_boundary/fortran/cartphysbdryop2d.f.m4
   cf_interface/fortran/linearcfinterpolation2d.f.m4
   cf_interface/fortran/quadcfinterpolation2d.f.m4)
