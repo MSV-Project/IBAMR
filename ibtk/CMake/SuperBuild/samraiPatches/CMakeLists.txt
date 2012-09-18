@@ -177,7 +177,6 @@ set(samrai_algorithm_SRCS)
   
 set(samrai_hierarchy_SRCS
   source/hierarchy/variables/ComponentSelector.C
-  source/hierarchy/variables/PatchDescriptor.C
   source/hierarchy/patches/ProcessorMapping.C
   source/hierarchy/variables/VariableContext.C
   )
@@ -211,6 +210,7 @@ set(samrai_hierarchy_inlined_SRCS
   source/hierarchy/patches/BoundaryBoxUtils.C
   source/hierarchy/patches/PatchLevelFactory.C
   source/hierarchy/patches/PatchConfigurationUtilities.C
+  source/hierarchy/variables/PatchDescriptor.C
   source/hierarchy/variables/LocallyActiveDataPatchLevelManager.C
   source/hierarchy/variables/LocallyActiveVariableDatabase.C
   source/hierarchy/variables/BoxOverlap.C
