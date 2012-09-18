@@ -83,9 +83,9 @@ else()
 endif()
 
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_DIR:PATH=${ep_install_dir}/samrai )
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_INCLUDE_PATH:PATH=${ep_install_dir}/samrai/include)
-list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_FORTDIR:PATH=${ep_install_dir}/samrai/include)
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_INCLUDE_PATH:PATH=${ep_install_dir}/include/samrai)
+list(APPEND IBTK_SUPERBUILD_EP_ARGS -DSAMRAI_FORTDIR:PATH=${ep_install_dir}/include/samrai)
 
-list(APPEND INCLUDE_PATHS ${ep_install_dir}/samrai/include)
-list(APPEND LIBRARY_PATHS ${ep_install_dir}/samrai/lib)
+list(APPEND INCLUDE_PATHS ${ep_install_dir}/include/samrai)
+list(APPEND LIBRARY_PATHS ${ep_install_dir}/lib)
 list(INSERT EXTERNAL_LIBRARIES 0 -lSAMRAI)

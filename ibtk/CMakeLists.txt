@@ -219,7 +219,6 @@ FortranCInterface_HEADER(${IBTK_INCLUDE_BINARY_PATH}/fortran_interfaces.h MACRO_
 
 list(APPEND IBTK_INCLUDE_PATH ${IBTK_INCLUDE_BINARY_PATH})
 
-
 # -----------------------------------------------------------------------------
 # FindMPI
 # -----------------------------------------------------------------------------

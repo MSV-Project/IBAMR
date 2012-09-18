@@ -8,16 +8,11 @@ endif( NOT M4_EXECUTABLE )
 
 # - Pass a list of files through the M4 macro processor
 #
-# ADD_M4_SOURCES( OUTVAR M4ARGS FILE_EXT source1 ... sourceN )
-#
-#  OUTVAR  A list containing all the output file names, suitable
-#          to be passed to add_executable or add_library.
-#
 # If the source files have a .m4 suffix it is stripped from the output
 # file name. The output files are placed in the same relative location
 # to CMAKE_CURRENT_BINARY_DIR as they are to CMAKE_CURRENT_SOURCE_DIR.
 #
-# Example:
+# Usage:
 #  add_m4_sources( SRCS src/test1.m4 src/test2.m4 -DM4ARG1=arg1 .cxx )
 #  add_executable( test ${SRCS} )
 #
