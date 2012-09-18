@@ -8,7 +8,7 @@ endif( NOT M4_EXECUTABLE )
 
 # - Pass a list of files through the M4 macro processor
 #
-# ADD_M4_SOURCES( OUTVAR source1 ... sourceN )
+# ADD_M4_SOURCES( OUTVAR M4ARGS FILE_EXT source1 ... sourceN )
 #
 #  OUTVAR  A list containing all the output file names, suitable
 #          to be passed to add_executable or add_library.
@@ -18,11 +18,11 @@ endif( NOT M4_EXECUTABLE )
 # to CMAKE_CURRENT_BINARY_DIR as they are to CMAKE_CURRENT_SOURCE_DIR.
 #
 # Example:
-#  add_m4_sources( SRCS src/test1.cxx.m4 src/test2.cxx.m4 )
+#  add_m4_sources( SRCS src/test1.m4 src/test2.m4 -DM4ARG1=arg1 .cxx )
 #  add_executable( test ${SRCS} )
 #
 
-function( ADD_M4_SOURCES OUTVAR M4ARGS FILE_EXT)
+function( ADD_M4_SOURCES _OUTVAR _M4ARGS _FILE_EXT)
    set( outfiles )
    foreach( f ${ARGN} )
      # first we might need to make the input file absolute
@@ -31,7 +31,7 @@ function( ADD_M4_SOURCES OUTVAR M4ARGS FILE_EXT)
      file( RELATIVE_PATH rf "${CMAKE_CURRENT_SOURCE_DIR}" "${f}" )
      # strip the .m4 off the end if present and prepend the current binary dir
      get_filename_component( file_ext ${f} EXT )
-     string( REGEX REPLACE "\\${file_ext}$" "${FILE_EXT}"  of "${CMAKE_CURRENT_BINARY_DIR}/${rf}" )
+     string( REGEX REPLACE "\\${file_ext}$" "${_FILE_EXT}"  of "${CMAKE_CURRENT_BINARY_DIR}/${rf}" )
      
      # append the output file to the list of outputs
      list( APPEND outfiles "${of}" )
@@ -44,13 +44,13 @@ function( ADD_M4_SOURCES OUTVAR M4ARGS FILE_EXT)
      # now add the custom command to generate the output file
      get_filename_component(file_path ${f} PATH)
      add_custom_command( OUTPUT "${of}"
-       COMMAND ${M4_EXECUTABLE} ARGS "${M4ARGS}" "${f}" > "${of}"
+       COMMAND ${M4_EXECUTABLE} ARGS "${_M4ARGS}" "${f}" > "${of}"
        DEPENDS "${f}"
        WORKING_DIRECTORY ${file_path}
        )
    endforeach( f )
    # set the output list in the calling scope
-   set( ${OUTVAR} ${outfiles} PARENT_SCOPE )
+   set( ${_OUTVAR} ${outfiles} PARENT_SCOPE )
 endfunction( ADD_M4_SOURCES )
   
   

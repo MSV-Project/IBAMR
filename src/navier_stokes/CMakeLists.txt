@@ -22,7 +22,7 @@ set(kit_SRCS
   INSStaggeredCenteredConvectiveOperator.C
   )
   
-add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} 
+add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
   fortran/navier_stokes_staggered_helpers3d.f.m4
   fortran/navier_stokes_bdryop3d.f.m4
   fortran/navier_stokes_divsource3d.f.m4
@@ -35,7 +35,7 @@ set(kit_SRCS3D
   ${FORTRAN_SRCS3D}
   )
   
-add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} 
+add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f 
   fortran/navier_stokes_stabledt2d.f.m4
   fortran/navier_stokes_staggered_helpers2d.f.m4
   fortran/navier_stokes_staggered_derivatives2d.f.m4

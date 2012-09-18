@@ -5,7 +5,7 @@ set(kit_SRCS
   GodunovAdvector.C
   )
   
-add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} 
+add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
   fortran/advect_diff3d.f.m4
   fortran/advect_stable3d.f.m4
   fortran/advect_detect3d.f.m4
@@ -19,7 +19,7 @@ set(kit_SRCS3D
   ${FORTRAN_SRCS3D}
   )
 
-add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR}  
+add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
   fortran/godunov_predictors2d.f.m4
   fortran/advect_centered_derivatives2d.f.m4
   fortran/advect_detect2d.f.m4
