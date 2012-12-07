@@ -35,7 +35,7 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 #ifndef included_IBTK_config
-#include <IBTK_config.h>
+// #include <IBTK_config.h>
 #define included_IBTK_config
 #endif
 
@@ -458,8 +458,8 @@ PETScNewtonKrylovSolver::reportSNESConvergedReason(
         case SNES_CONVERGED_FNORM_RELATIVE:
             os << d_object_name << ": converged: |F| less than specified relative tolerance.\n";
             break;
-        case SNES_CONVERGED_PNORM_RELATIVE:
-            os << d_object_name << ": converged: |P| less than specified relative tolerance.\n";
+        case SNES_CONVERGED_SNORM_RELATIVE:
+            os << d_object_name << ": converged: |S| less than specified relative tolerance.\n";
             break;
         case SNES_CONVERGED_TR_DELTA:
             os << d_object_name << ": converged: trust-region delta.\n";

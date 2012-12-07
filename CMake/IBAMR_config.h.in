@@ -1,0 +1,255 @@
+/* CMake genereted config file */
+
+/* Boolean value indicating whether we are using subdomain indices */
+#cmakedefine ENABLE_SUBDOMAIN_INDICES
+
+/* Define to dummy `main' function (if any) required to link to the Fortran
+   libraries. */
+#cmakedefine F77_DUMMY_MAIN
+
+/* Define to dummy `main' function (if any) required to link to the Fortran
+   libraries. */
+#cmakedefine FC_DUMMY_MAIN
+
+/* Define if F77 and FC dummy `main' functions are identical. */
+#cmakedefine FC_DUMMY_MAIN_EQ_F77
+
+/* Define to a macro mangling the given C identifier (in lower and upper
+   case), which must not contain underscores, for linking with Fortran. */
+#cmakedefine FC_FUNC
+
+/* As FC_FUNC, but for C identifiers containing underscores. */
+#cmakedefine FC_FUNC_
+
+/* Define if you have a BLAS library. */
+#cmakedefine HAVE_BLAS
+
+/* Boolean value indicating whether the C++ compiler supports the
+   __builtin_expect keyword */
+#cmakedefine HAVE_BUILTIN_EXPECT
+
+/* Boolean value indicating whether the C++ compiler supports the
+   __builtin_prefetch keyword */
+#cmakedefine HAVE_BUILTIN_PREFETCH
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#cmakedefine HAVE_INTTYPES_H
+
+/* Define if you have LAPACK library. */
+#cmakedefine HAVE_LAPACK
+
+/* Define if you have the libblitz library. */
+#cmakedefine HAVE_LIBBLITZ
+
+/* Define if you have the libexodusii library. */
+#cmakedefine HAVE_LIBEXODUSII
+
+/* Define if you have the libgmv library. */
+#cmakedefine HAVE_LIBGMV
+
+/* Define if you have the libgzstream library. */
+#cmakedefine HAVE_LIBGZSTREAM
+
+/* Define if you have the libhdf5 library. */
+#cmakedefine HAVE_LIBHDF5
+
+/* Define if you have the libhdf5_hl library. */
+#cmakedefine HAVE_LIBHDF5_HL
+
+/* Define if you have the libHilbert library. */
+#cmakedefine HAVE_LIBHILBERT
+
+/* Define if you have the libHYPRE library. */
+#cmakedefine HAVE_LIBHYPRE
+
+/* Define if you have the liblaspack library. */
+#cmakedefine HAVE_LIBLASPACK
+
+/* Define if you have the libmesh library. */
+#cmakedefine HAVE_LIBMESH
+
+/* Define if you have the libmetis library. */
+#cmakedefine HAVE_LIBMETIS
+
+/* Define if you have the libnemesis library. */
+#cmakedefine HAVE_LIBNEMESIS
+
+/* Define if you have the libnetcdf library. */
+#cmakedefine HAVE_LIBNETCDF
+
+/* Define if you have the libparmetis library. */
+#cmakedefine HAVE_LIBPARMETIS
+
+/* Define if you have the libpetsc library. */
+#cmakedefine HAVE_LIBPETSC
+
+/* Define if you have the libpetscdm library. */
+#cmakedefine HAVE_LIBPETSCDM
+
+/* Define if you have the libpetscksp library. */
+#cmakedefine HAVE_LIBPETSCKSP
+
+/* Define if you have the libpetscmat library. */
+#cmakedefine HAVE_LIBPETSCMAT
+
+/* Define if you have the libpetscsnes library. */
+#cmakedefine HAVE_LIBPETSCSNES
+
+/* Define if you have the libpetscts library. */
+#cmakedefine HAVE_LIBPETSCTS
+
+/* Define if you have the libpetscvec library. */
+#cmakedefine HAVE_LIBPETSCVEC
+
+/* Define if you have the libSAMRAI library. */
+#cmakedefine HAVE_LIBSAMRAI
+
+/* Define if you have the libSAMRAI2d_algs library. */
+#cmakedefine HAVE_LIBSAMRAI2D_ALGS
+
+/* Define if you have the libSAMRAI2d_appu library. */
+#cmakedefine HAVE_LIBSAMRAI2D_APPU
+
+/* Define if you have the libSAMRAI2d_geom library. */
+#cmakedefine HAVE_LIBSAMRAI2D_GEOM
+
+/* Define if you have the libSAMRAI2d_hier library. */
+#cmakedefine HAVE_LIBSAMRAI2D_HIER
+
+/* Define if you have the libSAMRAI2d_math_std library. */
+#cmakedefine HAVE_LIBSAMRAI2D_MATH_STD
+
+/* Define if you have the libSAMRAI2d_mesh library. */
+#cmakedefine HAVE_LIBSAMRAI2D_MESH
+
+/* Define if you have the libSAMRAI2d_pdat_std library. */
+#cmakedefine HAVE_LIBSAMRAI2D_PDAT_STD
+
+/* Define if you have the libSAMRAI2d_solv library. */
+#cmakedefine HAVE_LIBSAMRAI2D_SOLV
+
+/* Define if you have the libSAMRAI2d_xfer library. */
+#cmakedefine HAVE_LIBSAMRAI2D_XFER
+
+/* Define if you have the libSAMRAI3d_algs library. */
+#cmakedefine HAVE_LIBSAMRAI3D_ALGS
+
+/* Define if you have the libSAMRAI3d_appu library. */
+#cmakedefine HAVE_LIBSAMRAI3D_APPU
+
+/* Define if you have the libSAMRAI3d_geom library. */
+#cmakedefine HAVE_LIBSAMRAI3D_GEOM
+
+/* Define if you have the libSAMRAI3d_hier library. */
+#cmakedefine HAVE_LIBSAMRAI3D_HIER
+
+/* Define if you have the libSAMRAI3d_math_std library. */
+#cmakedefine HAVE_LIBSAMRAI3D_MATH_STD
+
+/* Define if you have the libSAMRAI3d_mesh library. */
+#cmakedefine HAVE_LIBSAMRAI3D_MESH
+
+/* Define if you have the libSAMRAI3d_pdat_std library. */
+#cmakedefine HAVE_LIBSAMRAI3D_PDAT_STD
+
+/* Define if you have the libSAMRAI3d_solv library. */
+#cmakedefine HAVE_LIBSAMRAI3D_SOLV
+
+/* Define if you have the libSAMRAI3d_xfer library. */
+#cmakedefine HAVE_LIBSAMRAI3D_XFER
+
+/* Define if you have the libsfcurves library. */
+#cmakedefine HAVE_LIBSFCURVES
+
+/* Define if you have the libsilo library. */
+#cmakedefine HAVE_LIBSILO
+
+/* Define if you have the libsiloh5 library. */
+#cmakedefine HAVE_LIBSILOH5
+
+/* Define if you have the libtetgen library. */
+#cmakedefine HAVE_LIBTETGEN
+
+/* Define if you have the libtriangle library. */
+#cmakedefine HAVE_LIBTRIANGLE
+
+/* Define if you have the libvtk library. */
+#cmakedefine HAVE_LIBVTK
+
+/* Define if you have the libX11 library. */
+#cmakedefine HAVE_LIBX11
+
+/* Define to 1 if you have the <memory.h> header file. */
+#cmakedefine HAVE_MEMORY_H
+
+/* Define if you have the MPI library. */
+#cmakedefine HAVE_MPI
+
+/* define if the compiler implements namespaces */
+#cmakedefine HAVE_NAMESPACES
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#cmakedefine HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#cmakedefine HAVE_STDLIB_H
+
+/* define if the compiler supports Standard Template Library */
+#cmakedefine HAVE_STL
+
+/* Define to 1 if you have the <strings.h> header file. */
+#cmakedefine HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#cmakedefine HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#cmakedefine HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#cmakedefine HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#cmakedefine HAVE_UNISTD_H
+
+/* Define to 1 if `major', `minor', and `makedev' are declared in <mkdev.h>.
+   */
+#cmakedefine MAJOR_IN_MKDEV
+
+/* Define to 1 if `major', `minor', and `makedev' are declared in
+   <sysmacros.h>. */
+#cmakedefine MAJOR_IN_SYSMACROS
+
+/* Name of package */
+#cmakedefine PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#cmakedefine PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#cmakedefine PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#cmakedefine PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#cmakedefine PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#cmakedefine PACKAGE_URL
+
+/* Define to the version of this package. */
+#cmakedefine PACKAGE_VERSION
+
+/* Define to 1 if you have the ANSI C header files. */
+#cmakedefine STDC_HEADERS
+
+/* Boolean value indicating whether we are using the expensive version of the
+   quadratic coarse-fine interface code */
+#cmakedefine USING_EXPENSIVE_CF_INTERPOLATION
+
+/* Boolean value indicating whether we are using large ghost cell widths */
+#cmakedefine USING_LARGE_GHOST_CELL_WIDTH
+
+/* Version number of package */
+#cmakedefine VERSION

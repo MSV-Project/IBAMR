@@ -35,7 +35,7 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 #ifndef included_IBTK_config
-#include <IBTK_config.h>
+// #include <IBTK_config.h>
 #define included_IBTK_config
 #endif
 
@@ -685,9 +685,9 @@ CCPoissonHypreLevelSolver::setMatrixCoefficients_aligned()
             const bool bdry_lower_side = (location_index % 2) == 0;
             const bool bdry_upper_side = (location_index % 2) != 0;
 
-            for (Box<NDIM>::Iterator b(bc_coef_box); b; b++)
+            for (Box<NDIM>::Iterator it(bc_coef_box); it; it++)
             {
-                const Index<NDIM>& i_s_bdry = b();
+                const Index<NDIM>& i_s_bdry = it();
                 const double& a = acoef_data(i_s_bdry,0);
                 const double& b = bcoef_data(i_s_bdry,0);
                 const double& h = dx[bdry_normal_axis];
@@ -1618,9 +1618,9 @@ CCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_aligned(
         //
         // i_c_intr: cell index located adjacent to physical boundary in the
         // patch interior
-        for (Box<NDIM>::Iterator b(bc_coef_box); b; b++)
+        for (Box<NDIM>::Iterator it(bc_coef_box); it; it++)
         {
-            const Index<NDIM>& i_s_bdry = b();
+            const Index<NDIM>& i_s_bdry = it();
             const double& a = acoef_data(i_s_bdry,0);
             const double& b = bcoef_data(i_s_bdry,0);
             const double& g = gcoef_data(i_s_bdry,0);
@@ -1697,9 +1697,9 @@ CCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_nonaligned(
         //
         // i_c_intr: cell index located adjacent to physical boundary in the
         // patch interior
-        for (Box<NDIM>::Iterator b(bc_coef_box); b; b++)
+        for (Box<NDIM>::Iterator it(bc_coef_box); it; it++)
         {
-            const Index<NDIM>& i_s_bdry = b();
+            const Index<NDIM>& i_s_bdry = it();
             const double& a = acoef_data(i_s_bdry,0);
             const double& b = bcoef_data(i_s_bdry,0);
             const double& g = gcoef_data(i_s_bdry,0);

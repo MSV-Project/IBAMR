@@ -1,0 +1,42 @@
+EXECUTE_PROCESS(
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/samraiPatches/CMakeLists.txt" "@Samrai_source@"
+  )
+
+if(NOT EXISTS @Samrai_build@/include)
+  file(MAKE_DIRECTORY @Samrai_build@/include)
+endif()  
+EXECUTE_PROCESS(
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/samraiPatches/SAMRAI_config.h.in" "@Samrai_build@"
+  )
+  
+EXECUTE_PROCESS(
+  COMMAND cd @Samrai_source@ && sh ./source/scripts/includes --link
+  )
+
+EXECUTE_PROCESS(
+  COMMAND patch -p2 -i "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/samraiPatches/SAMRAI-v2.4.4-patch-111217"
+  )
+
+EXECUTE_PROCESS(
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/samraiPatches/BoxList.C" "@Samrai_source@/source/hierarchy/boxes/BoxList.C"
+  )  
+
+EXECUTE_PROCESS(
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/samraiPatches/BoxList.I" "@Samrai_source@/source/hierarchy/boxes/BoxList.I"
+  )
+
+EXECUTE_PROCESS(
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/samraiPatches/CartesianGridGeometry.C" "@Samrai_source@/source/geometry/cartesian/grid_geom/CartesianGridGeometry.C"
+  )  
+
+EXECUTE_PROCESS(
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/samraiPatches/StandardTagAndInitialize.C" "@Samrai_source@/source/mesh/gridding/StandardTagAndInitialize.C"
+  )  
+  
+EXECUTE_PROCESS(
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/samraiPatches/CellGeometry.C" "@Samrai_source@/source/patchdata/boxgeometry/CellGeometry.C"
+  )  
+  
+EXECUTE_PROCESS(
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/samraiPatches/SideVariable.C" "@Samrai_source@/source/patchdata/side/SideVariable.C"
+  )

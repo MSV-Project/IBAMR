@@ -34,8 +34,10 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
+#include "fortran_interfaces.h"
+
 #ifndef included_IBAMR_config
-#include <IBAMR_config.h>
+// #include <IBAMR_config.h>
 #define included_IBAMR_config
 #endif
 
@@ -57,19 +59,19 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define ADVECT_DERIVATIVE_FC FC_FUNC_(advect_derivative2d, ADVECT_DERIVATIVE2D)
-#define ADVECT_FLUX_FC FC_FUNC_(advect_flux2d, ADVECT_FLUX2D)
-#define F_TO_C_DIV_FC FC_FUNC_(ftocdiv2d, FTOCDIV2D)
-#define F_TO_C_DIV_ADD_FC FC_FUNC_(ftocdivadd2d, FTOCDIVADD2D)
-#define GODUNOV_EXTRAPOLATE_FC FC_FUNC_(godunov_extrapolate2d, GODUNOV_EXTRAPOLATE2D)
+#define ADVECT_DERIVATIVE_FC FC_GLOBAL_(advect_derivative2d, ADVECT_DERIVATIVE2D)
+#define ADVECT_FLUX_FC FC_GLOBAL_(advect_flux2d, ADVECT_FLUX2D)
+#define F_TO_C_DIV_FC FC_GLOBAL_(ftocdiv2d, FTOCDIV2D)
+#define F_TO_C_DIV_ADD_FC FC_GLOBAL_(ftocdivadd2d, FTOCDIVADD2D)
+#define GODUNOV_EXTRAPOLATE_FC FC_GLOBAL_(godunov_extrapolate2d, GODUNOV_EXTRAPOLATE2D)
 #endif
 
 #if (NDIM == 3)
-#define ADVECT_DERIVATIVE_FC FC_FUNC_(advect_derivative3d, ADVECT_DERIVATIVE3D)
-#define ADVECT_FLUX_FC FC_FUNC_(advect_flux3d, ADVECT_FLUX3D)
-#define F_TO_C_DIV_FC FC_FUNC_(ftocdiv3d, FTOCDIV3D)
-#define F_TO_C_DIV_ADD_FC FC_FUNC_(ftocdivadd3d, FTOCDIVADD3D)
-#define GODUNOV_EXTRAPOLATE_FC FC_FUNC_(godunov_extrapolate3d, GODUNOV_EXTRAPOLATE3D)
+#define ADVECT_DERIVATIVE_FC FC_GLOBAL_(advect_derivative3d, ADVECT_DERIVATIVE3D)
+#define ADVECT_FLUX_FC FC_GLOBAL_(advect_flux3d, ADVECT_FLUX3D)
+#define F_TO_C_DIV_FC FC_GLOBAL_(ftocdiv3d, FTOCDIV3D)
+#define F_TO_C_DIV_ADD_FC FC_GLOBAL_(ftocdivadd3d, FTOCDIVADD3D)
+#define GODUNOV_EXTRAPOLATE_FC FC_GLOBAL_(godunov_extrapolate3d, GODUNOV_EXTRAPOLATE3D)
 #endif
 
 extern "C"

@@ -34,8 +34,10 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
+#include "fortran_interfaces.h"
+
 #ifndef included_IBAMR_config
-#include <IBAMR_config.h>
+// #include <IBAMR_config.h>
 #define included_IBAMR_config
 #endif
 
@@ -66,7 +68,7 @@
 #include <numeric>
 
 // FORTRAN ROUTINES
-#define DSQRTM_FC FC_FUNC(dsqrtm,DSQRTM)
+#define DSQRTM_FC FC_GLOBAL(dsqrtm,DSQRTM)
 extern "C"
 {
     void
@@ -342,7 +344,8 @@ IBKirchhoffRodForceGen::initializeLevelData(
     // Create new MPI block AIJ matrices and set the values of the non-zero
     // entries.
     {
-        ierr = MatCreateMPIBAIJ(PETSC_COMM_WORLD,
+      // NOTE: rortiz; this function changes in petsc 3.3
+        ierr = MatCreateBAIJ(PETSC_COMM_WORLD,
                                 3*3, 3*3*local_sz, 3*3*num_local_nodes,
                                 PETSC_DETERMINE, PETSC_DETERMINE,
                                 PETSC_DEFAULT, local_sz > 0 ? &next_d_nz[0] : PETSC_NULL,
@@ -374,7 +377,8 @@ IBKirchhoffRodForceGen::initializeLevelData(
     }
 
     {
-        ierr = MatCreateMPIBAIJ(PETSC_COMM_WORLD,
+      // NOTE: rortiz; this function changes in petsc 3.3
+        ierr = MatCreateBAIJ(PETSC_COMM_WORLD,
                                 NDIM, NDIM*local_sz, NDIM*num_local_nodes,
                                 PETSC_DETERMINE, PETSC_DETERMINE,
                                 PETSC_DEFAULT, local_sz > 0 ? &next_d_nz[0] : PETSC_NULL,

@@ -1,0 +1,1160 @@
+diff -Naur ./SAMRAI-orig/config/SAMRAI_config.h.in ./SAMRAI/config/SAMRAI_config.h.in
+--- ./SAMRAI-orig/config/SAMRAI_config.h.in	2009-06-18 17:43:43.000000000 -0400
++++ ./SAMRAI/config/SAMRAI_config.h.in	2009-08-20 11:58:52.000000000 -0400
+@@ -313,19 +313,19 @@
+ #undef OSTRSTREAM_TYPE_IS_BROKEN
+ 
+ /* Define to the address where bug reports for this package should be sent. */
+-#undef PACKAGE_BUGREPORT
++/* #undef PACKAGE_BUGREPORT */
+ 
+ /* Define to the full name of this package. */
+-#undef PACKAGE_NAME
++/* #undef PACKAGE_NAME */
+ 
+ /* Define to the full name and version of this package. */
+-#undef PACKAGE_STRING
++/* #undef PACKAGE_STRING */
+ 
+ /* Define to the one symbol short name of this package. */
+-#undef PACKAGE_TARNAME
++/* #undef PACKAGE_TARNAME */
+ 
+ /* Define to the version of this package. */
+-#undef PACKAGE_VERSION
++/* #undef PACKAGE_VERSION */
+ 
+ /* Define if restrict is not properly supported */
+ #undef RESTRICT_IS_BROKEN
+diff -Naur ./SAMRAI-orig/include/EmptyAlgorithmX.C ./SAMRAI/include/EmptyAlgorithmX.C
+--- ./SAMRAI-orig/include/EmptyAlgorithmX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/include/EmptyAlgorithmX.C	2009-06-23 20:23:53.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace algs {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/include/EmptyAppUtilsX.C ./SAMRAI/include/EmptyAppUtilsX.C
+--- ./SAMRAI-orig/include/EmptyAppUtilsX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/include/EmptyAppUtilsX.C	2009-06-23 20:23:48.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace appu {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/include/EmptyGeometryX.C ./SAMRAI/include/EmptyGeometryX.C
+--- ./SAMRAI-orig/include/EmptyGeometryX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/include/EmptyGeometryX.C	2009-06-23 20:23:43.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace geom {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/include/EmptyHierarchyX.C ./SAMRAI/include/EmptyHierarchyX.C
+--- ./SAMRAI-orig/include/EmptyHierarchyX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/include/EmptyHierarchyX.C	2009-06-23 20:23:38.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace hier {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/include/EmptyMathOpsX.C ./SAMRAI/include/EmptyMathOpsX.C
+--- ./SAMRAI-orig/include/EmptyMathOpsX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/include/EmptyMathOpsX.C	2009-06-23 20:23:33.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace math {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/include/EmptyMeshX.C ./SAMRAI/include/EmptyMeshX.C
+--- ./SAMRAI-orig/include/EmptyMeshX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/include/EmptyMeshX.C	2009-06-23 20:23:28.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace mesh {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/include/EmptyPatchDataX.C ./SAMRAI/include/EmptyPatchDataX.C
+--- ./SAMRAI-orig/include/EmptyPatchDataX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/include/EmptyPatchDataX.C	2009-06-23 20:23:23.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace pdat {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/include/EmptySolversX.C ./SAMRAI/include/EmptySolversX.C
+--- ./SAMRAI-orig/include/EmptySolversX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/include/EmptySolversX.C	2009-06-23 20:23:16.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace solv {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/include/EmptyTransferX.C ./SAMRAI/include/EmptyTransferX.C
+--- ./SAMRAI-orig/include/EmptyTransferX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/include/EmptyTransferX.C	2009-06-23 20:22:36.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace xfer {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/include/FACPreconditioner.C ./SAMRAI/include/FACPreconditioner.C
+--- ./SAMRAI-orig/include/FACPreconditioner.C	2008-01-25 16:28:01.000000000 -0500
++++ ./SAMRAI/include/FACPreconditioner.C	2009-07-23 13:40:00.000000000 -0400
+@@ -152,18 +152,22 @@
+       d_patch_hierarchy.setNull();
+ 
+       if ( d_error_vector ) {
++         d_error_vector->resetLevels(d_error_vector->getCoarsestLevelNumber(), std::min(d_error_vector->getFinestLevelNumber(),d_error_vector->getPatchHierarchy()->getFinestLevelNumber()));
+          d_error_vector->freeVectorComponents();
+          d_error_vector.setNull();
+       }
+       if ( d_tmp_error ) {
++         d_tmp_error->resetLevels(d_tmp_error->getCoarsestLevelNumber(), std::min(d_tmp_error->getFinestLevelNumber(),d_tmp_error->getPatchHierarchy()->getFinestLevelNumber()));
+          d_tmp_error->freeVectorComponents();
+          d_tmp_error.setNull();
+       }
+       if ( d_residual_vector ) {
++         d_residual_vector->resetLevels(d_residual_vector->getCoarsestLevelNumber(), std::min(d_residual_vector->getFinestLevelNumber(),d_residual_vector->getPatchHierarchy()->getFinestLevelNumber()));
+          d_residual_vector->freeVectorComponents();
+          d_residual_vector.setNull();
+       }
+       if ( d_tmp_residual ) {
++         d_tmp_residual->resetLevels(d_tmp_residual->getCoarsestLevelNumber(), std::min(d_tmp_residual->getFinestLevelNumber(),d_tmp_residual->getPatchHierarchy()->getFinestLevelNumber()));
+          d_tmp_residual->freeVectorComponents();
+          d_tmp_residual.setNull();
+       }
+diff -Naur ./SAMRAI-orig/include/GriddingAlgorithm.C ./SAMRAI/include/GriddingAlgorithm.C
+--- ./SAMRAI-orig/include/GriddingAlgorithm.C	2009-03-24 15:10:26.000000000 -0400
++++ ./SAMRAI/include/GriddingAlgorithm.C	2011-12-17 20:02:49.000000000 -0500
+@@ -1215,6 +1215,10 @@
+          hierarchy->makeNewPatchLevel(fine_level_number, ratio,
+                                       fine_boxes, mapping);
+ 
++         if (d_check_overlapping_patches != 'i') {
++            checkOverlappingPatches( hierarchy->getPatchLevel(fine_level_number) );
++         }
++
+          // "false" argument": const bool initial_time = false;
+          d_tag_init_strategy->initializeLevelData(hierarchy,
+                                                   fine_level_number,
+@@ -2563,7 +2567,7 @@
+                          << "smallest patch size.  Note:  If periodic "
+                          << "boundary conditions are used, this flag is "
+                          << "ignored in the periodic directions.");
+-                                                                                
++                                                                               
+       }
+    }
+ 
+@@ -2624,7 +2628,7 @@
+    }
+ 
+    d_check_overlapping_patches =
+-      db->getCharWithDefault( "check_overplapping_patches",
++      db->getCharWithDefault( "check_overlapping_patches",
+                               d_check_overlapping_patches );
+    if ( d_check_overlapping_patches != 'i' &&
+         d_check_overlapping_patches != 'w' &&
+diff -Naur ./SAMRAI-orig/include/HierarchyDataOpsReal.h ./SAMRAI/include/HierarchyDataOpsReal.h
+--- ./SAMRAI-orig/include/HierarchyDataOpsReal.h	2008-04-14 17:51:47.000000000 -0400
++++ ./SAMRAI/include/HierarchyDataOpsReal.h	2011-12-12 00:18:11.000000000 -0500
+@@ -330,6 +330,13 @@
+ 		    bool local_only=false) const = 0;
+ 
+    /**
++    * Return the integral of the function represented by the data array.
++    * The return value is the sum \f$\sum_i ( data_i * vol_i )\f$.
++    */
++   virtual TYPE integral(const int data_id,
++                         const int vol_id) const = 0;
++
++   /**
+     * Return 1 if \f$\|data2_i\| > 0\f$ and \f$data1_i * data2_i \leq 0\f$, for
+     * any \f$i\f$ in the set of patch data indices, where \f$cvol_i > 0\f$.  Otherwise,
+     * return 0.  If the control volume is undefined (vol_id < 0), all values
+diff -Naur ./SAMRAI-orig/include/IndexData.I ./SAMRAI/include/IndexData.I
+--- ./SAMRAI-orig/include/IndexData.I	2008-07-03 11:17:20.000000000 -0400
++++ ./SAMRAI/include/IndexData.I	2009-06-24 18:56:06.000000000 -0400
+@@ -119,6 +119,20 @@
+ 
+ template<int DIM, class TYPE, class BOX_GEOMETRY>
+ inline
++TYPE& IndexIterator<DIM,TYPE,BOX_GEOMETRY>::getItem()
++{
++   return(*d_node->d_item);
++}
++
++template<int DIM, class TYPE, class BOX_GEOMETRY>
++inline
++const hier::Index<DIM>& IndexIterator<DIM,TYPE,BOX_GEOMETRY>::getIndex() const
++{
++    return(d_node->d_index);
++}
++
++template<int DIM, class TYPE, class BOX_GEOMETRY>
++inline
+ IndexIterator<DIM,TYPE,BOX_GEOMETRY>::operator bool() const
+ {
+    return(d_node ? true : false);
+diff -Naur ./SAMRAI-orig/include/PatchLevel.C ./SAMRAI/include/PatchLevel.C
+--- ./SAMRAI-orig/include/PatchLevel.C	2008-05-14 17:25:02.000000000 -0400
++++ ./SAMRAI/include/PatchLevel.C	2009-06-30 19:25:24.000000000 -0400
+@@ -27,7 +27,15 @@
+ namespace SAMRAI {
+     namespace hier {
+ 
+-static tbox::Pointer<tbox::Timer> t_level_constructor;
++/*
++*************************************************************************
++*                                                                       *
++* Initialization for static data members.                               *
++*                                                                       *
++*************************************************************************
++*/
++template<int DIM> tbox::Pointer<tbox::Timer>
++   PatchLevel<DIM>::t_level_constructor;
+ 
+ /*
+  *************************************************************************
+@@ -1007,8 +1015,8 @@
+    if ( t_level_constructor.isNull() ) {
+       t_level_constructor = tbox::TimerManager::getManager() ->
+          getTimer("mesh::PatchLevel::level_constructor");
++      tbox::ShutdownRegistry::registerShutdownRoutine(freeTimers, 254);
+    }
+-   tbox::ShutdownRegistry::registerShutdownRoutine(freeTimers, 254);
+ }
+ 
+ 
+diff -Naur ./SAMRAI-orig/include/PatchLevel.h ./SAMRAI/include/PatchLevel.h
+--- ./SAMRAI-orig/include/PatchLevel.h	2008-05-14 17:25:02.000000000 -0400
++++ ./SAMRAI/include/PatchLevel.h	2009-06-30 19:24:37.000000000 -0400
+@@ -479,7 +479,10 @@
+     */
+    void setPatchTouchesBoundaryArrays();
+ 
+-   void initializeTimers();
++   /*!
++    * Allocate static timers.
++    */
++   static void initializeTimers();
+ 
+    /*!
+     * Free static timers.
+@@ -565,6 +568,11 @@
+     * Manages communications in clustering algorithms
+     */
+    tbox::Pointer< BinaryTree<DIM> > d_binary_tree;
++
++   /*
++    * Timer objects for performance measurement.
++    */
++   static tbox::Pointer<tbox::Timer> t_level_constructor;
+ };
+ 
+ /**
+diff -Naur ./SAMRAI-orig/include/RefineSchedule.C ./SAMRAI/include/RefineSchedule.C
+--- ./SAMRAI-orig/include/RefineSchedule.C	2009-03-19 19:03:30.000000000 -0400
++++ ./SAMRAI/include/RefineSchedule.C	2011-12-17 19:54:15.000000000 -0500
+@@ -41,18 +41,6 @@
+ #define BIG_GHOST_CELL_WIDTH  (10)
+ 
+ 
+-/*!
+- * Timer objects for performance measurement.
+- */
+-static tbox::Pointer<tbox::Timer> t_fill_data;
+-static tbox::Pointer<tbox::Timer> t_recursive_fill;
+-static tbox::Pointer<tbox::Timer> t_refine_scratch_data;
+-static tbox::Pointer<tbox::Timer> t_gen_sched_n_squared;
+-static tbox::Pointer<tbox::Timer> t_gen_sched_box_graph;
+-static tbox::Pointer<tbox::Timer> t_gen_sched_box_tree; 
+-static tbox::Pointer<tbox::Timer> t_gen_comm_sched;
+-static tbox::Pointer<tbox::Timer> t_finish_sched_const;
+-
+ /*
+ *************************************************************************
+ *                                                                       *
+@@ -67,6 +55,22 @@
+    RefineSchedule<DIM>::s_constant_one_intvector = hier::IntVector<DIM>(1);
+ template<int DIM> std::string
+    RefineSchedule<DIM>::s_schedule_generation_method = "BOX_TREE";
++template<int DIM> tbox::Pointer<tbox::Timer>
++   RefineSchedule<DIM>::t_fill_data;
++template<int DIM> tbox::Pointer<tbox::Timer>
++   RefineSchedule<DIM>::t_recursive_fill;
++template<int DIM> tbox::Pointer<tbox::Timer>
++   RefineSchedule<DIM>::t_refine_scratch_data;
++template<int DIM> tbox::Pointer<tbox::Timer>
++   RefineSchedule<DIM>::t_gen_sched_n_squared;
++template<int DIM> tbox::Pointer<tbox::Timer>
++   RefineSchedule<DIM>::t_gen_sched_box_graph;
++template<int DIM> tbox::Pointer<tbox::Timer>
++   RefineSchedule<DIM>::t_gen_sched_box_tree;
++template<int DIM> tbox::Pointer<tbox::Timer>
++   RefineSchedule<DIM>::t_gen_comm_sched;
++template<int DIM> tbox::Pointer<tbox::Timer>
++   RefineSchedule<DIM>::t_finish_sched_const;
+ 
+ /*
+  * ************************************************************************
+@@ -810,6 +814,19 @@
+    d_transaction_factory->setRefineItems(d_refine_items, d_number_refine_items);
+ 
+    /*
++    * Set the destination level number for the variable fill pattern
++    * objects.
++    */
++   const int num_equiv_classes =
++      d_refine_classes->getNumberOfEquivalenceClasses();
++   for (int nc = 0; nc < num_equiv_classes; nc++) {
++      const typename xfer::RefineClasses<DIM>::Data& rep_item =
++         d_refine_classes->getClassRepresentative(nc);
++      rep_item.d_var_fill_pattern->setTargetPatchLevelNumber(
++         d_dst_level->getLevelNumber());
++   }
++
++   /*
+     * Check whether scratch data needs to be allocated on the destination
+     * level.  Keep track of those allocated components so that they may be
+     * deallocated later.
+@@ -841,6 +858,16 @@
+    d_dst_level->deallocatePatchData(allocate_vector);
+ 
+    /*
++    * Reset the destination level number for the variable fill pattern
++    * objects.
++    */
++   for (int nc = 0; nc < num_equiv_classes; nc++) {
++      const typename xfer::RefineClasses<DIM>::Data& rep_item =
++         d_refine_classes->getClassRepresentative(nc);
++      rep_item.d_var_fill_pattern->setTargetPatchLevelNumber(-1);
++   }
++
++   /*
+     * Unset the refine items for all transactions.  These items are
+     * shared by all transaction objects in the communication schedule.
+     */
+@@ -1887,12 +1914,14 @@
+             hier::Box<DIM> src_mask( hier::Box<DIM>::shift( test_mask,-shift) );
+ 
+             tbox::Pointer< hier::BoxOverlap<DIM> > overlap =
+-               rep_item.d_var_fill_pattern->calculateOverlap(
++               rep_item.d_var_fill_pattern->calculateOverlapOnLevel(
+                   *dst_pdf->getBoxGeometry(dst_box),
+                   *src_pdf->getBoxGeometry(src_box),
+                   dst_box,
+                   src_mask,
+-                  true, shift);
++                  true, shift,
++                  dst_level->getLevelNumber(),
++                  src_level->getLevelNumber());
+ /*	    tbox::Pointer< hier::BoxOverlap<DIM> > overlap =
+ 	       dst_pdf->getBoxGeometry(dst_box)
+ 		      ->calculateOverlap(
+@@ -2230,6 +2259,8 @@
+ 
+ /*
+ ***********************************************************************
++Allocate static timers and register freeTimers with the shutdown
++registry.
+ ***********************************************************************
+ */
+ template<int DIM>
+diff -Naur ./SAMRAI-orig/include/RefineSchedule.h ./SAMRAI/include/RefineSchedule.h
+--- ./SAMRAI-orig/include/RefineSchedule.h	2008-05-14 17:25:02.000000000 -0400
++++ ./SAMRAI/include/RefineSchedule.h	2009-06-30 19:26:09.000000000 -0400
+@@ -542,15 +542,17 @@
+     */
+    void initialCheckRefineClassItems() const;
+ 
+-   void initializeTimers();
+-
+-
+    /*!
+     * @brief Set up things for the entire class.
+     */
+    void firstConstructorTasks();
+ 
+    /*!
++    * Allocate static timers.
++    */
++   static void initializeTimers();
++
++   /*!
+     * Free static timers.
+     *
+     * To be called by shutdown registry to make sure
+@@ -723,7 +725,17 @@
+    int d_max_fill_boxes;
+    hier::BoxArray<DIM> d_src_masks;
+ 
+-
++   /*!
++    * Timer objects for performance measurement.
++    */
++   static tbox::Pointer<tbox::Timer> t_fill_data;
++   static tbox::Pointer<tbox::Timer> t_recursive_fill;
++   static tbox::Pointer<tbox::Timer> t_refine_scratch_data;
++   static tbox::Pointer<tbox::Timer> t_gen_sched_n_squared;
++   static tbox::Pointer<tbox::Timer> t_gen_sched_box_graph;
++   static tbox::Pointer<tbox::Timer> t_gen_sched_box_tree;
++   static tbox::Pointer<tbox::Timer> t_gen_comm_sched;
++   static tbox::Pointer<tbox::Timer> t_finish_sched_const;
+ };
+ 
+ }
+diff -Naur ./SAMRAI-orig/include/VariableFillPattern.C ./SAMRAI/include/VariableFillPattern.C
+--- ./SAMRAI-orig/include/VariableFillPattern.C	2009-03-19 19:03:30.000000000 -0400
++++ ./SAMRAI/include/VariableFillPattern.C	2011-12-12 00:26:48.000000000 -0500
+@@ -39,7 +39,33 @@
+ {
+ }
+ 
++template<int DIM>
++tbox::Pointer< hier::BoxOverlap<DIM> >
++VariableFillPattern<DIM>::calculateOverlapOnLevel(const hier::BoxGeometry<DIM>& dst_geometry,
++                                                  const hier::BoxGeometry<DIM>& src_geometry,
++                                                  const hier::Box<DIM>& dst_patch_box,
++                                                  const hier::Box<DIM>& src_mask,
++                                                  const bool overwrite_interior,
++                                                  const hier::IntVector<DIM>& src_offset,
++                                                  const int dst_level_num,
++                                                  const int src_level_num) const
++{
++   NULL_USE(dst_level_num);
++   NULL_USE(src_level_num);
++   return calculateOverlap(dst_geometry,
++                           src_geometry,
++                           dst_patch_box,
++                           src_mask,
++                           overwrite_interior,
++                           src_offset);
++}
+ 
++template<int DIM>
++void VariableFillPattern<DIM>::setTargetPatchLevelNumber(const int level_num)
++{
++   NULL_USE(level_num);
++   return;
++}
+ 
+ }
+ }
+diff -Naur ./SAMRAI-orig/include/VariableFillPattern.h ./SAMRAI/include/VariableFillPattern.h
+--- ./SAMRAI-orig/include/VariableFillPattern.h	2009-03-20 14:08:50.000000000 -0400
++++ ./SAMRAI/include/VariableFillPattern.h	2011-12-12 00:25:03.000000000 -0500
+@@ -6,7 +6,7 @@
+ // Modified:	$LastChangedDate: 2009-02-02 15:22:36 -0800 (Mon, 02 Feb 2009) $
+ // Description:	Abstract fill pattern class to provide interface for stencils
+ //
+- 
++
+ #ifndef included_xfer_VariableFillPattern
+ #define included_xfer_VariableFillPattern
+ 
+@@ -24,7 +24,7 @@
+ 
+ 
+ /*!
+- * Class VariableFillPattern is an abstract base class that provides an 
++ * Class VariableFillPattern is an abstract base class that provides an
+  * interface to create objects that can calculate overlaps which correspond
+  * to a specific stencil.
+  */
+@@ -34,7 +34,7 @@
+ public:
+ 
+    /*!
+-    * Default constructor 
++    * Default constructor
+     */
+    VariableFillPattern();
+ 
+@@ -68,6 +68,47 @@
+                     const hier::IntVector<DIM>& src_offset) const = 0;
+ 
+    /*!
++    * This virtual method provides an interface to calculate overlaps between
++    * the destination and source geometries on a specified level of the patch
++    * hierarchy.
++    *
++    * @note A default implementation is provided that simply calls the pure
++    * virtual method calculateOverlap() for implementations that are level
++    * independent.
++    *
++    * @param dst_geometry    geometry object for destination box
++    * @param src_geometry    geometry object for source box
++    * @param dst_patch_box   box for the destination patch
++    * @param src_mask        the source mask, the box resulting from shifting
++    *                        the source box
++    * @param overwrite_interior  controls whether or not to include the
++    *                            destination box interior in the overlap
++    * @param src_offset      the offset between source and destination
++    *                        index space.  src + src_offset = dst
++    * @param dst_level_num   the level of the patch hierarchy on which the
++    *                        dst boxes are located
++    * @param src_level_num   the level of the patch hierarchy on which the
++    *                        src boxes are located
++    *
++    * @return                Pointer to the calculated overlap object
++    */
++   virtual tbox::Pointer< hier::BoxOverlap<DIM> >
++   calculateOverlapOnLevel(const hier::BoxGeometry<DIM>& dst_geometry,
++                           const hier::BoxGeometry<DIM>& src_geometry,
++                           const hier::Box<DIM>& dst_patch_box,
++                           const hier::Box<DIM>& src_mask,
++                           const bool overwrite_interior,
++                           const hier::IntVector<DIM>& src_offset,
++                           const int dst_level_num,
++                           const int src_level_num) const;
++
++   /*!
++    * Set the target patch level number for the variable fill pattern.  The
++    * default implementation is empty.
++    */
++   virtual void setTargetPatchLevelNumber(const int level_num);
++
++   /*!
+     * Return the maximum ghost width of the boundary stencil.  The default
+     * implementation throws an error.
+     */
+diff -Naur ./SAMRAI-orig/source/algorithm/templates/EmptyAlgorithmX.C ./SAMRAI/source/algorithm/templates/EmptyAlgorithmX.C
+--- ./SAMRAI-orig/source/algorithm/templates/EmptyAlgorithmX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/source/algorithm/templates/EmptyAlgorithmX.C	2009-06-23 20:23:53.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace algs {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/source/apputils/templates/EmptyAppUtilsX.C ./SAMRAI/source/apputils/templates/EmptyAppUtilsX.C
+--- ./SAMRAI-orig/source/apputils/templates/EmptyAppUtilsX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/source/apputils/templates/EmptyAppUtilsX.C	2009-06-23 20:23:48.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace appu {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/source/geometry/templates/EmptyGeometryX.C ./SAMRAI/source/geometry/templates/EmptyGeometryX.C
+--- ./SAMRAI-orig/source/geometry/templates/EmptyGeometryX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/source/geometry/templates/EmptyGeometryX.C	2009-06-23 20:23:43.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace geom {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/source/hierarchy/patches/PatchLevel.C ./SAMRAI/source/hierarchy/patches/PatchLevel.C
+--- ./SAMRAI-orig/source/hierarchy/patches/PatchLevel.C	2008-05-14 17:25:02.000000000 -0400
++++ ./SAMRAI/source/hierarchy/patches/PatchLevel.C	2009-06-30 19:25:24.000000000 -0400
+@@ -27,7 +27,15 @@
+ namespace SAMRAI {
+     namespace hier {
+ 
+-static tbox::Pointer<tbox::Timer> t_level_constructor;
++/*
++*************************************************************************
++*                                                                       *
++* Initialization for static data members.                               *
++*                                                                       *
++*************************************************************************
++*/
++template<int DIM> tbox::Pointer<tbox::Timer>
++   PatchLevel<DIM>::t_level_constructor;
+ 
+ /*
+  *************************************************************************
+@@ -1007,8 +1015,8 @@
+    if ( t_level_constructor.isNull() ) {
+       t_level_constructor = tbox::TimerManager::getManager() ->
+          getTimer("mesh::PatchLevel::level_constructor");
++      tbox::ShutdownRegistry::registerShutdownRoutine(freeTimers, 254);
+    }
+-   tbox::ShutdownRegistry::registerShutdownRoutine(freeTimers, 254);
+ }
+ 
+ 
+diff -Naur ./SAMRAI-orig/source/hierarchy/patches/PatchLevel.h ./SAMRAI/source/hierarchy/patches/PatchLevel.h
+--- ./SAMRAI-orig/source/hierarchy/patches/PatchLevel.h	2008-05-14 17:25:02.000000000 -0400
++++ ./SAMRAI/source/hierarchy/patches/PatchLevel.h	2009-06-30 19:24:37.000000000 -0400
+@@ -479,7 +479,10 @@
+     */
+    void setPatchTouchesBoundaryArrays();
+ 
+-   void initializeTimers();
++   /*!
++    * Allocate static timers.
++    */
++   static void initializeTimers();
+ 
+    /*!
+     * Free static timers.
+@@ -565,6 +568,11 @@
+     * Manages communications in clustering algorithms
+     */
+    tbox::Pointer< BinaryTree<DIM> > d_binary_tree;
++
++   /*
++    * Timer objects for performance measurement.
++    */
++   static tbox::Pointer<tbox::Timer> t_level_constructor;
+ };
+ 
+ /**
+diff -Naur ./SAMRAI-orig/source/hierarchy/templates/EmptyHierarchyX.C ./SAMRAI/source/hierarchy/templates/EmptyHierarchyX.C
+--- ./SAMRAI-orig/source/hierarchy/templates/EmptyHierarchyX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/source/hierarchy/templates/EmptyHierarchyX.C	2009-06-23 20:23:38.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace hier {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/source/mathops/hierarchy/HierarchyDataOpsReal.h ./SAMRAI/source/mathops/hierarchy/HierarchyDataOpsReal.h
+--- ./SAMRAI-orig/source/mathops/hierarchy/HierarchyDataOpsReal.h	2008-04-14 17:51:47.000000000 -0400
++++ ./SAMRAI/source/mathops/hierarchy/HierarchyDataOpsReal.h	2011-12-12 00:18:11.000000000 -0500
+@@ -330,6 +330,13 @@
+ 		    bool local_only=false) const = 0;
+ 
+    /**
++    * Return the integral of the function represented by the data array.
++    * The return value is the sum \f$\sum_i ( data_i * vol_i )\f$.
++    */
++   virtual TYPE integral(const int data_id,
++                         const int vol_id) const = 0;
++
++   /**
+     * Return 1 if \f$\|data2_i\| > 0\f$ and \f$data1_i * data2_i \leq 0\f$, for
+     * any \f$i\f$ in the set of patch data indices, where \f$cvol_i > 0\f$.  Otherwise,
+     * return 0.  If the control volume is undefined (vol_id < 0), all values
+diff -Naur ./SAMRAI-orig/source/mathops/templates/EmptyMathOpsX.C ./SAMRAI/source/mathops/templates/EmptyMathOpsX.C
+--- ./SAMRAI-orig/source/mathops/templates/EmptyMathOpsX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/source/mathops/templates/EmptyMathOpsX.C	2009-06-23 20:23:33.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace math {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/source/mesh/gridding/GriddingAlgorithm.C ./SAMRAI/source/mesh/gridding/GriddingAlgorithm.C
+--- ./SAMRAI-orig/source/mesh/gridding/GriddingAlgorithm.C	2009-03-24 15:10:26.000000000 -0400
++++ ./SAMRAI/source/mesh/gridding/GriddingAlgorithm.C	2011-12-17 20:02:49.000000000 -0500
+@@ -1215,6 +1215,10 @@
+          hierarchy->makeNewPatchLevel(fine_level_number, ratio,
+                                       fine_boxes, mapping);
+ 
++         if (d_check_overlapping_patches != 'i') {
++            checkOverlappingPatches( hierarchy->getPatchLevel(fine_level_number) );
++         }
++
+          // "false" argument": const bool initial_time = false;
+          d_tag_init_strategy->initializeLevelData(hierarchy,
+                                                   fine_level_number,
+@@ -2563,7 +2567,7 @@
+                          << "smallest patch size.  Note:  If periodic "
+                          << "boundary conditions are used, this flag is "
+                          << "ignored in the periodic directions.");
+-                                                                                
++                                                                               
+       }
+    }
+ 
+@@ -2624,7 +2628,7 @@
+    }
+ 
+    d_check_overlapping_patches =
+-      db->getCharWithDefault( "check_overplapping_patches",
++      db->getCharWithDefault( "check_overlapping_patches",
+                               d_check_overlapping_patches );
+    if ( d_check_overlapping_patches != 'i' &&
+         d_check_overlapping_patches != 'w' &&
+diff -Naur ./SAMRAI-orig/source/mesh/templates/EmptyMeshX.C ./SAMRAI/source/mesh/templates/EmptyMeshX.C
+--- ./SAMRAI-orig/source/mesh/templates/EmptyMeshX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/source/mesh/templates/EmptyMeshX.C	2009-06-23 20:23:28.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace mesh {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/source/patchdata/index/IndexData.I ./SAMRAI/source/patchdata/index/IndexData.I
+--- ./SAMRAI-orig/source/patchdata/index/IndexData.I	2008-07-03 11:17:20.000000000 -0400
++++ ./SAMRAI/source/patchdata/index/IndexData.I	2009-06-24 18:56:06.000000000 -0400
+@@ -119,6 +119,20 @@
+ 
+ template<int DIM, class TYPE, class BOX_GEOMETRY>
+ inline
++TYPE& IndexIterator<DIM,TYPE,BOX_GEOMETRY>::getItem()
++{
++   return(*d_node->d_item);
++}
++
++template<int DIM, class TYPE, class BOX_GEOMETRY>
++inline
++const hier::Index<DIM>& IndexIterator<DIM,TYPE,BOX_GEOMETRY>::getIndex() const
++{
++    return(d_node->d_index);
++}
++
++template<int DIM, class TYPE, class BOX_GEOMETRY>
++inline
+ IndexIterator<DIM,TYPE,BOX_GEOMETRY>::operator bool() const
+ {
+    return(d_node ? true : false);
+diff -Naur ./SAMRAI-orig/source/patchdata/templates/EmptyPatchDataX.C ./SAMRAI/source/patchdata/templates/EmptyPatchDataX.C
+--- ./SAMRAI-orig/source/patchdata/templates/EmptyPatchDataX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/source/patchdata/templates/EmptyPatchDataX.C	2009-06-23 20:23:23.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace pdat {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/source/solvers/FAC/FACPreconditioner.C ./SAMRAI/source/solvers/FAC/FACPreconditioner.C
+--- ./SAMRAI-orig/source/solvers/FAC/FACPreconditioner.C	2008-01-25 16:28:01.000000000 -0500
++++ ./SAMRAI/source/solvers/FAC/FACPreconditioner.C	2009-07-23 13:40:00.000000000 -0400
+@@ -152,18 +152,22 @@
+       d_patch_hierarchy.setNull();
+ 
+       if ( d_error_vector ) {
++         d_error_vector->resetLevels(d_error_vector->getCoarsestLevelNumber(), std::min(d_error_vector->getFinestLevelNumber(),d_error_vector->getPatchHierarchy()->getFinestLevelNumber()));
+          d_error_vector->freeVectorComponents();
+          d_error_vector.setNull();
+       }
+       if ( d_tmp_error ) {
++         d_tmp_error->resetLevels(d_tmp_error->getCoarsestLevelNumber(), std::min(d_tmp_error->getFinestLevelNumber(),d_tmp_error->getPatchHierarchy()->getFinestLevelNumber()));
+          d_tmp_error->freeVectorComponents();
+          d_tmp_error.setNull();
+       }
+       if ( d_residual_vector ) {
++         d_residual_vector->resetLevels(d_residual_vector->getCoarsestLevelNumber(), std::min(d_residual_vector->getFinestLevelNumber(),d_residual_vector->getPatchHierarchy()->getFinestLevelNumber()));
+          d_residual_vector->freeVectorComponents();
+          d_residual_vector.setNull();
+       }
+       if ( d_tmp_residual ) {
++         d_tmp_residual->resetLevels(d_tmp_residual->getCoarsestLevelNumber(), std::min(d_tmp_residual->getFinestLevelNumber(),d_tmp_residual->getPatchHierarchy()->getFinestLevelNumber()));
+          d_tmp_residual->freeVectorComponents();
+          d_tmp_residual.setNull();
+       }
+diff -Naur ./SAMRAI-orig/source/solvers/templates/EmptySolversX.C ./SAMRAI/source/solvers/templates/EmptySolversX.C
+--- ./SAMRAI-orig/source/solvers/templates/EmptySolversX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/source/solvers/templates/EmptySolversX.C	2009-06-23 20:23:16.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace solv {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;
+diff -Naur ./SAMRAI-orig/source/transfer/datamovers/standard/RefineSchedule.C ./SAMRAI/source/transfer/datamovers/standard/RefineSchedule.C
+--- ./SAMRAI-orig/source/transfer/datamovers/standard/RefineSchedule.C	2009-03-19 19:03:30.000000000 -0400
++++ ./SAMRAI/source/transfer/datamovers/standard/RefineSchedule.C	2011-12-17 19:54:15.000000000 -0500
+@@ -41,18 +41,6 @@
+ #define BIG_GHOST_CELL_WIDTH  (10)
+ 
+ 
+-/*!
+- * Timer objects for performance measurement.
+- */
+-static tbox::Pointer<tbox::Timer> t_fill_data;
+-static tbox::Pointer<tbox::Timer> t_recursive_fill;
+-static tbox::Pointer<tbox::Timer> t_refine_scratch_data;
+-static tbox::Pointer<tbox::Timer> t_gen_sched_n_squared;
+-static tbox::Pointer<tbox::Timer> t_gen_sched_box_graph;
+-static tbox::Pointer<tbox::Timer> t_gen_sched_box_tree; 
+-static tbox::Pointer<tbox::Timer> t_gen_comm_sched;
+-static tbox::Pointer<tbox::Timer> t_finish_sched_const;
+-
+ /*
+ *************************************************************************
+ *                                                                       *
+@@ -67,6 +55,22 @@
+    RefineSchedule<DIM>::s_constant_one_intvector = hier::IntVector<DIM>(1);
+ template<int DIM> std::string
+    RefineSchedule<DIM>::s_schedule_generation_method = "BOX_TREE";
++template<int DIM> tbox::Pointer<tbox::Timer>
++   RefineSchedule<DIM>::t_fill_data;
++template<int DIM> tbox::Pointer<tbox::Timer>
++   RefineSchedule<DIM>::t_recursive_fill;
++template<int DIM> tbox::Pointer<tbox::Timer>
++   RefineSchedule<DIM>::t_refine_scratch_data;
++template<int DIM> tbox::Pointer<tbox::Timer>
++   RefineSchedule<DIM>::t_gen_sched_n_squared;
++template<int DIM> tbox::Pointer<tbox::Timer>
++   RefineSchedule<DIM>::t_gen_sched_box_graph;
++template<int DIM> tbox::Pointer<tbox::Timer>
++   RefineSchedule<DIM>::t_gen_sched_box_tree;
++template<int DIM> tbox::Pointer<tbox::Timer>
++   RefineSchedule<DIM>::t_gen_comm_sched;
++template<int DIM> tbox::Pointer<tbox::Timer>
++   RefineSchedule<DIM>::t_finish_sched_const;
+ 
+ /*
+  * ************************************************************************
+@@ -810,6 +814,19 @@
+    d_transaction_factory->setRefineItems(d_refine_items, d_number_refine_items);
+ 
+    /*
++    * Set the destination level number for the variable fill pattern
++    * objects.
++    */
++   const int num_equiv_classes =
++      d_refine_classes->getNumberOfEquivalenceClasses();
++   for (int nc = 0; nc < num_equiv_classes; nc++) {
++      const typename xfer::RefineClasses<DIM>::Data& rep_item =
++         d_refine_classes->getClassRepresentative(nc);
++      rep_item.d_var_fill_pattern->setTargetPatchLevelNumber(
++         d_dst_level->getLevelNumber());
++   }
++
++   /*
+     * Check whether scratch data needs to be allocated on the destination
+     * level.  Keep track of those allocated components so that they may be
+     * deallocated later.
+@@ -841,6 +858,16 @@
+    d_dst_level->deallocatePatchData(allocate_vector);
+ 
+    /*
++    * Reset the destination level number for the variable fill pattern
++    * objects.
++    */
++   for (int nc = 0; nc < num_equiv_classes; nc++) {
++      const typename xfer::RefineClasses<DIM>::Data& rep_item =
++         d_refine_classes->getClassRepresentative(nc);
++      rep_item.d_var_fill_pattern->setTargetPatchLevelNumber(-1);
++   }
++
++   /*
+     * Unset the refine items for all transactions.  These items are
+     * shared by all transaction objects in the communication schedule.
+     */
+@@ -1887,12 +1914,14 @@
+             hier::Box<DIM> src_mask( hier::Box<DIM>::shift( test_mask,-shift) );
+ 
+             tbox::Pointer< hier::BoxOverlap<DIM> > overlap =
+-               rep_item.d_var_fill_pattern->calculateOverlap(
++               rep_item.d_var_fill_pattern->calculateOverlapOnLevel(
+                   *dst_pdf->getBoxGeometry(dst_box),
+                   *src_pdf->getBoxGeometry(src_box),
+                   dst_box,
+                   src_mask,
+-                  true, shift);
++                  true, shift,
++                  dst_level->getLevelNumber(),
++                  src_level->getLevelNumber());
+ /*	    tbox::Pointer< hier::BoxOverlap<DIM> > overlap =
+ 	       dst_pdf->getBoxGeometry(dst_box)
+ 		      ->calculateOverlap(
+@@ -2230,6 +2259,8 @@
+ 
+ /*
+ ***********************************************************************
++Allocate static timers and register freeTimers with the shutdown
++registry.
+ ***********************************************************************
+ */
+ template<int DIM>
+diff -Naur ./SAMRAI-orig/source/transfer/datamovers/standard/RefineSchedule.h ./SAMRAI/source/transfer/datamovers/standard/RefineSchedule.h
+--- ./SAMRAI-orig/source/transfer/datamovers/standard/RefineSchedule.h	2008-05-14 17:25:02.000000000 -0400
++++ ./SAMRAI/source/transfer/datamovers/standard/RefineSchedule.h	2009-06-30 19:26:09.000000000 -0400
+@@ -542,15 +542,17 @@
+     */
+    void initialCheckRefineClassItems() const;
+ 
+-   void initializeTimers();
+-
+-
+    /*!
+     * @brief Set up things for the entire class.
+     */
+    void firstConstructorTasks();
+ 
+    /*!
++    * Allocate static timers.
++    */
++   static void initializeTimers();
++
++   /*!
+     * Free static timers.
+     *
+     * To be called by shutdown registry to make sure
+@@ -723,7 +725,17 @@
+    int d_max_fill_boxes;
+    hier::BoxArray<DIM> d_src_masks;
+ 
+-
++   /*!
++    * Timer objects for performance measurement.
++    */
++   static tbox::Pointer<tbox::Timer> t_fill_data;
++   static tbox::Pointer<tbox::Timer> t_recursive_fill;
++   static tbox::Pointer<tbox::Timer> t_refine_scratch_data;
++   static tbox::Pointer<tbox::Timer> t_gen_sched_n_squared;
++   static tbox::Pointer<tbox::Timer> t_gen_sched_box_graph;
++   static tbox::Pointer<tbox::Timer> t_gen_sched_box_tree;
++   static tbox::Pointer<tbox::Timer> t_gen_comm_sched;
++   static tbox::Pointer<tbox::Timer> t_finish_sched_const;
+ };
+ 
+ }
+diff -Naur ./SAMRAI-orig/source/transfer/operators/VariableFillPattern.C ./SAMRAI/source/transfer/operators/VariableFillPattern.C
+--- ./SAMRAI-orig/source/transfer/operators/VariableFillPattern.C	2009-03-19 19:03:30.000000000 -0400
++++ ./SAMRAI/source/transfer/operators/VariableFillPattern.C	2011-12-12 00:26:48.000000000 -0500
+@@ -39,7 +39,33 @@
+ {
+ }
+ 
++template<int DIM>
++tbox::Pointer< hier::BoxOverlap<DIM> >
++VariableFillPattern<DIM>::calculateOverlapOnLevel(const hier::BoxGeometry<DIM>& dst_geometry,
++                                                  const hier::BoxGeometry<DIM>& src_geometry,
++                                                  const hier::Box<DIM>& dst_patch_box,
++                                                  const hier::Box<DIM>& src_mask,
++                                                  const bool overwrite_interior,
++                                                  const hier::IntVector<DIM>& src_offset,
++                                                  const int dst_level_num,
++                                                  const int src_level_num) const
++{
++   NULL_USE(dst_level_num);
++   NULL_USE(src_level_num);
++   return calculateOverlap(dst_geometry,
++                           src_geometry,
++                           dst_patch_box,
++                           src_mask,
++                           overwrite_interior,
++                           src_offset);
++}
+ 
++template<int DIM>
++void VariableFillPattern<DIM>::setTargetPatchLevelNumber(const int level_num)
++{
++   NULL_USE(level_num);
++   return;
++}
+ 
+ }
+ }
+diff -Naur ./SAMRAI-orig/source/transfer/operators/VariableFillPattern.h ./SAMRAI/source/transfer/operators/VariableFillPattern.h
+--- ./SAMRAI-orig/source/transfer/operators/VariableFillPattern.h	2009-03-20 14:08:50.000000000 -0400
++++ ./SAMRAI/source/transfer/operators/VariableFillPattern.h	2011-12-12 00:25:03.000000000 -0500
+@@ -6,7 +6,7 @@
+ // Modified:	$LastChangedDate: 2009-02-02 15:22:36 -0800 (Mon, 02 Feb 2009) $
+ // Description:	Abstract fill pattern class to provide interface for stencils
+ //
+- 
++
+ #ifndef included_xfer_VariableFillPattern
+ #define included_xfer_VariableFillPattern
+ 
+@@ -24,7 +24,7 @@
+ 
+ 
+ /*!
+- * Class VariableFillPattern is an abstract base class that provides an 
++ * Class VariableFillPattern is an abstract base class that provides an
+  * interface to create objects that can calculate overlaps which correspond
+  * to a specific stencil.
+  */
+@@ -34,7 +34,7 @@
+ public:
+ 
+    /*!
+-    * Default constructor 
++    * Default constructor
+     */
+    VariableFillPattern();
+ 
+@@ -68,6 +68,47 @@
+                     const hier::IntVector<DIM>& src_offset) const = 0;
+ 
+    /*!
++    * This virtual method provides an interface to calculate overlaps between
++    * the destination and source geometries on a specified level of the patch
++    * hierarchy.
++    *
++    * @note A default implementation is provided that simply calls the pure
++    * virtual method calculateOverlap() for implementations that are level
++    * independent.
++    *
++    * @param dst_geometry    geometry object for destination box
++    * @param src_geometry    geometry object for source box
++    * @param dst_patch_box   box for the destination patch
++    * @param src_mask        the source mask, the box resulting from shifting
++    *                        the source box
++    * @param overwrite_interior  controls whether or not to include the
++    *                            destination box interior in the overlap
++    * @param src_offset      the offset between source and destination
++    *                        index space.  src + src_offset = dst
++    * @param dst_level_num   the level of the patch hierarchy on which the
++    *                        dst boxes are located
++    * @param src_level_num   the level of the patch hierarchy on which the
++    *                        src boxes are located
++    *
++    * @return                Pointer to the calculated overlap object
++    */
++   virtual tbox::Pointer< hier::BoxOverlap<DIM> >
++   calculateOverlapOnLevel(const hier::BoxGeometry<DIM>& dst_geometry,
++                           const hier::BoxGeometry<DIM>& src_geometry,
++                           const hier::Box<DIM>& dst_patch_box,
++                           const hier::Box<DIM>& src_mask,
++                           const bool overwrite_interior,
++                           const hier::IntVector<DIM>& src_offset,
++                           const int dst_level_num,
++                           const int src_level_num) const;
++
++   /*!
++    * Set the target patch level number for the variable fill pattern.  The
++    * default implementation is empty.
++    */
++   virtual void setTargetPatchLevelNumber(const int level_num);
++
++   /*!
+     * Return the maximum ghost width of the boundary stencil.  The default
+     * implementation throws an error.
+     */
+diff -Naur ./SAMRAI-orig/source/transfer/templates/EmptyTransferX.C ./SAMRAI/source/transfer/templates/EmptyTransferX.C
+--- ./SAMRAI-orig/source/transfer/templates/EmptyTransferX.C	2008-06-05 18:21:40.000000000 -0400
++++ ./SAMRAI/source/transfer/templates/EmptyTransferX.C	2009-06-23 20:22:36.000000000 -0400
+@@ -14,6 +14,12 @@
+ namespace SAMRAI {
+    namespace xfer {
+       template<int DIM> class Empty {
++	 Empty() :
++	    something(0) 
++	 {
++	 }
++
++	 int something;
+       };
+ 
+       template class Empty< NDIM >;

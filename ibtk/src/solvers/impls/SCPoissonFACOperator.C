@@ -34,8 +34,10 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
+#include "fortran_interfaces.h"
+
 #ifndef included_IBTK_config
-#include <IBTK_config.h>
+// #include <IBTK_config.h>
 #define included_IBTK_config
 #endif
 
@@ -63,12 +65,12 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define GS_SMOOTH_FC FC_FUNC(gssmooth2d,GSSMOOTH2D)
-#define RB_GS_SMOOTH_FC FC_FUNC(rbgssmooth2d,RBGSSMOOTH2D)
+#define GS_SMOOTH_FC FC_GLOBAL(gssmooth2d,GSSMOOTH2D)
+#define RB_GS_SMOOTH_FC FC_GLOBAL(rbgssmooth2d,RBGSSMOOTH2D)
 #endif
 #if (NDIM == 3)
-#define GS_SMOOTH_FC FC_FUNC(gssmooth3d,GSSMOOTH3D)
-#define RB_GS_SMOOTH_FC FC_FUNC(rbgssmooth3d,RBGSSMOOTH3D)
+#define GS_SMOOTH_FC FC_GLOBAL(gssmooth3d,GSSMOOTH3D)
+#define RB_GS_SMOOTH_FC FC_GLOBAL(rbgssmooth3d,RBGSSMOOTH3D)
 #endif
 
 // Function interfaces
@@ -1113,8 +1115,8 @@ SCPoissonFACOperator::initializeOperatorState(
                     const Box<NDIM> axis_ghost_box = SideGeometry<NDIM>::toSideBox(ghost_box,axis);
                     const int size = axis_ghost_box.size();
 
-                    ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, size, PETSC_NULL, &e[axis]);  IBTK_CHKERRQ(ierr);
-                    ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, size, PETSC_NULL, &f[axis]);  IBTK_CHKERRQ(ierr);
+                    ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, 1, size, PETSC_NULL, &e[axis]);  IBTK_CHKERRQ(ierr);
+                    ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, 1, size, PETSC_NULL, &f[axis]);  IBTK_CHKERRQ(ierr);
 
                     buildPatchLaplaceOperator(A[axis], d_poisson_spec, patch, axis, d_gcw);
                 }

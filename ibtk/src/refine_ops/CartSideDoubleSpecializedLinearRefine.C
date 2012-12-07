@@ -33,9 +33,10 @@
 #include "CartSideDoubleSpecializedLinearRefine.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
+#include "fortran_interfaces.h"
 
 #ifndef included_IBTK_config
-#include <IBTK_config.h>
+// #include <IBTK_config.h>
 #define included_IBTK_config
 #endif
 
@@ -57,10 +58,10 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define CART_SIDE_SPECIALIZED_LINEAR_REFINE_FC FC_FUNC(cart_side_specialized_linear_refine2d,CART_SIDE_SPECIALIZED_LINEAR_REFINE2D)
+#define CART_SIDE_SPECIALIZED_LINEAR_REFINE_FC FC_GLOBAL(cart_side_specialized_linear_refine2d,CART_SIDE_SPECIALIZED_LINEAR_REFINE2D)
 #endif
 #if (NDIM == 3)
-#define CART_SIDE_SPECIALIZED_LINEAR_REFINE_FC FC_FUNC(cart_side_specialized_linear_refine3d,CART_SIDE_SPECIALIZED_LINEAR_REFINE3D)
+#define CART_SIDE_SPECIALIZED_LINEAR_REFINE_FC FC_GLOBAL(cart_side_specialized_linear_refine3d,CART_SIDE_SPECIALIZED_LINEAR_REFINE3D)
 #endif
 
 // Function interfaces

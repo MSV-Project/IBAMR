@@ -34,8 +34,10 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
+#include "fortran_interfaces.h"
+
 #ifndef included_IBAMR_config
-#include <IBAMR_config.h>
+// #include <IBAMR_config.h>
 #define included_IBAMR_config
 #endif
 
@@ -63,17 +65,17 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define ADVECT_STABLEDT_FC FC_FUNC_(advect_stabledt2d, ADVECT_STABLEDT2D)
-#define NAVIER_STOKES_ADV_SOURCE_FC FC_FUNC_(navier_stokes_adv_source2d, NAVIER_STOKES_ADV_SOURCE2D)
-#define NAVIER_STOKES_CONS_SOURCE_FC FC_FUNC_(navier_stokes_cons_source2d, NAVIER_STOKES_CONS_SOURCE2D)
-#define NAVIER_STOKES_SKEW_SYM_SOURCE_FC FC_FUNC_(navier_stokes_skew_sym_source2d, NAVIER_STOKES_SKEW_SYM_SOURCE2D)
+#define ADVECT_STABLEDT_FC FC_GLOBAL_(advect_stabledt2d, ADVECT_STABLEDT2D)
+#define NAVIER_STOKES_ADV_SOURCE_FC FC_GLOBAL_(navier_stokes_adv_source2d, NAVIER_STOKES_ADV_SOURCE2D)
+#define NAVIER_STOKES_CONS_SOURCE_FC FC_GLOBAL_(navier_stokes_cons_source2d, NAVIER_STOKES_CONS_SOURCE2D)
+#define NAVIER_STOKES_SKEW_SYM_SOURCE_FC FC_GLOBAL_(navier_stokes_skew_sym_source2d, NAVIER_STOKES_SKEW_SYM_SOURCE2D)
 #endif
 
 #if (NDIM == 3)
-#define ADVECT_STABLEDT_FC FC_FUNC_(advect_stabledt3d, ADVECT_STABLEDT3D)
-#define NAVIER_STOKES_ADV_SOURCE_FC FC_FUNC_(navier_stokes_adv_source3d, NAVIER_STOKES_ADV_SOURCE3D)
-#define NAVIER_STOKES_CONS_SOURCE_FC FC_FUNC_(navier_stokes_cons_source3d, NAVIER_STOKES_CONS_SOURCE3D)
-#define NAVIER_STOKES_SKEW_SYM_SOURCE_FC FC_FUNC_(navier_stokes_skew_sym_source3d, NAVIER_STOKES_SKEW_SYM_SOURCE3D)
+#define ADVECT_STABLEDT_FC FC_GLOBAL_(advect_stabledt3d, ADVECT_STABLEDT3D)
+#define NAVIER_STOKES_ADV_SOURCE_FC FC_GLOBAL_(navier_stokes_adv_source3d, NAVIER_STOKES_ADV_SOURCE3D)
+#define NAVIER_STOKES_CONS_SOURCE_FC FC_GLOBAL_(navier_stokes_cons_source3d, NAVIER_STOKES_CONS_SOURCE3D)
+#define NAVIER_STOKES_SKEW_SYM_SOURCE_FC FC_GLOBAL_(navier_stokes_skew_sym_source3d, NAVIER_STOKES_SKEW_SYM_SOURCE3D)
 #endif
 
 extern "C"

@@ -288,7 +288,8 @@ PETScMatUtilities::constructPatchLevelLaplaceOp(
     }
 
     // Create an empty matrix.
-    ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD,
+    // NOTE: rortiz: MatCreateMPIAIJ is replaced with MatCreateAIJ
+    ierr = MatCreateAIJ(PETSC_COMM_WORLD,
                            n_local, n_local,
                            PETSC_DETERMINE, PETSC_DETERMINE,
                            PETSC_DEFAULT, &d_nnz[0],
@@ -494,7 +495,8 @@ PETScMatUtilities::constructPatchLevelLaplaceOp(
     }
 
     // Create an empty matrix.
-    ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD,
+    // NOTE: rortiz: MatCreateMPIAIJ is replaced with MatCreateAIJ
+    ierr = MatCreateAIJ(PETSC_COMM_WORLD,
                            n_local, n_local,
                            PETSC_DETERMINE, PETSC_DETERMINE,
                            PETSC_DEFAULT, &d_nnz[0],
@@ -673,7 +675,8 @@ PETScMatUtilities::constructPatchLevelInterpOp(
     std::vector<int> o_nnz(m_local,static_cast<int>(pow(stencil_sz,NDIM)));
 
     // Create an empty matrix.
-    ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD,
+    // NOTE: rortiz: MatCreateMPIAIJ is replaced with MatCreateAIJ
+    ierr = MatCreateAIJ(PETSC_COMM_WORLD,
                            m_local, n_local,
                            PETSC_DETERMINE, PETSC_DETERMINE,
                            PETSC_DEFAULT, &d_nnz[0],

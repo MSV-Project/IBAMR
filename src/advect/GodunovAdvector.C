@@ -34,8 +34,10 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
+#include "fortran_interfaces.h"
+
 #ifndef included_IBAMR_config
-#include <IBAMR_config.h>
+// #include <IBAMR_config.h>
 #define included_IBAMR_config
 #endif
 
@@ -61,21 +63,21 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define ADVECT_DERIVATIVE_FC FC_FUNC_(advect_derivative2d, ADVECT_DERIVATIVE2D)
-#define ADVECT_FLUX_FC FC_FUNC_(advect_flux2d, ADVECT_FLUX2D)
-#define ADVECT_STABLEDT_FC FC_FUNC_(advect_stabledt2d, ADVECT_STABLEDT2D)
-#define GODUNOV_INCOMPRESSIBILITY_FIX_FC FC_FUNC_(godunov_incompressibility_fix2d, GODUNOV_INCOMPRESSIBILITY_FIX2D)
-#define GODUNOV_PREDICT_FC FC_FUNC_(godunov_predict2d, GODUNOV_PREDICT2D)
-#define GODUNOV_PREDICT_WITH_SOURCE_FC FC_FUNC_(godunov_predict_with_source2d, GODUNOV_PREDICT_WITH_SOURCE2D)
+#define ADVECT_DERIVATIVE_FC FC_GLOBAL_(advect_derivative2d, ADVECT_DERIVATIVE2D)
+#define ADVECT_FLUX_FC FC_GLOBAL_(advect_flux2d, ADVECT_FLUX2D)
+#define ADVECT_STABLEDT_FC FC_GLOBAL_(advect_stabledt2d, ADVECT_STABLEDT2D)
+#define GODUNOV_INCOMPRESSIBILITY_FIX_FC FC_GLOBAL_(godunov_incompressibility_fix2d, GODUNOV_INCOMPRESSIBILITY_FIX2D)
+#define GODUNOV_PREDICT_FC FC_GLOBAL_(godunov_predict2d, GODUNOV_PREDICT2D)
+#define GODUNOV_PREDICT_WITH_SOURCE_FC FC_GLOBAL_(godunov_predict_with_source2d, GODUNOV_PREDICT_WITH_SOURCE2D)
 #endif
 
 #if (NDIM == 3)
-#define ADVECT_DERIVATIVE_FC FC_FUNC_(advect_derivative3d, ADVECT_DERIVATIVE3D)
-#define ADVECT_FLUX_FC FC_FUNC_(advect_flux3d, ADVECT_FLUX3D)
-#define ADVECT_STABLEDT_FC FC_FUNC_(advect_stabledt3d, ADVECT_STABLEDT3D)
-#define GODUNOV_INCOMPRESSIBILITY_FIX_FC FC_FUNC_(godunov_incompressibility_fix3d, GODUNOV_INCOMPRESSIBILITY_FIX3D)
-#define GODUNOV_PREDICT_FC FC_FUNC_(godunov_predict3d, GODUNOV_PREDICT3D)
-#define GODUNOV_PREDICT_WITH_SOURCE_FC FC_FUNC_(godunov_predict_with_source3d, GODUNOV_PREDICT_WITH_SOURCE3D)
+#define ADVECT_DERIVATIVE_FC FC_GLOBAL_(advect_derivative3d, ADVECT_DERIVATIVE3D)
+#define ADVECT_FLUX_FC FC_GLOBAL_(advect_flux3d, ADVECT_FLUX3D)
+#define ADVECT_STABLEDT_FC FC_GLOBAL_(advect_stabledt3d, ADVECT_STABLEDT3D)
+#define GODUNOV_INCOMPRESSIBILITY_FIX_FC FC_GLOBAL_(godunov_incompressibility_fix3d, GODUNOV_INCOMPRESSIBILITY_FIX3D)
+#define GODUNOV_PREDICT_FC FC_GLOBAL_(godunov_predict3d, GODUNOV_PREDICT3D)
+#define GODUNOV_PREDICT_WITH_SOURCE_FC FC_GLOBAL_(godunov_predict_with_source3d, GODUNOV_PREDICT_WITH_SOURCE3D)
 #endif
 
 extern "C"

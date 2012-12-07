@@ -1,0 +1,8 @@
+
+# needs to happen regardless of platform.
+EXECUTE_PROCESS(
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/blitzPatches/blitz.h" "@Blitz_source@/blitz/blitz.h" OUTPUT_QUIET
+  )
+EXECUTE_PROCESS(
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/blitzPatches/Makefile.in" "@Blitz_source@/Makefile.in" OUTPUT_QUIET
+  )

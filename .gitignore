@@ -1,0 +1,10 @@
+*~
+*.kdev*
+!.gitignore
+*.kate-swp
+build*
+bin*
+*.nfs*
+*.svn
+.directory
+

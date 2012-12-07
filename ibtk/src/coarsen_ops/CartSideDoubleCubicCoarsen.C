@@ -35,9 +35,11 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 #ifndef included_IBTK_config
-#include <IBTK_config.h>
+// #include <IBTK_config.h>
 #define included_IBTK_config
 #endif
+
+#include "fortran_interfaces.h"
 
 #ifndef included_SAMRAI_config
 #include <SAMRAI_config.h>
@@ -56,10 +58,10 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define SC_CUBIC_COARSEN_FC FC_FUNC(sccubiccoarsen2d,SCCUBICCOARSEN2D)
+#define SC_CUBIC_COARSEN_FC FC_GLOBAL(sccubiccoarsen2d,SCCUBICCOARSEN2D)
 #endif
 #if (NDIM == 3)
-#define SC_CUBIC_COARSEN_FC FC_FUNC(sccubiccoarsen3d,SCCUBICCOARSEN3D)
+#define SC_CUBIC_COARSEN_FC FC_GLOBAL(sccubiccoarsen3d,SCCUBICCOARSEN3D)
 #endif
 
 // Function interfaces

@@ -34,8 +34,10 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
+#include "fortran_interfaces.h"
+
 #ifndef included_IBTK_config
-#include <IBTK_config.h>
+// #include <IBTK_config.h>
 #define included_IBTK_config
 #endif
 
@@ -60,10 +62,10 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define CC_LINEAR_NORMAL_INTERPOLATION_FC FC_FUNC(cclinearnormalinterpolation2d,CCLINEARNORMALINTERPOLATION2D)
+#define CC_LINEAR_NORMAL_INTERPOLATION_FC FC_GLOBAL(cclinearnormalinterpolation2d,CCLINEARNORMALINTERPOLATION2D)
 #endif
 #if (NDIM == 3)
-#define CC_LINEAR_NORMAL_INTERPOLATION_FC FC_FUNC(cclinearnormalinterpolation3d,CCLINEARNORMALINTERPOLATION3D)
+#define CC_LINEAR_NORMAL_INTERPOLATION_FC FC_GLOBAL(cclinearnormalinterpolation3d,CCLINEARNORMALINTERPOLATION3D)
 #endif
 
 // Function interfaces
