@@ -23,7 +23,7 @@ endif()
 option(IBAMR_BUILD_2D_LIBRARY "Build the optional 2D libraries." OFF)
 
 # --------------------------------------------------------------------------
-# Single or multiple (default) library build (needs CMake 2.8.8)
+# Single or multiple (default) library build (needs CMake >= 2.8.8)
 # -------------------------------------------------------------------------- 
 option(IBAMR_BUILD_SINGLE_LIBRARY "Build IBAMR single library" OFF)
 
@@ -31,16 +31,19 @@ option(IBAMR_BUILD_SINGLE_LIBRARY "Build IBAMR single library" OFF)
 # IBAMR requires IBTK
 # -----------------------------------------------------------------------------
 if(IBAMR_BUILD_2D_LIBRARY)
-  set(IBTK_BUILD_2D_LIBRARY ON CACHE BOOL "Build the 2D version of the library." FORCE)
+  set(IBTK_BUILD_2D_LIBRARY ON CACHE BOOL "Build the 2D version of the library."
+  FORCE)
 endif()
 
 if(IBAMR_BUILD_SINGLE_LIBRARY)
-  set(IBTK_BUILD_SINGLE_LIBRARY ON CACHE INTERNAL "Build IBTK single library" FORCE)
+  set(IBTK_BUILD_SINGLE_LIBRARY ON CACHE INTERNAL "Build IBTK single library"
+  FORCE)
 endif(IBAMR_BUILD_SINGLE_LIBRARY) 
 
+# -----------------------------------------------------------------------------
 # In-tree IBTK build.  
-# If IBTK is built out of tree then use its use and configuration 
-# files.
+# If IBTK is built out of tree then use its use and configuration files.
+# -----------------------------------------------------------------------------
 add_subdirectory(ibtk)
 
 if(IBTK_SUPERBUILD)

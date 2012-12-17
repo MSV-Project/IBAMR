@@ -15,11 +15,14 @@
 #  limitations under the License.
 #
 ###########################################################################
-
 #
 # HYPRE
 #
-
+set(HYPRE_REGISTER
+"**************************************************************************\n"
+"-- Please register to use HYPRE at:\n"
+"--  https://computation.llnl.gov/casc/hypre/download/hypre-2.8.0b_reg.html\n"
+"-- **************************************************************************")
 # Make sure this file is included only once
 get_filename_component(CMAKE_CURRENT_LIST_FILENAME ${CMAKE_CURRENT_LIST_FILE} NAME_WE)
 if(${CMAKE_CURRENT_LIST_FILENAME}_FILE_INCLUDED)
@@ -39,7 +42,7 @@ CheckExternalProjectDependency(HYPRE)
 set(proj HYPRE)
 
 if(NOT DEFINED HYPRE_DIR)
-
+  message(STATUS ${HYPRE_REGISTER})
   # Set CMake OSX variable to pass down the external project
   set(CMAKE_OSX_EXTERNAL_PROJECT_ARGS)
   if(APPLE)

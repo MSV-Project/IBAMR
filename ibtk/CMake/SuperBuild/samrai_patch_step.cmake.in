@@ -40,3 +40,7 @@ EXECUTE_PROCESS(
 EXECUTE_PROCESS(
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/samraiPatches/SideVariable.C" "@Samrai_source@/source/patchdata/side/SideVariable.C"
   )
+
+EXECUTE_PROCESS(
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "@IBTKSuperBuild_CMAKE_SOURCE_DIR@/samraiPatches/BoundaryLookupTable.C" "@Samrai_source@/source/hierarchy/patches/BoundaryLookupTable.C"
+  )
