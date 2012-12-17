@@ -38,11 +38,11 @@ endif()
 set(HYPRE_DEPENDENCIES "OPENMPI;LAPACK")
 
 # Include dependent projects if any
+message(STATUS ${HYPRE_REGISTER})
 CheckExternalProjectDependency(HYPRE)
 set(proj HYPRE)
 
 if(NOT DEFINED HYPRE_DIR)
-  message(STATUS ${HYPRE_REGISTER})
   # Set CMake OSX variable to pass down the external project
   set(CMAKE_OSX_EXTERNAL_PROJECT_ARGS)
   if(APPLE)

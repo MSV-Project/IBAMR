@@ -64,11 +64,11 @@ endif()
 set(SAMRAI_DEPENDENCIES "SILO;OPENMPI;HDF5")
 
 # Include dependent projects if any
+message(STATUS ${SAMRAI_REGISTER})
 CheckExternalProjectDependency(SAMRAI)
 set(proj SAMRAI)
 
 if(NOT DEFINED SAMRAI_DIR)
-  message(STATUS ${SAMRAI_REGISTER})
   # Set CMake OSX variable to pass down the external project
   set(CMAKE_OSX_EXTERNAL_PROJECT_ARGS)
   if(APPLE)
