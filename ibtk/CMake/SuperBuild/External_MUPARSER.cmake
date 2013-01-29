@@ -64,6 +64,7 @@ if(NOT DEFINED MUPARSER_DIR)
     URL_MD5 ${MUPARSER_MD5}
     UPDATE_COMMAND ""
     INSTALL_COMMAND make install
+    BUILD_COMMAND make lib
     CONFIGURE_COMMAND ${IBTK_BINARY_DIR}/SuperBuild/${proj}/configure
       "CFLAGS=${ep_common_c_flags}"
       "CXXFLAGS=${ep_common_cxx_flags}"
