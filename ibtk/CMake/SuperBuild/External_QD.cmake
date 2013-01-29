@@ -86,8 +86,6 @@ list(APPEND IBTK_SUPERBUILD_EP_ARGS -DQD_DIR:PATH=${ep_install_dir})
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DQD_INCLUDE_PATH:PATH=${ep_install_dir}/include)
 list(APPEND IBTK_SUPERBUILD_EP_ARGS -DCMAKE_Fortran_MODULE_DIRECTORY:PATH=${IBTK_BINARY_DIR}/SuperBuild/${proj}-build/fortran)
 
-    
-
 list(APPEND INCLUDE_PATHS ${ep_install_dir}/include)
 list(APPEND LIBRARY_PATHS ${ep_install_dir}/lib)
 list(INSERT EXTERNAL_LIBRARIES 0 -lqdmod -lqd)
