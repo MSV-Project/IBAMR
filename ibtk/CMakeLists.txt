@@ -229,7 +229,7 @@ endif()
 set(MPI_LIBS ${MPI_CXX_LIBRARIES})
 list(APPEND IBTK_INCLUDE_PATH ${MPI_CXX_INCLUDE_PATH})
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_CXX_LINK_FLAGS}")
-list(APPEND IBTK_EXTERNAL_LIBRARIES
+list(INSERT IBTK_EXTERNAL_LIBRARIES 0
   ${MPI_CXX_LIBRARIES}
   ${MPI_Fortran_LIBRARIES}
   ${MPI_C_LIBRARIES} -lopen-rte -lopen-pal
@@ -245,7 +245,7 @@ endif()
 set(HDF5_LIBS hdf5 hdf5_hl)
 list(APPEND IBTK_INCLUDE_PATH ${HDF5_INCLUDE_PATH})
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${HDF_DIR}/lib")
-list(APPEND IBTK_EXTERNAL_LIBRARIES
+list(INSERT IBTK_EXTERNAL_LIBRARIES 0
   ${HDF5_LIBS} 
   )
 
@@ -258,7 +258,7 @@ if(NOT LAPACK_DIR)
 endif()  
 set(LAPACK_LIBS -lgfortran -llapack -lblas)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${LAPACK_DIR}/lib")
-list(APPEND IBTK_EXTERNAL_LIBRARIES
+list(INSERT IBTK_EXTERNAL_LIBRARIES 0
   ${LAPACK_LIBS}
   )
 
@@ -274,8 +274,26 @@ set(PETSC_LIBS -lpetsc -lX11)
 list(APPEND IBTK_INCLUDE_PATH ${PETSC_INCLUDE_PATH} ${PETSC_DIR}/${PETSC_ARCH}/include)
 set(CMAKE_EXE_LINKER_FLAGS 
   "${CMAKE_EXE_LINKER_FLAGS} -L${PETSC_DIR}/${PETSC_ARCH}/lib -Wl,-rpath,${PETSC_DIR}/${PETSC_ARCH}/lib ")
-list(APPEND IBTK_EXTERNAL_LIBRARIES
+list(INSERT IBTK_EXTERNAL_LIBRARIES 0
   ${PETSC_LIBS} 
+  )
+
+# -----------------------------------------------------------------------------
+# Build with SILO support (default: YES)
+# -----------------------------------------------------------------------------
+option(WITH_SILO "Build with SILO support." ON)
+if(WITH_SILO)
+  set(SILO_DIR CACHE PATH "SILO installation directory.")
+  if(NOT SILO_DIR)
+    message(FATAL_ERROR "Must specify SILO_DIR.")
+  endif()
+  add_definitions(-DHAVE_LIBSILO)
+  set(SILO_LIBS -lsilo)
+endif()
+list(APPEND IBTK_INCLUDE_PATH ${SILO_INCLUDE_PATH})
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${SILO_DIR}/lib")
+list(INSERT IBTK_EXTERNAL_LIBRARIES 0
+  ${SILO_LIBS}
   )
 
 # -----------------------------------------------------------------------------
@@ -290,7 +308,7 @@ set(SAMRAI_LIBS
     )
 list(APPEND IBTK_INCLUDE_PATH ${SAMRAI_INCLUDE_PATH})
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${SAMRAI_DIR}/lib")
-list(APPEND IBTK_EXTERNAL_LIBRARIES
+list(INSERT IBTK_EXTERNAL_LIBRARIES 0
   ${SAMRAI_LIBS}
   )
 
@@ -304,7 +322,7 @@ endif()
 set(HYPRE_LIBS -lHYPRE)
 list(APPEND IBTK_INCLUDE_PATH ${HYPRE_INCLUDE_PATH})
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${HYPRE_DIR}/lib")
-list(APPEND IBTK_EXTERNAL_LIBRARIES
+list(INSERT IBTK_EXTERNAL_LIBRARIES 0
   ${HYPRE_LIBS} 
   )
 
@@ -318,27 +336,10 @@ endif()
 set(BLITZ_LIBS -lblitz)
 list(APPEND IBTK_INCLUDE_PATH ${BLITZ_INCLUDE_PATH})
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${BLITZ_DIR}/lib")
-list(APPEND IBTK_EXTERNAL_LIBRARIES
+list(INSERT IBTK_EXTERNAL_LIBRARIES 0
   ${BLITZ_LIBS} 
   )
 
-# -----------------------------------------------------------------------------
-# Build with SILO support (default: YES)
-# -----------------------------------------------------------------------------
-option(WITH_SILO "Build with SILO support." ON)
-if(WITH_SILO)
-  set(SILO_DIR CACHE PATH "SILO installation directory.")
-  if(NOT SILO_DIR)
-    message(FATAL_ERROR "Must specify SILO_DIR.")
-  endif()
-  add_definitions(-DHAVE_LIBSILO)
-  set(SILO_LIBS -lsilo)
-endif()  
-list(APPEND IBTK_INCLUDE_PATH ${SILO_INCLUDE_PATH})
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${SILO_DIR}/lib")
-list(APPEND IBTK_EXTERNAL_LIBRARIES
-  ${SILO_LIBS} 
-  )
   
 # --------------------------------------------------------------------------
 # Find qd library
@@ -350,7 +351,7 @@ endif()
 set(QD_LIBS -lqdmod -lqd)
 list(APPEND IBTK_INCLUDE_PATH ${QD_INCLUDE_PATH})
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${QD_DIR}/lib")
-list(APPEND IBTK_EXTERNAL_LIBRARIES
+list(INSERT IBTK_EXTERNAL_LIBRARIES 0
   ${QD_LIBS} 
   )
 
@@ -364,7 +365,7 @@ endif()
 set(MUPARSER_LIBS -lmuparser)
 list(APPEND IBTK_INCLUDE_PATH ${MUPARSER_INCLUDE_PATH})
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${MUPARSER_DIR}/lib")
-list(APPEND IBTK_EXTERNAL_LIBRARIES
+list(INSERT IBTK_EXTERNAL_LIBRARIES 0
   ${MUPARSER_LIBS} 
   )
 
@@ -418,8 +419,7 @@ endif()
 # Set library sub-directories
 # Order of project directory matters. Project should be topologically ordered
 # -----------------------------------------------------------------------------
-set(dirs)  
-list(APPEND dirs
+set(dirs
   fortran
   patch_data
   refine_ops
@@ -427,8 +427,8 @@ list(APPEND dirs
   math
   boundary
   coarsen_ops
-  utilities
   lagrangian
+  utilities
   )
 
 # -----------------------------------------------------------------------------
@@ -437,9 +437,13 @@ list(APPEND dirs
 foreach(dir ${dirs})
   message(STATUS "Configuring sub-library: ${dir}")
   add_subdirectory(src/${dir})
-  list(APPEND IBTK_LIBRARIES3D ibtk${dir}3D)
+  list(INSERT IBTK_LIBRARIES3D 0
+    ibtk${dir}3D
+    )
   if(IBTK_BUILD_2D_LIBRARY)
-    list(APPEND IBTK_LIBRARIES2D ibtk${dir}2D)
+    list(INSERT IBTK_LIBRARIES2D 0
+      ibtk${dir}2D
+      )
   endif()
 endforeach()
 
