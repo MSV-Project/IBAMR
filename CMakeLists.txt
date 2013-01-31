@@ -52,29 +52,29 @@ if(IBTK_SUPERBUILD)
 endif()  
 
 if(NOT IBAMR_BUILD_SINGLE_LIBRARY)
-  set(IBTK_LIBRARIES3D   
-    ibtkfortran3D 
-    ibtkpatch_data3D 
-    ibtkrefine_ops3D 
-    ibtksolvers3D 
-    ibtkmath3D 
-    ibtkboundary3D
-    ibtkcoarsen_ops3D
+  set(IBTK_LIBRARIES3D
     ibtkutilities3D
     ibtklagrangian3D
+    ibtkcoarsen_ops3D
+    ibtkboundary3D
+    ibtkmath3D
+    ibtksolvers3D
+    ibtkrefine_ops3D
+    ibtkpatch_data3D
+    ibtkfortran3D
     )
     
   if(IBAMR_BUILD_2D_LIBRARY)
-    set(IBTK_LIBRARIES2D 
-      ibtkfortran2D 
-      ibtkpatch_data2D 
-      ibtkrefine_ops2D 
-      ibtksolvers2D 
-      ibtkmath2D 
-      ibtkboundary2D
-      ibtkcoarsen_ops2D
+    set(IBTK_LIBRARIES2D
       ibtkutilities2D
       ibtklagrangian2D
+      ibtkcoarsen_ops2D
+      ibtkboundary2D
+      ibtkmath2D
+      ibtksolvers2D
+      ibtkrefine_ops2D
+      ibtkpatch_data2D
+      ibtkfortran2D
       )
   endif()
 else()
@@ -336,10 +336,10 @@ set(dirs
   )
 
 list(APPEND dirs 
-    IB 
     adv_diff
     advect
     fortran 
+    IB
     navier_stokes
 #     solid_mechanics
 #     tools
@@ -355,9 +355,11 @@ endif()
 foreach(dir ${dirs})
   message(STATUS "Configuring sub-library: ${dir}")
   add_subdirectory(src/${dir})
-  list(APPEND IBAMR_LIBRARIES3D ibamr${dir}3D)
+  list(INSERT IBAMR_LIBRARIES3D 0
+    ibamr${dir}3D)
   if(IBAMR_BUILD_2D_LIBRARY)
-    list(APPEND IBAMR_LIBRARIES2D ibamr${dir}2D)
+    list(INSERT IBAMR_LIBRARIES2D 0
+      ibamr${dir}2D)
   endif()
 endforeach()    
 
@@ -420,20 +422,20 @@ configure_file(
 # --------------------------------------------------------------------------
 # Append necessary libs to compile apps
 # --------------------------------------------------------------------------
-list(APPEND IBAMR_LIBRARIES3D 
+foreach(lib ${IBTK_LIBRARIES3D})  
+  list(APPEND IBAMR_LIBRARIES3D -l${lib})
+endforeach()
+list(APPEND IBAMR_LIBRARIES3D
   ${IBTK_EXTERNAL_LIBRARIES}
   )
-foreach(lib ${IBTK_LIBRARIES3D})  
-  list(INSERT IBAMR_LIBRARIES3D 0 -l${lib})
-endforeach()
 
 if(IBAMR_BUILD_2D_LIBRARY)
+  foreach(lib ${IBTK_LIBRARIES2D})
+    list(APPEND IBAMR_LIBRARIES2D -l${lib})
+  endforeach()
   list(APPEND IBAMR_LIBRARIES2D 
     ${IBTK_EXTERNAL_LIBRARIES}
     )
-  foreach(lib ${IBTK_LIBRARIES2D})  
-    list(INSERT IBAMR_LIBRARIES2D 0 -l${lib})
-  endforeach()
 endif()
 
 
