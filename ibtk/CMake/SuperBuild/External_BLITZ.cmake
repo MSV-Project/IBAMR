@@ -69,10 +69,10 @@ if(NOT DEFINED BLITZ_DIR)
 
   ExternalProject_Add(${proj}
     SOURCE_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
-    BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}-build
+    BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild/${proj}
     PREFIX ${proj}${ep_suffix}
-    URL ${BLITZ_URL}/${BLITZ_GZ}
-    URL_MD5 ${BLITZ_MD5}
+    HG_REPOSITORY ${BLITZ_HG_URL}
+    HG_TAG ${BLITZ_HG_TAG}
     UPDATE_COMMAND ""
     INSTALL_COMMAND make install
     PATCH_COMMAND ${Blitz_PATCH_COMMAND}

@@ -49,7 +49,7 @@ add_subdirectory(ibtk)
 if(IBTK_SUPERBUILD)
   set(IBTK_SUPERBUILD_BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild)
   set(SAMRAI_FORTDIR ${IBTK_SUPERBUILD_BINARY_DIR}/include/samrai)
-endif()  
+endif()
 
 if(NOT IBAMR_BUILD_SINGLE_LIBRARY)
   set(IBTK_LIBRARIES3D
