@@ -46,7 +46,6 @@ set(kit_SRCS2D
 #
 include(${IBTK_MODULE_PATH}/KitCommonBlock.cmake)  
 
-
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
   

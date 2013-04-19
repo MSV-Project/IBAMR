@@ -1,18 +1,18 @@
 set(KIT adv_diff)
 
-set(kit_SRCS 
+set(kit_SRCS
   AdvDiffHypPatchOps.C
   AdvDiffHierarchyIntegrator.C
   )
-    
+
 add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f fortran/adv_diff_consdiff3d.f.m4)
-set(kit_SRCS3D 
+set(kit_SRCS3D
   ${kit_SRCS}
   ${FORTRAN_SRCS3D}
   )
 
 add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f fortran/adv_diff_consdiff2d.f.m4)
-set(kit_SRCS2D 
+set(kit_SRCS2D
   ${kit_SRCS}
   ${FORTRAN_SRCS2D}
   )
@@ -20,10 +20,10 @@ set(kit_SRCS2D
 #
 # Include the common target module
 #
-include(KitCommonBlock)  
+include(KitCommonBlock)
 
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
-  
+
   )

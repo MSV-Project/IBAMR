@@ -18,8 +18,8 @@ endif()
 # Set export file location
 # -----------------------------------------------------------------------------
 if(NOT DEFINED IBTK_TARGETS_FILE)
-  set(IBTK_TARGETS_FILE 
-    ${CMAKE_CURRENT_BINARY_DIR}/IBTKTargets.cmake 
+  set(IBTK_TARGETS_FILE
+    ${CMAKE_CURRENT_BINARY_DIR}/IBTKTargets.cmake
     CACHE INTERNAL "IBTK library export file.")
 endif()
 
@@ -28,37 +28,14 @@ endif()
 # -----------------------------------------------------------------------------
 if(NOT DEFINED IBTK_BUILD_2D_LIBRARY)
   option(IBTK_BUILD_2D_LIBRARY "Build the optional 2D libraries." OFF)
-endif()  
+endif()
 
 # --------------------------------------------------------------------------
 # Single or multiple (default) library build (needs CMake 2.8.8)
-# -------------------------------------------------------------------------- 
+# --------------------------------------------------------------------------
 if(NOT DEFINED IBTK_BUILD_SINGLE_LIBRARY)
   option(IBTK_BUILD_SINGLE_LIBRARY "Build single library" OFF)
-endif()  
-
-#----------------------------------------------------------------------------
-# Set include dirs variable
-# ---------------------------------------------------------------------------
-set(IBTK_INCLUDE_PATH ${PROJECT_SOURCE_DIR}/include 
-    ${IBTK_BINARY_DIR}/include
-    CACHE INTERNAL "IBTK include paths.") 
-
-# ---------------------------------------------------------------------------
-# Set library names 
-# ---------------------------------------------------------------------------
-set(IBTK_EXTERNAL_LIBRARIES CACHE INTERNAL "IBTK external libraries.")
-set(IBTK_LIBRARIES3D CACHE INTERNAL "IBTK 3D library.")
-if(IBTK_BUILD_2D_LIBRARY)
-  set(IBTK_LIBRARIES2D CACHE INTERNAL "IBTK 2D library.")
 endif()
-
-#----------------------------------------------------------------------------
-# Superbuild Option - Enabled by default
-# ---------------------------------------------------------------------------
-option(IBTK_SUPERBUILD 
-  "Build IBTK and the projects it depends on via SuperBuild.cmake." ON)
-mark_as_advanced(IBTK_SUPERBUILD)
 
 #----------------------------------------------------------------------------
 # Output directories.
@@ -67,8 +44,8 @@ foreach(type LIBRARY ARCHIVE RUNTIME)
   # Make sure the directory exists
   if(DEFINED IBTK_CMAKE_${type}_OUTPUT_DIRECTORY
      AND NOT EXISTS ${IBTK_CMAKE_${type}_OUTPUT_DIRECTORY})
-    message(FATAL_ERROR 
-      "IBTK_CMAKE_${type}_OUTPUT_DIRECTORY is set to a non-existing 
+    message(FATAL_ERROR
+      "IBTK_CMAKE_${type}_OUTPUT_DIRECTORY is set to a non-existing
       directory [${IBTK_CMAKE_${type}_OUTPUT_DIRECTORY}]")
   endif()
 
@@ -84,7 +61,7 @@ foreach(type LIBRARY ARCHIVE RUNTIME)
       set(output_dir ${IBTK_CMAKE_${type}_OUTPUT_DIRECTORY})
     endif()
   endif()
-  set(CMAKE_${type}_OUTPUT_DIRECTORY ${output_dir} CACHE INTERNAL 
+  set(CMAKE_${type}_OUTPUT_DIRECTORY ${output_dir} CACHE INTERNAL
     "Single output directory for building all libraries.")
 endforeach()
 
@@ -95,11 +72,11 @@ if(NOT IBTK_INSTALL_BIN_DIR)
   set(IBTK_INSTALL_BIN_DIR "bin")
 endif()
 if(NOT IBTK_INSTALL_LIB_DIR)
-  set(IBTK_INSTALL_LIB_DIR 
+  set(IBTK_INSTALL_LIB_DIR
     "lib/IBTK-${IBTK_MAJOR_VERSION}.${IBTK_MINOR_VERSION}")
 endif()
 if(NOT IBTK_INSTALL_INCLUDE_DIR)
-  set(IBTK_INSTALL_INCLUDE_DIR 
+  set(IBTK_INSTALL_INCLUDE_DIR
     "include/IBTK-${IBTK_MAJOR_VERSION}.${IBTK_MINOR_VERSION}")
 endif()
 if(NOT IBTK_INSTALL_DOC_DIR)
@@ -114,15 +91,8 @@ set(IBTK_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 #------------------------------------------------------------------------------
 # Update CMake module path
 #------------------------------------------------------------------------------
-set(CMAKE_MODULE_PATH 
-  ${IBTK_MODULE_PATH} 
-  ${IBTK_MODULE_PATH}/SuperBuild
-  ${CMAKE_MODULE_PATH})
-  
-# ----------------------------------------------------------------------------
-# We need the m4 macro preprocessor and helper macros
-# ----------------------------------------------------------------------------
-include(${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindM4.cmake)
+set(CMAKE_MODULE_PATH
+  ${IBTK_MODULE_PATH} ${CMAKE_MODULE_PATH})
 
 # ----------------------------------------------------------------------------
 # IBTK version number.  An even minor number corresponds to releases.
@@ -144,7 +114,7 @@ if(NOT IBTK_NO_LIBRARY_VERSION)
 endif()
 
 #-----------------------------------------------------------------------------
-# Attempt to discover Doxygen so that DOXYGEN_EXECUTABLE is set to an 
+# Attempt to discover Doxygen so that DOXYGEN_EXECUTABLE is set to an
 # appropriate default value
 #
 find_package(Doxygen QUIET)
@@ -180,44 +150,25 @@ endif()
 
 if(MSVC)
   set(msvc_suppressed_warnings
-    "/wd4290" # C++ exception specification ignored except to indicate 
+    "/wd4290" # C++ exception specification ignored except to indicate
 	      # a function is not __declspec(nothrow)
   )
   set(IBTK_CXX_FLAGS "${IBTK_CXX_FLAGS} ${msvc_suppressed_warnings}")
 endif()
 
 add_definitions(
-  -D_CRT_NONSTDC_NO_DEPRECATE 
-  -D_CRT_SECURE_NO_WARNINGS 
-  -D_CRT_SECURE_NO_DEPRECATE 
+  -D_CRT_NONSTDC_NO_DEPRECATE
+  -D_CRT_SECURE_NO_WARNINGS
+  -D_CRT_SECURE_NO_DEPRECATE
   -DOMPI_SKIP_MPICXX
   )
-  
+
 # Let's mark as advanced some default properties
 mark_as_advanced(CMAKE_INSTALL_PREFIX)
 mark_as_advanced(DART_TESTING_TIMEOUT)
 
-#
-set(IBTK_SUPERBUILD_BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild CACHE INTERNAL 
-  "")
-
-#-----------------------------------------------------------------------------
-# Superbuild script
-# -----------------------------------------------------------------------------
-if(IBTK_SUPERBUILD)
-  add_subdirectory("${IBTK_MODULE_PATH}/SuperBuild")
-  return()
-endif()
-
-# -----------------------------------------------------------------------------
-# Detect the API by which C and Fortran languages interact.
-# Creates the header file fortran_interfaces.h containing macro definitions
-# -----------------------------------------------------------------------------
-include(FortranCInterface)
-FortranCInterface_VERIFY(CXX QUIET)
-FortranCInterface_HEADER(${IBTK_INCLUDE_BINARY_PATH}/fortran_interfaces.h MACRO_NAMESPACE "FC_")
-
-list(APPEND IBTK_INCLUDE_PATH ${IBTK_INCLUDE_BINARY_PATH})
+set(IBTK_EXTERNAL_INCLUDE_PATHS)
+set(IBTK_EXE_EXTERNAL_LINKER_FLAGS)
 
 # -----------------------------------------------------------------------------
 # FindMPI
@@ -226,56 +177,66 @@ find_package(MPI)
 if(NOT MPI_CXX_FOUND OR NOT MPI_Fortran_FOUND OR NOT MPI_C_FOUND)
   message(FATAL_ERROR "MPI not found.")
 endif()
-set(MPI_LIBS ${MPI_CXX_LIBRARIES})
-list(APPEND IBTK_INCLUDE_PATH ${MPI_CXX_INCLUDE_PATH})
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_CXX_LINK_FLAGS}")
-list(INSERT IBTK_EXTERNAL_LIBRARIES 0
+
+list(APPEND IBTK_EXTERNAL_INCLUDE_PATHS ${MPI_CXX_INCLUDE_PATH})
+set(IBTK_EXE_EXTERNAL_LINKER_FLAGS "${IBTK_EXE_EXTERNAL_LINKER_FLAGS} ${MPI_CXX_LINK_FLAGS}")
+list(INSERT IBTK_EXTERNAL_LIBS 0
+  -pthread
   ${MPI_CXX_LIBRARIES}
   ${MPI_Fortran_LIBRARIES}
-  ${MPI_C_LIBRARIES} -lopen-rte -lopen-pal
+  ${MPI_C_LIBRARIES}
   )
 
 # -----------------------------------------------------------------------------
-# Find HDF5
+# FindHDF5
 # -----------------------------------------------------------------------------
-find_package(HDF5)
+find_package(HDF5 CONFIG )
 if(NOT HDF5_FOUND)
   message(FATAL_ERROR "Must specify HDF5 installation directory.")
-endif()  
-set(HDF5_LIBS hdf5 hdf5_hl)
-list(APPEND IBTK_INCLUDE_PATH ${HDF5_INCLUDE_PATH})
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${HDF_DIR}/lib")
-list(INSERT IBTK_EXTERNAL_LIBRARIES 0
-  ${HDF5_LIBS} 
+endif()
+list(APPEND IBTK_EXTERNAL_INCLUDE_PATHS ${HDF5_INCLUDE_PATH} ${HDF5_INCLUDE_DIR_HL})
+list(INSERT IBTK_EXTERNAL_LIBS 0
+  ${HDF5_LIBRARIES}
   )
 
 # -----------------------------------------------------------------------------
-# Find LAPACK
+# FindLAPACK
 # -----------------------------------------------------------------------------
-set(LAPACK_DIR CACHE PATH "LAPACK installation directory.")
-if(NOT LAPACK_DIR)
+find_package(LAPACK)
+if(NOT LAPACK_FOUND)
   message(FATAL_ERROR "Must specify LAPACK installation directory.")
-endif()  
-set(LAPACK_LIBS -lgfortran -llapack -lblas)
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${LAPACK_DIR}/lib")
-list(INSERT IBTK_EXTERNAL_LIBRARIES 0
-  ${LAPACK_LIBS}
+endif()
+
+set(IBTK_EXE_EXTERNAL_LINKER_FLAGS "${IBTK_EXE_EXTERNAL_LINKER_FLAGS} ${LAPACK_LINKER_FLAGS}")
+list(INSERT IBTK_EXTERNAL_LIBS 0
+  -lgfortran
+  ${LAPACK_LIBRARIES}
   )
 
 # -----------------------------------------------------------------------------
-# Find PETSc 
+# Find HYPRE
 # -----------------------------------------------------------------------------
-set(PETSC_DIR CACHE PATH "Petsc installation directory.")
-set(PETSC_ARCH CACHE STRING "Petsc architecture.")
-if(NOT PETSC_DIR)
-  message(FATAL_ERROR "Must specify PETSC_DIR and PETSC_ARCH(If not sys lib).")
-endif()  
-set(PETSC_LIBS -lpetsc -lX11)
-list(APPEND IBTK_INCLUDE_PATH ${PETSC_INCLUDE_PATH} ${PETSC_DIR}/${PETSC_ARCH}/include)
-set(CMAKE_EXE_LINKER_FLAGS 
-  "${CMAKE_EXE_LINKER_FLAGS} -L${PETSC_DIR}/${PETSC_ARCH}/lib -Wl,-rpath,${PETSC_DIR}/${PETSC_ARCH}/lib ")
-list(INSERT IBTK_EXTERNAL_LIBRARIES 0
-  ${PETSC_LIBS} 
+find_package(HYPRE)
+if(NOT HYPRE_FOUND)
+  message(FATAL_ERROR "Must specify HYPRE installation directory.")
+endif()
+list(APPEND IBTK_EXTERNAL_INCLUDE_PATHS ${HYPRE_INCLUDE_PATH})
+set(IBTK_EXE_EXTERNAL_LINKER_FLAGS "${IBTK_EXE_EXTERNAL_LINKER_FLAGS} ${HYPRE_COMPILE_FLAGS}")
+list(INSERT IBTK_EXTERNAL_LIBS 0
+  ${HYPRE_LIBRARIES}
+  )
+
+# -----------------------------------------------------------------------------
+# Find PETSc
+# -----------------------------------------------------------------------------
+find_package(PETSC)
+if(NOT PETSC_FOUND)
+  message(FATAL_ERROR "Must specify PETSC installation directory.")
+endif()
+list(APPEND IBTK_EXTERNAL_INCLUDE_PATHS ${PETSC_INCLUDE_PATH})
+set(IBTK_EXE_EXTERNAL_LINKER_FLAGS "${IBTK_EXE_EXTERNAL_LINKER_FLAGS} ${PETSC_LINK_FLAGS}")
+list(INSERT IBTK_EXTERNAL_LIBS 0
+  ${PETSC_LIBRARIES}
   )
 
 # -----------------------------------------------------------------------------
@@ -283,177 +244,153 @@ list(INSERT IBTK_EXTERNAL_LIBRARIES 0
 # -----------------------------------------------------------------------------
 option(WITH_SILO "Build with SILO support." ON)
 if(WITH_SILO)
-  set(SILO_DIR CACHE PATH "SILO installation directory.")
-  if(NOT SILO_DIR)
-    message(FATAL_ERROR "Must specify SILO_DIR.")
+  find_package(Silo)
+  if(NOT SILO_FOUND)
+    message(FATAL_ERROR "Must specify SILO_DIR..")
   endif()
   add_definitions(-DHAVE_LIBSILO)
-  set(SILO_LIBS -lsilo)
 endif()
-list(APPEND IBTK_INCLUDE_PATH ${SILO_INCLUDE_PATH})
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${SILO_DIR}/lib")
-list(INSERT IBTK_EXTERNAL_LIBRARIES 0
-  ${SILO_LIBS}
+
+list(APPEND IBTK_EXTERNAL_INCLUDE_PATHS ${SILO_INCLUDE_PATH})
+set(IBTK_EXE_EXTERNAL_LINKER_FLAGS "${IBTK_EXE_EXTERNAL_LINKER_FLAGS} ${SILO_COMPILE_FLAGS}")
+list(INSERT IBTK_EXTERNAL_LIBS 0
+  ${SILO_LIBRARIES}
   )
 
 # -----------------------------------------------------------------------------
 # Find SAMRAI
 # -----------------------------------------------------------------------------
-set(SAMRAI_DIR CACHE PATH "SAMRAI installation directory.")
-if(NOT SAMRAI_DIR)
+find_package(SAMRAI)
+if(NOT SAMRAI_FOUND)
   message(FATAL_ERROR "Must specify SAMRAI installation directory.")
-endif()  
-set(SAMRAI_LIBS
-    -lSAMRAI
-    )
-list(APPEND IBTK_INCLUDE_PATH ${SAMRAI_INCLUDE_PATH})
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${SAMRAI_DIR}/lib")
-list(INSERT IBTK_EXTERNAL_LIBRARIES 0
-  ${SAMRAI_LIBS}
-  )
-
-# -----------------------------------------------------------------------------
-# Find HYPRE
-# -----------------------------------------------------------------------------
-set(HYPRE_DIR CACHE PATH "HYPRE installation directory.")
-if(NOT HYPRE_DIR)
-  message(FATAL_ERROR "Must specify HYPRE installation directory.")
-endif()  
-set(HYPRE_LIBS -lHYPRE)
-list(APPEND IBTK_INCLUDE_PATH ${HYPRE_INCLUDE_PATH})
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${HYPRE_DIR}/lib")
-list(INSERT IBTK_EXTERNAL_LIBRARIES 0
-  ${HYPRE_LIBS} 
+endif()
+list(APPEND IBTK_EXTERNAL_INCLUDE_PATHS ${SAMRAI_INCLUDE_PATH})
+set(IBTK_EXE_EXTERNAL_LINKER_FLAGS "${IBTK_EXE_EXTERNAL_LINKER_FLAGS} ${SAMRAI_COMPILE_FLAGS}")
+list(INSERT IBTK_EXTERNAL_LIBS 0
+  ${SAMRAI_LIBRARIES}
   )
 
 # -----------------------------------------------------------------------------
 # Find Blitz++
 #
-set(BLITZ_DIR CACHE PATH "Blitz++ installation directory.")
-if(NOT BLITZ_DIR)
+find_package(BLITZ++)
+if(NOT BLITZ_FOUND)
   message(FATAL_ERROR "Must specify Blitz++ installation directory.")
-endif() 
-set(BLITZ_LIBS -lblitz)
-list(APPEND IBTK_INCLUDE_PATH ${BLITZ_INCLUDE_PATH})
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${BLITZ_DIR}/lib")
-list(INSERT IBTK_EXTERNAL_LIBRARIES 0
-  ${BLITZ_LIBS} 
+endif()
+
+list(APPEND IBTK_EXTERNAL_INCLUDE_PATHS ${BLITZ_INCLUDE_PATH})
+set(IBTK_EXE_EXTERNAL_LINKER_FLAGS "${IBTK_EXE_EXTERNAL_LINKER_FLAGS} ${BLITZ_COMPILE_FLAGS}")
+list(INSERT IBTK_EXTERNAL_LIBS 0
+  ${BLITZ_LIBRARIES}
   )
 
-  
+
 # --------------------------------------------------------------------------
 # Find qd library
 # --------------------------------------------------------------------------
-set(QD_DIR CACHE PATH "QD Directory.")
-if(NOT QD_DIR)
+find_package(QD)
+if(NOT QD_FOUND)
   message(FATAL_ERROR "Must specify QD installation directory.")
-endif() 
-set(QD_LIBS -lqdmod -lqd)
-list(APPEND IBTK_INCLUDE_PATH ${QD_INCLUDE_PATH})
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${QD_DIR}/lib")
-list(INSERT IBTK_EXTERNAL_LIBRARIES 0
-  ${QD_LIBS} 
+endif()
+
+list(APPEND IBTK_EXTERNAL_INCLUDE_PATHS ${QD_INCLUDE_PATH})
+set(IBTK_EXE_EXTERNAL_LINKER_FLAGS "${IBTK_EXE_EXTERNAL_LINKER_FLAGS} ${QD_COMPILE_FLAGS}")
+list(INSERT IBTK_EXTERNAL_LIBS 0
+  ${QD_LIBRARIES}
   )
 
 # --------------------------------------------------------------------------
 # Find muParser library
 # --------------------------------------------------------------------------
-set(MUPARSER_DIR CACHE PATH "MUPARSER Directory.")
-if(NOT MUPARSER_DIR)
+find_package(MuParser)
+if(NOT MUPARSER_FOUND)
   message(FATAL_ERROR "Must specify MUPARSER installation directory.")
-endif() 
-set(MUPARSER_LIBS -lmuparser)
-list(APPEND IBTK_INCLUDE_PATH ${MUPARSER_INCLUDE_PATH})
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${MUPARSER_DIR}/lib")
-list(INSERT IBTK_EXTERNAL_LIBRARIES 0
-  ${MUPARSER_LIBS} 
+endif()
+list(APPEND IBTK_EXTERNAL_INCLUDE_PATHS ${MUPARSER_INCLUDE_PATH})
+set(IBTK_EXE_EXTERNAL_LINKER_FLAGS "${IBTK_EXE_EXTERNAL_LINKER_FLAGS} ${MUPARSER_COMPILE_FLAGS}")
+list(INSERT IBTK_EXTERNAL_LIBS 0
+  ${MUPARSER_LIBRARIES}
   )
 
-# -----------------------------------------------------------------------------
-# Set some gcc optimizations
-# -----------------------------------------------------------------------------
-if(CMAKE_COMPILER_IS_GNUCXX)
-  add_definitions(-DIBTK_HAVE_BUILTIN_EXPECT -DIBTK_HAVE_BUILTIN_PREFETCH)
+# --------------------------------------------------------------------------
+# Find libMesh library
+# --------------------------------------------------------------------------
+find_package(libMesh)
+if(NOT LIBMESH_FOUND)
+  message(FATAL_ERROR "Must specify LIBMESH installation directory.")
 endif()
+list(APPEND IBTK_EXTERNAL_INCLUDE_PATHS ${LIBMESH_INCLUDE_PATH})
+set(IBTK_EXE_EXTERNAL_LINKER_FLAGS "${IBTK_EXE_EXTERNAL_LINKER_FLAGS} ${LIBMESH_COMPILE_FLAGS}")
+list(INSERT IBTK_EXTERNAL_LIBS 0
+  ${LIBMESH_LIBRARIES}
+  )
+list(REMOVE_DUPLICATES IBTK_EXTERNAL_LIBS)
+list(REMOVE_DUPLICATES IBTK_EXTERNAL_INCLUDE_PATHS)
+
+#----------------------------------------------------------------------------
+# Set include dirs variable, and linker flags
+# ---------------------------------------------------------------------------
+set(IBTK_INCLUDE_PATH ${PROJECT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}/include
+    ${IBTK_EXTERNAL_INCLUDE_PATHS}
+    CACHE INTERNAL "IBTK include paths.")
+
+set(IBTK_EXE_LINKER_FLAGS ${IBTK_EXE_EXTERNAL_LINKER_FLAGS} CACHE INTERNAL "IBTK Exe linker flags.")
+
+# ---------------------------------------------------------------------------
+# Set library names
+# ---------------------------------------------------------------------------
+set(IBTK_EXTERNAL_LIBRARIES ${IBTK_EXTERNAL_LIBS} CACHE INTERNAL "IBTK external libraries.")
 
 include_directories(${IBTK_INCLUDE_PATH})
 
-# -----------------------------------------------------------------------------
-# Add options: USING_LARGE_GHOST_CELL_WIDTH (default 0) and 
-# 		USING_EXPENSIVE_CF_INTERPOLATION (default 0)
-# -----------------------------------------------------------------------------
-if(NOT DEFINED ENABLE_LARGE_GHOST_CELL_WIDTH)
-  option(ENABLE_LARGE_GHOST_CELL_WIDTH "This enables the use of large ghost 
-    cell regions (this feature must be enabled for certain types of physical 
-    boundary condition routines to function properly)" OFF)
-endif()
-if(ENABLE_LARGE_GHOST_CELL_WIDTH)
-  add_definitions(-DUSING_LARGE_GHOST_CELL_WIDTH=1)
-  message(STATUS "Large ghost cell widths are ENABLED!")
-else()
-  add_definitions(-DUSING_LARGE_GHOST_CELL_WIDTH=0)
-  message(STATUS "Large ghost cell widths are DISABLED!
-    Certain physical boundary condition handling routines may
-    not function properly if you wish to enable support for large 
-    ghost cell widths, enable this option")
-endif()
-if(NOT DEFINED ENABLE_EXPENSIVE_CF_INTERPOLATION)
-  option(ENABLE_EXPENSIVE_CF_INTERPOLATION "This enables the use of the 
-    expensive version of the quadratic coarse-fine interface interpolation 
-    code (this feature must be enabled for certain use cases, e.g. 
-    general anisotropic diffusion tensors)" OFF)
-endif() 
-if(ENABLE_EXPENSIVE_CF_INTERPOLATION)
-  add_definitions(-DUSING_EXPENSIVE_CF_INTERPOLATION=1)
-  message(STATUS "Expensive version of the quadratic coarse-fine interface 
-    interpolation code is ENABLED!")
-else()
-  add_definitions(-DUSING_EXPENSIVE_CF_INTERPOLATION=0)
-  message(STATUS "Expensive version of the quadratic coarse-fine interface 
-    interpolation code is DISABLED! this feature must be enabled for certain 
-    use cases, e.g. general anisotropic diffusion tensors if you wish to 
-    enable support for large ghost cell widths, enable this option")
-endif() 
+# ----------------------------------------------------------------------------
+# Set IBTK linker flags
+# ----------------------------------------------------------------------------
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${IBTK_EXE_EXTERNAL_LINKER_FLAGS}")
 
 # -----------------------------------------------------------------------------
 # Set library sub-directories
 # Order of project directory matters. Project should be topologically ordered
 # -----------------------------------------------------------------------------
 set(dirs
-  fortran
   patch_data
-  refine_ops
   solvers
   math
   boundary
+  utilities
+  refine_ops
   coarsen_ops
   lagrangian
-  utilities
+  fortran
   )
 
 # -----------------------------------------------------------------------------
-# Loop over list of sub-directories 
+# Loop over list of sub-directories
 # -----------------------------------------------------------------------------
+set(IBTK_LIBRARIES2D)
+set(IBTK_LIBRARIES3D)
+
 foreach(dir ${dirs})
   message(STATUS "Configuring sub-library: ${dir}")
   add_subdirectory(src/${dir})
-  list(INSERT IBTK_LIBRARIES3D 0
-    ibtk${dir}3D
-    )
+  include_directories(src/${dir})
+  list(APPEND IBTK_LIBRARIES3D ibtk${dir}3D)
   if(IBTK_BUILD_2D_LIBRARY)
-    list(INSERT IBTK_LIBRARIES2D 0
-      ibtk${dir}2D
-      )
+    list(APPEND IBTK_LIBRARIES2D ibtk${dir}2D)
   endif()
 endforeach()
 
+set(IBTK_LIBRARIES ${IBTK_LIBRARIES3D} ${IBTK_LIBRARIES2D} CACHE INTERNAL "IBTK 3D library.")
+
 # --------------------------------------------------------------------------
 # Single or multiple (default) library build (needs CMake 2.8.8)
-# -------------------------------------------------------------------------- 
+# --------------------------------------------------------------------------
 if(IBTK_BUILD_SINGLE_LIBRARY)
   message(STATUS "Single library build is enabled.")
-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lib.C "// Dummy file needed 
-    // to link sublibraries.")
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lib.C
+    "// Dummy file needed to link sublibraries.")
   set(IBTK_LIBRARY_TARGETS3D)
   foreach(lib ${IBTK_LIBRARIES3D})
     list(APPEND IBTK_LIBRARY_TARGETS3D $<TARGET_OBJECTS:${lib}>)
@@ -463,11 +400,11 @@ if(IBTK_BUILD_SINGLE_LIBRARY)
     foreach(lib ${IBTK_LIBRARIES2D})
       list(APPEND IBTK_LIBRARY_TARGETS2D $<TARGET_OBJECTS:${lib}>)
     endforeach()
-    add_library(ibtk2D ${CMAKE_CURRENT_BINARY_DIR}/lib.C 
+    add_library(ibtk2D ${CMAKE_CURRENT_BINARY_DIR}/lib.C
       ${IBTK_LIBRARY_TARGETS2D})
     set(IBTK_LIBRARIES2D ibtk2D)
   endif()
-  add_library(ibtk3D ${CMAKE_CURRENT_BINARY_DIR}/lib.C 
+  add_library(ibtk3D ${CMAKE_CURRENT_BINARY_DIR}/lib.C
     ${IBTK_LIBRARY_TARGETS3D})
   set(IBTK_LIBRARIES3D ibtk3D)
 else()
@@ -475,12 +412,14 @@ else()
 endif()
 
 # --------------------------------------------------------------------------
-# Export all targets used here 
+# Export all targets used here
 # --------------------------------------------------------------------------
-export(TARGETS ${IBTK_LIBRARIES3D} FILE ${IBTK_TARGETS_FILE})
-if(IBTK_BUILD_2D_LIBRARY)
-  export(TARGETS ${IBTK_LIBRARIES2D} APPEND FILE ${IBTK_TARGETS_FILE})
-endif()
+export(TARGETS ${IBTK_LIBRARIES} FILE ${IBTK_TARGETS_FILE})
+
+# --------------------------------------------------------------------------
+# Sets configuration header
+# --------------------------------------------------------------------------
+include(GenerateIBTKConfig)
 
 # --------------------------------------------------------------------------
 # add testing
@@ -488,4 +427,4 @@ endif()
 INCLUDE(CTest)
 IF(BUILD_TESTING)
     ADD_SUBDIRECTORY(examples)
-ENDIF()  
+ENDIF()

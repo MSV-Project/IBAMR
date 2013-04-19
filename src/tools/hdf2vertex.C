@@ -38,7 +38,9 @@
 #include <string>
 #include <vector>
 
-#include <H5LT.h>
+#include <H5Fpublic.h>
+#include <H5Lpublic.h>
+#include <H5LTpublic.h>
 
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
@@ -147,7 +149,7 @@ main(
 
     static const int num_vertex = dims[1];
     vector<double> vertex_posn(NDIM*num_vertex);
-    status = H5LTread_dataset_static_cast<double>(file_id, "vertex", &vertex_posn[0]);
+    status = H5LTread_dataset_double(file_id, "vertex", &vertex_posn[0]);
 
     status = H5Fclose(file_id);
 

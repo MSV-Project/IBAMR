@@ -35,11 +35,11 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 #ifndef included_IBTK_config
-// #include <IBTK_config.h>
+#include <IBTK_config.h>
 #define included_IBTK_config
 #endif
 
-#include "fortran_interfaces.h"
+
 
 #ifndef included_SAMRAI_config
 #include <SAMRAI_config.h>

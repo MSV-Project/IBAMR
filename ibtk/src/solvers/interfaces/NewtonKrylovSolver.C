@@ -35,7 +35,7 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 #ifndef included_IBTK_config
-// #include <IBTK_config.h>
+#include <IBTK_config.h>
 #define included_IBTK_config
 #endif
 

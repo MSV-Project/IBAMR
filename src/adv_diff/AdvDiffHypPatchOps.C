@@ -34,10 +34,8 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
-#include "fortran_interfaces.h"
-
 #ifndef included_IBAMR_config
-// #include <IBAMR_config.h>
+#include <IBAMR_config.h>
 #define included_IBAMR_config
 #endif
 

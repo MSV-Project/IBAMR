@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 2.8.10)
 
 # -----------------------------------------------------------------------------
-project(IBAMR CXX Fortran)
+project(IBAMR C CXX Fortran)
 # -----------------------------------------------------------------------------
 
 #-----------------------------------------------------------------------------
@@ -16,19 +16,69 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "MinSizeRel" "RelWithDebInfo")
 endif()
 
+#-----------------------------------------------------------------------------
+# Library mode: SHARED (default) or STATIC
+#-----------------------------------------------------------------------------
+set(IBAMR_LIBRARY_MODE "SHARED")
+
+option(BUILD_SHARED_LIBS "Build IBAMR with shared libraries." ON)
+set(IBAMR_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
+mark_as_advanced(BUILD_SHARED_LIBS)
+
 # -----------------------------------------------------------------------------
-# Set option to optionaly build 2d library as well (by default the 
+# Set option to optionaly build 2d library as well (by default (and always) the
 # 3D library is built)
 # -----------------------------------------------------------------------------
 option(IBAMR_BUILD_2D_LIBRARY "Build the optional 2D libraries." OFF)
 
 # --------------------------------------------------------------------------
 # Single or multiple (default) library build (needs CMake >= 2.8.8)
-# -------------------------------------------------------------------------- 
+# --------------------------------------------------------------------------
 option(IBAMR_BUILD_SINGLE_LIBRARY "Build IBAMR single library" OFF)
 
+# ----------------------------------------------------------------------------
+# We need the m4 macro preprocessor and helper macros
+# ----------------------------------------------------------------------------
+include(${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindM4.cmake)
+
+#----------------------------------------------------------------------------
+# Superbuild Option - Enabled by default
+# ---------------------------------------------------------------------------
+option(IBAMR_SUPERBUILD
+  "Build IBMR and the projects it depends on via SuperBuild.cmake." ON)
+mark_as_advanced(IBAMR_SUPERBUILD)
+
+option(CHECK_ASSERTIONS "Debug flag to check assertions in IBAMR." OFF)
+if(CHECK_ASSERTIONS)
+  add_definitions(-DDEBUG_CHECK_ASSERTIONS)
+endif()
+
 # -----------------------------------------------------------------------------
-# IBAMR requires IBTK
+# Path to IBAMR cmake modules
+# -----------------------------------------------------------------------------
+set(IBAMR_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
+
+#-----------------------------------------------------------------------------
+# Update CMake module path
+#
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${IBAMR_MODULE_PATH} ${IBAMR_MODULE_PATH}/SuperBuild)
+
+#-----------------------------------------------------------------------------
+# Path to IBTK
+#
+set(IBTK_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ibtk" CACHE PATH "Path to IBTK.")
+
+#-----------------------------------------------------------------------------
+# Superbuild script
+#
+if(IBAMR_SUPERBUILD)
+  include("${CMAKE_CURRENT_SOURCE_DIR}/CMake/SuperBuild/SuperBuild.cmake")
+  return()
+endif()
+
+# -----------------------------------------------------------------------------
+# In-tree IBTK build.
+# If IBTK is built out of tree then use its use and configuration files.
 # -----------------------------------------------------------------------------
 if(IBAMR_BUILD_2D_LIBRARY)
   set(IBTK_BUILD_2D_LIBRARY ON CACHE BOOL "Build the 2D version of the library."
@@ -38,61 +88,35 @@ endif()
 if(IBAMR_BUILD_SINGLE_LIBRARY)
   set(IBTK_BUILD_SINGLE_LIBRARY ON CACHE INTERNAL "Build IBTK single library"
   FORCE)
-endif(IBAMR_BUILD_SINGLE_LIBRARY) 
+endif(IBAMR_BUILD_SINGLE_LIBRARY)
 
 # -----------------------------------------------------------------------------
-# In-tree IBTK build.  
-# If IBTK is built out of tree then use its use and configuration files.
+# IBAMR requires IBTK
 # -----------------------------------------------------------------------------
-add_subdirectory(ibtk)
+add_subdirectory(${IBTK_SOURCE_DIR})
 
-if(IBTK_SUPERBUILD)
-  set(IBTK_SUPERBUILD_BINARY_DIR ${IBTK_BINARY_DIR}/SuperBuild)
-  set(SAMRAI_FORTDIR ${IBTK_SUPERBUILD_BINARY_DIR}/include/samrai)
-endif()
-
-if(NOT IBAMR_BUILD_SINGLE_LIBRARY)
-  set(IBTK_LIBRARIES3D
-    ibtkutilities3D
-    ibtklagrangian3D
-    ibtkcoarsen_ops3D
-    ibtkboundary3D
-    ibtkmath3D
-    ibtksolvers3D
-    ibtkrefine_ops3D
-    ibtkpatch_data3D
-    ibtkfortran3D
-    )
-    
-  if(IBAMR_BUILD_2D_LIBRARY)
-    set(IBTK_LIBRARIES2D
-      ibtkutilities2D
-      ibtklagrangian2D
-      ibtkcoarsen_ops2D
-      ibtkboundary2D
-      ibtkmath2D
-      ibtksolvers2D
-      ibtkrefine_ops2D
-      ibtkpatch_data2D
-      ibtkfortran2D
-      )
-  endif()
-else()
-  set(IBTK_LIBRARIES3D   
-    ibtk3D
-    )
-    
-  if(IBAMR_BUILD_2D_LIBRARY)
-    set(IBTK_LIBRARIES2D 
-      ibtk2D
-      )
-  endif()
-endif()
+#-----------------------------------------------------------------------------
+# Update CMake module path
+#
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${IBTK_SOURCE_DIR}/CMake)
 
 # ----------------------------------------------------------------------------
-# We need the m4 macro preprocessor and utility macro
+# Set IBAMR include directories
 # ----------------------------------------------------------------------------
-include(${IBTK_SOURCE_DIR}/CMake/FindM4.cmake)
+set(IBAMR_INCLUDE_DIRS
+  ${IBTK_INCLUDE_PATH}
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_BINARY_DIR}
+  ${CMAKE_CURRENT_BINARY_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/utilities)
+
+include_directories(${IBAMR_INCLUDE_DIRS})
+
+# ----------------------------------------------------------------------------
+# Set IBAMR linker flags
+# ----------------------------------------------------------------------------
+set(IBAMR_EXE_LINKER_FLAGS "${IBAMR_EXE_LINKER_FLAGS} ${IBTK_EXE_LINKER_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${IBAMR_EXE_EXTERNAL_LINKER_FLAGS}")
 
 #----------------------------------------------------------------------------
 # Output directories.
@@ -107,8 +131,8 @@ foreach(type LIBRARY ARCHIVE RUNTIME)
   # Make sure the directory exists
   if(DEFINED IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY
      AND NOT EXISTS ${IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY})
-    message(FATAL_ERROR 
-      "IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY is set to a non-existing 
+    message(FATAL_ERROR
+      "IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY is set to a non-existing
       directory [${IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY}]")
   endif()
 
@@ -117,110 +141,10 @@ foreach(type LIBRARY ARCHIVE RUNTIME)
   else()
     set(output_dir ${IBAMR_CMAKE_${type}_OUTPUT_DIRECTORY})
   endif()
-  set(CMAKE_${type}_OUTPUT_DIRECTORY ${output_dir} CACHE INTERNAL 
+  set(CMAKE_${type}_OUTPUT_DIRECTORY ${output_dir} CACHE INTERNAL
     "Single output directory for building all libraries.")
 endforeach()
 
-# ----------------------------------------------------------------------------
-# Set IBAMR include directories
-# ----------------------------------------------------------------------------
-set(IBAMR_INCLUDE_DIRS 
-  ${IBTK_INCLUDE_PATH} 
-  ${CMAKE_CURRENT_SOURCE_DIR}/include 
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/utilities)
-  
-include_directories(${IBAMR_INCLUDE_DIRS})
-  
-set(IBAMR_LIBRARY_DIRS 
-  ${CMAKE_CURRENT_BINARY_DIR}/lib
-  ${IBTK_LIBRARY_PATH}
-  ${IBTK_BINARY_DIR}/lib
-  )
-
-list(REMOVE_DUPLICATES IBAMR_LIBRARY_DIRS)  
-foreach(dir ${IBAMR_LIBRARY_DIRS})
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${dir} -Wl,-rpath,${dir}")
-endforeach()
-set(CMAKE_SHARED_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS})
-
-# set(CMAKE_EXE_LINKER_FLAGS 
-#   "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_SUPERBUILD_BINARY_DIR}/PETSC/build/lib -Wl,-rpath,${IBTK_SUPERBUILD_BINARY_DIR}/PETSC/build/lib")
-# set(CMAKE_EXE_LINKER_FLAGS 
-#   "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_BINARY_DIR}/lib -Wl,-rpath,${IBTK_BINARY_DIR}/lib")
-# set(CMAKE_EXE_LINKER_FLAGS 
-#   "${CMAKE_EXE_LINKER_FLAGS} -L${IBTK_SUPERBUILD_BINARY_DIR}/lib/samrai/lib -L${IBTK_SUPERBUILD_BINARY_DIR}/lib -Wl,-rpath,${IBTK_SUPERBUILD_BINARY_DIR}/lib")
-#   
-
-# -----------------------------------------------------------------------------
-# Add options: USING_LARGE_GHOST_CELL_WIDTH (default 0) and 
-# USING_EXPENSIVE_CF_INTERPOLATION (default 0)
-# -----------------------------------------------------------------------------
-option(ENABLE_LARGE_GHOST_CELL_WIDTH "This enables the use of large ghost 
-  cell regions (this feature must be enabled for certain types of physical 
-  boundary condition routines to function properly)" OFF)
-if(ENABLE_LARGE_GHOST_CELL_WIDTH)
-  add_definitions(-DUSING_LARGE_GHOST_CELL_WIDTH=1)
-  message(STATUS "Large ghost cell widths are ENABLED!")
-else()
-  add_definitions(-DUSING_LARGE_GHOST_CELL_WIDTH=0)
-  message(STATUS "Large ghost cell widths are DISABLED!
-    Certain physical boundary condition handling routines may
-    not function properly if you wish to enable support for large 
-    ghost cell widths, enable this option")
-endif()
-
-option(ENABLE_EXPENSIVE_CF_INTERPOLATION "This enables the use of the expensive 
-  version of the quadratic coarse-fine interface interpolation code (this feature 
-  must be enabled for certain use cases, e.g. general anisotropic 
-  diffusion tensors)" OFF)
-if(ENABLE_EXPENSIVE_CF_INTERPOLATION)
-  add_definitions(-DUSING_EXPENSIVE_CF_INTERPOLATION=1)
-  message(STATUS "Expensive version of the quadratic coarse-fine interface 
-    interpolation code is ENABLED!")
-else()
-  add_definitions(-DUSING_EXPENSIVE_CF_INTERPOLATION=0)
-  message(STATUS "Expensive version of the quadratic coarse-fine interface 
-    interpolation code is DISABLED! this feature must be enabled for certain 
-    use cases, e.g. general anisotropic diffusion tensors if you wish to 
-    enable support for large ghost cell widths, enable this option")
-endif() 
-
-option(CHECK_ASSERTIONS "Debug flag to check assertions in IBAMR." OFF)
-if(CHECK_ASSERTIONS)
-  add_definitions(-DDEBUG_CHECK_ASSERTIONS)
-endif()
-
-# ----------------------------------------------------------------------------
-# Set subdomain indices option
-#-----------------------------------------------------------------------------
-option(ENABLE_SUBDOMAIN_INDICES 
-  "Enable the use of subdomain indices for standard IB mechanical elements" 
-  OFF) 
-if(ENABLE_SUBDOMAIN_INDICES)
-  add_definitions(-DENABLE_SUBDOMAIN_INDICES)
-  message(STATUS "Subdomain indices are ENABLED!")
-else()
-  message(STATUS "Subdomain indices are DISABLED!")
-endif() 
-
-#-----------------------------------------------------------------------------
-# Library mode: SHARED (default) or STATIC
-#-----------------------------------------------------------------------------
-set(IBAMR_LIBRARY_MODE "SHARED")
-
-option(BUILD_SHARED_LIBS "Build IBAMR with shared libraries." ON)
-set(IBAMR_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
-mark_as_advanced(BUILD_SHARED_LIBS)
-
-# -----------------------------------------------------------------------------
-# Path to IBAMR cmake modules
-#-----------------------------------------------------------------------------
-set(IBAMR_CMAKE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/CMake ${IBTK_SOURCE_DIR}/CMake)
-
-#-----------------------------------------------------------------------------
-# Update CMake module path
-#
-set(CMAKE_MODULE_PATH "${IBAMR_CMAKE_DIRS}" ${CMAKE_MODULE_PATH})
 
 #-----------------------------------------------------------------------------
 # IBAMR version number.  An even minor number corresponds to releases.
@@ -249,11 +173,11 @@ if(NOT IBAMR_INSTALL_BIN_DIR)
   set(IBAMR_INSTALL_BIN_DIR "bin")
 endif()
 if(NOT IBAMR_INSTALL_LIB_DIR)
-  set(IBAMR_INSTALL_LIB_DIR 
+  set(IBAMR_INSTALL_LIB_DIR
     "lib/IBAMR-${IBAMR_MAJOR_VERSION}.${IBAMR_MINOR_VERSION}")
 endif()
 if(NOT IBAMR_INSTALL_INCLUDE_DIR)
-  set(IBAMR_INSTALL_INCLUDE_DIR 
+  set(IBAMR_INSTALL_INCLUDE_DIR
     "include/IBAMR-${IBAMR_MAJOR_VERSION}.${IBAMR_MINOR_VERSION}")
 endif()
 if(NOT IBAMR_INSTALL_DOC_DIR)
@@ -263,7 +187,7 @@ endif()
 #-----------------------------------------------------------------------------
 # Documentation
 #
-option(DOCUMENTATION_TARGET_IN_ALL 
+option(DOCUMENTATION_TARGET_IN_ALL
   "Include the custom target for building documentation in 'all'" OFF)
 mark_as_advanced(DOCUMENTATION_TARGET_IN_ALL)
 
@@ -290,13 +214,13 @@ mark_as_advanced(ADDITIONAL_F_FLAGS)
 # IBAMR C/CXX Flags
 #
 set(IBAMR_C_FLAGS "${CMAKE_C_FLAGS_INIT} ${ADDITIONAL_C_FLAGS}")
-set(IBAMR_CXX_FLAGS 
+set(IBAMR_CXX_FLAGS
   "${CMAKE_CXX_FLAGS_INIT} ${VISIBILITY_CXX_FLAGS} ${ADDITIONAL_CXX_FLAGS}")
-set(IBAMR_F_FLAGS 
+set(IBAMR_F_FLAGS
   "${CMAKE_F_FLAGS_INIT} ${VISIBILITY_F_FLAGS} ${ADDITIONAL_F_FLAGS}")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-  set(cflags 
+  set(cflags
     "-Wall -Wextra -Wpointer-arith -Winvalid-pch -Wcast-align -Wwrite-strings -D_FORTIFY_SOURCE=2")
 
   if(MINGW)
@@ -305,7 +229,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   endif()
 
   set(IBAMR_C_FLAGS "${cflags} ${IBAMR_C_FLAGS}")
-  set(IBAMR_CXX_FLAGS 
+  set(IBAMR_CXX_FLAGS
     "${cflags} -Woverloaded-virtual -Wold-style-cast -Wstrict-null-sentinel -Wsign-promo ${IBAMR_CXX_FLAGS}")
 endif()
 
@@ -317,9 +241,9 @@ if(MSVC)
 endif()
 
 add_definitions(
-  -D_CRT_NONSTDC_NO_DEPRECATE 
-  -D_CRT_SECURE_NO_WARNINGS 
-  -D_CRT_SECURE_NO_DEPRECATE 
+  -D_CRT_NONSTDC_NO_DEPRECATE
+  -D_CRT_SECURE_NO_WARNINGS
+  -D_CRT_SECURE_NO_DEPRECATE
   -DOMPI_SKIP_MPICXX
   )
 
@@ -335,40 +259,46 @@ set(dirs
 # FileWatcher
   )
 
-list(APPEND dirs 
+list(APPEND dirs
+    navier_stokes
     adv_diff
     advect
-    fortran 
     IB
-    navier_stokes
+    fortran
 #     solid_mechanics
-#     tools
     )
 
+
 # -----------------------------------------------------------------------------
-# Loop over list of sub-directories 
+# Loop over list of sub-directories
 # -----------------------------------------------------------------------------
-set(IBAMR_LIBRARIES3D CACHE INTERNAL "IBAMR 3D library." FORCE)
-if(IBAMR_BUILD_2D_LIBRARY)
-  set(IBAMR_LIBRARIES2D CACHE INTERNAL "IBAMR 2D library." FORCE)
-endif()
+set(IBAMR_LIBRARIES3D)
+set(IBAMR_LIBRARIES2D)
 foreach(dir ${dirs})
   message(STATUS "Configuring sub-library: ${dir}")
+  include_directories(src/${dir})
   add_subdirectory(src/${dir})
-  list(INSERT IBAMR_LIBRARIES3D 0
-    ibamr${dir}3D)
+  list(APPEND IBAMR_LIBRARIES3D ibamr${dir}3D)
   if(IBAMR_BUILD_2D_LIBRARY)
-    list(INSERT IBAMR_LIBRARIES2D 0
-      ibamr${dir}2D)
+    list(APPEND IBAMR_LIBRARIES2D ibamr${dir}2D)
   endif()
-endforeach()    
+endforeach()
+
+set(IBAMR_LIBRARIES
+  ${IBAMR_LIBRARIES3D}
+  ${IBAMR_LIBRARIES2D}
+  ${IBTK_LIBRARIES}
+  ${IBTK_EXTERNAL_LIBRARIES}
+  CACHE INTERNAL "IBAMR library." FORCE )
+
+add_subdirectory(src/tools)
 
 # --------------------------------------------------------------------------
-# Single or multiple (default) library build (needs CMake 2.8.8)
-# -------------------------------------------------------------------------- 
+# Single or multiple (default) library build (needs CMake > 2.8.8)
+# --------------------------------------------------------------------------
 if(IBAMR_BUILD_SINGLE_LIBRARY)
   message(STATUS "Single library build is enabled.")
-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lib.C 
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lib.C
     "// Dummy file needed to link sublibraries.")
   set(IBAMR_LIBRARY_TARGETS3D)
   foreach(lib ${IBAMR_LIBRARIES3D})
@@ -379,12 +309,12 @@ if(IBAMR_BUILD_SINGLE_LIBRARY)
     foreach(lib ${IBAMR_LIBRARIES2D})
       list(APPEND IBAMR_LIBRARY_TARGETS2D $<TARGET_OBJECTS:${lib}>)
     endforeach()
-    add_library(ibamr2D ${CMAKE_CURRENT_BINARY_DIR}/lib.C 
+    add_library(ibamr2D ${CMAKE_CURRENT_BINARY_DIR}/lib.C
       ${IBAMR_LIBRARY_TARGETS2D})
     add_dependencies(ibamr2D IBTK)
     set(IBAMR_LIBRARIES2D ibamr2D)
   endif(IBAMR_BUILD_2D_LIBRARY)
-  add_library(ibamr3D ${CMAKE_CURRENT_BINARY_DIR}/lib.C 
+  add_library(ibamr3D ${CMAKE_CURRENT_BINARY_DIR}/lib.C
     ${IBAMR_LIBRARY_TARGETS3D})
   add_dependencies(ibamr3D IBTK)
   set(IBAMR_LIBRARIES3D ibamr3D)
@@ -395,9 +325,7 @@ endif(IBAMR_BUILD_SINGLE_LIBRARY)
 # --------------------------------------------------------------------------
 # Export all targets created
 # --------------------------------------------------------------------------
-if(NOT DEFINED IBAMR_TARGETS_FILE)
-  set(IBAMR_TARGETS_FILE ${CMAKE_CURRENT_BINARY_DIR}/IBAMRTargets.cmake)
-endif()
+set(IBAMR_TARGETS_FILE ${CMAKE_CURRENT_BINARY_DIR}/IBAMRTargets.cmake)
 export(TARGETS ${IBAMR_LIBRARIES3D} FILE ${IBAMR_TARGETS_FILE})
 if(IBAMR_BUILD_2D_LIBRARY)
   export(TARGETS ${IBAMR_LIBRARIES2D} APPEND FILE ${IBAMR_TARGETS_FILE})
@@ -408,41 +336,20 @@ set(IBAMR_USE_FILE "${IBAMR_SOURCE_DIR}/UseIBAMR.cmake")
 # --------------------------------------------------------------------------
 # Configuration variables
 # --------------------------------------------------------------------------
-set(IBAMR_LIBRARIES 
-  ${IBAMR_LIBRARIES3D} 
-  ${IBTK_LIBRARIES3D} 
-  ${IBAMR_LIBRARIES2D} 
-  ${IBTK_LIBRARIES2D})
-  
 configure_file(
     ${IBAMR_SOURCE_DIR}/CMake/IBAMRConfig.cmake.in
-    ${IBAMR_BINARY_DIR}/IBAMRConfig.cmake 
+    ${IBAMR_BINARY_DIR}/IBAMRConfig.cmake
     @ONLY IMMEDIATE)
-    
-# --------------------------------------------------------------------------
-# Append necessary libs to compile apps
-# --------------------------------------------------------------------------
-foreach(lib ${IBTK_LIBRARIES3D})  
-  list(APPEND IBAMR_LIBRARIES3D -l${lib})
-endforeach()
-list(APPEND IBAMR_LIBRARIES3D
-  ${IBTK_EXTERNAL_LIBRARIES}
-  )
 
-if(IBAMR_BUILD_2D_LIBRARY)
-  foreach(lib ${IBTK_LIBRARIES2D})
-    list(APPEND IBAMR_LIBRARIES2D -l${lib})
-  endforeach()
-  list(APPEND IBAMR_LIBRARIES2D 
-    ${IBTK_EXTERNAL_LIBRARIES}
-    )
-endif()
-
+# --------------------------------------------------------------------------
+# Sets configuration header
+# --------------------------------------------------------------------------
+include(GenerateIBAMRConfig)
 
 # --------------------------------------------------------------------------
 # add testing
 # --------------------------------------------------------------------------
-include(CTest)
+# include(CTest)
 if(BUILD_TESTING)
     add_subdirectory(examples)
-endif()    
+endif()

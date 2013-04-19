@@ -14,7 +14,6 @@ macro(BUILD_2D_TARGET)
     endforeach()
   endif()  
 endmacro()
-
 macro(BUILD_3D_TARGET)
   add_executable(${TEST_NAME}_3d main.C)
   target_link_libraries(${TEST_NAME}_3d ${IBTK_LIBRARIES3D} ${IBTK_EXTERNAL_LIBRARIES})

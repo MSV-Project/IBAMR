@@ -1,0 +1,388 @@
+/* include/SAMRAI_config.h.  Generated from SAMRAI_config.h.in by cmake.  */
+
+
+
+#ifndef INCLUDED_SAMRAI_CONFIG_H
+#define INCLUDED_SAMRAI_CONFIG_H
+
+#define SAMRAI_VERSION_MAJOR 2
+#define SAMRAI_VERSION_MINOR 4
+#define SAMRAI_VERSION_PATCHLEVEL 4
+
+
+/* Define if bool type is not properly supported */
+/* #undef BOOL_IS_BROKEN */
+
+/* Define if DBL_MAX is not in float.h */
+/* #undef DBL_MAX_IS_BROKEN */
+
+/* Define if DBL_SNAN is not in float.h */
+#cmakedefine01 DBL_SNAN_IS_BROKEN
+
+/* Enable assertion checking for debug mode */
+/* #undef DEBUG_CHECK_ASSERTIONS */
+
+/* Initialize new memory to undefined values in debug mode */
+/* #undef DEBUG_INITIALIZE_UNDEFINED */
+
+/* Disable inlining for debug mode */
+/* #undef DEBUG_NO_INLINE */
+
+/* Define to dummy `main' function (if any) required to link to the Fortran
+   libraries. */
+/* #undef F77_DUMMY_MAIN */
+
+/* Define to a macro mangling the given C identifier (in lower and upper
+   case), which must not contain underscores, for linking with Fortran. */
+#define F77_FUNC(name,NAME) name ## _
+
+/* As F77_FUNC, but for C identifiers containing underscores. */
+#define F77_FUNC_(name,NAME) name ## _
+
+/* Define if F77 and FC dummy `main' functions are identical. */
+/* #undef FC_DUMMY_MAIN_EQ_F77 */
+
+/* Define if FLT_MAX is not in float.h */
+/* #undef FLT_MAX_IS_BROKEN */
+
+/* Define if FLT_SNAN is not in float.h */
+#cmakedefine01 FLT_SNAN_IS_BROKEN
+
+/* FORTRAN_CAPS */
+/* #undef FORTRAN_CAPS */
+
+/* FORTRAN_DOUBLE_UNDERSCORE */
+/* #undef FORTRAN_DOUBLE_UNDERSCORE */
+
+/* FORTRAN_NO_UNDERSCORE */
+/* #undef FORTRAN_NO_UNDERSCORE */
+
+/* FORTRAN_UNDERSCORE */
+/* #undef FORTRAN_UNDERSCORE */
+
+/* BLASLAPACK library is available so use it */
+/* #undef HAVE_BLASLAPACK */
+
+/* Build SAMRAI with instantiated bool datatypes */
+/* #undef HAVE_BOOL */
+
+/* Build SAMRAI with instantiated char datatypes */
+/* #undef HAVE_CHAR */
+
+/* HAVE_CMATH */
+#cmakedefine01 HAVE_CMATH
+
+/* HAVE_CMATH_ISNAN */
+#cmakedefine01 HAVE_CMATH_ISNAN
+
+/* Configured with Cubes library */
+/* #undef HAVE_CUBES */
+
+/* Build SAMRAI with instantiated double-complex datatypes */
+/* #undef HAVE_DCOMPLEX */
+
+/* Configured with Eleven library */
+/* #undef HAVE_ELEVEN */
+
+/* HAVE_EXCEPTION_HANDLING */
+#cmakedefine01 HAVE_EXCEPTION_HANDLING
+
+/* Build SAMRAI with instantiated float datatypes */
+/* #undef HAVE_FLOAT */
+
+/* HDF5 library is available so use it */
+#cmakedefine01 HAVE_HDF5
+
+/* HYPRE library is available so use it */
+/* #undef HAVE_HYPRE */
+
+/* HAVE_INLINE_ISNAND */
+/* #undef HAVE_INLINE_ISNAND */
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#cmakedefine01 HAVE_INTTYPES_H
+
+/* HAVE_IOMANIP_LEFT */
+#cmakedefine01 HAVE_IOMANIP_LEFT
+
+/* HAVE_ISNAN */
+/* #undef HAVE_ISNAN */
+
+/* HAVE_ISNAND */
+/* #undef HAVE_ISNAND */
+
+/* HAVE_ISNAN_TEMPLATE */
+/* #undef HAVE_ISNAN_TEMPLATE */
+
+/* HAVE_ISO_SSTREAM */
+#cmakedefine01 HAVE_ISO_SSTREAM
+
+/* Define if you have the 'mallinfo' function. */
+#cmakedefine01 HAVE_MALLINFO
+
+/* HAVE_MALLOC_H */
+#cmakedefine01 HAVE_MALLOC_H
+
+/* HAVE_MEMBER_FUNCTION_SPECIALIZATION */
+#cmakedefine01 HAVE_MEMBER_FUNCTION_SPECIALIZATION
+
+/* Define to 1 if you have the <memory.h> header file. */
+#cmakedefine01 HAVE_MEMORY_H
+
+/* MPI library is present */
+#cmakedefine01 HAVE_MPI
+
+/* HAVE_NAMESPACE */
+#cmakedefine01 HAVE_NAMESPACE
+
+/* HAVE_NEW_PLACEMENT_OPERATOR */
+#cmakedefine01 HAVE_NEW_PLACEMENT_OPERATOR
+
+/* PETSC library is available so use it */
+/* #undef HAVE_PETSC */
+
+/* HAVE_PRAGMA_STATIC_DATA_SPECIALIZATION */
+/* #undef HAVE_PRAGMA_STATIC_DATA_SPECIALIZATION */
+
+/* SILO library is available so use it */
+#cmakedefine01 HAVE_SILO
+
+/* HAVE_SSTREAM */
+#cmakedefine01 HAVE_SSTREAM
+
+/* HAVE_STANDARD_STATIC_DATA_SPECIALIZATION */
+#cmakedefine01 HAVE_STANDARD_STATIC_DATA_SPECIALIZATION
+
+/* HAVE_STATIC_DATA_INSTANTIATION */
+#cmakedefine01 HAVE_STATIC_DATA_INSTANTIATION
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#cmakedefine01 HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#cmakedefine01 HAVE_STDLIB_H
+
+/* Define to 1 if cpp supports the ANSI # stringizing operator. */
+#cmakedefine01 HAVE_STRINGIZE
+
+/* Define to 1 if you have the <strings.h> header file. */
+#cmakedefine01 HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#cmakedefine01 HAVE_STRING_H
+
+/* HAVE_SUNDIALS */
+/* #undef HAVE_SUNDIALS */
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#cmakedefine01 HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#cmakedefine01 HAVE_SYS_TYPES_H
+
+/* HAVE_TAU */
+/* #undef HAVE_TAU */
+
+/* HAVE_TEMPLATE_COMPLEX */
+#cmakedefine01 HAVE_TEMPLATE_COMPLEX
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#cmakedefine01 HAVE_UNISTD_H
+
+/* HAVE_VAMPIR */
+/* #undef HAVE_VAMPIR */
+
+/* X11 library is present */
+/* #undef HAVE_X11 */
+
+/* "Compiling with XDR support" */
+/* #undef HAVE_XDR */
+
+/* Define if the host system is Solaris */
+/* #undef HOST_OS_IS_SOLARIS */
+
+/* Hypre library is configured for sequential mode */
+/* #undef HYPRE_SEQUENTIAL */
+
+/* "Compiling without deprecated features" */
+#define INCLUDE_DEPRECATED 9999999
+
+/* INCLUDE_TEMPLATE_IMPLEMENTATION */
+#cmakedefine INCLUDE_TEMPLATE_IMPLEMENTATION
+
+/* Header file for iomanip */
+#define IOMANIP_HEADER_FILE <iomanip>
+
+/* The iomanip header file is broken */
+/* #undef IOMANIP_IS_BROKEN */
+
+/* Header file for iostream */
+#define IOSTREAM_HEADER_FILE <iostream>
+
+/* The iostream header file is broken */
+/* #undef IOSTREAM_IS_BROKEN */
+
+/* LACKS_CMATH */
+/* #undef LACKS_CMATH */
+
+/* LACKS_CMATH_ISNAN */
+/* #undef LACKS_CMATH_ISNAN */
+
+/* Configured without Cubes library */
+#cmakedefine01 LACKS_CUBES
+
+/* Configured without Eleven library */
+#cmakedefine01 LACKS_ELEVEN
+
+/* LACKS_EXCEPTION_HANDLING */
+/* #undef LACKS_EXCEPTION_HANDLING */
+
+/* Hypre library is missing */
+#cmakedefine01 LACKS_HYPRE
+
+/* LACKS_INLINE_ISNAND */
+/* #undef LACKS_INLINE_ISNAND */
+
+/* LACKS_IOMANIP_LEFT */
+/* #undef LACKS_IOMANIP_LEFT */
+
+/* LACKS_ISNAN */
+/* #undef LACKS_ISNAN */
+
+/* LACKS_ISNAND */
+/* #undef LACKS_ISNAND */
+
+/* LACKS_ISNAN_TEMPLATE */
+#cmakedefine01 LACKS_ISNAN_TEMPLATE
+
+/* LACKS_MEMBER_FUNCTION_SPECIALIZATION */
+/* #undef LACKS_MEMBER_FUNCTION_SPECIALIZATION */
+
+/* MPI library is missing */
+/* #undef LACKS_MPI */
+
+/* LACKS_NAMESPACE */
+/* #undef LACKS_NAMESPACE */
+
+/* LACKS_NEW_PLACEMENT_OPERATOR */
+/* #undef LACKS_NEW_PLACEMENT_OPERATOR */
+
+/* LACKS_PRAGMA_STATIC_DATA_SPECIALIZATION */
+/* #undef LACKS_PRAGMA_STATIC_DATA_SPECIALIZATION */
+
+/* LACKS_PROPER_XDR_HEADER */
+#cmakedefine01 LACKS_PROPER_XDR_HEADER
+
+/* LACKS_SSTREAM */
+/* #undef LACKS_SSTREAM */
+
+/* LACKS_STANDARD_STATIC_DATA_SPECIALIZATION */
+/* #undef LACKS_STANDARD_STATIC_DATA_SPECIALIZATION */
+
+/* LACKS_STATIC_DATA_INSTANTIATION */
+/* #undef LACKS_STATIC_DATA_INSTANTIATION */
+
+/* LACKS_SUNDIALS */
+#cmakedefine01 LACKS_SUNDIALS
+
+/* LACKS_TAU */
+#cmakedefine01 LACKS_TAU
+
+/* LACKS_TEMPLATE_COMPLEX */
+/* #undef LACKS_TEMPLATE_COMPLEX */
+
+/* LACKS_VAMPIR */
+#cmakedefine01 LACKS_VAMPIR
+
+/* X11 library is missing */
+#cmakedefine01 LACKS_X11
+
+/* LACK_ISO_SSTREAM */
+/* #undef LACK_ISO_SSTREAM */
+
+/* Define if namespace is not properly supported */
+/* #undef NAMESPACE_IS_BROKEN */
+
+/* Define if NAN is not in float.h */
+#cmakedefine01 NAN_IS_BROKEN
+
+/* The type ostringstream is broken */
+/* #undef OSTRINGSTREAM_TYPE_IS_BROKEN */
+
+/* The type ostrstream is broken */
+#cmakedefine01 OSTRSTREAM_TYPE_IS_BROKEN
+
+/* Define to the address where bug reports for this package should be sent. */
+/* #undef PACKAGE_BUGREPORT */
+
+/* Define to the full name of this package. */
+/* #undef PACKAGE_NAME */
+
+/* Define to the full name and version of this package. */
+/* #undef PACKAGE_STRING */
+
+/* Define to the one symbol short name of this package. */
+/* #undef PACKAGE_TARNAME */
+
+/* Define to the version of this package. */
+/* #undef PACKAGE_VERSION */
+
+/* Define if restrict is not properly supported */
+/* #undef RESTRICT_IS_BROKEN */
+
+/* Define to 1 if you have the ANSI C header files. */
+#cmakedefine01 STDC_HEADERS
+
+/* Header file for stl-sstream */
+#define STL_SSTREAM_HEADER_FILE <sstream>
+
+/* The stl-sstream header file is broken */
+/* #undef STL_SSTREAM_IS_BROKEN */
+
+/* Define to 1 if the X Window System is missing or not being used. */
+#cmakedefine01 X_DISPLAY_MISSING
+
+/* Kludgey thing inserted by configure.in */
+/* #undef _POWER */
+
+
+/********************************************************************/
+/********************* Hardwired defines ****************************/
+/********************************************************************/
+
+/*
+ * Some compilers require cmath to be included before the regular
+ * C math.h and stdlib.h headers are brought in, otherwise
+ * the compiler will get conflicting definitions for the functions.
+ */
+#if defined(__xlC__)
+#cmakedefine01 REQUIRES_CMATH
+#endif
+
+#define STL_SSTREAM_HEADER_FILE <sstream>
+#define LACKS_STRSTREAM
+
+/*
+ * A few things for the MSVC++ version.
+ */
+#ifdef _MSC_VER
+
+/*
+ * Move this bad stuff to the utility class, not POSIX
+ */
+#define drand48() ((double)rand()/(double)RAND_MAX)
+/*
+ * This is not correct, the range is wrong, need to find
+ * a better solution
+ */
+#define mrand48() (rand())
+
+/*
+ * Some IEEE stuff is not under the normal names.
+ *
+ */
+#define isnan _isnan
+
+#endif
+
+#endif
