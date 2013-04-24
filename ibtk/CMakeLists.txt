@@ -137,7 +137,10 @@ set(IBTK_CXX_FLAGS "${CMAKE_CXX_FLAGS_INIT} ${VISIBILITY_CXX_FLAGS} ${ADDITIONAL
 set(IBTK_Fortran_FLAGS "${CMAKE_F_FLAGS_INIT} ${VISIBILITY_F_FLAGS} ${ADDITIONAL_F_FLAGS}")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-  set(cflags "-Wall -Wextra -Wpointer-arith -Winvalid-pch -Wcast-align -Wwrite-strings -D_FORTIFY_SOURCE=2")
+  set(cflags "-Wall -Wextra -Wpointer-arith -Winvalid-pch -Wcast-align -Wwrite-strings")
+  if(CMAKE_BUILD_TYPE MATCHES "Release")
+    set(cflags "${cflags} -D_FORTIFY_SOURCE=2")
+  endif()
 
   if(MINGW)
     # suppress warnings about auto imported symbols
@@ -190,7 +193,7 @@ list(INSERT IBTK_EXTERNAL_LIBS 0
 # -----------------------------------------------------------------------------
 # FindHDF5
 # -----------------------------------------------------------------------------
-find_package(HDF5 CONFIG )
+find_package(HDF5)
 if(NOT HDF5_FOUND)
   message(FATAL_ERROR "Must specify HDF5 installation directory.")
 endif()
@@ -283,7 +286,6 @@ set(IBTK_EXE_EXTERNAL_LINKER_FLAGS "${IBTK_EXE_EXTERNAL_LINKER_FLAGS} ${BLITZ_CO
 list(INSERT IBTK_EXTERNAL_LIBS 0
   ${BLITZ_LIBRARIES}
   )
-
 
 # --------------------------------------------------------------------------
 # Find qd library

@@ -221,8 +221,10 @@ set(IBAMR_F_FLAGS
 
 if(CMAKE_COMPILER_IS_GNUCXX)
   set(cflags
-    "-Wall -Wextra -Wpointer-arith -Winvalid-pch -Wcast-align -Wwrite-strings -D_FORTIFY_SOURCE=2")
-
+    "-Wall -Wextra -Wpointer-arith -Winvalid-pch -Wcast-align -Wwrite-strings")
+  if(CMAKE_BUILD_TYPE MATCHES "Release")
+    set(cflags "${cflags} -D_FORTIFY_SOURCE=2")
+  endif()
   if(MINGW)
     # suppress warnings about auto imported symbols
     set(IBAMR_CXX_FLAGS "-Wl,--enable-auto-import ${IBAMR_CXX_FLAGS}")
@@ -331,14 +333,6 @@ if(IBAMR_BUILD_2D_LIBRARY)
 endif()
 
 set(IBAMR_USE_FILE "${IBAMR_SOURCE_DIR}/UseIBAMR.cmake")
-
-# --------------------------------------------------------------------------
-# Configuration variables
-# --------------------------------------------------------------------------
-configure_file(
-    ${IBAMR_SOURCE_DIR}/CMake/IBAMRConfig.cmake.in
-    ${IBAMR_BINARY_DIR}/IBAMRConfig.cmake
-    @ONLY IMMEDIATE)
 
 # --------------------------------------------------------------------------
 # Sets configuration header

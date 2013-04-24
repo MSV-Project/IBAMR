@@ -39,12 +39,7 @@ find_library(QD_LIB1
   HINTS         ${QD_DIR}
   PATH_SUFFIXES lib lib/${MS_QD_ARCH_DIR} Lib Lib/${MS_QD_ARCH_DIR})
 
-find_library(QD_LIB2
-  NAMES         qd_f_main
-  HINTS         ${QD_DIR}
-  PATH_SUFFIXES lib lib/${MS_QD_ARCH_DIR} Lib Lib/${MS_QD_ARCH_DIR})
-
-set(QD_LIBRARIES_WORK ${QD_LIB2} ${QD_LIB1} ${QD_LIB0})
+set(QD_LIBRARIES_WORK ${QD_LIB1} ${QD_LIB0})
 
 set(QD_INCLUDE_PATH  ${QD_INCLUDE_PATH_WORK} CACHE STRING "QD include path" FORCE)
 set(QD_LIBRARIES ${QD_LIBRARIES_WORK} CACHE STRING "QD library to link against" FORCE)
