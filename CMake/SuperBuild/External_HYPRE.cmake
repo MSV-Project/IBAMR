@@ -52,13 +52,26 @@ if(NOT DEFINED HYPRE_DIR)
       -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
   endif()
 
-  set(SHARED_LIB_CONF)
+#     message(STATUS "Adding project:${proj}")
   if(BUILD_SHARED_LIBS)
     set(SHARED_LIB_CONF --enable-shared --disable-static)
+    # Hack -- Delete build directory to triger rebuild.
+    if(NOT ${proj}_SHARED_BUILD AND EXISTS ${IBAMR_BINARY_DIR}/SuperBuild/${proj})
+      file(REMOVE_RECURSE ${IBAMR_BINARY_DIR}/SuperBuild/${proj})
+      file(REMOVE_RECURSE ${IBAMR_BINARY_DIR}/CMake/${proj}${ep_suffix})
+    endif()
+
+    set(${proj}_SHARED_BUILD TRUE CACHE INTERNAL "" FORCE)
   else()
     set(SHARED_LIB_CONF --enable-static --disable-shared)
+
+    if(${proj}_SHARED_BUILD AND EXISTS ${IBAMR_BINARY_DIR}/SuperBuild/${proj})
+      file(REMOVE_RECURSE ${IBAMR_BINARY_DIR}/SuperBuild/${proj})
+      file(REMOVE_RECURSE ${IBAMR_BINARY_DIR}/CMake/${proj}${ep_suffix})
+    endif()
+
+    set(${proj}_SHARED_BUILD FALSE CACHE INTERNAL "" FORCE)
   endif()
-#     message(STATUS "Adding project:${proj}")
 
   ExternalProject_Add(${proj}
     SOURCE_DIR ${IBAMR_BINARY_DIR}/SuperBuild/${proj}
@@ -72,18 +85,15 @@ if(NOT DEFINED HYPRE_DIR)
       CC=${ep_install_dir}/bin/mpicc
       CXX=${ep_install_dir}/bin/mpicxx
       FC=${ep_install_dir}/bin/mpif90
-      "CFLAGS=${ep_common_c_flags}"
-      "CXXFLAGS=${ep_common_cxx_flags}"
-      "FCFLAGS=${CMAKE_Fortran_FLAGS}"
-      "FFLAGS=${CMAKE_Fortran_FLAGS}"
+      "CFLAGS=${ep_common_c_flags} ${ep_build_type_c_flags}"
+      "CXXFLAGS=${ep_common_cxx_flags} ${ep_build_type_cxx_flags}"
+      "FCFLAGS=${CMAKE_Fortran_FLAGS} ${ep_build_type_fortran_flags}"
+      "FFLAGS=${CMAKE_Fortran_FLAGS} ${ep_build_type_fortran_flags}"
       "LDFLAGS=-L${ep_install_dir}/lib -Wl,-rpath,${ep_install_dir}/lib"
-      ${SHARED_LIB_CONF}
       --libdir=${ep_install_dir}/lib
       --prefix=${ep_install_dir}
       --with-MPI-include=${ep_install_dir}/include
       --with-MPI-libs=nsl;aio;rt
-#       --with-blas=yes
-#       --with-lapack=yes
       --with-blas-lib-dirs=${LAPACK_DIR}
       --with-lapack-lib-dirs=${LAPACK_DIR}
       --with-lapack-libs=lapack
@@ -92,6 +102,7 @@ if(NOT DEFINED HYPRE_DIR)
       --without-mli
       --without-fei
       --without-superlu
+      ${SHARED_LIB_CONF}
     LOG_DOWNLOAD 1
     LOG_CONFIGURE 1
     LOG_TEST 1
@@ -100,7 +111,7 @@ if(NOT DEFINED HYPRE_DIR)
     DEPENDS
       ${HYPRE_DEPENDENCIES}
     )
-  set(${proj}_DIR ${IBAMR_BINARY_DIR}/SuperBuild/${proj}/src)
+  set(${proj}_DIR ${ep_install_dir})
 
 else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")

@@ -58,8 +58,11 @@ if(NOT DEFINED PETSC_DIR)
   else()
     set(SHARED_LIB_CONF --with-shared-libraries=0)
   endif()
-  # Set PETSc specific environment variables
-  set(ENV{PETSC_DIR} ${IBAMR_BINARY_DIR}/SuperBuild/${proj})
+
+  set(with_debug "--with-debugging=0")
+  if(CMAKE_BUILD_TYPE MATCHES "Debug")
+    set(with_debug "--with-debugging=1")
+  endif()
 
   ExternalProject_Add(${proj}
     SOURCE_DIR ${IBAMR_BINARY_DIR}/SuperBuild/${proj}
@@ -74,26 +77,23 @@ if(NOT DEFINED PETSC_DIR)
       "--CXXFLAGS=${ep_common_cxx_flags}"
       "--FCFLAGS=${CMAKE_Fortran_FLAGS}"
       "--FFLAGS=${CMAKE_Fortran_FLAGS}"
-      "--COPTFLAGS=${CMAKE_C_FLAGS_RELEASE}"
-      "--CXXOPTFLAGS=${CMAKE_CXX_FLAGS_RELEASE}"
-      "--FOPTFLAGS=${CMAKE_F_FLAGS_RELEASE}"
       "--LDFLAGS=-Wl,-rpath -Wl,${ep_install_dir}/lib"
       "--LIBS=-Wl,-rpath -Wl,${ep_install_dir}/lib"
       --PETSC_ARCH=build
       --with-default-arch=0
-      --with-debugging=0
       --with-c++-support
       --with-hypre=1
-      --with-hypre-dir=${ep_install_dir}
+      --with-hypre-dir=${HYPRE_DIR}
       --with-mpi=1
-      --with-mpi-dir=${ep_install_dir}
+      --with-mpi-dir=${OPENMPI_DIR}
       --with-x=0
+      ${with_debug}
       ${SHARED_LIB_CONF}
-    LOG_DOWNLOAD 1
-    LOG_CONFIGURE 1
-    LOG_TEST 1
-    LOG_BUILD 1
-    LOG_INSTALL 1
+#     LOG_DOWNLOAD 1
+#     LOG_CONFIGURE 1
+#     LOG_TEST 1
+#     LOG_BUILD 1
+#     LOG_INSTALL 1
     BUILD_COMMAND make PETSC_DIR=${IBAMR_BINARY_DIR}/SuperBuild/${proj} PETSC_ARCH=build all
     DEPENDS
       ${PETSC_DEPENDENCIES}
@@ -105,10 +105,10 @@ else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
-list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DPETSC_DIR:PATH=$ENV{PETSC_DIR})
-list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DPETSC_ARCH:STRING=build)
-list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DPETSC_INCLUDE_PATH:PATH=$ENV{PETSC_DIR}/include)
+list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DPETSC_DIR:PATH=${PETSC_DIR})
+list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DPETSC_ARCH:STRING=${PETSC_ARCH})
+list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DPETSC_INCLUDE_PATH:PATH=${PETSC_DIR}/include)
 
-list(APPEND INCLUDE_PATHS $ENV{PETSC_DIR}/build/include $ENV{PETSC_DIR}/include)
-list(APPEND LIBRARY_PATHS $ENV{PETSC_DIR}/build/lib)
+list(APPEND INCLUDE_PATHS ${PETSC_DIR}/build/include ${PETSC_DIR}/include)
+list(APPEND LIBRARY_PATHS ${PETSC_DIR}/build/lib)
 list(INSERT EXTERNAL_LIBRARIES 0 -lpetsc)

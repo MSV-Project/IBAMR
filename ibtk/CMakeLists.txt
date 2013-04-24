@@ -326,7 +326,6 @@ list(INSERT IBTK_EXTERNAL_LIBS 0
   )
 list(REMOVE_DUPLICATES IBTK_EXTERNAL_LIBS)
 list(REMOVE_DUPLICATES IBTK_EXTERNAL_INCLUDE_PATHS)
-
 #----------------------------------------------------------------------------
 # Set include dirs variable, and linker flags
 # ---------------------------------------------------------------------------

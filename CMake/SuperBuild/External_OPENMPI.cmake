@@ -83,10 +83,10 @@ if(NOT DEFINED OPENMPI_DIR)
       CXX=${CMAKE_CXX_COMPILER}
       F77=${CMAKE_Fortran_COMPILER}
       FC=${CMAKE_Fortran_COMPILER}
-      "CFLAGS=${ep_common_c_flags}"
-      "CXXFLAGS=${ep_common_cxx_flags}"
-      "FCFLAGS=${CMAKE_Fortran_FLAGS}"
-      "FFLAGS=${CMAKE_Fortran_FLAGS}"
+      "CFLAGS=${ep_common_c_flags} ${ep_build_type_c_flags}"
+      "CXXFLAGS=${ep_common_cxx_flags} ${ep_build_type_cxx_flags}"
+      "FCFLAGS=${CMAKE_Fortran_FLAGS} ${ep_build_type_fortran_flags}"
+      "FFLAGS=${CMAKE_Fortran_FLAGS} ${ep_build_type_fortran_flags}"
       --libdir=${ep_install_dir}/lib
       --prefix=${ep_install_dir}
       --disable-dependency-tracking
@@ -103,7 +103,7 @@ if(NOT DEFINED OPENMPI_DIR)
     DEPENDS
       ${OPENMPI_DEPENDENCIES}
     )
-  set(${proj}_DIR ${IBAMR_BINARY_DIR}/SuperBuild/${proj}-build)
+  set(${proj}_DIR ${ep_install_dir})
 
 else()
   msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")

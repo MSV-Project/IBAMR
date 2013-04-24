@@ -81,10 +81,10 @@ if(NOT DEFINED BLITZ_DIR)
       CXX=g++
       F77=gfortran
       FC=gfortran
-      "CFLAGS=${ep_common_c_flags}"
-      "CXXFLAGS=${ep_common_cxx_flags}"
-      "FCFLAGS=${CMAKE_Fortran_FLAGS}"
-      "FFLAGS=${CMAKE_Fortran_FLAGS}"
+      "CFLAGS=${ep_common_c_flags} ${ep_build_type_c_flags}"
+      "CXXFLAGS=${ep_common_cxx_flags} ${ep_build_type_cxx_flags}"
+      "FCFLAGS=${CMAKE_Fortran_FLAGS} ${ep_build_type_fortran_flags}"
+      "FFLAGS=${CMAKE_Fortran_FLAGS} ${ep_build_type_fortran_flags}"
       ${SHARED_LIB_CONF}
       --libdir=${ep_install_dir}/lib
       --prefix=${ep_install_dir}

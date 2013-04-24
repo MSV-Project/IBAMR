@@ -68,10 +68,10 @@ if(NOT DEFINED SILO_DIR)
     UPDATE_COMMAND ""
     INSTALL_COMMAND make install
     CONFIGURE_COMMAND ${IBAMR_BINARY_DIR}/SuperBuild/${proj}/configure
-      "CFLAGS=${ep_common_c_flags}"
-      "CXXFLAGS=${ep_common_cxx_flags}"
-      "FCFLAGS=${CMAKE_Fortran_FLAGS}"
-      "FFLAGS=${CMAKE_Fortran_FLAGS}"
+      "CFLAGS=${ep_common_c_flags} ${ep_build_type_c_flags}"
+      "CXXFLAGS=${ep_common_cxx_flags} ${ep_build_type_cxx_flags}"
+      "FCFLAGS=${CMAKE_Fortran_FLAGS} ${ep_build_type_fortran_flags}"
+      "FFLAGS=${CMAKE_Fortran_FLAGS} ${ep_build_type_fortran_flags}"
       CC=${CMAKE_C_COMPILER}
       CXX=${CMAKE_CXX_COMPILER}
       F77=${CMAKE_Fortran_COMPILER}
