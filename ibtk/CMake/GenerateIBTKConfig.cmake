@@ -6,49 +6,49 @@ include(CheckIncludeFile)
 include(TestForSTDNamespace)
 
 if(MPI_FOUND)
-  set(HAVE_MPI 1)
+  set(HAVE_MPI TRUE)
 endif()
 
 if(HDF5_FOUND)
-  set(HAVE_LIBHDF5 1)
-  set(HAVE_LIBHDF5_HL 1)
+  set(HAVE_LIBHDF5 TRUE)
+  set(HAVE_LIBHDF5_HL TRUE)
 endif()
 
 if(LAPACK_FOUND)
-  set(HAVE_BLAS 1)
-  set(HAVE_LAPACK 1)
+  set(HAVE_BLAS TRUE)
+  set(HAVE_LAPACK TRUE)
 endif()
 
 if(HYPRE_FOUND)
-  set(HAVE_LIBHYPRE 1)
+  set(HAVE_LIBHYPRE TRUE)
 endif()
 
 if(PETSC_FOUND)
-  set(HAVE_LIBPETSC 1)
+  set(HAVE_LIBPETSC TRUE)
 endif()
 
 if(SILO_FOUND)
-  set(HAVE_LIBSILO 1)
+  set(HAVE_LIBSILO TRUE)
 endif()
 
 if(SAMRAI_FOUND)
-  set(HAVE_LIBSAMRAI 1)
+  set(HAVE_LIBSAMRAI TRUE)
 endif()
 
 if(BLITZ_FOUND)
-  set(HAVE_LIBBLITZ 1)
+  set(HAVE_LIBBLITZ TRUE)
 endif()
 
 if(QD_FOUND)
-  set(HAVE_QD 1)
+  set(HAVE_QD TRUE)
 endif()
 
 if(MUPARSER_FOUND)
-  set(HAVE_MUPARSER 1)
+  set(HAVE_MUPARSER TRUE)
 endif()
 
 if(LIBMESH_FOUND)
-  set(HAVE_LIBMESH 1)
+  set(HAVE_LIBMESH TRUE)
 endif()
 
 # -----------------------------------------------------------------------------
@@ -78,8 +78,8 @@ if(ENABLE_EXPENSIVE_CF_INTERPOLATION)
 endif()
 
 if(NOT CMAKE_NO_STD_NAMESPACE)
-  set(HAVE_STL 1)
-  set(HAVE_NAMESPACES 1)
+  set(HAVE_STL TRUE)
+  set(HAVE_NAMESPACES TRUE)
 endif()
 CHECK_INCLUDE_FILES("stdlib.h;string.h;stdarg.h;float.h" STDC_HEADERS)
 CHECK_INCLUDE_FILE("memory.h" HAVE_MEMORY_H)
@@ -105,7 +105,7 @@ set(FC_FUNC "FC_GLOBAL")
 set(FC_FUNC_ "FC_GLOBAL_")
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/testBuiltinExpect.cxx
-  "int main() { return __builtin_expect(1, 1) ? 1 : 0; }")
+  "int main() { return __builtin_expect(1,1) ? 1 : 0; }")
 
 try_compile(HAVE_BUILTIN_EXPECT ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}/testBuiltinExpect.cxx

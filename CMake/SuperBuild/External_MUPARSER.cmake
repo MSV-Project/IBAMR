@@ -66,10 +66,10 @@ if(NOT DEFINED MUPARSER_DIR)
     INSTALL_COMMAND make install
     BUILD_COMMAND make lib
     CONFIGURE_COMMAND ${IBAMR_BINARY_DIR}/SuperBuild/${proj}/configure
-      "CFLAGS=${ep_common_c_flags}"
-      "CXXFLAGS=${ep_common_cxx_flags}"
-      "FCFLAGS=${CMAKE_F_FLAGS}"
-      "FFLAGS=${CMAKE_F_FLAGS}"
+      "CFLAGS=${ep_common_c_flags} ${ep_build_type_c_flags}"
+      "CXXFLAGS=${ep_common_cxx_flags} ${ep_build_type_cxx_flags}"
+      "FCFLAGS=${CMAKE_Fortran_FLAGS} ${ep_build_type_fortran_flags}"
+      "FFLAGS=${CMAKE_Fortran_FLAGS} ${ep_build_type_fortran_flags}"
       CC=${CMAKE_C_COMPILER}
       CXX=${CMAKE_CXX_COMPILER}
       F77=${CMAKE_Fortran_COMPILER}

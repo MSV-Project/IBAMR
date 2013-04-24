@@ -49,6 +49,27 @@ set(ep_suffix      "-cmake")
 set(ep_common_c_flags "${CMAKE_C_FLAGS_INIT} ${ADDITIONAL_C_FLAGS}")
 set(ep_common_cxx_flags "${CMAKE_CXX_FLAGS_INIT} ${ADDITIONAL_CXX_FLAGS}")
 
+set(ep_build_type_c_flags)
+set(ep_build_type_cxx_flags)
+set(ep_build_type_fortran_flags)
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+  set(ep_build_type_c_flags "${ep_build_type_c_flags} ${CMAKE_C_FLAGS_DEBUG}")
+  set(ep_build_type_cxx_flags "${ep_build_type_cxx_flags} ${CMAKE_CXX_FLAGS_DEBUG}")
+  set(ep_build_type_fortran_flags "${ep_build_type_fortran_flags} ${CMAKE_Fortran_FLAGS_DEBUG}")
+elseif(CMAKE_BUILD_TYPE MATCHES "Release")
+  set(ep_build_type_c_flags "${ep_build_type_c_flags} ${CMAKE_C_FLAGS_RELEASE}")
+  set(ep_build_type_cxx_flags "${ep_build_type_cxx_flags} ${CMAKE_CXX_FLAGS_RELEASE}")
+  set(ep_build_type_fortran_flags "${ep_build_type_fortran_flags} ${CMAKE_Fortran_FLAGS_RELEASE}")
+elseif(CMAKE_BUILD_TYPE MATCHES "MinSizeRel")
+  set(ep_build_type_c_flags "${ep_build_type_c_flags} ${CMAKE_C_FLAGS_MINSIZEREL}")
+  set(ep_build_type_cxx_flags "${ep_build_type_cxx_flags} ${CMAKE_CXX_FLAGS_MINSIZEREL}")
+  set(ep_build_type_fortran_flags "${ep_build_type_fortran_flags} ${CMAKE_Fortran_FLAGS_MINSIZEREL}")
+elseif(CMAKE_BUILD_TYPE MATCHES "RelWithDebInfo")
+  set(ep_build_type_c_flags "${ep_build_type_c_flags} ${CMAKE_C_FLAGS_RELWITHDEBINFO}")
+  set(ep_build_type_cxx_flags "${ep_build_type_cxx_flags} ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+  set(ep_build_type_fortran_flags "${ep_build_type_fortran_flags} ${CMAKE_Fortran_FLAGS_RELWITHDEBINFO}")
+endif()
+
 # Compute -G arg for configuring external projects with the same CMake generator:
 if(CMAKE_EXTRA_GENERATOR)
   set(gen "${CMAKE_EXTRA_GENERATOR} - ${CMAKE_GENERATOR}")
@@ -70,15 +91,15 @@ set(INCLUDE_PATHS)
 
 CheckExternalProjectDependency(IBAMR)
 
-list(REMOVE_DUPLICATES EXTERNAL_LIBRARIES)
-list(REMOVE_DUPLICATES INCLUDE_PATHS)
-list(REMOVE_DUPLICATES LIBRARY_PATHS)
-set(IBAMR_EXTERNAL_LIBRARIES ${IBAMR_EXTERNAL_LIBRARIES} ${EXTERNAL_LIBRARIES}
-  CACHE INTERNAL "IBAMR external libraries.")
-set(IBAMR_INCLUDE_PATH ${IBAMR_INCLUDE_PATH} ${INCLUDE_PATHS}
-  CACHE INTERNAL "IBAMR include paths.")
-set(IBAMR_LIBRARY_PATH ${IBAMR_LIBRARY_PATH} ${LIBRARY_PATHS}
-  CACHE INTERNAL "IBAMR library paths.")
+# list(REMOVE_DUPLICATES EXTERNAL_LIBRARIES)
+# list(REMOVE_DUPLICATES INCLUDE_PATHS)
+# list(REMOVE_DUPLICATES LIBRARY_PATHS)
+# set(IBAMR_EXTERNAL_LIBRARIES ${IBAMR_EXTERNAL_LIBRARIES} ${EXTERNAL_LIBRARIES}
+#   CACHE INTERNAL "IBAMR external libraries.")
+# set(IBAMR_INCLUDE_PATH ${IBAMR_INCLUDE_PATH} ${INCLUDE_PATHS}
+#   CACHE INTERNAL "IBAMR include paths.")
+# set(IBAMR_LIBRARY_PATH ${IBAMR_LIBRARY_PATH} ${LIBRARY_PATHS}
+#   CACHE INTERNAL "IBAMR library paths.")
 
 #-----------------------------------------------------------------------------
 # Makes sure ${IBAMR_BINARY_DIR}/bin and ${IBAMR_BINARY_DIR}/lib exists

@@ -39,7 +39,7 @@ if(MINGW)
   list(APPEND additional_vtk_cmakevars -DCMAKE_USE_PTHREADS:BOOL=OFF)
 endif()
 
-set(LIBMESH_DEPENDENCIES "OPENMPI")
+set(LIBMESH_DEPENDENCIES "OPENMPI;PETSC")
 # Include dependent projects if any
 CheckExternalProjectDependency(LIBMESH)
 set(proj LIBMESH)
@@ -58,11 +58,24 @@ if(NOT DEFINED LIBMESH_DIR)
   endif()
 
 #     message(STATUS "Adding project:${proj}")
-  set(SHARED_LIB_CONF)
   if(BUILD_SHARED_LIBS)
     set(SHARED_LIB_CONF --enable-shared --disable-static)
+    # Hack -- Delete build directory to triger rebuild.
+    if(NOT ${proj}_SHARED_BUILD AND EXISTS ${IBAMR_BINARY_DIR}/SuperBuild/${proj})
+      file(REMOVE_RECURSE ${IBAMR_BINARY_DIR}/SuperBuild/${proj})
+      file(REMOVE_RECURSE ${IBAMR_BINARY_DIR}/CMake/${proj}${ep_suffix})
+    endif()
+
+    set(${proj}_SHARED_BUILD TRUE CACHE INTERNAL "" FORCE)
   else()
     set(SHARED_LIB_CONF --enable-static --disable-shared)
+
+    if(${proj}_SHARED_BUILD AND EXISTS ${IBAMR_BINARY_DIR}/SuperBuild/${proj})
+      file(REMOVE_RECURSE ${IBAMR_BINARY_DIR}/SuperBuild/${proj})
+      file(REMOVE_RECURSE ${IBAMR_BINARY_DIR}/CMake/${proj}${ep_suffix})
+    endif()
+
+    set(${proj}_SHARED_BUILD FALSE CACHE INTERNAL "" FORCE)
   endif()
 
   ExternalProject_Add(${proj}
@@ -75,11 +88,13 @@ if(NOT DEFINED LIBMESH_DIR)
     INSTALL_COMMAND ""
     BUILD_COMMAND make AR=/usr/bin/ar
     CONFIGURE_COMMAND ${IBAMR_BINARY_DIR}/SuperBuild/${proj}/libmesh/configure
-      "CFLAGS=${ep_common_c_flags}"
-      "CXXFLAGS=${ep_common_cxx_flags}"
-      "FCFLAGS=${CMAKE_Fortran_FLAGS}"
-      "FFLAGS=${CMAKE_Fortran_FLAGS}"
+      "CFLAGS=${ep_common_c_flags} ${ep_build_type_c_flags}"
+      "CXXFLAGS=${ep_common_cxx_flags} ${ep_build_type_cxx_flags}"
+      "FCFLAGS=${CMAKE_Fortran_FLAGS} ${ep_build_type_fortran_flags}"
+      "FFLAGS=${CMAKE_Fortran_FLAGS} ${ep_build_type_fortran_flags}"
       "LDFLAGS=-L${ep_install_dir}/lib -Wl,-rpath,${ep_install_dir}/lib"
+      "PETSC_DIR=${PETSC_DIR}"
+      "PETSC_ARCH=${PETSC_ARCH}"
       --build=${build}
       --prefix=${ep_install_dir}
       --libdir=${ep_install_dir}/lib
@@ -89,7 +104,7 @@ if(NOT DEFINED LIBMESH_DIR)
       --with-f77=${ep_install_dir}/bin/mpif90
       ${SHARED_LIB_CONF}
       --enable-mpi
-#       --enable-petsc
+      --enable-petsc
       --enable-tetgen
       --enable-triangle
       --enable-vtk
