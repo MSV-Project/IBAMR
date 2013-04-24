@@ -1,3 +1,12 @@
+
+# --------------------------------------------------------------------------
+# Configuration variables
+# --------------------------------------------------------------------------
+configure_file(
+    ${IBAMR_SOURCE_DIR}/CMake/IBAMRConfig.cmake.in
+    ${IBAMR_BINARY_DIR}/IBAMRConfig.cmake
+    @ONLY IMMEDIATE)
+
 #
 # Generate configuration header
 #
