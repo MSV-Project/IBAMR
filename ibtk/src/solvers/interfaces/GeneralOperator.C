@@ -86,9 +86,11 @@ GeneralOperator::applyAdd(
 
 void
 GeneralOperator::initializeOperatorState(
-    const SAMRAIVectorReal<NDIM,double>& /*in*/,
-    const SAMRAIVectorReal<NDIM,double>& /*out*/)
+    const SAMRAIVectorReal<NDIM,double>& in,
+    const SAMRAIVectorReal<NDIM,double>& out)
 {
+    (void) in;
+    (void) out;
     // intentionally blank
     return;
 }// initializeOperatorState
@@ -105,5 +107,10 @@ GeneralOperator::deallocateOperatorState()
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::GeneralOperator>;
 
 //////////////////////////////////////////////////////////////////////////////

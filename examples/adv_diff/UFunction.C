@@ -35,7 +35,7 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 #ifndef included_IBAMR_config
-// #include <IBAMR_config.h>
+#include <IBAMR_config.h>
 #define included_IBAMR_config
 #endif
 
@@ -44,20 +44,29 @@
 #define included_SAMRAI_config
 #endif
 
+// SAMRAI INCLUDES
+#include <ArrayData.h>
+#include <Box.h>
+#include <CartesianPatchGeometry.h>
+#include <FaceData.h>
+#include <FaceIndex.h>
+#include <FaceIterator.h>
+#include <Index.h>
+
 /////////////////////////////// STATIC ///////////////////////////////////////
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
 UFunction::UFunction(
     const string& object_name,
-    Pointer<GridGeometry<NDIM> > grid_geom,
-    Pointer<Database> input_db)
+    tbox::Pointer<hier::GridGeometry<NDIM> > grid_geom,
+    tbox::Pointer<tbox::Database> input_db)
     : CartGridFunction(object_name),
       d_object_name(object_name),
       d_grid_geom(grid_geom),
-      d_X(),
+      d_X(NDIM),
       d_init_type("UNIFORM"),
-      d_uniform_u()
+      d_uniform_u(NDIM)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(!object_name.empty());
@@ -67,7 +76,7 @@ UFunction::UFunction(
     // Default initial values.
     const double* const XUpper = d_grid_geom->getXUpper();
     const double* const XLower = d_grid_geom->getXLower();
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         d_X[d] = XLower[d] + 0.5*(XUpper[d] - XLower[d]);
         d_uniform_u[d] = 1.0;
@@ -88,20 +97,20 @@ UFunction::~UFunction()
 void
 UFunction::setDataOnPatch(
     const int data_idx,
-    Pointer<Variable<NDIM> > /*var*/,
-    Pointer<Patch<NDIM> > patch,
-    const double /*data_time*/,
-    const bool /*initial_time*/,
-    Pointer<PatchLevel<NDIM> > /*level*/)
+    tbox::Pointer<hier::Variable<NDIM> > var,
+    tbox::Pointer<hier::Patch<NDIM> > patch,
+    const double data_time,
+    const bool initial_time,
+    tbox::Pointer<hier::PatchLevel<NDIM> > level)
 {
-    Pointer<FaceData<NDIM,double> > u_data = patch->getPatchData(data_idx);
+    tbox::Pointer< pdat::FaceData<NDIM,double> > u_data = patch->getPatchData(data_idx);
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(!u_data.isNull());
 #endif
 
     if (d_init_type == "UNIFORM")
     {
-        for (unsigned int axis = 0; axis < NDIM; ++axis)
+        for (int axis = 0; axis < NDIM; ++axis)
         {
             u_data->getArrayData(axis).
                 fillAll(d_uniform_u[axis]);
@@ -109,35 +118,35 @@ UFunction::setDataOnPatch(
     }
     else if (d_init_type == "VORTEX")
     {
-        const Box<NDIM>& patch_box = patch->getBox();
-        const Index<NDIM>& patch_lower = patch_box.lower();
-        Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
+        const hier::Box<NDIM>& patch_box = patch->getBox();
+        const hier::Index<NDIM>& patch_lower = patch_box.lower();
+        tbox::Pointer<geom::CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
 
         const double* const XLower = pgeom->getXLower();
         const double* const dx = pgeom->getDx();
 
-        TinyVector<double,NDIM> X;
+        double X[NDIM];
 
-        for (unsigned int axis = 0; axis < NDIM; ++axis)
+        for (int axis = 0; axis < NDIM; ++axis)
         {
-            for (FaceIterator<NDIM> it(patch_box,axis); it; it++)
+            for (pdat::FaceIterator<NDIM> it(patch_box,axis); it; it++)
             {
-                const FaceIndex<NDIM>& i = it();
-                const Index<NDIM>& cell_idx = i.toCell(1);
+                const pdat::FaceIndex<NDIM>& i = it();
+                const hier::Index<NDIM>& cell_idx = i.toCell(1);
 
-                for (unsigned int d = 0; d < NDIM; ++d)
+                for (int d = 0; d < NDIM; ++d)
                 {
                     if (d != axis)
                     {
                         X[d] =
                             XLower[d] +
-                            dx[d]*(static_cast<double>(cell_idx(d)-patch_lower(d))+0.5);
+                            dx[d]*(double(cell_idx(d)-patch_lower(d))+0.5);
                     }
                     else
                     {
                         X[d] =
                             XLower[d] +
-                            dx[d]*(static_cast<double>(cell_idx(d)-patch_lower(d)));
+                            dx[d]*(double(cell_idx(d)-patch_lower(d)));
                     }
                 }
 
@@ -171,13 +180,13 @@ UFunction::setDataOnPatch(
 
 void
 UFunction::getFromInput(
-    Pointer<Database> db)
+    tbox::Pointer<tbox::Database> db)
 {
     if (!db.isNull())
     {
         if (db->keyExists("X"))
         {
-            db->getDoubleArray("X", d_X.data(), NDIM);
+            d_X = db->getDoubleArray("X");
         }
 
         d_init_type = db->getStringWithDefault("init_type",d_init_type);
@@ -186,7 +195,7 @@ UFunction::getFromInput(
         {
             if (db->keyExists("uniform_u"))
             {
-                db->getDoubleArray("uniform_u", d_uniform_u.data(), NDIM);
+                d_uniform_u = db->getDoubleArray("uniform_u");
             }
         }
         else if (d_init_type == "VORTEX")

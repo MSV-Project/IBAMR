@@ -69,12 +69,13 @@ public:
     PETScSNESJacobianJOWrapper(
         const std::string& object_name,
         const SNES& petsc_snes,
-        PetscErrorCode (*petsc_snes_form_jac)(SNES,Vec,Mat*,Mat*,MatStructure*,void*),
-        void* petsc_snes_jac_ctx);
+        PetscErrorCode (* const petsc_snes_form_jac)(SNES,Vec,Mat*,Mat*,MatStructure*,void*),
+        void* const petsc_snes_jac_ctx);
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~PETScSNESJacobianJOWrapper();
 
     /*!
@@ -114,14 +115,14 @@ public:
      *
      * \param x value where the Jacobian is to be evaluated
      */
-    void
+    virtual void
     formJacobian(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x);
 
     /*!
      * \brief Return the vector where the Jacobian is evaluated.
      */
-    SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> >
+    virtual SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> >
     getBaseVector() const;
 
     //\}
@@ -153,7 +154,7 @@ public:
      * \param x input
      * \param y output: y=Ax
      */
-    void
+    virtual void
     apply(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
@@ -181,7 +182,7 @@ public:
      * \param y input
      * \param z output: z=Ax+y
      */
-    void
+    virtual void
     applyAdd(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y,
@@ -209,7 +210,7 @@ public:
      * \param x input
      * \param y output: y=A'x
      */
-    void
+    virtual void
     applyAdjoint(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
@@ -237,7 +238,7 @@ public:
      * \param y input
      * \param z output: z=A'x+y
      */
-    void
+    virtual void
     applyAdjointAdd(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y,
@@ -273,7 +274,7 @@ public:
      * \param in input vector
      * \param out output vector
      */
-    void
+    virtual void
     initializeOperatorState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& in,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& out);
@@ -288,7 +289,7 @@ public:
      *
      * \see initializeOperatorState
      */
-    void
+    virtual void
     deallocateOperatorState();
 
     //\}
@@ -303,7 +304,7 @@ public:
      *
      * \param enabled logging state: true=on, false=off
      */
-    void
+    virtual void
     enableLogging(
         bool enabled=true);
 

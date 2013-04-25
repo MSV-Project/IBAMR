@@ -41,7 +41,6 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/ax_blas.m4 \
 	$(top_srcdir)/m4/ax_cxx_have_stl.m4 \
 	$(top_srcdir)/m4/ax_cxx_namespaces.m4 \
 	$(top_srcdir)/m4/ax_lapack.m4 $(top_srcdir)/m4/ax_mpi.m4 \
-	$(top_srcdir)/m4/ax_prefix_config_h.m4 \
 	$(top_srcdir)/m4/blitz.m4 $(top_srcdir)/m4/hdf5.m4 \
 	$(top_srcdir)/m4/hypre.m4 $(top_srcdir)/m4/lib-ld.m4 \
 	$(top_srcdir)/m4/lib-link.m4 $(top_srcdir)/m4/lib-prefix.m4 \
@@ -382,16 +381,14 @@ IBAMR3d_LIBS = ${top_builddir}/lib/libIBAMR3d.a ${top_builddir}/ibtk/lib/libIBTK
 pkg_includedir = $(includedir)/@PACKAGE@
 SUFFIXES = .f.m4
 EXTRA_DIST = \
-  godunov_helpers.f.m4                                                   \
-  advect_centered_derivatives2d.f.m4  advect_centered_derivatives3d.f.m4 \
-  advect_detect2d.f.m4                advect_detect3d.f.m4               \
-  advect_diff2d.f.m4                  advect_diff3d.f.m4                 \
-  advect_stable2d.f.m4                advect_stable3d.f.m4               \
-  godunov_predictors2d.f.m4           godunov_predictors3d.f.m4
+  godunov_helpers.f.m4                                                  \
+  advect_detect2d.f.m4               advect_detect3d.f.m4               \
+  advect_diff2d.f.m4                 advect_diff3d.f.m4                 \
+  advect_stable2d.f.m4               advect_stable3d.f.m4               \
+  godunov_predictors2d.f.m4          godunov_predictors3d.f.m4
 
 BUILT_SOURCES = \
   godunov_helpers.f                                               \
-  advect_centered_derivatives2d.f advect_centered_derivatives3d.f \
   advect_detect2d.f               advect_detect3d.f               \
   advect_diff2d.f                 advect_diff3d.f                 \
   advect_stable2d.f               advect_stable3d.f               \

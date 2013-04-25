@@ -5,7 +5,6 @@ AC_PREREQ([2.68])
 AC_INIT([IBAMR],[101029],[griffith AT cims DOT nyu DOT edu])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_HEADERS([config/IBAMR_config.h])
-AX_PREFIX_CONFIG_H([config/IBAMR_prefix_config.h])
 AM_INIT_AUTOMAKE([1.11.1 -Wall -Werror dist-bzip2 foreign])
 AM_MAINTAINER_MODE([disable])
 AC_LANG(C++)
@@ -91,31 +90,13 @@ fi
 
 AC_MSG_CHECKING([whether compiler supports __builtin_expect keyword])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[
-    if (__builtin_expect(true,1))
-    {
-        return 0;
-    }
-    else
-    {
-        return -1;
-    }
+if (__builtin_expect(true,1)) return 0;
 ]])],[
 have_builtin_expect=1
 AC_MSG_RESULT(yes)],[
 have_builtin_expect=0
 AC_MSG_RESULT(no)])
 AC_DEFINE_UNQUOTED(HAVE_BUILTIN_EXPECT,$have_builtin_expect,[Boolean value indicating whether the C++ compiler supports the __builtin_expect keyword])
-
-AC_MSG_CHECKING([whether compiler supports __builtin_prefetch keyword])
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[
-    __builtin_prefetch(0,0,0);
-    return 0;
-]])],[
-have_builtin_prefetch=1
-AC_MSG_RESULT(yes)],[
-have_builtin_prefetch=0
-AC_MSG_RESULT(no)])
-AC_DEFINE_UNQUOTED(HAVE_BUILTIN_PREFETCH,$have_builtin_prefetch,[Boolean value indicating whether the C++ compiler supports the __builtin_prefetch keyword])
 
 # Checks for other programs.
 AC_PROG_RANLIB
@@ -444,12 +425,20 @@ AC_CONFIG_FILES([
   doc/online_Doxyfile
   examples/Makefile
   examples/IB/Makefile
-  examples/IB/explicit/Makefile
-  examples/IB/explicit/ex0/Makefile
-  examples/IB/explicit/ex1/Makefile
-  examples/IB/explicit/ex2/Makefile
-  examples/IB/explicit/ex3/Makefile
-  examples/IB/explicit/ex4/Makefile
+  examples/IB/cell_centered/Makefile
+  examples/IB/cell_centered/ex0/Makefile
+  examples/IB/cell_centered/ex1/Makefile
+  examples/IB/cell_centered/ex2/Makefile
+  examples/IB/staggered_grid/Makefile
+  examples/IB/staggered_grid/explicit/Makefile
+  examples/IB/staggered_grid/explicit/ex0/Makefile
+  examples/IB/staggered_grid/explicit/ex1/Makefile
+  examples/IB/staggered_grid/explicit/ex2/Makefile
+  examples/IB/staggered_grid/explicit/ex3/Makefile
+  examples/IB/staggered_grid/explicit/ex4/Makefile
+  examples/IB/staggered_grid/implicit/Makefile
+  examples/IB/staggered_grid/implicit/ex0/Makefile
+  examples/IB/staggered_grid/implicit/ex1/Makefile
   examples/IBFE/Makefile
   examples/IBFE/explicit/Makefile
   examples/IBFE/explicit/ex0/Makefile
@@ -463,10 +452,22 @@ AC_CONFIG_FILES([
   examples/adv_diff/Makefile
   examples/advect/Makefile
   examples/navier_stokes/Makefile
-  examples/navier_stokes/ex0/Makefile
-  examples/navier_stokes/ex1/Makefile
-  examples/navier_stokes/ex2/Makefile
-  examples/navier_stokes/ex3/Makefile
+  examples/navier_stokes/cell_centered/Makefile
+  examples/navier_stokes/cell_centered/approx_projection/Makefile
+  examples/navier_stokes/cell_centered/approx_projection/ex0/Makefile
+  examples/navier_stokes/cell_centered/approx_projection/ex1/Makefile
+  examples/navier_stokes/cell_centered/approx_projection/ex2/Makefile
+  examples/navier_stokes/cell_centered/exact_projection/Makefile
+  examples/navier_stokes/cell_centered/exact_projection/ex0/Makefile
+  examples/navier_stokes/cell_centered/exact_projection/ex1/Makefile
+  examples/navier_stokes/staggered_grid/Makefile
+  examples/navier_stokes/staggered_grid/ex0/Makefile
+  examples/navier_stokes/staggered_grid/ex1/Makefile
+  examples/navier_stokes/staggered_grid/ex2/Makefile
+  examples/navier_stokes/staggered_grid/ex3/Makefile
+  examples/vc_navier_stokes/Makefile
+  examples/vc_navier_stokes/operator_test/Makefile
+  examples/vc_navier_stokes/solver_test/Makefile
   lib/Makefile
   src/Makefile
   src/fortran/Makefile
@@ -477,7 +478,6 @@ AC_CONFIG_FILES([
   src/advect/fortran/Makefile
   src/navier_stokes/Makefile
   src/navier_stokes/fortran/Makefile
-  src/solid_mechanics/Makefile
   src/utilities/Makefile
   src/tools/Makefile
 ])

@@ -36,10 +36,14 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 // IBAMR INCLUDES
-#include <ibamr/ConvectiveOperator.h>
+#include <ibamr/ibamr_enums.h>
+
+// IBTK INCLUDES
+#include <ibtk/GeneralOperator.h>
 
 // SAMRAI INCLUDES
 #include <RefineAlgorithm.h>
+#include <RefineOperator.h>
 #include <SideVariable.h>
 
 // C++ STDLIB INCLUDES
@@ -51,25 +55,25 @@ namespace IBAMR
 {
 /*!
  * \brief Class INSStaggeredCenteredConvectiveOperator is a concrete
- * ConvectiveOperator which implements a centered convective differencing
+ * IBTK::GeneralOperator which implements a centered convective differencing
  * operator.
  *
  * \see INSStaggeredHierarchyIntegrator
  */
 class INSStaggeredCenteredConvectiveOperator
-    : public ConvectiveOperator
+    : public IBTK::GeneralOperator
 {
 public:
     /*!
      * \brief Class constructor.
      */
     INSStaggeredCenteredConvectiveOperator(
-        ConvectiveDifferencingType difference_form,
-        const std::string& bdry_extrap_type);
+        const ConvectiveDifferencingType& difference_form);
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~INSStaggeredCenteredConvectiveOperator();
 
     /*!
@@ -77,13 +81,39 @@ public:
      */
     void
     applyConvectiveOperator(
-        int U_idx,
-        int N_idx);
+        const int U_idx,
+        const int N_idx);
 
     /*!
      * \name General operator functionality.
      */
     //\{
+
+    /*!
+     * \brief Compute \f$y=F[x]\f$.
+     *
+     * Before calling apply(), the form of the vectors \a x and \a y should be
+     * set properly by the user on all patch interiors on the specified range of
+     * levels in the patch hierarchy.  The user is responsible for all data
+     * management for the quantities associated with the vectors.  In
+     * particular, patch data in these vectors must be allocated prior to
+     * calling this method.
+     *
+     * \param x input vector
+     * \param y output vector, i.e., \f$y=F[x]\f$
+     *
+     * <b>Conditions on Parameters:</b>
+     * - vectors \a x and \a y must have same hierarchy
+     * - vectors \a x and \a y must have same structure, depth, etc.
+     *
+     * In general, the vectors \a x and \a y \em cannot be the same.
+     *
+     * \see initializeOperatorState
+     */
+    virtual void
+    apply(
+        SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
+        SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
 
     /*!
      * \brief Compute hierarchy dependent data required for computing y=F[x] and
@@ -115,7 +145,7 @@ public:
      * \param in input vector
      * \param out output vector
      */
-    void
+    virtual void
     initializeOperatorState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& in,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& out);
@@ -129,7 +159,7 @@ public:
      *
      * \see initializeOperatorState
      */
-    void
+    virtual void
     deallocateOperatorState();
 
     //\}
@@ -144,7 +174,7 @@ public:
      *
      * \param enabled logging state: true=on, false=off
      */
-    void
+    virtual void
     enableLogging(
         bool enabled=true);
 
@@ -184,11 +214,14 @@ private:
     // Whether the operator is initialized.
     bool d_is_initialized;
 
+    // Determines which form of differencing to use.
+    const ConvectiveDifferencingType d_difference_form;
+
     // Data communication algorithms, operators, and schedules.
-    SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineAlgorithm<NDIM> > d_ghostfill_alg;
-    SAMRAI::tbox::Pointer<SAMRAI::xfer::RefinePatchStrategy<NDIM> > d_ghostfill_strategy;
-    std::vector<SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineSchedule<NDIM> > > d_ghostfill_scheds;
-    const std::string d_bdry_extrap_type;
+    SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineAlgorithm<NDIM> > d_refine_alg;
+    SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineOperator<NDIM> > d_refine_op;
+    SAMRAI::tbox::Pointer<SAMRAI::xfer::RefinePatchStrategy<NDIM> > d_refine_strategy;
+    std::vector<SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineSchedule<NDIM> > > d_refine_scheds;
 
     // Hierarchy configuration.
     SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > d_hierarchy;

@@ -34,8 +34,6 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
-
-
 #ifndef included_IBTK_config
 #include <IBTK_config.h>
 #define included_IBTK_config
@@ -65,12 +63,12 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define GS_SMOOTH_FC FC_GLOBAL(gssmooth2d,GSSMOOTH2D)
-#define RB_GS_SMOOTH_FC FC_GLOBAL(rbgssmooth2d,RBGSSMOOTH2D)
+#define GS_SMOOTH_FC FC_FUNC(gssmooth2d,GSSMOOTH2D)
+#define RB_GS_SMOOTH_FC FC_FUNC(rbgssmooth2d,RBGSSMOOTH2D)
 #endif
 #if (NDIM == 3)
-#define GS_SMOOTH_FC FC_GLOBAL(gssmooth3d,GSSMOOTH3D)
-#define RB_GS_SMOOTH_FC FC_GLOBAL(rbgssmooth3d,RBGSSMOOTH3D)
+#define GS_SMOOTH_FC FC_FUNC(gssmooth3d,GSSMOOTH3D)
+#define RB_GS_SMOOTH_FC FC_FUNC(rbgssmooth3d,RBGSSMOOTH3D)
 #endif
 
 // Function interfaces
@@ -140,7 +138,7 @@ static const bool CONSISTENT_TYPE_2_BDRY = false;
 
 SCPoissonFACOperator::SCPoissonFACOperator(
     const std::string& object_name,
-    const Pointer<Database> input_db)
+    const Pointer<Database>& input_db)
     : d_object_name(object_name),
       d_is_initialized(false),
       d_solution(NULL),
@@ -178,8 +176,9 @@ SCPoissonFACOperator::SCPoissonFACOperator(
       d_context(NULL),
       d_side_scratch_idx(-1),
       d_bc_op(NULL),
-      d_default_bc_coef(new LocationIndexRobinBcCoefs<NDIM>(d_object_name+"::default_bc_coef", Pointer<Database>(NULL))),
-      d_bc_coefs(blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>(d_default_bc_coef)),
+      d_default_bc_coef(new LocationIndexRobinBcCoefs<NDIM>(
+                            d_object_name+"::default_bc_coef", Pointer<Database>(NULL))),
+      d_bc_coefs(std::vector<RobinBcCoefStrategy<NDIM>*>(1,d_default_bc_coef)),
       d_apply_time(0.0),
       d_cf_bdry_op(),
       d_op_stencil_fill_pattern(),
@@ -227,14 +226,14 @@ SCPoissonFACOperator::SCPoissonFACOperator(
 
     // Setup a default boundary condition object that specifies homogeneous
     // Dirichlet boundary conditions.
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         d_default_bc_coef->setBoundaryValue(2*d  ,0.0);
         d_default_bc_coef->setBoundaryValue(2*d+1,0.0);
     }
 
     // Initialize the boundary conditions objects.
-    setPhysicalBcCoefs(blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>(d_default_bc_coef));
+    setPhysicalBcCoefs(std::vector<RobinBcCoefStrategy<NDIM>*>(NDIM,d_default_bc_coef));
 
     // Setup scratch variables.
     VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
@@ -283,17 +282,18 @@ SCPoissonFACOperator::setPoissonSpecifications(
 
 void
 SCPoissonFACOperator::setPhysicalBcCoefs(
-    const blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs)
+    const std::vector<RobinBcCoefStrategy<NDIM>*>& bc_coefs)
 {
-    for (unsigned int d = 0; d < NDIM; ++d)
+    d_bc_coefs.resize(bc_coefs.size());
+    for (unsigned l = 0; l < bc_coefs.size(); ++l)
     {
-        if (bc_coefs[d] != NULL)
+        if (bc_coefs[l] != NULL)
         {
-            d_bc_coefs[d] = bc_coefs[d];
+            d_bc_coefs[l] = bc_coefs[l];
         }
         else
         {
-            d_bc_coefs[d] = d_default_bc_coef;
+            d_bc_coefs[l] = d_default_bc_coef;
         }
     }
     return;
@@ -379,7 +379,6 @@ SCPoissonFACOperator::setCoarsestLevelSolverChoice(
     if (d_coarse_solver_choice == "hypre")
     {
         d_using_hypre = true;
-        d_hypre_solver = new SCPoissonHypreLevelSolver(d_object_name+"::hypre_solver", d_hypre_db);
         if (d_is_initialized)
         {
             initializeHypreLevelSolver();
@@ -492,7 +491,7 @@ SCPoissonFACOperator::restrictResidual(
     SAMRAIVectorReal<NDIM,double>& dst,
     int dst_ln)
 {
-    IBTK_TIMER_START(t_restrict_residual);
+    t_restrict_residual->start();
 
     const int src_idx = src.getComponentDescriptorIndex(0);
     const int dst_idx = dst.getComponentDescriptorIndex(0);
@@ -505,7 +504,7 @@ SCPoissonFACOperator::restrictResidual(
     }
     xeqScheduleRestriction(dst_idx, src_idx, dst_ln);
 
-    IBTK_TIMER_STOP(t_restrict_residual);
+    t_restrict_residual->stop();
     return;
 }// restrictResidual
 
@@ -515,7 +514,7 @@ SCPoissonFACOperator::prolongError(
     SAMRAIVectorReal<NDIM,double>& dst,
     int dst_ln)
 {
-    IBTK_TIMER_START(t_prolong_error);
+    t_prolong_error->start();
 
     const int dst_idx = dst.getComponentDescriptorIndex(0);
     const int src_idx = src.getComponentDescriptorIndex(0);
@@ -524,7 +523,7 @@ SCPoissonFACOperator::prolongError(
     // level error.
     xeqScheduleProlongation(dst_idx, src_idx, dst_ln);
 
-    IBTK_TIMER_STOP(t_prolong_error);
+    t_prolong_error->stop();
     return;
 }// prolongError
 
@@ -534,7 +533,7 @@ SCPoissonFACOperator::prolongErrorAndCorrect(
     SAMRAIVectorReal<NDIM,double>& dst,
     int dst_ln)
 {
-    IBTK_TIMER_START(t_prolong_error_and_correct);
+    t_prolong_error_and_correct->start();
 
     const int dst_idx = dst.getComponentDescriptorIndex(0);
     const int src_idx = src.getComponentDescriptorIndex(0);
@@ -551,7 +550,7 @@ SCPoissonFACOperator::prolongErrorAndCorrect(
     HierarchySideDataOpsReal<NDIM,double> hier_sc_data_ops_fine(d_hierarchy, dst_ln, dst_ln);
     hier_sc_data_ops_fine.add(dst_idx, dst_idx, d_side_scratch_idx, interior_only);
 
-    IBTK_TIMER_STOP(t_prolong_error_and_correct);
+    t_prolong_error_and_correct->stop();
     return;
 }// prolongErrorAndCorrect
 
@@ -561,12 +560,12 @@ SCPoissonFACOperator::smoothError(
     const SAMRAIVectorReal<NDIM,double>& residual,
     int level_num,
     int num_sweeps,
-    bool /*performing_pre_sweeps*/,
-    bool /*performing_post_sweeps*/)
+    bool performing_pre_sweeps,
+    bool performing_post_sweeps)
 {
     if (num_sweeps == 0) return;
 
-    IBTK_TIMER_START(t_smooth_error);
+    t_smooth_error->start();
 
     Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(level_num);
     const int error_idx = error.getComponentDescriptorIndex(0);
@@ -587,7 +586,7 @@ SCPoissonFACOperator::smoothError(
             TBOX_ASSERT(  error_data->getGhostCellWidth() == d_gcw);
             TBOX_ASSERT(scratch_data->getGhostCellWidth() == d_gcw);
 #endif
-            for (unsigned int axis = 0; axis < NDIM; ++axis)
+            for (int axis = 0; axis < NDIM; ++axis)
             {
                 scratch_data->getArrayData(axis).copy(
                     error_data->getArrayData(axis),
@@ -619,7 +618,7 @@ SCPoissonFACOperator::smoothError(
                     TBOX_ASSERT(  error_data->getGhostCellWidth() == d_gcw);
                     TBOX_ASSERT(scratch_data->getGhostCellWidth() == d_gcw);
 #endif
-                    for (unsigned int axis = 0; axis < NDIM; ++axis)
+                    for (int axis = 0; axis < NDIM; ++axis)
                     {
                         error_data->getArrayData(axis).copy(
                             scratch_data->getArrayData(axis),
@@ -665,7 +664,7 @@ SCPoissonFACOperator::smoothError(
             const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
             const double* const dx = pgeom->getDx();
 
-            for (unsigned int axis = 0; axis < NDIM; ++axis)
+            for (int axis = 0; axis < NDIM; ++axis)
             {
                 // Copy updated values from other local patches.
                 if (d_smoother_choice == "multiplicative")
@@ -727,8 +726,12 @@ SCPoissonFACOperator::smoothError(
                         static const double shift = 0.0;
                         static const int its = 1;
                         Mat& A = d_patch_mat[level_num][patch_counter][axis];
+#if (PETSC_VERSION_MAJOR == 3 && PETSC_VERSION_MINOR == 0)
+                        ierr = MatRelax(A, f, omega, SOR_SYMMETRIC_SWEEP, shift, its, its, e);  IBTK_CHKERRQ(ierr);
+#endif
+#if (PETSC_VERSION_MAJOR == 3 && PETSC_VERSION_MINOR == 1)
                         ierr = MatSOR(A, f, omega, SOR_SYMMETRIC_SWEEP, shift, its, its, e);  IBTK_CHKERRQ(ierr);
-
+#endif
                         // Reset the PETSc Vec wrappers.
                         ierr = VecResetArray(e);  IBTK_CHKERRQ(ierr);
                         ierr = VecResetArray(f);  IBTK_CHKERRQ(ierr);
@@ -736,7 +739,7 @@ SCPoissonFACOperator::smoothError(
                 }
                 else
                 {
-                    // Smooth the error using Gauss-Seidel.
+                    // Smooth the error using red-black Gauss-Seidel.
                     const double& alpha = d_poisson_spec.getDConstant();
                     const double& beta = d_poisson_spec.cIsZero() ? 0.0 : d_poisson_spec.getCConstant();
                     for (int depth = 0; depth < d_depth; ++depth)
@@ -746,7 +749,7 @@ SCPoissonFACOperator::smoothError(
                         const double* const F = residual_data->getPointer(axis,depth);
                         const int F_ghosts = (residual_data->getGhostCellWidth()).max();
                         static const int its = 1;
-                        GS_SMOOTH_FC(
+                        RB_GS_SMOOTH_FC(
                             U, U_ghosts,
                             alpha, beta,
                             F, F_ghosts,
@@ -765,7 +768,7 @@ SCPoissonFACOperator::smoothError(
     // Synchronize data along patch boundaries.
     xeqScheduleSideDataSynch(error_idx, level_num);
 
-    IBTK_TIMER_STOP(t_smooth_error);
+    t_smooth_error->stop();
     return;
 }// smoothError
 
@@ -775,7 +778,7 @@ SCPoissonFACOperator::solveCoarsestLevel(
     const SAMRAIVectorReal<NDIM,double>& residual,
     int coarsest_ln)
 {
-    IBTK_TIMER_START(t_solve_coarsest_level);
+    t_solve_coarsest_level->start();
 
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(coarsest_ln == d_coarsest_ln);
@@ -805,14 +808,12 @@ SCPoissonFACOperator::solveCoarsestLevel(
                 TBOX_ERROR("SCPoissonFACOperator::solveCoarsestLevel()\n"
                            << "  hypre level solver does not support non-scalar-valued data" << std::endl);
             }
-            d_hypre_solver->setInitialGuessNonzero(true);
             d_hypre_solver->setMaxIterations(d_coarse_solver_max_its);
             d_hypre_solver->setRelativeTolerance(d_coarse_solver_tol);
             d_hypre_solver->solveSystem(error_level,residual_level);
         }
         else if (d_using_petsc)
         {
-            d_petsc_solver->setInitialGuessNonzero(true);
             d_petsc_solver->setMaxIterations(d_coarse_solver_max_its);
             d_petsc_solver->setRelativeTolerance(d_coarse_solver_tol);
             d_petsc_solver->solveSystem(error_level,residual_level);
@@ -823,7 +824,7 @@ SCPoissonFACOperator::solveCoarsestLevel(
         xeqScheduleSideDataSynch(error_idx, coarsest_ln);
     }
 
-    IBTK_TIMER_STOP(t_solve_coarsest_level);
+    t_solve_coarsest_level->stop();
     return true;
 }// solveCoarsestLevel
 
@@ -832,47 +833,65 @@ SCPoissonFACOperator::computeResidual(
     SAMRAIVectorReal<NDIM,double>& residual,
     const SAMRAIVectorReal<NDIM,double>& solution,
     const SAMRAIVectorReal<NDIM,double>& rhs,
-    int coarsest_level_num,
-    int finest_level_num)
+    int level_num)
 {
-    IBTK_TIMER_START(t_compute_residual);
+    t_compute_residual->start();
 
-    const int res_idx = residual.getComponentDescriptorIndex(0);
-    const int sol_idx = solution.getComponentDescriptorIndex(0);
-    const int rhs_idx = rhs.getComponentDescriptorIndex(0);
-
-    const Pointer<SideVariable<NDIM,double> > res_var = residual.getComponentVariable(0);
-    const Pointer<SideVariable<NDIM,double> > sol_var = solution.getComponentVariable(0);
-    const Pointer<SideVariable<NDIM,double> > rhs_var = rhs.getComponentVariable(0);
-
-    // Fill ghost-cell values.
-    typedef HierarchyGhostCellInterpolation::InterpolationTransactionComponent InterpolationTransactionComponent;
-    Pointer<SideNoCornersFillPattern> fill_pattern = new SideNoCornersFillPattern(SIDEG, false, false, true);
-    InterpolationTransactionComponent transaction_comp(sol_idx, DATA_COARSEN_TYPE, BDRY_EXTRAP_TYPE, CONSISTENT_TYPE_2_BDRY, d_bc_coefs, fill_pattern);
-    if (d_hier_bdry_fill_ops[finest_level_num].isNull())
+    if (!d_preconditioner.isNull() && d_preconditioner->getNumPreSmoothingSweeps() == 0)
     {
-        d_hier_bdry_fill_ops[finest_level_num] = new HierarchyGhostCellInterpolation();
-        d_hier_bdry_fill_ops[finest_level_num]->initializeOperatorState(transaction_comp, d_hierarchy, coarsest_level_num, finest_level_num);
+        // Compute the residual, r = f - A*u = f - A*0.
+        residual.copyVector(Pointer<SAMRAIVectorReal<NDIM,double> >(const_cast<SAMRAIVectorReal<NDIM,double>*>(&rhs),false), false);
     }
     else
     {
-        d_hier_bdry_fill_ops[finest_level_num]->resetTransactionComponent(transaction_comp);
-    }
-    d_hier_bdry_fill_ops[finest_level_num]->setHomogeneousBc(true);
-    d_hier_bdry_fill_ops[finest_level_num]->fillData(d_apply_time);
+        // Compute the residual, r = f - A*u.
+        const int res_idx = residual.getComponentDescriptorIndex(0);
+        const int sol_idx = solution.getComponentDescriptorIndex(0);
+        const int rhs_idx = rhs.getComponentDescriptorIndex(0);
 
-    // Compute the residual, r = f - A*u.
-    if (d_hier_math_ops[finest_level_num].isNull())
-    {
-        std::ostringstream stream;
-        stream << d_object_name << "::hier_math_ops_" << finest_level_num;
-        d_hier_math_ops[finest_level_num] = new HierarchyMathOps(stream.str(), d_hierarchy, coarsest_level_num, finest_level_num);
-    }
-    d_hier_math_ops[finest_level_num]->laplace(res_idx, res_var, d_poisson_spec, sol_idx, sol_var, NULL, d_apply_time);
-    HierarchySideDataOpsReal<NDIM,double> hier_sc_data_ops(d_hierarchy, coarsest_level_num, finest_level_num);
-    hier_sc_data_ops.axpy(res_idx, -1.0, res_idx, rhs_idx, false);
+        const Pointer<SideVariable<NDIM,double> > res_var = residual.getComponentVariable(0);
+        const Pointer<SideVariable<NDIM,double> > sol_var = solution.getComponentVariable(0);
+        const Pointer<SideVariable<NDIM,double> > rhs_var = rhs.getComponentVariable(0);
 
-    IBTK_TIMER_STOP(t_compute_residual);
+        // NOTE: Here, we assume that the residual is to be computed only during
+        // pre-sweeps and only for zero initial guesses, so that we need to
+        // compute A*u ONLY on levels level_num and level_num-1.
+
+        // Fill ghost-cell values.
+        typedef HierarchyGhostCellInterpolation::InterpolationTransactionComponent InterpolationTransactionComponent;
+        Pointer<SideNoCornersFillPattern> fill_pattern = new SideNoCornersFillPattern(SIDEG, false, true);
+        InterpolationTransactionComponent transaction_comp(sol_idx, DATA_COARSEN_TYPE, BDRY_EXTRAP_TYPE, CONSISTENT_TYPE_2_BDRY, d_bc_coefs, fill_pattern);
+        if (d_hier_bdry_fill_ops[level_num].isNull())
+        {
+            d_hier_bdry_fill_ops[level_num] = new HierarchyGhostCellInterpolation();
+            d_hier_bdry_fill_ops[level_num]->initializeOperatorState(transaction_comp, d_hierarchy, level_num, level_num);
+        }
+        else
+        {
+            d_hier_bdry_fill_ops[level_num]->resetTransactionComponent(transaction_comp);
+        }
+        d_hier_bdry_fill_ops[level_num]->setHomogeneousBc(true);
+        d_hier_bdry_fill_ops[level_num]->fillData(d_apply_time);
+        if (level_num > d_coarsest_ln) xeqScheduleGhostFillNoCoarse(sol_idx, level_num-1);
+
+        // Compute the residual, r = f - A*u.  We assume that u=0 for all levels
+        // coarser than level_num, and therefore that A*u = 0 on all levels
+        // coarser than level_num-1.  (A*u may be non-zero on level_num-1
+        // because of coarse-grid corrections at coarse-fine interfaces.)
+        if (d_hier_math_ops[level_num].isNull())
+        {
+            std::ostringstream stream;
+            stream << d_object_name << "::hier_math_ops_" << level_num;
+            d_hier_math_ops[level_num] = new HierarchyMathOps(stream.str(), d_hierarchy, std::max(d_coarsest_ln,level_num-1), level_num);
+        }
+        d_hier_math_ops[level_num]->laplace(res_idx, res_var,
+                                            d_poisson_spec,
+                                            sol_idx, sol_var, NULL, d_apply_time);
+        HierarchySideDataOpsReal<NDIM,double> hier_sc_data_ops(d_hierarchy, std::max(d_coarsest_ln,level_num-1), level_num);
+        hier_sc_data_ops.axpy(res_idx, -1.0, res_idx, rhs_idx, false);
+    }
+
+    t_compute_residual->stop();
     return;
 }// computeResidual
 
@@ -881,8 +900,7 @@ SCPoissonFACOperator::initializeOperatorState(
     const SAMRAIVectorReal<NDIM,double>& solution,
     const SAMRAIVectorReal<NDIM,double>& rhs)
 {
-    IBTK_TIMER_START(t_initialize_operator_state);
-
+    t_initialize_operator_state->start();
     d_in_initialize_operator_state = true;
 
     // Cache the level range to be reset.
@@ -1001,7 +1019,7 @@ SCPoissonFACOperator::initializeOperatorState(
 
     if (d_poisson_spec.dIsConstant())
     {
-        d_op_stencil_fill_pattern = new SideNoCornersFillPattern(SIDEG, true, false, false);
+        d_op_stencil_fill_pattern = new SideNoCornersFillPattern(SIDEG, false, false);
     }
     else
     {
@@ -1105,18 +1123,21 @@ SCPoissonFACOperator::initializeOperatorState(
                 const Box<NDIM>& patch_box = patch->getBox();
                 const Box<NDIM>  ghost_box = Box<NDIM>::grow(patch_box, d_gcw);
 
-                blitz::TinyVector<Vec,NDIM>& e = d_patch_vec_e[ln][patch_counter];
-                blitz::TinyVector<Vec,NDIM>& f = d_patch_vec_f[ln][patch_counter];
-                blitz::TinyVector<Mat,NDIM>& A = d_patch_mat  [ln][patch_counter];
-                for (unsigned int axis = 0; axis < NDIM; ++axis)
+                std::vector<Vec>& e = d_patch_vec_e[ln][patch_counter];
+                std::vector<Vec>& f = d_patch_vec_f[ln][patch_counter];
+                std::vector<Mat>& A = d_patch_mat  [ln][patch_counter];
+                e.resize(NDIM);
+                f.resize(NDIM);
+                A.resize(NDIM);
+                for (int axis = 0; axis < NDIM; ++axis)
                 {
                     int ierr;
 
                     const Box<NDIM> axis_ghost_box = SideGeometry<NDIM>::toSideBox(ghost_box,axis);
                     const int size = axis_ghost_box.size();
 
-                    ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, 1, size, PETSC_NULL, &e[axis]);  IBTK_CHKERRQ(ierr);
-                    ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, 1, size, PETSC_NULL, &f[axis]);  IBTK_CHKERRQ(ierr);
+                    ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, size, PETSC_NULL, &e[axis]);  IBTK_CHKERRQ(ierr);
+                    ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, size, PETSC_NULL, &f[axis]);  IBTK_CHKERRQ(ierr);
 
                     buildPatchLaplaceOperator(A[axis], d_poisson_spec, patch, axis, d_gcw);
                 }
@@ -1138,7 +1159,9 @@ SCPoissonFACOperator::initializeOperatorState(
         {
             Pointer<Patch<NDIM> > patch = level->getPatch(p());
             const Box<NDIM>& patch_box = patch->getBox();
-            for (unsigned int axis = 0; axis < NDIM; ++axis)
+
+            d_patch_bc_box_overlap[ln][patch_counter].resize(NDIM);
+            for (int axis = 0; axis < NDIM; ++axis)
             {
                 const Box<NDIM> side_box = SideGeometry<NDIM>::toSideBox(patch_box,axis);
                 const Box<NDIM> side_ghost_box = Box<NDIM>::grow(side_box, 1);
@@ -1163,7 +1186,8 @@ SCPoissonFACOperator::initializeOperatorState(
             int patch_counter1 = 0;
             for (PatchLevel<NDIM>::Iterator p1(level); p1; p1++, ++patch_counter1)
             {
-                for (unsigned int axis = 0; axis < NDIM; ++axis)
+                d_patch_smoother_bc_boxes[ln][patch_counter1].resize(NDIM);
+                for (int axis = 0; axis < NDIM; ++axis)
                 {
                     d_patch_smoother_bc_boxes[ln][patch_counter1][axis].clear();
                 }
@@ -1178,7 +1202,7 @@ SCPoissonFACOperator::initializeOperatorState(
                     Pointer<Patch<NDIM> > src_patch = level->getPatch(p2());
                     const Box<NDIM>& src_patch_box = src_patch->getBox();
 
-                    for (unsigned int axis = 0; axis < NDIM; ++axis)
+                    for (int axis = 0; axis < NDIM; ++axis)
                     {
                         const Box<NDIM> overlap =
                             SideGeometry<NDIM>::toSideBox(dst_ghost_box,axis) *
@@ -1199,9 +1223,9 @@ SCPoissonFACOperator::initializeOperatorState(
 
     // Indicate that the operator is initialized.
     d_is_initialized = true;
-    d_in_initialize_operator_state = false;
 
-    IBTK_TIMER_STOP(t_initialize_operator_state);
+    d_in_initialize_operator_state = false;
+    t_initialize_operator_state->stop();
     return;
 }// initializeOperatorState
 
@@ -1214,7 +1238,7 @@ SCPoissonFACOperator::deallocateOperatorState()
         return;
     }
 
-    IBTK_TIMER_START(t_deallocate_operator_state);
+    t_deallocate_operator_state->start();
 
     if (d_is_initialized)
     {
@@ -1239,33 +1263,33 @@ SCPoissonFACOperator::deallocateOperatorState()
             {
                 int ierr;
 
-                for (std::vector<blitz::TinyVector<Vec,NDIM> >::iterator it = d_patch_vec_e[ln].begin();
+                for (std::vector<std::vector<Vec> >::iterator it = d_patch_vec_e[ln].begin();
                      it != d_patch_vec_e[ln].end(); ++it)
                 {
-                    blitz::TinyVector<Vec,NDIM>& e = *it;
-                    for (unsigned int d = 0; d < NDIM; ++d)
+                    std::vector<Vec>& e = *it;
+                    for (unsigned k = 0; k < e.size(); ++k)
                     {
-                        ierr = VecDestroy(&e[d]);  IBTK_CHKERRQ(ierr);
+                        ierr = VecDestroy(e[k]);  IBTK_CHKERRQ(ierr);
                     }
                 }
                 d_patch_vec_e[ln].clear();
-                for (std::vector<blitz::TinyVector<Vec,NDIM> >::iterator it = d_patch_vec_f[ln].begin();
+                for (std::vector<std::vector<Vec> >::iterator it = d_patch_vec_f[ln].begin();
                      it != d_patch_vec_f[ln].end(); ++it)
                 {
-                    blitz::TinyVector<Vec,NDIM>& f = *it;
-                    for (unsigned int d = 0; d < NDIM; ++d)
+                    std::vector<Vec>& f = *it;
+                    for (unsigned k = 0; k < f.size(); ++k)
                     {
-                        ierr = VecDestroy(&f[d]);  IBTK_CHKERRQ(ierr);
+                        ierr = VecDestroy(f[k]);  IBTK_CHKERRQ(ierr);
                     }
                 }
                 d_patch_vec_f[ln].clear();
-                for (std::vector<blitz::TinyVector<Mat,NDIM> >::iterator it = d_patch_mat[ln].begin();
+                for (std::vector<std::vector<Mat> >::iterator it = d_patch_mat[ln].begin();
                      it != d_patch_mat[ln].end(); ++it)
                 {
-                    blitz::TinyVector<Mat,NDIM>& A = *it;
-                    for (unsigned int d = 0; d < NDIM; ++d)
+                    std::vector<Mat>& A = *it;
+                    for (unsigned k = 0; k < A.size(); ++k)
                     {
-                        ierr = MatDestroy(&A[d]);  IBTK_CHKERRQ(ierr);
+                        ierr = MatDestroy(A[k]);  IBTK_CHKERRQ(ierr);
                     }
                 }
                 d_patch_mat[ln].clear();
@@ -1335,7 +1359,7 @@ SCPoissonFACOperator::deallocateOperatorState()
     // Indicate that the operator is not initialized.
     d_is_initialized = false;
 
-    IBTK_TIMER_STOP(t_deallocate_operator_state);
+    t_deallocate_operator_state->stop();
     return;
 }// deallocateOperatorState
 
@@ -1409,6 +1433,9 @@ SCPoissonFACOperator::xeqScheduleSideDataSynch(
 void
 SCPoissonFACOperator::initializeHypreLevelSolver()
 {
+    d_hypre_solver = new SCPoissonHypreLevelSolver(d_object_name+"::hypre_solver", d_hypre_db);
+    d_hypre_solver->setTime(d_apply_time);
+
     SAMRAIVectorReal<NDIM,double> solution_level(d_solution->getName()+"::level", d_solution->getPatchHierarchy(), d_coarsest_ln, d_coarsest_ln);
     for (int comp = 0; comp < d_solution->getNumberOfComponents(); ++comp)
     {
@@ -1425,7 +1452,6 @@ SCPoissonFACOperator::initializeHypreLevelSolver()
     // always employ homogeneous boundary conditions.
     d_hypre_solver->setPoissonSpecifications(d_poisson_spec);
     d_hypre_solver->setPhysicalBcCoefs(d_bc_coefs);
-    d_hypre_solver->setTime(d_apply_time);
     d_hypre_solver->setHomogeneousBc(true);
     d_hypre_solver->initializeSolverState(solution_level, rhs_level);
     return;
@@ -1465,7 +1491,7 @@ void
 SCPoissonFACOperator::buildPatchLaplaceOperator(
     Mat& A,
     const PoissonSpecifications& poisson_spec,
-    const Pointer<Patch<NDIM> > patch,
+    const Pointer<Patch<NDIM> >& patch,
     const int component_axis,
     const IntVector<NDIM>& ghost_cell_width)
 {
@@ -1504,14 +1530,16 @@ SCPoissonFACOperator::buildPatchLaplaceOperator(
 
     // Setup the finite difference stencil.  The stencil order is chosen to
     // optimize performance when setting the matrix coefficients.
-    blitz::TinyVector<int,NDIM> num_cells;
-    for (unsigned int d = 0; d < NDIM; ++d)
+    static const int x_axis = 0; (void) x_axis;
+    static const int y_axis = 1; (void) y_axis;
+    static const int z_axis = 2; (void) z_axis;
+    std::vector<int> num_cells(NDIM);
+    for (int d = 0; d < NDIM; ++d)
     {
         num_cells[d] = ghost_box.numberCells(d);
     }
     std::vector<int> mat_stencil(stencil_sz);
 #if (NDIM == 2)
-    static const int x_axis = 0;
     mat_stencil[0] = -num_cells[x_axis]; // ylower
     mat_stencil[1] = -1;                 // xlower
     mat_stencil[2] = 0;
@@ -1519,8 +1547,6 @@ SCPoissonFACOperator::buildPatchLaplaceOperator(
     mat_stencil[4] = +num_cells[x_axis]; // yupper
 #endif
 #if (NDIM == 3)
-    static const int x_axis = 0;
-    static const int y_axis = 1;
     mat_stencil[0] = -num_cells[x_axis]*num_cells[y_axis]; // zlower
     mat_stencil[1] = -num_cells[x_axis];                   // ylower
     mat_stencil[2] = -1;                                   // xlower
@@ -1546,7 +1572,7 @@ SCPoissonFACOperator::buildPatchLaplaceOperator(
 
         std::vector<double> mat_vals(stencil_sz,0.0);
         mat_vals[NDIM] = C;
-        for (unsigned int axis = 0; axis < NDIM; ++axis)
+        for (int axis = 0; axis < NDIM; ++axis)
         {
             const double& h = dx[axis];
             {
@@ -1623,12 +1649,12 @@ SCPoissonFACOperator::sanityCheck()
                    << "  invalid coarse solver maximum iterations: " << d_coarse_solver_max_its << std::endl);
     }
 
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (unsigned l = 0; l < d_bc_coefs.size(); ++l)
     {
-        if (d_bc_coefs[d] == NULL)
+        if (d_bc_coefs[l] == NULL)
         {
             TBOX_ERROR(d_object_name << ":\n"
-                       << "  invalid physical bc object at depth = " << d << std::endl);
+                       << "  invalid physical bc object at depth = " << l << std::endl);
         }
     }
     return;
@@ -1637,5 +1663,10 @@ SCPoissonFACOperator::sanityCheck()
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::SCPoissonFACOperator>;
 
 //////////////////////////////////////////////////////////////////////////////

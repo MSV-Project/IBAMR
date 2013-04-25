@@ -42,7 +42,7 @@ namespace IBTK
 
 inline void
 FACPreconditioner::setInitialGuessNonzero(
-    bool /*initial_guess_nonzero*/)
+    bool initial_guess_nonzero)
 {
     // intentionally blank
     return;
@@ -76,7 +76,7 @@ FACPreconditioner::getMaxIterations() const
 
 inline void
 FACPreconditioner::setAbsoluteTolerance(
-    double /*abs_residual_tol*/)
+    double abs_residual_tol)
 {
     // intentionally blank
     return;
@@ -91,7 +91,7 @@ FACPreconditioner::getAbsoluteTolerance() const
 
 inline void
 FACPreconditioner::setRelativeTolerance(
-    double /*rel_residual_tol*/)
+    double rel_residual_tol)
 {
     // intentionally blank
     return;
@@ -105,23 +105,14 @@ FACPreconditioner::getRelativeTolerance() const
 }// getRelativeTolerance
 
 inline void
-FACPreconditioner::setMGCycleType(
-    MGCycleType cycle_type)
-{
-    d_cycle_type = cycle_type;
-    return;
-}// setMGCycleType
-
-inline MGCycleType
-FACPreconditioner::getMGCycleType() const
-{
-    return d_cycle_type;
-}// getMGCycleType
-
-inline void
 FACPreconditioner::setNumPreSmoothingSweeps(
     int num_pre_sweeps)
 {
+    if (d_is_initialized)
+    {
+        TBOX_ERROR(d_object_name << "::setNumPreSmoothingSweeps()\n"
+                   << "  cannot be called while solver state is initialized" << std::endl);
+    }
     d_num_pre_sweeps = num_pre_sweeps;
     return;
 }// setNumPreSmoothingSweeps

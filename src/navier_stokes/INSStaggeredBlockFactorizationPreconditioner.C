@@ -86,7 +86,7 @@ static Timer* t_deallocate_solver_state;
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
 INSStaggeredBlockFactorizationPreconditioner::INSStaggeredBlockFactorizationPreconditioner(
-    const INSProblemCoefs& problem_coefs,
+    const INSCoefs& problem_coefs,
     RobinBcCoefStrategy<NDIM>* P_bc_coef,
     const bool normalize_pressure,
     Pointer<LinearSolver> velocity_helmholtz_solver,
@@ -191,7 +191,7 @@ INSStaggeredBlockFactorizationPreconditioner::solveSystem(
     SAMRAIVectorReal<NDIM,double>& x,
     SAMRAIVectorReal<NDIM,double>& b)
 {
-    IBAMR_TIMER_START(t_solve_system);
+    t_solve_system->start();
 
     // Initialize the solver (if necessary).
     const bool deallocate_at_completion = !d_is_initialized;
@@ -243,7 +243,7 @@ INSStaggeredBlockFactorizationPreconditioner::solveSystem(
     P_out_vec->addComponent(P_out_cc_var, P_out_idx, d_wgt_cc_idx, d_hier_cc_data_ops);
 
     // Setup the interpolation transaction information.
-    Pointer<VariableFillPattern<NDIM> > fill_pattern = new CellNoCornersFillPattern(CELLG, false, false, true);
+    Pointer<VariableFillPattern<NDIM> > fill_pattern = new CellNoCornersFillPattern(CELLG, false, true);
     typedef HierarchyGhostCellInterpolation::InterpolationTransactionComponent InterpolationTransactionComponent;
     InterpolationTransactionComponent     P_out_transaction_comp(      P_out_idx, DATA_COARSEN_TYPE, BDRY_EXTRAP_TYPE, CONSISTENT_TYPE_2_BDRY, d_P_bc_coef, fill_pattern);
     InterpolationTransactionComponent P_scratch_transaction_comp(d_P_scratch_idx, DATA_COARSEN_TYPE, BDRY_EXTRAP_TYPE, CONSISTENT_TYPE_2_BDRY, d_P_bc_coef, fill_pattern);
@@ -287,7 +287,7 @@ INSStaggeredBlockFactorizationPreconditioner::solveSystem(
     // Deallocate the solver (if necessary).
     if (deallocate_at_completion) deallocateSolverState();
 
-    IBAMR_TIMER_STOP(t_solve_system);
+    t_solve_system->stop();
     return true;
 }// solveSystem
 
@@ -296,7 +296,7 @@ INSStaggeredBlockFactorizationPreconditioner::initializeSolverState(
     const SAMRAIVectorReal<NDIM,double>& x,
     const SAMRAIVectorReal<NDIM,double>& b)
 {
-    IBAMR_TIMER_START(t_initialize_solver_state);
+    t_initialize_solver_state->start();
 
     if (d_is_initialized) deallocateSolverState();
 
@@ -308,8 +308,6 @@ INSStaggeredBlockFactorizationPreconditioner::initializeSolverState(
     TBOX_ASSERT(d_hierarchy == b.getPatchHierarchy());
     TBOX_ASSERT(d_coarsest_ln == b.getCoarsestLevelNumber());
     TBOX_ASSERT(d_finest_ln == b.getFinestLevelNumber());
-#else
-    NULL_USE(b);
 #endif
     d_wgt_cc_var = d_hier_math_ops->getCellWeightVariable();
     d_wgt_sc_var = d_hier_math_ops->getSideWeightVariable();
@@ -317,7 +315,7 @@ INSStaggeredBlockFactorizationPreconditioner::initializeSolverState(
     d_wgt_sc_idx = d_hier_math_ops->getSideWeightPatchDescriptorIndex();
     d_volume = d_hier_math_ops->getVolumeOfPhysicalDomain();
 
-    Pointer<VariableFillPattern<NDIM> > fill_pattern = new CellNoCornersFillPattern(CELLG, false, false, true);
+    Pointer<VariableFillPattern<NDIM> > fill_pattern = new CellNoCornersFillPattern(CELLG, false, true);
     typedef HierarchyGhostCellInterpolation::InterpolationTransactionComponent InterpolationTransactionComponent;
     InterpolationTransactionComponent P_scratch_component(d_P_scratch_idx, DATA_COARSEN_TYPE, BDRY_EXTRAP_TYPE, CONSISTENT_TYPE_2_BDRY, d_P_bc_coef, fill_pattern);
     d_P_bdry_fill_op = new HierarchyGhostCellInterpolation();
@@ -338,7 +336,7 @@ INSStaggeredBlockFactorizationPreconditioner::initializeSolverState(
     }
     d_is_initialized = true;
 
-    IBAMR_TIMER_STOP(t_initialize_solver_state);
+    t_initialize_solver_state->stop();
     return;
 }// initializeSolverState
 
@@ -347,7 +345,7 @@ INSStaggeredBlockFactorizationPreconditioner::deallocateSolverState()
 {
     if (!d_is_initialized) return;
 
-    IBAMR_TIMER_START(t_deallocate_solver_state);
+    t_deallocate_solver_state->start();
 
     // Deallocate scratch data.
     for (int ln = d_coarsest_ln; ln <= d_finest_ln; ++ln)
@@ -364,13 +362,13 @@ INSStaggeredBlockFactorizationPreconditioner::deallocateSolverState()
     }
     d_is_initialized = false;
 
-    IBAMR_TIMER_STOP(t_deallocate_solver_state);
+    t_deallocate_solver_state->stop();
     return;
 }// deallocateSolverState
 
 void
 INSStaggeredBlockFactorizationPreconditioner::setInitialGuessNonzero(
-    bool /*initial_guess_nonzero*/)
+    bool initial_guess_nonzero)
 {
     // intentionally blank
     return;
@@ -385,7 +383,7 @@ INSStaggeredBlockFactorizationPreconditioner::getInitialGuessNonzero() const
 
 void
 INSStaggeredBlockFactorizationPreconditioner::setMaxIterations(
-    int /*max_iterations*/)
+    int max_iterations)
 {
     // intentionally blank
     return;
@@ -400,7 +398,7 @@ INSStaggeredBlockFactorizationPreconditioner::getMaxIterations() const
 
 void
 INSStaggeredBlockFactorizationPreconditioner::setAbsoluteTolerance(
-    double /*abs_residual_tol*/)
+    double abs_residual_tol)
 {
     // intentionally blank
     return;
@@ -415,7 +413,7 @@ INSStaggeredBlockFactorizationPreconditioner::getAbsoluteTolerance() const
 
 void
 INSStaggeredBlockFactorizationPreconditioner::setRelativeTolerance(
-    double /*rel_residual_tol*/)
+    double rel_residual_tol)
 {
     // intentionally blank
     return;
@@ -456,5 +454,10 @@ INSStaggeredBlockFactorizationPreconditioner::enableLogging(
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBAMR
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBAMR::INSStaggeredBlockFactorizationPreconditioner>;
 
 //////////////////////////////////////////////////////////////////////////////

@@ -56,10 +56,10 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define CC_CUBIC_COARSEN_FC FC_GLOBAL(cccubiccoarsen2d,CCCUBICCOARSEN2D)
+#define CC_CUBIC_COARSEN_FC FC_FUNC(cccubiccoarsen2d,CCCUBICCOARSEN2D)
 #endif
 #if (NDIM == 3)
-#define CC_CUBIC_COARSEN_FC FC_GLOBAL(cccubiccoarsen3d,CCCUBICCOARSEN3D)
+#define CC_CUBIC_COARSEN_FC FC_FUNC(cccubiccoarsen3d,CCCUBICCOARSEN3D)
 #endif
 
 // Function interfaces
@@ -172,7 +172,7 @@ CartCellDoubleCubicCoarsen::coarsen(
         TBOX_ERROR("CartCellDoubleCubicCoarsen::coarsen():\n"
                    << "   coarse patch data does not have uniform ghost cell widths" << std::endl);
     }
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         if (ratio(d)%2 == 1)
         {
@@ -217,5 +217,10 @@ CartCellDoubleCubicCoarsen::coarsen(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::CartCellDoubleCubicCoarsen>;
 
 //////////////////////////////////////////////////////////////////////////////

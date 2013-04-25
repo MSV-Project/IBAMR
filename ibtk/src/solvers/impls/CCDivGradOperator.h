@@ -79,8 +79,9 @@ public:
         const std::string& object_name);
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~CCDivGradOperator();
 
     /*!
@@ -110,7 +111,7 @@ public:
      *
      * \param y output: y=Ax
      */
-    void
+    virtual void
     modifyRhsForInhomogeneousBc(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
 
@@ -140,7 +141,7 @@ public:
      * \param x input
      * \param y output: y=Ax
      */
-    void
+    virtual void
     apply(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
@@ -154,7 +155,7 @@ public:
      *
      * \see KrylovLinearSolver::initializeSolverState
      */
-    void
+    virtual void
     initializeOperatorState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& in,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& out);
@@ -170,7 +171,7 @@ public:
      * \see initializeOperatorState
      * \see KrylovLinearSolver::deallocateSolverState
      */
-    void
+    virtual void
     deallocateOperatorState();
 
     //\}
@@ -185,7 +186,7 @@ public:
      *
      * \param enabled logging state: true=on, false=off
      */
-    void
+    virtual void
     enableLogging(
         bool enabled=true);
 

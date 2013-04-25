@@ -64,6 +64,7 @@ c
       function lagrangian_piecewise_linear_delta(r)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
       double precision lagrangian_piecewise_linear_delta,r
 c
       if ( r.lt.0.d0 ) then
@@ -89,6 +90,7 @@ c
       function lagrangian_wide_piecewise_linear_delta(r)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
       external lagrangian_piecewise_linear_delta
       double precision lagrangian_piecewise_linear_delta
       double precision lagrangian_wide_piecewise_linear_delta,r
@@ -109,6 +111,7 @@ c
       function lagrangian_piecewise_cubic_delta(r)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
       double precision lagrangian_piecewise_cubic_delta,r
 c
       if ( r.lt.0.d0 ) then
@@ -138,6 +141,7 @@ c
       function lagrangian_wide_piecewise_cubic_delta(r)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
       external lagrangian_piecewise_cubic_delta
       double precision lagrangian_piecewise_cubic_delta
       double precision lagrangian_wide_piecewise_cubic_delta,r
@@ -158,10 +162,8 @@ c
       function lagrangian_ib_3_delta(r)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
       double precision lagrangian_ib_3_delta,r
-      double precision sixth, third
-      parameter (sixth=0.16666666666667d0)
-      parameter (third=0.333333333333333d0)
 c
       if ( r.lt.0.d0 ) then
          r = -r
@@ -190,6 +192,7 @@ c
       function lagrangian_wide_ib_3_delta(r)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
       external lagrangian_ib_3_delta
       double precision lagrangian_ib_3_delta
       double precision lagrangian_wide_ib_3_delta,r
@@ -240,6 +243,7 @@ c
       function lagrangian_wide_ib_4_delta(r)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
       external lagrangian_ib_4_delta
       double precision lagrangian_ib_4_delta
       double precision lagrangian_wide_ib_4_delta,r

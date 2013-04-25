@@ -41,8 +41,8 @@
 #include <tbox/DescribedClass.h>
 #include <tbox/Pointer.h>
 
-// BLITZ++ INCLUDES
-#include <blitz/tinyvec.h>
+// C++ STDLIB INCLUDES
+#include <vector>
 
 /////////////////////////////// CLASS DEFINITION /////////////////////////////
 
@@ -65,7 +65,7 @@ namespace IBTK
  * \see StreamableManager
  */
 class Streamable
-    : public SAMRAI::tbox::DescribedClass
+    : public virtual SAMRAI::tbox::DescribedClass
 {
 public:
     /*!
@@ -110,7 +110,7 @@ public:
     virtual void
     registerPeriodicShift(
         const SAMRAI::hier::IntVector<NDIM>& offset,
-        const blitz::TinyVector<double,NDIM>& displacement);
+        const std::vector<double>& displacement);
 
 private:
     /*!

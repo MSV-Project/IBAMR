@@ -39,8 +39,6 @@
 #define included_IBTK_config
 #endif
 
-
-
 #ifndef included_SAMRAI_config
 #include <SAMRAI_config.h>
 #define included_SAMRAI_config
@@ -67,17 +65,17 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define CC_ROBIN_PHYS_BDRY_OP_1_X_FC FC_GLOBAL(ccrobinphysbdryop1x2d, CCROBINPHYSBDRYOP1X2D)
-#define CC_ROBIN_PHYS_BDRY_OP_1_Y_FC FC_GLOBAL(ccrobinphysbdryop1y2d, CCROBINPHYSBDRYOP1Y2D)
-#define CC_ROBIN_PHYS_BDRY_OP_2_FC FC_GLOBAL(ccrobinphysbdryop22d, CCROBINPHYSBDRYOP22D)
+#define CC_ROBIN_PHYS_BDRY_OP_1_X_FC FC_FUNC(ccrobinphysbdryop1x2d, CCROBINPHYSBDRYOP1X2D)
+#define CC_ROBIN_PHYS_BDRY_OP_1_Y_FC FC_FUNC(ccrobinphysbdryop1y2d, CCROBINPHYSBDRYOP1Y2D)
+#define CC_ROBIN_PHYS_BDRY_OP_2_FC FC_FUNC(ccrobinphysbdryop22d, CCROBINPHYSBDRYOP22D)
 #endif // if (NDIM == 2)
 
 #if (NDIM == 3)
-#define CC_ROBIN_PHYS_BDRY_OP_1_X_FC FC_GLOBAL(ccrobinphysbdryop1x3d, CCROBINPHYSBDRYOP1X3D)
-#define CC_ROBIN_PHYS_BDRY_OP_1_Y_FC FC_GLOBAL(ccrobinphysbdryop1y3d, CCROBINPHYSBDRYOP1Y3D)
-#define CC_ROBIN_PHYS_BDRY_OP_1_Z_FC FC_GLOBAL(ccrobinphysbdryop1z3d, CCROBINPHYSBDRYOP1Z3D)
-#define CC_ROBIN_PHYS_BDRY_OP_2_FC FC_GLOBAL(ccrobinphysbdryop23d, CCROBINPHYSBDRYOP23D)
-#define CC_ROBIN_PHYS_BDRY_OP_3_FC FC_GLOBAL(ccrobinphysbdryop33d, CCROBINPHYSBDRYOP33D)
+#define CC_ROBIN_PHYS_BDRY_OP_1_X_FC FC_FUNC(ccrobinphysbdryop1x3d, CCROBINPHYSBDRYOP1X3D)
+#define CC_ROBIN_PHYS_BDRY_OP_1_Y_FC FC_FUNC(ccrobinphysbdryop1y3d, CCROBINPHYSBDRYOP1Y3D)
+#define CC_ROBIN_PHYS_BDRY_OP_1_Z_FC FC_FUNC(ccrobinphysbdryop1z3d, CCROBINPHYSBDRYOP1Z3D)
+#define CC_ROBIN_PHYS_BDRY_OP_2_FC FC_FUNC(ccrobinphysbdryop23d, CCROBINPHYSBDRYOP23D)
+#define CC_ROBIN_PHYS_BDRY_OP_3_FC FC_FUNC(ccrobinphysbdryop33d, CCROBINPHYSBDRYOP33D)
 #endif // if (NDIM == 3)
 
 extern "C"
@@ -264,48 +262,6 @@ CartCellRobinPhysBdryOp::CartCellRobinPhysBdryOp(
     return;
 }// CartCellRobinPhysBdryOp
 
-CartCellRobinPhysBdryOp::CartCellRobinPhysBdryOp(
-    const int patch_data_index,
-    const blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs,
-    const bool homogeneous_bc)
-    : d_patch_data_indices(),
-      d_bc_coefs(),
-      d_homogeneous_bc(false)
-{
-    setPatchDataIndex(patch_data_index);
-    setPhysicalBcCoefs(bc_coefs);
-    setHomogeneousBc(homogeneous_bc);
-    return;
-}// CartCellRobinPhysBdryOp
-
-CartCellRobinPhysBdryOp::CartCellRobinPhysBdryOp(
-    const std::set<int>& patch_data_indices,
-    const blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs,
-    const bool homogeneous_bc)
-    : d_patch_data_indices(),
-      d_bc_coefs(),
-      d_homogeneous_bc(false)
-{
-    setPatchDataIndices(patch_data_indices);
-    setPhysicalBcCoefs(bc_coefs);
-    setHomogeneousBc(homogeneous_bc);
-    return;
-}// CartCellRobinPhysBdryOp
-
-CartCellRobinPhysBdryOp::CartCellRobinPhysBdryOp(
-    const ComponentSelector& patch_data_indices,
-    const blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs,
-    const bool homogeneous_bc)
-    : d_patch_data_indices(),
-      d_bc_coefs(),
-      d_homogeneous_bc(false)
-{
-    setPatchDataIndices(patch_data_indices);
-    setPhysicalBcCoefs(bc_coefs);
-    setHomogeneousBc(homogeneous_bc);
-    return;
-}// CartCellRobinPhysBdryOp
-
 CartCellRobinPhysBdryOp::~CartCellRobinPhysBdryOp()
 {
     // intentionally blank
@@ -361,20 +317,12 @@ CartCellRobinPhysBdryOp::setPhysicalBcCoefs(
     const std::vector<RobinBcCoefStrategy<NDIM>*>& bc_coefs)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    for (unsigned int l = 0; l < bc_coefs.size(); ++l)
+    for (unsigned l = 0; l < bc_coefs.size(); ++l)
     {
         TBOX_ASSERT(bc_coefs[l] != NULL);
     }
 #endif
     d_bc_coefs = bc_coefs;
-    return;
-}// setPhysicalBcCoefs
-
-void
-CartCellRobinPhysBdryOp::setPhysicalBcCoefs(
-    const blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs)
-{
-    setPhysicalBcCoefs(std::vector<RobinBcCoefStrategy<NDIM>*>(&bc_coefs[0],&bc_coefs[0]+NDIM));
     return;
 }// setPhysicalBcCoefs
 
@@ -445,7 +393,7 @@ CartCellRobinPhysBdryOp::setPhysicalBoundaryConditions(
 
         Pointer<CellData<NDIM,double> > patch_data = patch.getPatchData(patch_data_idx);
         const IntVector<NDIM> gcw_to_fill = IntVector<NDIM>::min(patch_data->getGhostCellWidth(), ghost_width_to_fill);
-        if (patch_data->getDepth() != static_cast<int>(d_bc_coefs.size()))
+        if (patch_data->getDepth() != int(d_bc_coefs.size()))
         {
             TBOX_ERROR("CartCellRobinPhysBdryOp::setPhysicalBoundaryConditions():\n"
                        << "  data depth for patch data index " << patch_data_idx << " is " << patch_data->getDepth() << "\n"
@@ -522,7 +470,7 @@ CartCellRobinPhysBdryOp::setPhysicalBoundaryConditions(
                                "  patch data for patch data index " << patch_data_idx << " does not have uniform ghost cell widths." << std::endl);
                 }
 #endif
-                const unsigned int location_index = bdry_box.getLocationIndex();
+                const int location_index = bdry_box.getLocationIndex();
                 switch (location_index)
                 {
                     case 0:  // lower x
@@ -594,7 +542,7 @@ CartCellRobinPhysBdryOp::setPhysicalBoundaryConditions(
                                "  patch data for patch data index " << patch_data_idx << " does not have uniform ghost cell widths." << std::endl);
                 }
 #endif
-                const unsigned int location_index = bdry_box.getLocationIndex();
+                const int location_index = bdry_box.getLocationIndex();
                 CC_ROBIN_PHYS_BDRY_OP_2_FC(
                     U, U_gcw,
                     location_index,
@@ -627,7 +575,7 @@ CartCellRobinPhysBdryOp::setPhysicalBoundaryConditions(
                                "  patch data for patch data index " << patch_data_idx << " does not have uniform ghost cell widths." << std::endl);
                 }
 #endif
-                const unsigned int location_index = bdry_box.getLocationIndex();
+                const int location_index = bdry_box.getLocationIndex();
                 CC_ROBIN_PHYS_BDRY_OP_3_FC(
                     U, U_gcw,
                     location_index,
@@ -652,10 +600,10 @@ CartCellRobinPhysBdryOp::getRefineOpStencilWidth() const
 
 void
 CartCellRobinPhysBdryOp::preprocessRefine(
-    Patch<NDIM>& /*fine*/,
-    const Patch<NDIM>& /*coarse*/,
-    const Box<NDIM>& /*fine_box*/,
-    const IntVector<NDIM>& /*ratio*/)
+    Patch<NDIM>& fine,
+    const Patch<NDIM>& coarse,
+    const Box<NDIM>& fine_box,
+    const IntVector<NDIM>& ratio)
 {
     // intentionally blank
     return;
@@ -663,10 +611,10 @@ CartCellRobinPhysBdryOp::preprocessRefine(
 
 void
 CartCellRobinPhysBdryOp::postprocessRefine(
-    Patch<NDIM>& /*fine*/,
-    const Patch<NDIM>& /*coarse*/,
-    const Box<NDIM>& /*fine_box*/,
-    const IntVector<NDIM>& /*ratio*/)
+    Patch<NDIM>& fine,
+    const Patch<NDIM>& coarse,
+    const Box<NDIM>& fine_box,
+    const IntVector<NDIM>& ratio)
 {
     // intentionally blank
     return;
@@ -679,5 +627,10 @@ CartCellRobinPhysBdryOp::postprocessRefine(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::CartCellRobinPhysBdryOp>;
 
 //////////////////////////////////////////////////////////////////////////////

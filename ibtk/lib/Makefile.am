@@ -47,15 +47,11 @@ $(top_srcdir)/src/utilities/Interpolator.I \
 $(top_srcdir)/src/utilities/Interpolator.h \
 $(top_srcdir)/src/utilities/compiler_hints.h \
 $(top_srcdir)/src/utilities/efficient_add_or_update.h \
-$(top_srcdir)/src/utilities/ibtk_enums.h \
-$(top_srcdir)/src/utilities/ibtk_utilities.h \
-$(top_srcdir)/src/utilities/app_namespaces.h \
 $(top_srcdir)/src/utilities/namespaces.h
 
 ## Dimension-dependent libraries
 DIM_INDEPENDENT_SOURCES = \
 $(top_srcdir)/src/boundary/HierarchyGhostCellInterpolation.C \
-$(top_srcdir)/src/boundary/cf_interface/CartCellDoubleLinearCFInterpolation.C \
 $(top_srcdir)/src/boundary/cf_interface/CartCellDoubleQuadraticCFInterpolation.C \
 $(top_srcdir)/src/boundary/cf_interface/CartSideDoubleQuadraticCFInterpolation.C \
 $(top_srcdir)/src/boundary/cf_interface/CoarseFineBoundaryRefinePatchStrategy.C \
@@ -64,30 +60,26 @@ $(top_srcdir)/src/boundary/physical_boundary/CartExtrapPhysBdryOp.C \
 $(top_srcdir)/src/boundary/physical_boundary/CartSideRobinPhysBdryOp.C \
 $(top_srcdir)/src/boundary/physical_boundary/ExtendedRobinBcCoefStrategy.C \
 $(top_srcdir)/src/boundary/physical_boundary/PhysicalBoundaryUtilities.C \
+$(top_srcdir)/src/boundary/physical_boundary/TimeDependentLocationIndexRobinBcCoefs.C \
 $(top_srcdir)/src/boundary/physical_boundary/muParserRobinBcCoefs.C \
 $(top_srcdir)/src/coarsen_ops/CartCellDoubleCubicCoarsen.C \
 $(top_srcdir)/src/coarsen_ops/CartSideDoubleCubicCoarsen.C \
-$(top_srcdir)/src/coarsen_ops/LMarkerCoarsen.C \
+$(top_srcdir)/src/coarsen_ops/LagMarkerCoarsen.C \
 $(top_srcdir)/src/coarsen_ops/VecCellCoarsenAdapter.C \
-$(top_srcdir)/src/lagrangian/LData.C \
 $(top_srcdir)/src/lagrangian/LDataManager.C \
 $(top_srcdir)/src/lagrangian/LEInteractor.C \
-$(top_srcdir)/src/lagrangian/LIndexSetData.C \
-$(top_srcdir)/src/lagrangian/LIndexSetDataFactory.C \
-$(top_srcdir)/src/lagrangian/LIndexSetVariable.C \
-$(top_srcdir)/src/lagrangian/LInitStrategy.C \
-$(top_srcdir)/src/lagrangian/LM3DDataWriter.C \
-$(top_srcdir)/src/lagrangian/LMarker.C \
-$(top_srcdir)/src/lagrangian/LMesh.C \
-$(top_srcdir)/src/lagrangian/LNode.C \
 $(top_srcdir)/src/lagrangian/LNodeIndex.C \
-$(top_srcdir)/src/lagrangian/LSet.C \
-$(top_srcdir)/src/lagrangian/LSetData.C \
-$(top_srcdir)/src/lagrangian/LSetDataFactory.C \
-$(top_srcdir)/src/lagrangian/LSetDataIterator.C \
-$(top_srcdir)/src/lagrangian/LSetVariable.C \
-$(top_srcdir)/src/lagrangian/LSiloDataWriter.C \
-$(top_srcdir)/src/lagrangian/LTransaction.C \
+$(top_srcdir)/src/lagrangian/LNodeIndexData.C \
+$(top_srcdir)/src/lagrangian/LNodeIndexDataFactory.C \
+$(top_srcdir)/src/lagrangian/LNodeIndexIterator.C \
+$(top_srcdir)/src/lagrangian/LNodeIndexSet.C \
+$(top_srcdir)/src/lagrangian/LNodeIndexTransaction.C \
+$(top_srcdir)/src/lagrangian/LNodeIndexVariable.C \
+$(top_srcdir)/src/lagrangian/LNodeInitStrategy.C \
+$(top_srcdir)/src/lagrangian/LNodeLevelData.C \
+$(top_srcdir)/src/lagrangian/LagM3DDataWriter.C \
+$(top_srcdir)/src/lagrangian/LagMarker.C \
+$(top_srcdir)/src/lagrangian/LagSiloDataWriter.C \
 $(top_srcdir)/src/math/HierarchyMathOps.C \
 $(top_srcdir)/src/math/HierarchyVecCellDataOpsReal.C \
 $(top_srcdir)/src/math/PETScMatUtilities.C \
@@ -101,15 +93,15 @@ $(top_srcdir)/src/patch_data/VecCellVariable.C \
 $(top_srcdir)/src/refine_ops/CartCellDoubleBoundsPreservingConservativeLinearRefine.C \
 $(top_srcdir)/src/refine_ops/CartCellDoubleQuadraticRefine.C \
 $(top_srcdir)/src/refine_ops/CartSideDoubleDivPreservingRefine.C \
-$(top_srcdir)/src/refine_ops/CartSideDoubleSpecializedConstantRefine.C \
 $(top_srcdir)/src/refine_ops/CartSideDoubleSpecializedLinearRefine.C \
 $(top_srcdir)/src/refine_ops/VecCellRefineAdapter.C \
-$(top_srcdir)/src/refine_ops/LMarkerRefine.C \
+$(top_srcdir)/src/refine_ops/LagMarkerRefine.C \
 $(top_srcdir)/src/solvers/impls/BGaussSeidelPreconditioner.C \
 $(top_srcdir)/src/solvers/impls/BJacobiPreconditioner.C \
 $(top_srcdir)/src/solvers/impls/CCDivGradHypreLevelSolver.C \
 $(top_srcdir)/src/solvers/impls/CCDivGradOperator.C \
 $(top_srcdir)/src/solvers/impls/CCLaplaceOperator.C \
+$(top_srcdir)/src/solvers/impls/CCLaplaceOperator2.C \
 $(top_srcdir)/src/solvers/impls/CCPoissonFACOperator.C \
 $(top_srcdir)/src/solvers/impls/CCPoissonHypreLevelSolver.C \
 $(top_srcdir)/src/solvers/impls/CCPoissonPETScLevelSolver.C \
@@ -136,7 +128,6 @@ $(top_srcdir)/src/solvers/wrappers/PETScPCLSWrapper.C \
 $(top_srcdir)/src/solvers/wrappers/PETScSAMRAIVectorReal.C \
 $(top_srcdir)/src/solvers/wrappers/PETScSNESFunctionGOWrapper.C \
 $(top_srcdir)/src/solvers/wrappers/PETScSNESJacobianJOWrapper.C \
-$(top_srcdir)/src/utilities/AppInitializer.C \
 $(top_srcdir)/src/utilities/CartGridFunction.C \
 $(top_srcdir)/src/utilities/CellNoCornersFillPattern.C \
 $(top_srcdir)/src/utilities/CoarsenPatchStrategySet.C \
@@ -148,12 +139,14 @@ $(top_srcdir)/src/utilities/EdgeSynchCopyFillPattern.C \
 $(top_srcdir)/src/utilities/FaceDataSynchronization.C \
 $(top_srcdir)/src/utilities/FaceSynchCopyFillPattern.C \
 $(top_srcdir)/src/utilities/FixedSizedStream.C \
-$(top_srcdir)/src/utilities/HierarchyIntegrator.C \
 $(top_srcdir)/src/utilities/IndexUtilities.C \
-$(top_srcdir)/src/utilities/LMarkerUtilities.C \
+$(top_srcdir)/src/utilities/IndexSet.C \
+$(top_srcdir)/src/utilities/LagMarkerUtilities.C \
 $(top_srcdir)/src/utilities/NodeDataSynchronization.C \
 $(top_srcdir)/src/utilities/NodeSynchCopyFillPattern.C \
 $(top_srcdir)/src/utilities/NormOps.C \
+$(top_srcdir)/src/utilities/PETScMatOps.C \
+$(top_srcdir)/src/utilities/PETScVecOps.C \
 $(top_srcdir)/src/utilities/ParallelEdgeMap.C \
 $(top_srcdir)/src/utilities/ParallelMap.C \
 $(top_srcdir)/src/utilities/ParallelSet.C \
@@ -169,12 +162,12 @@ $(top_srcdir)/src/utilities/muParserCartGridFunction.C
 
 if LIBMESH_ENABLED
 DIM_INDEPENDENT_SOURCES += \
-$(top_srcdir)/src/lagrangian/FEDataManager.C
+$(top_srcdir)/src/lagrangian/FEDataManager.C \
+$(top_srcdir)/src/utilities/FESystemDataCache.C
 endif
 
 pkg_include_HEADERS += \
 $(top_srcdir)/src/boundary/HierarchyGhostCellInterpolation.h \
-$(top_srcdir)/src/boundary/cf_interface/CartCellDoubleLinearCFInterpolation.h \
 $(top_srcdir)/src/boundary/cf_interface/CartCellDoubleQuadraticCFInterpolation.h \
 $(top_srcdir)/src/boundary/cf_interface/CartSideDoubleQuadraticCFInterpolation.h \
 $(top_srcdir)/src/boundary/cf_interface/CoarseFineBoundaryRefinePatchStrategy.h \
@@ -183,55 +176,32 @@ $(top_srcdir)/src/boundary/physical_boundary/CartExtrapPhysBdryOp.h \
 $(top_srcdir)/src/boundary/physical_boundary/CartSideRobinPhysBdryOp.h \
 $(top_srcdir)/src/boundary/physical_boundary/ExtendedRobinBcCoefStrategy.h \
 $(top_srcdir)/src/boundary/physical_boundary/PhysicalBoundaryUtilities.h \
+$(top_srcdir)/src/boundary/physical_boundary/TimeDependentLocationIndexRobinBcCoefs.h \
 $(top_srcdir)/src/boundary/physical_boundary/muParserRobinBcCoefs.h \
 $(top_srcdir)/src/coarsen_ops/CartCellDoubleCubicCoarsen.h \
 $(top_srcdir)/src/coarsen_ops/CartSideDoubleCubicCoarsen.h \
-$(top_srcdir)/src/coarsen_ops/LMarkerCoarsen.h \
+$(top_srcdir)/src/coarsen_ops/LagMarkerCoarsen.h \
 $(top_srcdir)/src/coarsen_ops/VecCellCoarsenAdapter.h \
-$(top_srcdir)/src/lagrangian/LData.I \
-$(top_srcdir)/src/lagrangian/LData.h \
-$(top_srcdir)/src/lagrangian/LDataManager.I \
 $(top_srcdir)/src/lagrangian/LDataManager.h \
 $(top_srcdir)/src/lagrangian/LEInteractor.h \
-$(top_srcdir)/src/lagrangian/LIndexSetData.I \
-$(top_srcdir)/src/lagrangian/LIndexSetData.h \
-$(top_srcdir)/src/lagrangian/LIndexSetDataFactory.h \
-$(top_srcdir)/src/lagrangian/LIndexSetVariable.h \
-$(top_srcdir)/src/lagrangian/LInitStrategy.h \
-$(top_srcdir)/src/lagrangian/LM3DDataWriter.h \
-$(top_srcdir)/src/lagrangian/LMarker.I \
-$(top_srcdir)/src/lagrangian/LMarker.h \
-$(top_srcdir)/src/lagrangian/LMarkerSet.h \
-$(top_srcdir)/src/lagrangian/LMarkerSetData.h \
-$(top_srcdir)/src/lagrangian/LMarkerSetDataFactory.h \
-$(top_srcdir)/src/lagrangian/LMarkerSetDataIterator.h \
-$(top_srcdir)/src/lagrangian/LMarkerSetVariable.h \
-$(top_srcdir)/src/lagrangian/LMesh.I \
-$(top_srcdir)/src/lagrangian/LMesh.h \
-$(top_srcdir)/src/lagrangian/LNode.I \
-$(top_srcdir)/src/lagrangian/LNode.h \
 $(top_srcdir)/src/lagrangian/LNodeIndex.I \
 $(top_srcdir)/src/lagrangian/LNodeIndex.h \
+$(top_srcdir)/src/lagrangian/LNodeIndexData.I \
+$(top_srcdir)/src/lagrangian/LNodeIndexData.h \
+$(top_srcdir)/src/lagrangian/LNodeIndexDataFactory.h \
+$(top_srcdir)/src/lagrangian/LNodeIndexIterator.I \
+$(top_srcdir)/src/lagrangian/LNodeIndexIterator.h \
+$(top_srcdir)/src/lagrangian/LNodeIndexSet.I \
 $(top_srcdir)/src/lagrangian/LNodeIndexSet.h \
-$(top_srcdir)/src/lagrangian/LNodeIndexSetData.h \
-$(top_srcdir)/src/lagrangian/LNodeIndexSetDataFactory.h \
-$(top_srcdir)/src/lagrangian/LNodeIndexSetDataIterator.h \
-$(top_srcdir)/src/lagrangian/LNodeIndexSetVariable.h \
-$(top_srcdir)/src/lagrangian/LNodeSet.h \
-$(top_srcdir)/src/lagrangian/LNodeSetData.h \
-$(top_srcdir)/src/lagrangian/LNodeSetDataFactory.h \
-$(top_srcdir)/src/lagrangian/LNodeSetDataIterator.h \
-$(top_srcdir)/src/lagrangian/LNodeSetVariable.h \
-$(top_srcdir)/src/lagrangian/LSet.I \
-$(top_srcdir)/src/lagrangian/LSet.h \
-$(top_srcdir)/src/lagrangian/LSetData.I \
-$(top_srcdir)/src/lagrangian/LSetData.h \
-$(top_srcdir)/src/lagrangian/LSetDataFactory.h \
-$(top_srcdir)/src/lagrangian/LSetDataIterator.I \
-$(top_srcdir)/src/lagrangian/LSetDataIterator.h \
-$(top_srcdir)/src/lagrangian/LSetVariable.h \
-$(top_srcdir)/src/lagrangian/LSiloDataWriter.h \
-$(top_srcdir)/src/lagrangian/LTransaction.h \
+$(top_srcdir)/src/lagrangian/LNodeIndexTransaction.h \
+$(top_srcdir)/src/lagrangian/LNodeIndexVariable.h \
+$(top_srcdir)/src/lagrangian/LNodeInitStrategy.h \
+$(top_srcdir)/src/lagrangian/LNodeLevelData.I \
+$(top_srcdir)/src/lagrangian/LNodeLevelData.h \
+$(top_srcdir)/src/lagrangian/LagM3DDataWriter.h \
+$(top_srcdir)/src/lagrangian/LagMarker.I \
+$(top_srcdir)/src/lagrangian/LagMarker.h \
+$(top_srcdir)/src/lagrangian/LagSiloDataWriter.h \
 $(top_srcdir)/src/math/HierarchyMathOps.h \
 $(top_srcdir)/src/math/HierarchyVecCellDataOpsReal.h \
 $(top_srcdir)/src/math/PETScMatUtilities.h \
@@ -247,10 +217,9 @@ $(top_srcdir)/src/patch_data/VecCellVariable.h \
 $(top_srcdir)/src/refine_ops/CartCellDoubleBoundsPreservingConservativeLinearRefine.h \
 $(top_srcdir)/src/refine_ops/CartCellDoubleQuadraticRefine.h \
 $(top_srcdir)/src/refine_ops/CartSideDoubleDivPreservingRefine.h \
-$(top_srcdir)/src/refine_ops/CartSideDoubleSpecializedConstantRefine.h \
 $(top_srcdir)/src/refine_ops/CartSideDoubleSpecializedLinearRefine.h \
 $(top_srcdir)/src/refine_ops/VecCellRefineAdapter.h \
-$(top_srcdir)/src/refine_ops/LMarkerRefine.h \
+$(top_srcdir)/src/refine_ops/LagMarkerRefine.h \
 $(top_srcdir)/src/solvers/impls/BGaussSeidelPreconditioner.I \
 $(top_srcdir)/src/solvers/impls/BGaussSeidelPreconditioner.h \
 $(top_srcdir)/src/solvers/impls/BJacobiPreconditioner.I \
@@ -259,6 +228,7 @@ $(top_srcdir)/src/solvers/impls/CCDivGradHypreLevelSolver.I \
 $(top_srcdir)/src/solvers/impls/CCDivGradHypreLevelSolver.h \
 $(top_srcdir)/src/solvers/impls/CCDivGradOperator.h \
 $(top_srcdir)/src/solvers/impls/CCLaplaceOperator.h \
+$(top_srcdir)/src/solvers/impls/CCLaplaceOperator2.h \
 $(top_srcdir)/src/solvers/impls/CCPoissonFACOperator.h \
 $(top_srcdir)/src/solvers/impls/CCPoissonHypreLevelSolver.I \
 $(top_srcdir)/src/solvers/impls/CCPoissonHypreLevelSolver.h \
@@ -297,7 +267,6 @@ $(top_srcdir)/src/solvers/wrappers/PETScSNESFunctionGOWrapper.I \
 $(top_srcdir)/src/solvers/wrappers/PETScSNESFunctionGOWrapper.h \
 $(top_srcdir)/src/solvers/wrappers/PETScSNESJacobianJOWrapper.I \
 $(top_srcdir)/src/solvers/wrappers/PETScSNESJacobianJOWrapper.h \
-$(top_srcdir)/src/utilities/AppInitializer.h \
 $(top_srcdir)/src/utilities/CartGridFunction.h \
 $(top_srcdir)/src/utilities/CellNoCornersFillPattern.h \
 $(top_srcdir)/src/utilities/CoarsenPatchStrategySet.I \
@@ -311,13 +280,16 @@ $(top_srcdir)/src/utilities/FaceDataSynchronization.h \
 $(top_srcdir)/src/utilities/FaceSynchCopyFillPattern.h \
 $(top_srcdir)/src/utilities/FixedSizedStream.I \
 $(top_srcdir)/src/utilities/FixedSizedStream.h \
-$(top_srcdir)/src/utilities/HierarchyIntegrator.h \
 $(top_srcdir)/src/utilities/IndexUtilities.I \
 $(top_srcdir)/src/utilities/IndexUtilities.h \
-$(top_srcdir)/src/utilities/LMarkerUtilities.h \
+$(top_srcdir)/src/utilities/IndexSet.I \
+$(top_srcdir)/src/utilities/IndexSet.h \
+$(top_srcdir)/src/utilities/LagMarkerUtilities.h \
 $(top_srcdir)/src/utilities/NodeDataSynchronization.h \
 $(top_srcdir)/src/utilities/NodeSynchCopyFillPattern.h \
 $(top_srcdir)/src/utilities/NormOps.h \
+$(top_srcdir)/src/utilities/PETScMatOps.h \
+$(top_srcdir)/src/utilities/PETScVecOps.h \
 $(top_srcdir)/src/utilities/ParallelEdgeMap.h \
 $(top_srcdir)/src/utilities/ParallelMap.h \
 $(top_srcdir)/src/utilities/ParallelSet.h \
@@ -340,12 +312,13 @@ $(top_srcdir)/src/utilities/muParserCartGridFunction.h
 if LIBMESH_ENABLED
 DIM_INDEPENDENT_SOURCES += \
 $(top_srcdir)/src/lagrangian/FEDataManager.h \
-$(top_srcdir)/src/utilities/libmesh_utilities.h
+$(top_srcdir)/src/utilities/FESystemDataCache.h \
+$(top_srcdir)/src/utilities/libmesh_utilities.h \
+$(top_srcdir)/src/utilities/ibtk_utilities.h
 endif
 
 libIBTK2d_a_CXXFLAGS = $(AM_CXXFLAGS) -DNDIM=2
 libIBTK2d_a_SOURCES = $(DIM_INDEPENDENT_SOURCES) \
-$(top_builddir)/src/boundary/cf_interface/fortran/linearcfinterpolation2d.f \
 $(top_builddir)/src/boundary/cf_interface/fortran/quadcfinterpolation2d.f \
 $(top_builddir)/src/boundary/physical_boundary/fortran/cartphysbdryop2d.f \
 $(top_builddir)/src/coarsen_ops/fortran/cubiccoarsen2d.f \
@@ -365,7 +338,6 @@ $(top_builddir)/src/solvers/impls/fortran/patchsmoothers2d.f
 
 libIBTK3d_a_CXXFLAGS = $(AM_CXXFLAGS) -DNDIM=3
 libIBTK3d_a_SOURCES = $(DIM_INDEPENDENT_SOURCES) \
-$(top_builddir)/src/boundary/cf_interface/fortran/linearcfinterpolation3d.f \
 $(top_builddir)/src/boundary/cf_interface/fortran/quadcfinterpolation3d.f \
 $(top_builddir)/src/boundary/physical_boundary/fortran/cartphysbdryop3d.f \
 $(top_builddir)/src/coarsen_ops/fortran/cubiccoarsen3d.f \

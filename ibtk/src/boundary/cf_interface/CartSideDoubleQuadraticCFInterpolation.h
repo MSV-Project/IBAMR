@@ -69,6 +69,7 @@ public:
     /*!
      * \brief Destructor.
      */
+    virtual
     ~CartSideDoubleQuadraticCFInterpolation();
 
     /*!
@@ -89,10 +90,10 @@ public:
      * \param fill_time            Double simulation time for boundary filling.
      * \param ghost_width_to_fill  Integer vector describing maximum ghost width to fill over all registered scratch components.
      */
-    void
+    virtual void
     setPhysicalBoundaryConditions(
         SAMRAI::hier::Patch<NDIM>& patch,
-        double fill_time,
+        const double fill_time,
         const SAMRAI::hier::IntVector<NDIM>& ghost_width_to_fill);
 
     /*!
@@ -100,7 +101,7 @@ public:
      * interpolation operations.  This is needed to determine the correct
      * interpolation data dependencies.
      */
-    SAMRAI::hier::IntVector<NDIM>
+    virtual SAMRAI::hier::IntVector<NDIM>
     getRefineOpStencilWidth() const;
 
     /*!
@@ -120,7 +121,7 @@ public:
      * \param fine_box  Box region on fine patch into which data is refined.
      * \param ratio     Integer vector containing ratio relating index space between coarse and fine patches.
      */
-    void
+    virtual void
     preprocessRefine(
         SAMRAI::hier::Patch<NDIM>& fine,
         const SAMRAI::hier::Patch<NDIM>& coarse,
@@ -142,7 +143,7 @@ public:
      * \param fine_box  Box region on fine patch into which data is refined.
      * \param ratio     Integer vector containing ratio relating index space between coarse and fine patches.
      */
-    void
+    virtual void
     postprocessRefine(
         SAMRAI::hier::Patch<NDIM>& fine,
         const SAMRAI::hier::Patch<NDIM>& coarse,
@@ -161,28 +162,28 @@ public:
      * Whether or not to employ a consistent interpolation scheme at "Type 2"
      * coarse-fine interface ghost cells.
      */
-    void
+    virtual void
     setConsistentInterpolationScheme(
-        bool consistent_type_2_bdry);
+        const bool consistent_type_2_bdry);
 
     /*!
      * \brief Reset the patch data index operated upon by this class.
      */
-    void
+    virtual void
     setPatchDataIndex(
-        int patch_data_index);
+        const int patch_data_index);
 
     /*!
      * \brief Reset the patch data indices operated upon by this class.
      */
-    void
+    virtual void
     setPatchDataIndices(
         const std::set<int>& patch_data_indices);
 
     /*!
      * \brief Reset the patch data indices operated upon by this class.
      */
-    void
+    virtual void
     setPatchDataIndices(
         const SAMRAI::hier::ComponentSelector& patch_data_indices);
 
@@ -190,7 +191,7 @@ public:
      * Set the patch hierarchy used in constructing coarse-fine interface
      * boundary boxes.
      */
-    void
+    virtual void
     setPatchHierarchy(
         SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy);
 
@@ -198,13 +199,13 @@ public:
      * Clear the patch hierarchy used in constructing coarse-fine interface
      * boundary boxes.
      */
-    void
+    virtual void
     clearPatchHierarchy();
 
     /*!
      * Compute the normal extension of fine data at coarse-fine interfaces.
      */
-    void
+    virtual void
     computeNormalExtension(
         SAMRAI::hier::Patch<NDIM>& patch,
         const SAMRAI::hier::IntVector<NDIM>& ratio,

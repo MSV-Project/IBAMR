@@ -89,25 +89,23 @@ static Timer* t_deallocate_operator_state;
 SCLaplaceOperator::SCLaplaceOperator(
     const std::string& object_name,
     const PoissonSpecifications& poisson_spec,
-    const blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs,
+    const std::vector<RobinBcCoefStrategy<NDIM>*>& bc_coefs,
     const bool homogeneous_bc)
     : LinearOperator(true),
       d_object_name(object_name),
       d_is_initialized(false),
       d_ncomp(0),
       d_apply_time(0.0),
-      d_fill_pattern(NULL),
-      d_transaction_comps(),
       d_hier_bdry_fill(NULL),
       d_no_fill(NULL),
       d_x(NULL),
       d_b(NULL),
+      d_correcting_rhs(false),
       d_poisson_spec(d_object_name+"::Poisson spec"),
       d_default_bc_coef(new LocationIndexRobinBcCoefs<NDIM>(
                             d_object_name+"::default_bc_coef", Pointer<Database>(NULL))),
       d_bc_coefs(),
       d_homogeneous_bc(false),
-      d_correcting_rhs(false),
       d_hier_sc_data_ops(),
       d_hier_math_ops(),
       d_hier_math_ops_external(false),
@@ -120,7 +118,7 @@ SCLaplaceOperator::SCLaplaceOperator(
 
     // Setup a default boundary condition object that specifies homogeneous
     // Dirichlet boundary conditions.
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         d_default_bc_coef->setBoundaryValue(2*d  ,0.0);
         d_default_bc_coef->setBoundaryValue(2*d+1,0.0);
@@ -156,17 +154,26 @@ SCLaplaceOperator::setPoissonSpecifications(
 
 void
 SCLaplaceOperator::setPhysicalBcCoefs(
-    const blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs)
+    const std::vector<RobinBcCoefStrategy<NDIM>*>& bc_coefs)
 {
-    for (unsigned int d = 0; d < NDIM; ++d)
+#ifdef DEBUG_CHECK_ASSERTIONS
+    if (bc_coefs.size() != NDIM)
     {
-        if (bc_coefs[d] != NULL)
+        TBOX_ERROR(d_object_name << "setPhysicalBcCoefs::()\n"
+                   << "  " << NDIM << " boundary condition objects required (one for each component of the side-centered vector field)" << std::endl);
+    }
+#endif
+
+    d_bc_coefs.resize(bc_coefs.size());
+    for (unsigned l = 0; l < bc_coefs.size(); ++l)
+    {
+        if (bc_coefs[l] != NULL)
         {
-            d_bc_coefs[d] = bc_coefs[d];
+            d_bc_coefs[l] = bc_coefs[l];
         }
         else
         {
-            d_bc_coefs[d] = d_default_bc_coef;
+            d_bc_coefs[l] = d_default_bc_coef;
         }
     }
     return;
@@ -206,6 +213,7 @@ SCLaplaceOperator::modifyRhsForInhomogeneousBc(
     if (!d_homogeneous_bc)
     {
         d_correcting_rhs = true;
+        d_x->setToScalar(0.0);
         apply(*d_x,*d_b);
         y.subtract(Pointer<SAMRAIVectorReal<NDIM,double> >(&y, false), d_b);
         d_correcting_rhs = false;
@@ -218,14 +226,20 @@ SCLaplaceOperator::apply(
     SAMRAIVectorReal<NDIM,double>& x,
     SAMRAIVectorReal<NDIM,double>& y)
 {
-    IBTK_TIMER_START(t_apply);
+    t_apply->start();
 
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(d_is_initialized);
+#endif
+
     for (int comp = 0; comp < d_ncomp; ++comp)
     {
-        Pointer<SideVariable<NDIM,double> > x_sc_var = x.getComponentVariable(comp);
-        Pointer<SideVariable<NDIM,double> > y_sc_var = y.getComponentVariable(comp);
+        const Pointer<Variable<NDIM> >& x_var = x.getComponentVariable(comp);
+        const Pointer<Variable<NDIM> >& y_var = y.getComponentVariable(comp);
+
+        Pointer<SideVariable<NDIM,double> > x_sc_var = x_var;
+        Pointer<SideVariable<NDIM,double> > y_sc_var = y_var;
+
         if (x_sc_var.isNull() || y_sc_var.isNull())
         {
             TBOX_ERROR(d_object_name << "::apply()\n"
@@ -237,50 +251,52 @@ SCLaplaceOperator::apply(
         Pointer<SideDataFactory<NDIM,double> > y_factory =
             y_sc_var->getPatchDataFactory();
 
+#ifdef DEBUG_CHECK_ASSERTIONS
         TBOX_ASSERT(!x_factory.isNull());
         TBOX_ASSERT(!y_factory.isNull());
+#endif
 
-        const unsigned int x_depth = x_factory->getDefaultDepth();
-        const unsigned int y_depth = y_factory->getDefaultDepth();
+        const unsigned x_depth = x_factory->getDefaultDepth();
+        const unsigned y_depth = y_factory->getDefaultDepth();
+
+#ifdef DEBUG_CHECK_ASSERTIONS
         TBOX_ASSERT(x_depth == y_depth);
+#endif
         if (x_depth != 1 || y_depth != 1)
         {
             TBOX_ERROR(d_object_name << "::apply()\n"
                        << "  each vector component must have data depth == 1" << std::endl);
         }
-    }
-#endif
 
-    // Simultaneously fill ghost cell values for all components.
-    typedef HierarchyGhostCellInterpolation::InterpolationTransactionComponent InterpolationTransactionComponent;
-    std::vector<InterpolationTransactionComponent> x_transaction_comps;
-    for (int comp = 0; comp < d_ncomp; ++comp)
-    {
-        InterpolationTransactionComponent x_component(x.getComponentDescriptorIndex(comp), DATA_COARSEN_TYPE, BDRY_EXTRAP_TYPE, CONSISTENT_TYPE_2_BDRY, d_bc_coefs, d_fill_pattern);
-        x_transaction_comps.push_back(x_component);
+        const int x_idx = x.getComponentDescriptorIndex(comp);
+        const int scratch_idx = d_scratch_idxs[comp];
+        d_hier_sc_data_ops->copyData(scratch_idx, x_idx);
     }
-    d_hier_bdry_fill->resetTransactionComponents(x_transaction_comps);
+
+    // Fill the data.
     const bool homogeneous_bc = d_correcting_rhs ? d_homogeneous_bc : true;
     d_hier_bdry_fill->setHomogeneousBc(homogeneous_bc);
     d_hier_bdry_fill->fillData(d_apply_time);
-    d_hier_bdry_fill->resetTransactionComponents(d_transaction_comps);
 
     // Compute the action of the operator.
     for (int comp = 0; comp < d_ncomp; ++comp)
     {
-        Pointer<SideVariable<NDIM,double> > x_sc_var = x.getComponentVariable(comp);
-        Pointer<SideVariable<NDIM,double> > y_sc_var = y.getComponentVariable(comp);
+        const Pointer<Variable<NDIM> >& x_var = x.getComponentVariable(comp);
+        const Pointer<Variable<NDIM> >& y_var = y.getComponentVariable(comp);
 
-        const int x_idx = x.getComponentDescriptorIndex(comp);
+        Pointer<SideVariable<NDIM,double> > x_sc_var = x_var;
+        Pointer<SideVariable<NDIM,double> > y_sc_var = y_var;
+
+        const int scratch_idx = d_scratch_idxs[comp];
         const int y_idx = y.getComponentDescriptorIndex(comp);
 
         d_hier_math_ops->laplace(
             y_idx, y_sc_var,
-            d_poisson_spec, x_idx, x_sc_var,
+            d_poisson_spec, scratch_idx, x_sc_var,
             d_no_fill, 0.0);
     }
 
-    IBTK_TIMER_STOP(t_apply);
+    t_apply->stop();
     return;
 }// apply
 
@@ -289,7 +305,7 @@ SCLaplaceOperator::initializeOperatorState(
     const SAMRAIVectorReal<NDIM,double>& in,
     const SAMRAIVectorReal<NDIM,double>& out)
 {
-    IBTK_TIMER_START(t_initialize_operator_state);
+    t_initialize_operator_state->start();
 
     // Deallocate the operator state if the operator is already initialized.
     if (d_is_initialized) deallocateOperatorState();
@@ -299,7 +315,6 @@ SCLaplaceOperator::initializeOperatorState(
     d_b = out.cloneVector(out.getName());
 
     d_x->allocateVectorData();
-    d_x->setToScalar(0.0);
     d_b->allocateVectorData();
 
     // Setup operator state.
@@ -333,28 +348,61 @@ SCLaplaceOperator::initializeOperatorState(
 #endif
     }
 
-    // Setup the interpolation transaction information.
-    d_fill_pattern = NULL;
-    if (d_poisson_spec.dIsConstant())
-    {
-        d_fill_pattern = new SideNoCornersFillPattern(SIDEG, false, false, true);
-    }
-    typedef HierarchyGhostCellInterpolation::InterpolationTransactionComponent InterpolationTransactionComponent;
-    d_transaction_comps.clear();
+    // Setup scratch data.
+    VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
+    d_scratch_idxs.resize(d_ncomp);
     for (int comp = 0; comp < d_ncomp; ++comp)
     {
-        InterpolationTransactionComponent component(d_x->getComponentDescriptorIndex(comp), DATA_COARSEN_TYPE, BDRY_EXTRAP_TYPE, CONSISTENT_TYPE_2_BDRY, d_bc_coefs, d_fill_pattern);
-        d_transaction_comps.push_back(component);
+        // Get variables and patch data descriptors for temporary data.
+        const Pointer<Variable<NDIM> >& in_var = in.getComponentVariable(comp);
+        const int in_idx = in.getComponentDescriptorIndex(comp);
+        d_scratch_idxs[comp] = var_db->registerClonedPatchDataIndex(in_var, in_idx);
+        const int scratch_idx = d_scratch_idxs[comp];
+#ifdef DEBUG_CHECK_ASSERTIONS
+        TBOX_ASSERT(in_idx >= 0);
+        TBOX_ASSERT(scratch_idx >= 0);
+#endif
+        Pointer<SideDataFactory<NDIM,double> > scratch_factory =
+            var_db->getPatchDescriptor()->getPatchDataFactory(scratch_idx);
+#ifdef DEBUG_CHECK_ASSERTIONS
+        TBOX_ASSERT(!scratch_factory.isNull());
+        TBOX_ASSERT(scratch_factory->getGhostCellWidth() == SIDEG);
+#endif
+    }
+
+    // Allocate scratch data.
+    for (int ln = d_coarsest_ln; ln <= d_finest_ln; ++ln)
+    {
+        Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(ln);
+        for (int comp = 0; comp < d_ncomp; ++comp)
+        {
+            const int scratch_idx = d_scratch_idxs[comp];
+            level->allocatePatchData(scratch_idx, d_apply_time);
+        }
+    }
+
+    // Setup the interpolation transaction information.
+    Pointer<VariableFillPattern<NDIM> > fill_pattern = NULL;
+    if (d_poisson_spec.dIsConstant())
+    {
+        fill_pattern = new SideNoCornersFillPattern(SIDEG, false, true);
+    }
+    typedef HierarchyGhostCellInterpolation::InterpolationTransactionComponent InterpolationTransactionComponent;
+    std::vector<InterpolationTransactionComponent> transaction_comps;
+    for (int comp = 0; comp < d_ncomp; ++comp)
+    {
+        InterpolationTransactionComponent component(d_scratch_idxs[comp], DATA_COARSEN_TYPE, BDRY_EXTRAP_TYPE, CONSISTENT_TYPE_2_BDRY, d_bc_coefs, fill_pattern);
+        transaction_comps.push_back(component);
     }
 
     // Initialize the interpolation operators.
     d_hier_bdry_fill = new HierarchyGhostCellInterpolation();
-    d_hier_bdry_fill->initializeOperatorState(d_transaction_comps, d_hierarchy, d_coarsest_ln, d_finest_ln);
+    d_hier_bdry_fill->initializeOperatorState(transaction_comps, d_hierarchy, d_coarsest_ln, d_finest_ln);
 
     // Indicate the operator is initialized.
     d_is_initialized = true;
 
-    IBTK_TIMER_STOP(t_initialize_operator_state);
+    t_initialize_operator_state->stop();
     return;
 }// initializeOperatorState
 
@@ -363,15 +411,32 @@ SCLaplaceOperator::deallocateOperatorState()
 {
     if (!d_is_initialized) return;
 
-    IBTK_TIMER_START(t_deallocate_operator_state);
+    t_deallocate_operator_state->start();
 
     // Deallocate the interpolation operators.
     d_hier_bdry_fill->deallocateOperatorState();
     d_hier_bdry_fill.setNull();
-    d_transaction_comps.clear();
-    d_fill_pattern.setNull();
 
-    // Deallocate hierarchy math operations object.
+    // Deallocate scratch data.
+    for (int ln = d_coarsest_ln; ln <= d_finest_ln; ++ln)
+    {
+        if (ln <= d_hierarchy->getFinestLevelNumber())
+        {
+            Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(ln);
+            for (int comp = 0; comp < d_ncomp; ++comp)
+            {
+                level->deallocatePatchData(d_scratch_idxs[comp]);
+            }
+        }
+    }
+
+    VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
+    for (int comp = 0; comp < d_ncomp; ++comp)
+    {
+        const int scratch_idx = d_scratch_idxs[comp];
+        var_db->removePatchDataIndex(scratch_idx);
+    }
+
     if (!d_hier_math_ops_external) d_hier_math_ops.setNull();
 
     // Delete the solution and rhs vectors.
@@ -387,13 +452,13 @@ SCLaplaceOperator::deallocateOperatorState()
     // Indicate that the operator is NOT initialized.
     d_is_initialized = false;
 
-    IBTK_TIMER_STOP(t_deallocate_operator_state);
+    t_deallocate_operator_state->stop();
     return;
 }// deallocateOperatorState
 
 void
 SCLaplaceOperator::enableLogging(
-    bool /*enabled*/)
+    bool enabled)
 {
     TBOX_WARNING("SCLaplaceOperator::enableLogging() not supported" << std::endl);
     return;
@@ -404,5 +469,10 @@ SCLaplaceOperator::enableLogging(
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::SCLaplaceOperator>;
 
 //////////////////////////////////////////////////////////////////////////////

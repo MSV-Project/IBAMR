@@ -1,5 +1,5 @@
 !  ddmod.f
-!
+!  
 !  This work was supported by the Director, Office of Science, Division
 !  of Mathematical, Information, and Computational Sciences of the
 !  U.S. Department of Energy under contract number DE-AC03-76SF00098.
@@ -14,7 +14,7 @@
 module ddmodule
   use ddext
   implicit none
-
+  
   type dd_real
     sequence
     real*8 :: re(2)
@@ -507,7 +507,7 @@ contains
     to_d_dd = a%re(1)
   end function to_d_dd
 
-  elemental integer function to_int_dd(a)
+  elemental integer function to_int_dd(a) 
     type (dd_real), intent(in) :: a
     to_int_dd = a%re(1)
   end function to_int_dd
@@ -1782,7 +1782,8 @@ subroutine ddinp (iu, a)
 !   value must be placed on a single line of not more than 80 characters.
 
 implicit none
-integer iu
+integer iu, ln
+parameter (ln = 80)
 character*80 cs
 real*8 a(2)
 
@@ -1803,7 +1804,8 @@ subroutine ddinpc (a, b)
 !   Converts the CHARACTER*80 array A into the DD number B.
 
 implicit none
-integer i, id, ie, inz, ip, is, k, lnn, beg
+integer i, id, ie, inz, ip, is, k, ln, lnn, beg
+parameter (ln = 80)
 real*8 bi
 character*80 a
 character*1 ai
@@ -1930,7 +1932,8 @@ subroutine ddout (iu, a)
 !   E format, with lines 40 characters long.
 
 implicit none
-integer iu
+integer iu, ln
+parameter (ln = 40)
 character cs(40)
 real*8 a(2)
 
@@ -1978,7 +1981,7 @@ end subroutine
     character*16 ca, digits
     parameter (digits = '0123456789')
     integer i, is, k, n
-!   real*8 dabs, dint
+    real*8 dabs, dint
 
     intrinsic :: dabs, dint
 
@@ -2008,81 +2011,59 @@ end subroutine
     return
   end function
 
-elemental type (dd_real) function ddhuge(a)
+elemental type (dd_real) function ddhuge(a) 
   type (dd_real), intent(in) :: a
-  type (dd_real) dummy_a
-  dummy_a = a
   ddhuge = dd_huge
 end function ddhuge
 
 elemental type (dd_real) function dd_safe_huge(a)
   type (dd_real), intent(in) :: a
-  type (dd_real) dummy_a
-  dummy_a = a
   dd_safe_huge = dd_real((/1.7976931080746007281d+308, &
                            9.97920154767359795037d+291/));
 end function dd_safe_huge
 
-elemental type (dd_real) function ddtiny(a)
+elemental type (dd_real) function ddtiny(a) 
   type (dd_real), intent(in) :: a
-  type (dd_real) dummy_a
-  dummy_a = a
   ddtiny = dd_tiny
 end function ddtiny
 
-elemental type (dd_real) function ddepsilon(a)
+elemental type (dd_real) function ddepsilon(a) 
   type (dd_real), intent(in) :: a
-  type (dd_real) dummy_a
-  dummy_a = a
   ddepsilon = dd_eps
 end function ddepsilon
 
 elemental integer function dd_radix(a)
   type (dd_real), intent(in) :: a
-  type (dd_real) dummy_a
-  dummy_a = a
   dd_radix = 2
 end function dd_radix
 
 elemental integer function dd_digits(a)
   type (dd_real), intent(in) :: a
-  type (dd_real) dummy_a
-  dummy_a = a
   dd_digits = 104
 end function dd_digits
 
 elemental integer function dd_max_expn(a)
   type (dd_real), intent(in) :: a
-  type (dd_real) dummy_a
-  dummy_a = a
   dd_max_expn = 1023
 end function dd_max_expn
 
 elemental integer function dd_min_expn(a)
   type (dd_real), intent(in) :: a
-  type (dd_real) dummy_a
-  dummy_a = a
   dd_min_expn = -969
 end function dd_min_expn
 
 elemental integer function dd_precision(a)
   type (dd_real), intent(in) :: a
-  type (dd_real) dummy_a
-  dummy_a = a
   dd_precision = 31
 end function dd_precision
 
 elemental integer function dd_range(a)
   type (dd_real), intent(in) :: a
-  type (dd_real) dummy_a
-  dummy_a = a
   dd_range = 291
 end function dd_range
 
 elemental type (dd_real) function dd_nan(a)
   type (dd_real), intent(in) :: a
-  type (dd_real) dummy_a
-  dummy_a = a
   call f_dd_nan(dd_nan%re)
 end function dd_nan
 
@@ -2092,3 +2073,5 @@ elemental type (dd_real) function dd_aimag(a)
 end function
 
 end module ddmodule
+
+

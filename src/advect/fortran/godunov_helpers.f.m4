@@ -48,8 +48,7 @@ c
       REAL function muscldiff(Q)
 c
       implicit none
-      REAL twothird
-      parameter (twothird=0.66666666666667d0)
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c
@@ -109,6 +108,7 @@ c
       REAL function minmod2(a,b)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c
@@ -140,6 +140,7 @@ c
       REAL function minmod3(a,b,c)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c

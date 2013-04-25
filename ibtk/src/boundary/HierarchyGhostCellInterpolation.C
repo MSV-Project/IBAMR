@@ -47,28 +47,12 @@
 // SAMRAI INCLUDES
 #include <CellVariable.h>
 #include <SideVariable.h>
-#include <tbox/Timer.h>
-#include <tbox/TimerManager.h>
 
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 namespace IBTK
 {
 /////////////////////////////// STATIC ///////////////////////////////////////
-
-namespace
-{
-// Timers.
-static Timer* t_initialize_operator_state;
-static Timer* t_reset_transaction_component;
-static Timer* t_reset_transaction_components;
-static Timer* t_reinitialize_operator_state;
-static Timer* t_deallocate_operator_state;
-static Timer* t_fill_data;
-static Timer* t_fill_data_coarsen;
-static Timer* t_fill_data_refine;
-static Timer* t_fill_data_set_physical_bcs;
-}
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
@@ -91,18 +75,7 @@ HierarchyGhostCellInterpolation::HierarchyGhostCellInterpolation()
       d_cc_robin_bc_ops(),
       d_sc_robin_bc_ops()
 {
-    // Setup Timers.
-    IBTK_DO_ONCE(
-        t_initialize_operator_state = TimerManager::getManager()->getTimer("IBTK::HierarchyGhostCellInterpolation::initializeOperatorState()");
-        t_reset_transaction_component = TimerManager::getManager()->getTimer("IBTK::HierarchyGhostCellInterpolation::resetTransactionComponent()");
-        t_reset_transaction_components = TimerManager::getManager()->getTimer("IBTK::HierarchyGhostCellInterpolation::resetTransactionComponents()");
-        t_reinitialize_operator_state = TimerManager::getManager()->getTimer("IBTK::HierarchyGhostCellInterpolation::reinitializeOperatorState()");
-        t_deallocate_operator_state = TimerManager::getManager()->getTimer("IBTK::HierarchyGhostCellInterpolation::deallocateOperatorState()");
-        t_fill_data = TimerManager::getManager()->getTimer("IBTK::HierarchyGhostCellInterpolation::fillData()");
-        t_fill_data_coarsen = TimerManager::getManager()->getTimer("IBTK::HierarchyGhostCellInterpolation::fillData()[coarsen]");
-        t_fill_data_refine = TimerManager::getManager()->getTimer("IBTK::HierarchyGhostCellInterpolation::fillData()[refine]");
-        t_fill_data_set_physical_bcs = TimerManager::getManager()->getTimer("IBTK::HierarchyGhostCellInterpolation::fillData()[set_physical_bcs]");
-                 );
+    // intentionally blank
     return;
 }// HierarchyGhostCellInterpolation
 
@@ -117,7 +90,7 @@ HierarchyGhostCellInterpolation::setHomogeneousBc(
     const bool homogeneous_bc)
 {
     d_homogeneous_bc = homogeneous_bc;
-    for (unsigned int comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
+    for (unsigned comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
     {
         if (!d_cc_robin_bc_ops[comp_idx].isNull()) d_cc_robin_bc_ops[comp_idx]->setHomogeneousBc(d_homogeneous_bc);
         for (std::vector<RobinBcCoefStrategy<NDIM>*>::iterator it =
@@ -148,27 +121,21 @@ HierarchyGhostCellInterpolation::setHomogeneousBc(
 void
 HierarchyGhostCellInterpolation::initializeOperatorState(
     const InterpolationTransactionComponent transaction_comp,
-    const Pointer<PatchHierarchy<NDIM> > hierarchy,
+    Pointer<PatchHierarchy<NDIM> > hierarchy,
     const int coarsest_ln,
     const int finest_ln)
 {
-    IBTK_TIMER_START(t_initialize_operator_state);
-
     initializeOperatorState(std::vector<InterpolationTransactionComponent>(1,transaction_comp), hierarchy, coarsest_ln, finest_ln);
-
-    IBTK_TIMER_STOP(t_initialize_operator_state);
     return;
 }// initializeOperatorState
 
 void
 HierarchyGhostCellInterpolation::initializeOperatorState(
-    const std::vector<InterpolationTransactionComponent>& transaction_comps,
-    const Pointer<PatchHierarchy<NDIM> > hierarchy,
+    const std::vector<InterpolationTransactionComponent> transaction_comps,
+    Pointer<PatchHierarchy<NDIM> > hierarchy,
     const int coarsest_ln,
     const int finest_ln)
 {
-    IBTK_TIMER_START(t_initialize_operator_state);
-
     // Deallocate the operator state if the operator is already initialized.
     if (d_is_initialized) deallocateOperatorState();
 
@@ -191,7 +158,7 @@ HierarchyGhostCellInterpolation::initializeOperatorState(
     VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
     bool registered_coarsen_op = false;
     d_coarsen_alg = new CoarsenAlgorithm<NDIM>();
-    for (unsigned int comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
+    for (unsigned comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
     {
         const std::string& coarsen_op_name = d_transaction_comps[comp_idx].d_coarsen_op_name;
         if (coarsen_op_name != "NONE")
@@ -234,7 +201,7 @@ HierarchyGhostCellInterpolation::initializeOperatorState(
     d_sc_robin_bc_ops.resize(d_transaction_comps.size());
     d_refine_alg = new RefineAlgorithm<NDIM>();
     std::vector<RefinePatchStrategy<NDIM>*> refine_patch_strategies;
-    for (unsigned int comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
+    for (unsigned comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
     {
         const int data_idx = d_transaction_comps[comp_idx].d_data_idx;
         Pointer<Variable<NDIM> > var;
@@ -299,12 +266,7 @@ HierarchyGhostCellInterpolation::initializeOperatorState(
         }
         if (!null_bc_coefs && !sc_var.isNull())
         {
-#ifdef DEBUG_CHECK_ASSERTIONS
-            TBOX_ASSERT(robin_bc_coefs.size() == NDIM);
-#endif
-            blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM> robin_bc_coefs_vec;
-            for (unsigned int d = 0; d < NDIM; ++d) robin_bc_coefs_vec[d] = robin_bc_coefs[d];
-            d_sc_robin_bc_ops[comp_idx] = new CartSideRobinPhysBdryOp(data_idx, robin_bc_coefs_vec, d_homogeneous_bc);
+            d_sc_robin_bc_ops[comp_idx] = new CartSideRobinPhysBdryOp(data_idx, robin_bc_coefs, d_homogeneous_bc);
         }
     }
 
@@ -322,8 +284,6 @@ HierarchyGhostCellInterpolation::initializeOperatorState(
 
     // Indicate the operator is initialized.
     d_is_initialized = true;
-
-    IBTK_TIMER_STOP(t_initialize_operator_state);
     return;
 }// initializeOperatorState
 
@@ -331,8 +291,6 @@ void
 HierarchyGhostCellInterpolation::resetTransactionComponent(
     const InterpolationTransactionComponent& transaction_comp)
 {
-    IBTK_TIMER_START(t_reset_transaction_component);
-
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(d_is_initialized);
 #endif
@@ -342,8 +300,6 @@ HierarchyGhostCellInterpolation::resetTransactionComponent(
                    << "  invalid reset operation.  attempting to change the number of registered interpolation transaction components.\n");
     }
     resetTransactionComponents(std::vector<InterpolationTransactionComponent>(1,transaction_comp));
-
-    IBTK_TIMER_STOP(t_reset_transaction_component);
     return;
 }// resetTransactionComponent
 
@@ -351,8 +307,6 @@ void
 HierarchyGhostCellInterpolation::resetTransactionComponents(
     const std::vector<InterpolationTransactionComponent>& transaction_comps)
 {
-    IBTK_TIMER_START(t_reset_transaction_components);
-
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(d_is_initialized);
 #endif
@@ -369,7 +323,7 @@ HierarchyGhostCellInterpolation::resetTransactionComponents(
     VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
     bool registered_coarsen_op = false;
     d_coarsen_alg = new CoarsenAlgorithm<NDIM>();
-    for (unsigned int comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
+    for (unsigned comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
     {
         const std::string& coarsen_op_name = d_transaction_comps[comp_idx].d_coarsen_op_name;
         if (coarsen_op_name != "NONE")
@@ -402,7 +356,7 @@ HierarchyGhostCellInterpolation::resetTransactionComponents(
 
     // Reset cached refine algorithms and schedules.
     d_refine_alg = new RefineAlgorithm<NDIM>();
-    for (unsigned int comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
+    for (unsigned comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
     {
         const int data_idx = d_transaction_comps[comp_idx].d_data_idx;
         Pointer<Variable<NDIM> > var;
@@ -474,11 +428,8 @@ HierarchyGhostCellInterpolation::resetTransactionComponents(
 #ifdef DEBUG_CHECK_ASSERTIONS
             TBOX_ASSERT(!null_bc_coefs);
             TBOX_ASSERT(!sc_var.isNull());
-            TBOX_ASSERT(robin_bc_coefs.size() == NDIM);
 #endif
-            blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM> robin_bc_coefs_vec;
-            for (unsigned int d = 0; d < NDIM; ++d) robin_bc_coefs_vec[d] = robin_bc_coefs[d];
-            d_sc_robin_bc_ops[comp_idx]->setPhysicalBcCoefs(robin_bc_coefs_vec);
+            d_sc_robin_bc_ops[comp_idx]->setPhysicalBcCoefs(robin_bc_coefs);
             d_sc_robin_bc_ops[comp_idx]->setPatchDataIndex(data_idx);
         }
     }
@@ -487,8 +438,6 @@ HierarchyGhostCellInterpolation::resetTransactionComponents(
     {
         d_refine_alg->resetSchedule(d_refine_scheds[dst_ln]);
     }
-
-    IBTK_TIMER_STOP(t_reset_transaction_components);
     return;
 }// resetTransactionComponents
 
@@ -497,12 +446,7 @@ HierarchyGhostCellInterpolation::reinitializeOperatorState(
     Pointer<PatchHierarchy<NDIM> > hierarchy)
 {
     if (!d_is_initialized) return;
-
-    IBTK_TIMER_START(t_reinitialize_operator_state);
-
     initializeOperatorState(d_transaction_comps, hierarchy);
-
-    IBTK_TIMER_STOP(t_reinitialize_operator_state);
     return;
 }// reinitializeOperatorState
 
@@ -510,8 +454,6 @@ void
 HierarchyGhostCellInterpolation::deallocateOperatorState()
 {
     if (!d_is_initialized) return;
-
-    IBTK_TIMER_START(t_deallocate_operator_state);
 
     // Clear cached refinement operators.
     d_cf_bdry_ops.clear();
@@ -532,22 +474,18 @@ HierarchyGhostCellInterpolation::deallocateOperatorState()
 
     // Indicate that the operator is NOT initialized.
     d_is_initialized = false;
-
-    IBTK_TIMER_STOP(t_deallocate_operator_state);
     return;
 }// deallocateOperatorState
 
 void
 HierarchyGhostCellInterpolation::fillData(
-    double fill_time)
+    const double& fill_time)
 {
-    IBTK_TIMER_START(t_fill_data);
-
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(d_is_initialized);
 #endif
     // Ensure the boundary condition objects are in the correct state.
-    for (unsigned int comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
+    for (unsigned comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
     {
         if (!d_cc_robin_bc_ops[comp_idx].isNull()) d_cc_robin_bc_ops[comp_idx]->setHomogeneousBc(d_homogeneous_bc);
         for (std::vector<RobinBcCoefStrategy<NDIM>*>::iterator it =
@@ -575,16 +513,13 @@ HierarchyGhostCellInterpolation::fillData(
 
     // Synchronize data on the patch hierarchy prior to filling ghost cell
     // values.
-    IBTK_TIMER_START(t_fill_data_coarsen);
     for (int src_ln = d_finest_ln; src_ln >= std::max(1,d_coarsest_ln); --src_ln)
     {
         if (!d_coarsen_scheds[src_ln].isNull()) d_coarsen_scheds[src_ln]->coarsenData();
     }
-    IBTK_TIMER_STOP(t_fill_data_coarsen);
 
     // Perform the initial data fill, using extrapolation to determine ghost
     // cell values at physical boundaries.
-    IBTK_TIMER_START(t_fill_data_refine);
     for (int dst_ln = d_coarsest_ln; dst_ln <= d_finest_ln; ++dst_ln)
     {
         if (!d_refine_scheds[dst_ln].isNull())
@@ -596,7 +531,7 @@ HierarchyGhostCellInterpolation::fillData(
         for (PatchLevel<NDIM>::Iterator p(level); p; p++)
         {
             Pointer<Patch<NDIM> > patch = level->getPatch(p());
-            for (unsigned int comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
+            for (unsigned comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
             {
                 if (!d_cf_bdry_ops[comp_idx].isNull())
                 {
@@ -607,10 +542,8 @@ HierarchyGhostCellInterpolation::fillData(
             }
         }
     }
-    IBTK_TIMER_STOP(t_fill_data_refine);
 
     // Set Robin boundary conditions at physical boundaries.
-    IBTK_TIMER_START(t_fill_data_set_physical_bcs);
     for (int ln = d_coarsest_ln; ln <= d_finest_ln; ++ln)
     {
         Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(ln);
@@ -619,7 +552,7 @@ HierarchyGhostCellInterpolation::fillData(
             Pointer<Patch<NDIM> > patch = level->getPatch(p());
             if (patch->getPatchGeometry()->getTouchesRegularBoundary())
             {
-                for (unsigned int comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
+                for (unsigned comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
                 {
                     if (!d_cc_robin_bc_ops[comp_idx].isNull())
                     {
@@ -637,9 +570,6 @@ HierarchyGhostCellInterpolation::fillData(
             }
         }
     }
-    IBTK_TIMER_STOP(t_fill_data_set_physical_bcs);
-
-    IBTK_TIMER_STOP(t_fill_data);
     return;
 }// fillData
 
@@ -650,5 +580,10 @@ HierarchyGhostCellInterpolation::fillData(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::HierarchyGhostCellInterpolation>;
 
 //////////////////////////////////////////////////////////////////////////////

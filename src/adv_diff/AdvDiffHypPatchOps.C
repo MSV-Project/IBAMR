@@ -63,13 +63,13 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define ADV_DIFF_CONSDIFF_FC FC_GLOBAL_(adv_diff_consdiff2d, ADV_DIFF_CONSDIFF2D)
-#define ADV_DIFF_CONSDIFFWITHDIVSOURCE_FC FC_GLOBAL_(adv_diff_consdiffwithdivsource2d, ADV_DIFF_CONSDIFFWITHDIVSOURCE2D)
+#define ADV_DIFF_CONSDIFF_FC FC_FUNC_(adv_diff_consdiff2d, ADV_DIFF_CONSDIFF2D)
+#define ADV_DIFF_CONSDIFFWITHDIVSOURCE_FC FC_FUNC_(adv_diff_consdiffwithdivsource2d, ADV_DIFF_CONSDIFFWITHDIVSOURCE2D)
 #endif
 
 #if (NDIM == 3)
-#define ADV_DIFF_CONSDIFF_FC FC_GLOBAL_(adv_diff_consdiff3d, ADV_DIFF_CONSDIFF3D)
-#define ADV_DIFF_CONSDIFFWITHDIVSOURCE_FC FC_GLOBAL_(adv_diff_consdiffwithdivsource3d, ADV_DIFF_CONSDIFFWITHDIVSOURCE3D)
+#define ADV_DIFF_CONSDIFF_FC FC_FUNC_(adv_diff_consdiff3d, ADV_DIFF_CONSDIFF3D)
+#define ADV_DIFF_CONSDIFFWITHDIVSOURCE_FC FC_FUNC_(adv_diff_consdiffwithdivsource3d, ADV_DIFF_CONSDIFFWITHDIVSOURCE3D)
 #endif
 
 extern "C"
@@ -133,7 +133,7 @@ AdvDiffHypPatchOps::AdvDiffHypPatchOps(
     bool register_for_restart)
     : AdvectHypPatchOps(object_name, input_db, godunov_advector, grid_geom, register_for_restart)
 {
-    d_overwrite_tags = false;
+    // intentionally blank
     return;
 }// AdvDiffHypPatchOps
 
@@ -162,9 +162,9 @@ AdvDiffHypPatchOps::getName() const
 void
 AdvDiffHypPatchOps::conservativeDifferenceOnPatch(
     Patch<NDIM>& patch,
-    const double /*time*/,
+    const double time,
     const double dt,
-    bool /*at_synchronization*/)
+    bool at_synchronization)
 {
     const Box<NDIM>& patch_box = patch.getBox();
     const Index<NDIM>& ilower = patch_box.lower();
@@ -178,13 +178,6 @@ AdvDiffHypPatchOps::conservativeDifferenceOnPatch(
     {
         Pointer<CellVariable<NDIM,double> > Q_var = *cit;
         Pointer<FaceVariable<NDIM,double> > u_var = d_Q_u_map[Q_var];
-
-        if (u_var.isNull())
-        {
-            Pointer<CellData<NDIM,double> > Q_data = patch.getPatchData(Q_var, getDataContext());
-            Q_data->fillAll(0.0);
-            continue;
-        }
 
         const bool conservation_form = d_Q_difference_form[Q_var] == CONSERVATIVE;
         const bool u_is_div_free = d_u_is_div_free[u_var];
@@ -315,10 +308,10 @@ void
 AdvDiffHypPatchOps::preprocessAdvanceLevelState(
     const Pointer<PatchLevel<NDIM> >& level,
     double current_time,
-    double /*dt*/,
-    bool /*first_step*/,
-    bool /*last_step*/,
-    bool /*regrid_advance*/)
+    double dt,
+    bool first_step,
+    bool last_step,
+    bool regrid_advance)
 {
     if (!d_compute_init_velocity) return;
 
@@ -342,9 +335,9 @@ AdvDiffHypPatchOps::postprocessAdvanceLevelState(
     const Pointer<PatchLevel<NDIM> >& level,
     double current_time,
     double dt,
-    bool /*first_step*/,
-    bool /*last_step*/,
-    bool /*regrid_advance*/)
+    bool first_step,
+    bool last_step,
+    bool regrid_advance)
 {
     if (!d_compute_final_velocity) return;
 
@@ -366,5 +359,10 @@ AdvDiffHypPatchOps::postprocessAdvanceLevelState(
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBAMR
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBAMR::AdvDiffHypPatchOps>;
 
 //////////////////////////////////////////////////////////////////////////////

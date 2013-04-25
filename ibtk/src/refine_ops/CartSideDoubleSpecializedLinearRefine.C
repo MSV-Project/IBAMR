@@ -57,10 +57,10 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define CART_SIDE_SPECIALIZED_LINEAR_REFINE_FC FC_GLOBAL(cart_side_specialized_linear_refine2d,CART_SIDE_SPECIALIZED_LINEAR_REFINE2D)
+#define CART_SIDE_SPECIALIZED_LINEAR_REFINE_FC FC_FUNC(cart_side_specialized_linear_refine2d,CART_SIDE_SPECIALIZED_LINEAR_REFINE2D)
 #endif
 #if (NDIM == 3)
-#define CART_SIDE_SPECIALIZED_LINEAR_REFINE_FC FC_GLOBAL(cart_side_specialized_linear_refine3d,CART_SIDE_SPECIALIZED_LINEAR_REFINE3D)
+#define CART_SIDE_SPECIALIZED_LINEAR_REFINE_FC FC_FUNC(cart_side_specialized_linear_refine3d,CART_SIDE_SPECIALIZED_LINEAR_REFINE3D)
 #endif
 
 // Function interfaces
@@ -222,5 +222,10 @@ CartSideDoubleSpecializedLinearRefine::refine(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::CartSideDoubleSpecializedLinearRefine>;
 
 //////////////////////////////////////////////////////////////////////////////

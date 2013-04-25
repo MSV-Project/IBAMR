@@ -36,7 +36,7 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 // IBAMR INCLUDES
-#include <ibamr/INSProblemCoefs.h>
+#include <ibamr/INSCoefs.h>
 
 // IBTK INCLUDES
 #include <ibtk/LinearSolver.h>
@@ -65,9 +65,9 @@ public:
      * \brief Class constructor
      */
     INSStaggeredProjectionPreconditioner(
-        const INSProblemCoefs& problem_coefs,
+        const INSCoefs& problem_coefs,
         SAMRAI::solv::RobinBcCoefStrategy<NDIM>* Phi_bc_coef,
-        bool normalize_pressure,
+        const bool normalize_pressure,
         SAMRAI::tbox::Pointer<IBTK::LinearSolver> velocity_helmholtz_solver,
         SAMRAI::tbox::Pointer<IBTK::LinearSolver> pressure_poisson_solver,
         SAMRAI::tbox::Pointer<SAMRAI::math::HierarchyCellDataOpsReal<NDIM,double> > hier_cc_data_ops,
@@ -75,8 +75,9 @@ public:
         SAMRAI::tbox::Pointer<IBTK::HierarchyMathOps> hier_math_ops);
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~INSStaggeredProjectionPreconditioner();
 
     /*!
@@ -87,8 +88,9 @@ public:
      */
     void
     setTimeInterval(
-        double current_time,
-        double new_time);
+        const double current_time,
+        const double new_time,
+        const double dt);
 
     /*!
      * \name Linear solver functionality.
@@ -98,7 +100,7 @@ public:
     /*!
      * \brief Compute the action of the preconditioner.
      */
-    bool
+    virtual bool
     solveSystem(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -120,7 +122,7 @@ public:
      *
      * \note A default implementation is provided which does nothing.
      */
-    void
+    virtual void
     initializeSolverState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -136,7 +138,7 @@ public:
      *
      * \note A default implementation is provided which does nothing.
      */
-    void
+    virtual void
     deallocateSolverState();
 
     //\}
@@ -149,53 +151,53 @@ public:
     /*!
      * \brief Set whether the initial guess is non-zero.
      */
-    void
+    virtual void
     setInitialGuessNonzero(
         bool initial_guess_nonzero=true);
 
     /*!
      * \brief Get whether the initial guess is non-zero.
      */
-    bool
+    virtual bool
     getInitialGuessNonzero() const;
 
     /*!
      * \brief Set the maximum number of iterations to use per solve.
      */
-    void
+    virtual void
     setMaxIterations(
         int max_iterations);
 
     /*!
      * \brief Get the maximum number of iterations to use per solve.
      */
-    int
+    virtual int
     getMaxIterations() const;
 
     /*!
      * \brief Set the absolute residual tolerance for convergence.
      */
-    void
+    virtual void
     setAbsoluteTolerance(
         double abs_residual_tol);
 
     /*!
      * \brief Get the absolute residual tolerance for convergence.
      */
-    double
+    virtual double
     getAbsoluteTolerance() const;
 
     /*!
      * \brief Set the relative residual tolerance for convergence.
      */
-    void
+    virtual void
     setRelativeTolerance(
         double rel_residual_tol);
 
     /*!
      * \brief Get the relative residual tolerance for convergence.
      */
-    double
+    virtual double
     getRelativeTolerance() const;
 
     //\}
@@ -208,13 +210,13 @@ public:
     /*!
      * \brief Return the iteration count from the most recent linear solve.
      */
-    int
+    virtual int
     getNumIterations() const;
 
     /*!
      * \brief Return the residual norm from the most recent iteration.
      */
-    double
+    virtual double
     getResidualNorm() const;
 
     //\}
@@ -229,7 +231,7 @@ public:
      *
      * \param enabled logging state: true=on, false=off
      */
-    void
+    virtual void
     enableLogging(
         bool enabled=true);
 
@@ -273,10 +275,10 @@ private:
     bool d_is_initialized;
 
     // The simulation time.
-    double d_current_time, d_new_time;
+    double d_current_time, d_new_time, d_dt;
 
     // Problem coefficients.
-    const INSProblemCoefs& d_problem_coefs;
+    const INSCoefs& d_problem_coefs;
     SAMRAI::solv::PoissonSpecifications d_pressure_helmholtz_spec;
 
     // Normalize the pressure when necessary.

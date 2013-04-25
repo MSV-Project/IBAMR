@@ -88,9 +88,9 @@ struct IndexComp
         const Index<NDIM>& rhs) const
         {
             return (lhs(0) < rhs(0)
-#if (NDIM > 1)
+#if (NDIM>1)
                     || (lhs(0) == rhs(0) && lhs(1) < rhs(1))
-#if (NDIM > 2)
+#if (NDIM>2)
                     || (lhs(0) == rhs(0) && lhs(1) == rhs(1) && lhs(2) < rhs(2))
 #endif
 #endif
@@ -196,7 +196,7 @@ CCDivGradHypreLevelSolver::solveSystem(
     SAMRAIVectorReal<NDIM,double>& x,
     SAMRAIVectorReal<NDIM,double>& b)
 {
-    IBTK_TIMER_START(t_solve_system);
+    t_solve_system->start();
 
     if (d_enable_logging) plog << d_object_name << "::solveSystem():" << std::endl;
 
@@ -237,7 +237,7 @@ CCDivGradHypreLevelSolver::solveSystem(
     // Deallocate the solver, when necessary.
     if (deallocate_after_solve) deallocateSolverState();
 
-    IBTK_TIMER_STOP(t_solve_system);
+    t_solve_system->stop();
     return converged;
 }// solveSystem
 
@@ -246,7 +246,7 @@ CCDivGradHypreLevelSolver::initializeSolverState(
     const SAMRAIVectorReal<NDIM,double>& x,
     const SAMRAIVectorReal<NDIM,double>& b)
 {
-    IBTK_TIMER_START(t_initialize_solver_state);
+    t_initialize_solver_state->start();
 
     // Rudimentary error checking.
 #ifdef DEBUG_CHECK_ASSERTIONS
@@ -301,8 +301,6 @@ CCDivGradHypreLevelSolver::initializeSolverState(
         TBOX_ERROR(d_object_name << "::initializeSolverState()\n"
                    << "  coarsest_ln != finest_ln in CCDivGradHypreLevelSolver" << std::endl);
     }
-#else
-    NULL_USE(b);
 #endif
     // Deallocate the solver state if the solver is already initialized.
     if (d_is_initialized) deallocateSolverState();
@@ -319,7 +317,7 @@ CCDivGradHypreLevelSolver::initializeSolverState(
     // Indicate that the solver is initialized.
     d_is_initialized = true;
 
-    IBTK_TIMER_STOP(t_initialize_solver_state);
+    t_initialize_solver_state->stop();
     return;
 }// initializeSolverState
 
@@ -328,7 +326,7 @@ CCDivGradHypreLevelSolver::deallocateSolverState()
 {
     if (!d_is_initialized) return;
 
-    IBTK_TIMER_START(t_deallocate_solver_state);
+    t_deallocate_solver_state->start();
 
     // Deallocate the hypre data structures.
     destroyHypreSolver();
@@ -337,7 +335,7 @@ CCDivGradHypreLevelSolver::deallocateSolverState()
     // Indicate that the solver is NOT initialized.
     d_is_initialized = false;
 
-    IBTK_TIMER_STOP(t_deallocate_solver_state);
+    t_deallocate_solver_state->stop();
     return;
 }// deallocateSolverState
 
@@ -382,7 +380,7 @@ CCDivGradHypreLevelSolver::allocateHypreData()
     }
 
     int hypre_periodic_shift[3];
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         hypre_periodic_shift[d] = periodic_shift(d)/2;
     }
@@ -849,7 +847,7 @@ CCDivGradHypreLevelSolver::solveSystem(
     HYPRE_StructVectorAssemble(d_rhs_vec);
 
     // Solve the system.
-    IBTK_TIMER_START(t_solve_system_hypre);
+    t_solve_system_hypre->start();
 
     if (d_solver_type == "PFMG")
     {
@@ -913,7 +911,7 @@ CCDivGradHypreLevelSolver::solveSystem(
         HYPRE_StructBiCGSTABGetFinalRelativeResidualNorm(d_solver, &d_current_residual_norm);
     }
 
-    IBTK_TIMER_STOP(t_solve_system_hypre);
+    t_solve_system_hypre->stop();
 
     // Pull the solution vector out of the hypre structures.
     for (PatchLevel<NDIM>::Iterator p(level); p; p++)
@@ -929,7 +927,7 @@ CCDivGradHypreLevelSolver::solveSystem(
 void
 CCDivGradHypreLevelSolver::copyToHypre(
     HYPRE_StructVector vector,
-    const Pointer<CellData<NDIM,double> > src_data,
+    const Pointer<CellData<NDIM,double> >& src_data,
     const Box<NDIM>& box,
     const IntVector<NDIM>& chkbrd_mode_id)
 {
@@ -948,7 +946,7 @@ CCDivGradHypreLevelSolver::copyToHypre(
 
 void
 CCDivGradHypreLevelSolver::copyFromHypre(
-    Pointer<CellData<NDIM,double> > dst_data,
+    Pointer<CellData<NDIM,double> >& dst_data,
     HYPRE_StructVector vector,
     const Box<NDIM>& box,
     const IntVector<NDIM>& chkbrd_mode_id)
@@ -1041,5 +1039,10 @@ CCDivGradHypreLevelSolver::deallocateHypreData()
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::CCDivGradHypreLevelSolver>;
 
 //////////////////////////////////////////////////////////////////////////////

@@ -75,4 +75,9 @@ CoarseFineBoundaryRefinePatchStrategy::~CoarseFineBoundaryRefinePatchStrategy()
 
 }// namespace IBTK
 
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::CoarseFineBoundaryRefinePatchStrategy>;
+
 //////////////////////////////////////////////////////////////////////////////

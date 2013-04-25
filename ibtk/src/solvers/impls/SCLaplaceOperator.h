@@ -44,9 +44,6 @@
 #include <LocationIndexRobinBcCoefs.h>
 #include <PoissonSpecifications.h>
 
-// BLITZ++ INCLUDES
-#include <blitz/tinyvec.h>
-
 /////////////////////////////// CLASS DEFINITION /////////////////////////////
 
 namespace IBTK
@@ -73,12 +70,13 @@ public:
     SCLaplaceOperator(
         const std::string& object_name,
         const SAMRAI::solv::PoissonSpecifications& poisson_spec,
-        const blitz::TinyVector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs,
-        bool homogeneous_bc=true);
+        const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& bc_coefs,
+        const bool homogeneous_bc=true);
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~SCLaplaceOperator();
 
     /*!
@@ -99,16 +97,16 @@ public:
      *
      * \param bc_coefs  Vector of pointers to objects that can set the Robin boundary condition coefficients
      */
-    void
+    virtual void
     setPhysicalBcCoefs(
-        const blitz::TinyVector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs);
+        const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& bc_coefs);
 
     /*!
      * \brief Specify whether the boundary conditions are homogeneous.
      */
-    void
+    virtual void
     setHomogeneousBc(
-        bool homogeneous_bc);
+        const bool homogeneous_bc);
 
     /*!
      * \brief Set the hierarchy time, for use with the refinement schedules and
@@ -116,7 +114,7 @@ public:
      */
     void
     setTime(
-        double time);
+        const double time);
 
     /*!
      * \brief Set the HierarchyMathOps object used by the operator.
@@ -145,7 +143,7 @@ public:
      *
      * \param y output: y=Ax
      */
-    void
+    virtual void
     modifyRhsForInhomogeneousBc(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
 
@@ -175,7 +173,7 @@ public:
      * \param x input
      * \param y output: y=Ax
      */
-    void
+    virtual void
     apply(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
@@ -189,7 +187,7 @@ public:
      *
      * \see KrylovLinearSolver::initializeSolverState
      */
-    void
+    virtual void
     initializeOperatorState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& in,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& out);
@@ -205,7 +203,7 @@ public:
      * \see initializeOperatorState
      * \see KrylovLinearSolver::deallocateSolverState
      */
-    void
+    virtual void
     deallocateOperatorState();
 
     //\}
@@ -220,7 +218,7 @@ public:
      *
      * \param enabled logging state: true=on, false=off
      */
-    void
+    virtual void
     enableLogging(
         bool enabled=true);
 
@@ -266,20 +264,19 @@ private:
     double d_apply_time;
 
     // Cached communications operators.
-    SAMRAI::tbox::Pointer<SAMRAI::xfer::VariableFillPattern<NDIM> > d_fill_pattern;
-    std::vector<HierarchyGhostCellInterpolation::InterpolationTransactionComponent> d_transaction_comps;
     SAMRAI::tbox::Pointer<HierarchyGhostCellInterpolation> d_hier_bdry_fill, d_no_fill;
 
     // Scratch data.
+    std::vector<int> d_scratch_idxs;
     SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> > d_x, d_b;
+    bool d_correcting_rhs;
 
-    // Problem specification.
+    // Problem specification and mathematical operators.
     SAMRAI::solv::PoissonSpecifications d_poisson_spec;
     SAMRAI::solv::LocationIndexRobinBcCoefs<NDIM>* const d_default_bc_coef;
-    blitz::TinyVector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*,NDIM> d_bc_coefs;
-    bool d_homogeneous_bc, d_correcting_rhs;
+    std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*> d_bc_coefs;
+    bool d_homogeneous_bc;
 
-    // Mathematical operators.
     SAMRAI::tbox::Pointer<SAMRAI::math::HierarchyDataOpsReal<NDIM,double> > d_hier_sc_data_ops;
     SAMRAI::tbox::Pointer<HierarchyMathOps> d_hier_math_ops;
     bool d_hier_math_ops_external;

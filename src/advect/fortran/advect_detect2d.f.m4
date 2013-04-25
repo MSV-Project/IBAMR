@@ -57,6 +57,7 @@ c
      &  tags,temptags)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
       INTEGER
      &  ifirst0,ifirst1,ilast0,ilast1,

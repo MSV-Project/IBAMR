@@ -30,7 +30,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "IBSourceSpec.h"
+#include "IBSourceSpecFactory.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
@@ -45,6 +45,7 @@
 #endif
 
 // IBAMR INCLUDES
+#include <ibamr/IBSourceSpec.h>
 #include <ibamr/namespaces.h>
 
 // IBTK INCLUDES
@@ -54,43 +55,48 @@
 
 namespace IBAMR
 {
+/////////////////////////////// STATIC ///////////////////////////////////////
+
+int IBSourceSpecFactory::s_class_id = -1;
+
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
-IBSourceSpec::Factory::Factory()
+IBSourceSpecFactory::IBSourceSpecFactory()
 {
     setStreamableClassID(StreamableManager::getUnregisteredID());
     return;
-}// Factory
+}// IBSourceSpecFactory
 
-IBSourceSpec::Factory::~Factory()
+IBSourceSpecFactory::~IBSourceSpecFactory()
 {
     // intentionally blank
     return;
-}// ~Factory
+}// ~IBSourceSpecFactory
 
 int
-IBSourceSpec::Factory::getStreamableClassID() const
+IBSourceSpecFactory::getStreamableClassID() const
 {
-    return STREAMABLE_CLASS_ID;
+    return s_class_id;
 }// getStreamableClassID
 
 void
-IBSourceSpec::Factory::setStreamableClassID(
+IBSourceSpecFactory::setStreamableClassID(
     const int class_id)
 {
-    STREAMABLE_CLASS_ID = class_id;
+    s_class_id = class_id;
     return;
 }// setStreamableClassID
 
 Pointer<Streamable>
-IBSourceSpec::Factory::unpackStream(
+IBSourceSpecFactory::unpackStream(
     AbstractStream& stream,
-    const IntVector<NDIM>& /*offset*/)
+    const IntVector<NDIM>& offset)
 {
-    Pointer<IBSourceSpec> ret_val = new IBSourceSpec();
-    stream.unpack(&ret_val->d_master_idx,1);
-    stream.unpack(&ret_val->d_source_idx,1);
-    return ret_val;
+    int master_idx;
+    stream.unpack(&master_idx,1);
+    int source_idx;
+    stream.unpack(&source_idx,1);
+    return new IBSourceSpec(master_idx,source_idx);
 }// unpackStream
 
 /////////////////////////////// PROTECTED ////////////////////////////////////
@@ -100,5 +106,10 @@ IBSourceSpec::Factory::unpackStream(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBAMR
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBAMR::IBSourceSpecFactory>;
 
 //////////////////////////////////////////////////////////////////////////////

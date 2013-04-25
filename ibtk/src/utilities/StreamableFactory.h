@@ -66,7 +66,7 @@ namespace IBTK
  * \see StreamableManager
  */
 class StreamableFactory
-    : public SAMRAI::tbox::DescribedClass
+    : public virtual SAMRAI::tbox::DescribedClass
 {
 public:
     /*!
@@ -95,7 +95,7 @@ public:
      */
     virtual void
     setStreamableClassID(
-        int class_id) = 0;
+        const int class_id) = 0;
 
     /*!
      * \brief Build a Streamable object by unpacking data from the data stream.

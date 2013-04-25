@@ -109,12 +109,12 @@ inline int
 compute_side_index(
     const Index<NDIM>& i,
     const Box<NDIM>& box,
-    const unsigned int axis)
+    const int axis)
 {
     const Box<NDIM> side_box = SideGeometry<NDIM>::toSideBox(box,axis);
     if (!side_box.contains(i)) return -1;
     int offset = 0;
-    for (unsigned int d = 0; d < axis; ++d)
+    for (int d = 0; d < axis; ++d)
     {
         offset += SideGeometry<NDIM>::toSideBox(box,d).size();
     }
@@ -128,7 +128,7 @@ compute_cell_index(
 {
     if (!box.contains(i)) return -1;
     int offset = 0;
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         offset += SideGeometry<NDIM>::toSideBox(box,axis).size();
     }
@@ -138,11 +138,11 @@ compute_cell_index(
 void
 buildBoxOperator(
     Mat& A,
-    const INSProblemCoefs& problem_coefs,
+    const INSCoefs& problem_coefs,
     const double dt,
     const Box<NDIM>& box,
     const Box<NDIM>& ghost_box,
-    const blitz::TinyVector<double,NDIM>& dx)
+    const double* const dx)
 {
     int ierr;
 
@@ -151,9 +151,9 @@ buildBoxOperator(
     const double lambda = problem_coefs.getLambda();
 
     // Allocate a PETSc matrix for the box operator.
-    blitz::TinyVector<Box<NDIM>,NDIM> side_boxes;
-    blitz::TinyVector<BoxList<NDIM>,NDIM> side_ghost_boxes;
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    Box<NDIM> side_boxes[NDIM];
+    BoxList<NDIM> side_ghost_boxes[NDIM];
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         side_boxes[axis] = SideGeometry<NDIM>::toSideBox(box, axis);
         side_ghost_boxes[axis] = SideGeometry<NDIM>::toSideBox(ghost_box, axis);
@@ -163,7 +163,7 @@ buildBoxOperator(
     cell_ghost_boxes.removeIntersections(box);
 
     int size = 0;
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         size += SideGeometry<NDIM>::toSideBox(ghost_box, axis).size();
     }
@@ -173,7 +173,7 @@ buildBoxOperator(
     static const int P_stencil_sz = 2*NDIM+1;
     std::vector<int> nnz(size, 0);
 
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         for (Box<NDIM>::Iterator b(side_boxes[axis]); b; b++)
         {
@@ -216,7 +216,7 @@ buildBoxOperator(
     // coarse-fine interfaces are implicitly treated by setting ghost cell
     // values appropriately.  Thus the matrix coefficients are independent of
     // any boundary conditions.
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         for (Box<NDIM>::Iterator b(side_boxes[axis]); b; b++)
         {
@@ -229,7 +229,7 @@ buildBoxOperator(
             mat_cols[0] = mat_row;
             mat_vals[0] = (rho/dt) + 0.5*lambda;
 
-            for (unsigned int d = 0; d < NDIM; ++d)
+            for (int d = 0; d < NDIM; ++d)
             {
                 Index<NDIM> shift = 0;
                 shift(d) = 1;
@@ -270,7 +270,7 @@ buildBoxOperator(
         mat_cols[0] = mat_row;
         mat_vals[0] = 0.0;
 
-        for (unsigned int axis = 0; axis < NDIM; ++axis)
+        for (int axis = 0; axis < NDIM; ++axis)
         {
             Index<NDIM> shift = 0;
             shift(axis) = 1;
@@ -290,7 +290,7 @@ buildBoxOperator(
 
     // Set the entries in the ghost cell region so that ghost cell values are
     // not modified by the smoother.
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         for (BoxList<NDIM>::Iterator bl(side_ghost_boxes[axis]); bl; bl++)
         {
@@ -322,8 +322,8 @@ modifyRhsForBcs(
     Vec& v,
     const SideData<NDIM,double>& U_data,
     const CellData<NDIM,double>& P_data,
-    const INSProblemCoefs& problem_coefs,
-    const double /*dt*/,
+    const INSCoefs& problem_coefs,
+    const double dt,
     const Box<NDIM>& box,
     const Box<NDIM>& ghost_box,
     const double* const dx)
@@ -331,7 +331,7 @@ modifyRhsForBcs(
     int ierr;
 
     const double mu = problem_coefs.getMu();
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         const Box<NDIM> side_box = SideGeometry<NDIM>::toSideBox(box, axis);
         for (Box<NDIM>::Iterator b(side_box); b; b++)
@@ -339,7 +339,7 @@ modifyRhsForBcs(
             Index<NDIM> i = b();
             const int idx = compute_side_index(i, ghost_box, axis);
 
-            for (unsigned int d = 0; d < NDIM; ++d)
+            for (int d = 0; d < NDIM; ++d)
             {
                 Index<NDIM> shift = 0;
                 shift(d) = 1;
@@ -385,7 +385,7 @@ copyToVec(
 {
     int ierr;
 
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         const Box<NDIM> side_box = SideGeometry<NDIM>::toSideBox(box, axis);
         for (Box<NDIM>::Iterator b(side_box); b; b++)
@@ -422,7 +422,7 @@ copyFromVec(
     const double omega = 0.65;
 
     double U;
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         const Box<NDIM> side_box = SideGeometry<NDIM>::toSideBox(box, axis);
         for (Box<NDIM>::Iterator b(side_box); b; b++)
@@ -451,7 +451,7 @@ copyFromVec(
 
 INSStaggeredBoxRelaxationFACOperator::INSStaggeredBoxRelaxationFACOperator(
     const std::string& object_name,
-    const Pointer<Database> input_db)
+    const Pointer<Database>& input_db)
     : d_object_name(object_name),
       d_is_initialized(false),
       d_solution(NULL),
@@ -485,7 +485,7 @@ INSStaggeredBoxRelaxationFACOperator::INSStaggeredBoxRelaxationFACOperator(
       d_cell_scratch_idx(-1),
       d_U_bc_op(NULL),
       d_default_U_bc_coef(new LocationIndexRobinBcCoefs<NDIM>(d_object_name+"::default_U_bc_coef", Pointer<Database>(NULL))),
-      d_U_bc_coefs(blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>(d_default_U_bc_coef)),
+      d_U_bc_coefs(std::vector<RobinBcCoefStrategy<NDIM>*>(NDIM,d_default_U_bc_coef)),
       d_P_bc_op(NULL),
       d_default_P_bc_coef(new LocationIndexRobinBcCoefs<NDIM>(d_object_name+"::default_P_bc_coef", Pointer<Database>(NULL))),
       d_P_bc_coef(d_default_P_bc_coef),
@@ -533,7 +533,7 @@ INSStaggeredBoxRelaxationFACOperator::INSStaggeredBoxRelaxationFACOperator(
     // Setup a default boundary condition object that specifies homogeneous
     // Dirichlet boundary conditions for the velocity and homogeneous Neumann
     // boundary conditions for the pressure.
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         d_default_U_bc_coef->setBoundaryValue(2*d  ,0.0);
         d_default_U_bc_coef->setBoundaryValue(2*d+1,0.0);
@@ -542,7 +542,7 @@ INSStaggeredBoxRelaxationFACOperator::INSStaggeredBoxRelaxationFACOperator(
     }
 
     // Initialize the boundary conditions objects.
-    setPhysicalBcCoefs(blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>(d_default_U_bc_coef),d_default_P_bc_coef);
+    setPhysicalBcCoefs(std::vector<RobinBcCoefStrategy<NDIM>*>(NDIM,d_default_U_bc_coef),d_default_P_bc_coef);
 
     // Setup scratch variables.
     VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
@@ -594,26 +594,32 @@ INSStaggeredBoxRelaxationFACOperator::~INSStaggeredBoxRelaxationFACOperator()
 
 void
 INSStaggeredBoxRelaxationFACOperator::setProblemCoefficients(
-    const INSProblemCoefs& problem_coefs)
+    const INSCoefs& problem_coefs,
+    const double dt)
 {
     d_problem_coefs = problem_coefs;
+    d_dt = dt;
     return;
 }// setProblemCoefficients
 
 void
 INSStaggeredBoxRelaxationFACOperator::setPhysicalBcCoefs(
-    const blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>& U_bc_coefs,
+    const std::vector<RobinBcCoefStrategy<NDIM>*>& U_bc_coefs,
     RobinBcCoefStrategy<NDIM>* P_bc_coef)
 {
-    for (unsigned int d = 0; d < NDIM; ++d)
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(U_bc_coefs.size() == NDIM);
+#endif
+    d_U_bc_coefs.resize(U_bc_coefs.size());
+    for (unsigned l = 0; l < U_bc_coefs.size(); ++l)
     {
-        if (U_bc_coefs[d] != NULL)
+        if (U_bc_coefs[l] != NULL)
         {
-            d_U_bc_coefs[d] = U_bc_coefs[d];
+            d_U_bc_coefs[l] = U_bc_coefs[l];
         }
         else
         {
-            d_U_bc_coefs[d] = d_default_U_bc_coef;
+            d_U_bc_coefs[l] = d_default_U_bc_coef;
         }
     }
 
@@ -635,7 +641,6 @@ INSStaggeredBoxRelaxationFACOperator::setTimeInterval(
 {
     d_current_time = current_time;
     d_new_time = new_time;
-    d_dt = d_new_time-d_current_time;
     return;
 }// setTimeInterval
 
@@ -816,7 +821,7 @@ INSStaggeredBoxRelaxationFACOperator::restrictResidual(
     SAMRAIVectorReal<NDIM,double>& dst,
     int dst_ln)
 {
-    IBAMR_TIMER_START(t_restrict_residual);
+    t_restrict_residual->start();
 
     const int U_src_idx = src.getComponentDescriptorIndex(0);
     const int P_src_idx = src.getComponentDescriptorIndex(1);
@@ -842,7 +847,7 @@ INSStaggeredBoxRelaxationFACOperator::restrictResidual(
 
     xeqScheduleRestriction(dst_idxs, src_idxs, dst_ln);
 
-    IBAMR_TIMER_STOP(t_restrict_residual);
+    t_restrict_residual->stop();
     return;
 }// restrictResidual
 
@@ -852,7 +857,7 @@ INSStaggeredBoxRelaxationFACOperator::prolongError(
     SAMRAIVectorReal<NDIM,double>& dst,
     int dst_ln)
 {
-    IBAMR_TIMER_START(t_prolong_error);
+    t_prolong_error->start();
 
     const int U_src_idx = src.getComponentDescriptorIndex(0);
     const int P_src_idx = src.getComponentDescriptorIndex(1);
@@ -866,7 +871,7 @@ INSStaggeredBoxRelaxationFACOperator::prolongError(
     // fine level error.
     xeqScheduleProlongation(dst_idxs, src_idxs, dst_ln);
 
-    IBAMR_TIMER_STOP(t_prolong_error);
+    t_prolong_error->stop();
     return;
 }// prolongError
 
@@ -876,7 +881,7 @@ INSStaggeredBoxRelaxationFACOperator::prolongErrorAndCorrect(
     SAMRAIVectorReal<NDIM,double>& dst,
     int dst_ln)
 {
-    IBAMR_TIMER_START(t_prolong_error_and_correct);
+    t_prolong_error_and_correct->start();
 
     const int U_src_idx = src.getComponentDescriptorIndex(0);
     const int P_src_idx = src.getComponentDescriptorIndex(1);
@@ -907,7 +912,7 @@ INSStaggeredBoxRelaxationFACOperator::prolongErrorAndCorrect(
     HierarchyCellDataOpsReal<NDIM,double> hier_cc_data_ops_fine(d_hierarchy, dst_ln, dst_ln);
     hier_cc_data_ops_fine.add(P_dst_idx, P_dst_idx, d_cell_scratch_idx, interior_only);
 
-    IBAMR_TIMER_STOP(t_prolong_error_and_correct);
+    t_prolong_error_and_correct->stop();
     return;
 }// prolongErrorAndCorrect
 
@@ -917,12 +922,12 @@ INSStaggeredBoxRelaxationFACOperator::smoothError(
     const SAMRAIVectorReal<NDIM,double>& residual,
     int level_num,
     int num_sweeps,
-    bool /*performing_pre_sweeps*/,
-    bool /*performing_post_sweeps*/)
+    bool performing_pre_sweeps,
+    bool performing_post_sweeps)
 {
     if (num_sweeps == 0) return;
 
-    IBAMR_TIMER_START(t_smooth_error);
+    t_smooth_error->start();
 
     Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(level_num);
     const int U_error_idx = error.getComponentDescriptorIndex(0);
@@ -946,7 +951,7 @@ INSStaggeredBoxRelaxationFACOperator::smoothError(
             TBOX_ASSERT(  U_error_data->getGhostCellWidth() == d_gcw);
             TBOX_ASSERT(U_scratch_data->getGhostCellWidth() == d_gcw);
 #endif
-            for (unsigned int axis = 0; axis < NDIM; ++axis)
+            for (int axis = 0; axis < NDIM; ++axis)
             {
                 U_scratch_data->getArrayData(axis).copy(
                     U_error_data->getArrayData(axis),
@@ -992,7 +997,7 @@ INSStaggeredBoxRelaxationFACOperator::smoothError(
                     TBOX_ASSERT(  U_error_data->getGhostCellWidth() == d_gcw);
                     TBOX_ASSERT(U_scratch_data->getGhostCellWidth() == d_gcw);
 #endif
-                    for (unsigned int axis = 0; axis < NDIM; ++axis)
+                    for (int axis = 0; axis < NDIM; ++axis)
                     {
                         U_error_data->getArrayData(axis).copy(
                             U_scratch_data->getArrayData(axis),
@@ -1065,7 +1070,7 @@ INSStaggeredBoxRelaxationFACOperator::smoothError(
             // Copy updated values from other local patches.
             if (d_smoother_choice == "multiplicative")
             {
-                for (unsigned int axis = 0; axis < NDIM; ++axis)
+                for (int axis = 0; axis < NDIM; ++axis)
                 {
                     const std::map<int,Box<NDIM> > side_smoother_bc_boxes = d_patch_side_smoother_bc_boxes[level_num][patch_counter][axis];
                     for (std::map<int,Box<NDIM> >::const_iterator cit = side_smoother_bc_boxes.begin();
@@ -1132,7 +1137,7 @@ INSStaggeredBoxRelaxationFACOperator::smoothError(
     // Synchronize data along patch boundaries.
     xeqScheduleSideDataSynch(U_error_idx, level_num);
 
-    IBAMR_TIMER_STOP(t_smooth_error);
+    t_smooth_error->stop();
     return;
 }// smoothError
 
@@ -1142,7 +1147,7 @@ INSStaggeredBoxRelaxationFACOperator::solveCoarsestLevel(
     const SAMRAIVectorReal<NDIM,double>& residual,
     int coarsest_ln)
 {
-    IBAMR_TIMER_START(t_solve_coarsest_level);
+    t_solve_coarsest_level->start();
 
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(coarsest_ln == d_coarsest_ln);
@@ -1150,7 +1155,7 @@ INSStaggeredBoxRelaxationFACOperator::solveCoarsestLevel(
 
     smoothError(error, residual, coarsest_ln, d_coarse_solver_max_its, false, false);
 
-    IBAMR_TIMER_STOP(t_solve_coarsest_level);
+    t_solve_coarsest_level->stop();
     return true;
 }// solveCoarsestLevel
 
@@ -1159,72 +1164,102 @@ INSStaggeredBoxRelaxationFACOperator::computeResidual(
     SAMRAIVectorReal<NDIM,double>& residual,
     const SAMRAIVectorReal<NDIM,double>& solution,
     const SAMRAIVectorReal<NDIM,double>& rhs,
-    int coarsest_level_num,
-    int finest_level_num)
+    int level_num)
 {
-    IBAMR_TIMER_START(t_compute_residual);
+    t_compute_residual->start();
 
-    const int U_res_idx = residual.getComponentDescriptorIndex(0);
-    const int U_sol_idx = solution.getComponentDescriptorIndex(0);
-    const int U_rhs_idx = rhs.getComponentDescriptorIndex(0);
-
-    const Pointer<SideVariable<NDIM,double> > U_res_sc_var = residual.getComponentVariable(0);
-    const Pointer<SideVariable<NDIM,double> > U_sol_sc_var = solution.getComponentVariable(0);
-    const Pointer<SideVariable<NDIM,double> > U_rhs_sc_var = rhs.getComponentVariable(0);
-
-    const int P_res_idx = residual.getComponentDescriptorIndex(1);
-    const int P_sol_idx = solution.getComponentDescriptorIndex(1);
-    const int P_rhs_idx = rhs.getComponentDescriptorIndex(1);
-
-    const Pointer<CellVariable<NDIM,double> > P_res_cc_var = residual.getComponentVariable(1);
-    const Pointer<CellVariable<NDIM,double> > P_sol_cc_var = solution.getComponentVariable(1);
-    const Pointer<CellVariable<NDIM,double> > P_rhs_cc_var = rhs.getComponentVariable(1);
-
-    // Fill ghost-cell values.
-    typedef HierarchyGhostCellInterpolation::InterpolationTransactionComponent InterpolationTransactionComponent;
-    Pointer<VariableFillPattern<NDIM> > sc_fill_pattern = new SideNoCornersFillPattern(GHOSTS, false, false, true);
-    Pointer<VariableFillPattern<NDIM> > cc_fill_pattern = new CellNoCornersFillPattern(GHOSTS, false, false, true);
-    InterpolationTransactionComponent U_scratch_component(U_sol_idx, DATA_COARSEN_TYPE, BDRY_EXTRAP_TYPE, CONSISTENT_TYPE_2_BDRY, d_U_bc_coefs, sc_fill_pattern);
-    InterpolationTransactionComponent P_scratch_component(P_sol_idx, DATA_COARSEN_TYPE, BDRY_EXTRAP_TYPE, CONSISTENT_TYPE_2_BDRY, d_P_bc_coef , cc_fill_pattern);
-    std::vector<InterpolationTransactionComponent> U_P_components(2);
-    U_P_components[0] = U_scratch_component;
-    U_P_components[1] = P_scratch_component;
-    if (d_hier_bdry_fill_ops[finest_level_num].isNull())
+    if (!d_preconditioner.isNull() && d_preconditioner->getNumPreSmoothingSweeps() == 0)
     {
-        d_hier_bdry_fill_ops[finest_level_num] = new HierarchyGhostCellInterpolation();
-        d_hier_bdry_fill_ops[finest_level_num]->initializeOperatorState(U_P_components, d_hierarchy, coarsest_level_num, finest_level_num);
+        // Compute the residual, r = f - A*u = f - A*0.
+        residual.copyVector(Pointer<SAMRAIVectorReal<NDIM,double> >(const_cast<SAMRAIVectorReal<NDIM,double>*>(&rhs),false), false);
     }
     else
     {
-        d_hier_bdry_fill_ops[finest_level_num]->resetTransactionComponents(U_P_components);
+        // Compute the residual, r = f - A*u.
+        const int U_res_idx = residual.getComponentDescriptorIndex(0);
+        const int U_sol_idx = solution.getComponentDescriptorIndex(0);
+        const int U_rhs_idx = rhs.getComponentDescriptorIndex(0);
+
+        const Pointer<SideVariable<NDIM,double> > U_res_sc_var = residual.getComponentVariable(0);
+        const Pointer<SideVariable<NDIM,double> > U_sol_sc_var = solution.getComponentVariable(0);
+        const Pointer<SideVariable<NDIM,double> > U_rhs_sc_var = rhs.getComponentVariable(0);
+
+        const int P_res_idx = residual.getComponentDescriptorIndex(1);
+        const int P_sol_idx = solution.getComponentDescriptorIndex(1);
+        const int P_rhs_idx = rhs.getComponentDescriptorIndex(1);
+
+        const Pointer<CellVariable<NDIM,double> > P_res_cc_var = residual.getComponentVariable(1);
+        const Pointer<CellVariable<NDIM,double> > P_sol_cc_var = solution.getComponentVariable(1);
+        const Pointer<CellVariable<NDIM,double> > P_rhs_cc_var = rhs.getComponentVariable(1);
+
+        // NOTE: Here, we assume that the residual is to be computed only during
+        // pre-sweeps and only for zero initial guesses, so that we need to
+        // compute A*u ONLY on levels level_num and level_num-1.
+
+        // Fill ghost-cell values.
+        typedef HierarchyGhostCellInterpolation::InterpolationTransactionComponent InterpolationTransactionComponent;
+        Pointer<VariableFillPattern<NDIM> > sc_fill_pattern = new SideNoCornersFillPattern(GHOSTS, false, true);
+        Pointer<VariableFillPattern<NDIM> > cc_fill_pattern = new CellNoCornersFillPattern(GHOSTS, false, true);
+        InterpolationTransactionComponent U_scratch_component(U_sol_idx, DATA_COARSEN_TYPE, BDRY_EXTRAP_TYPE, CONSISTENT_TYPE_2_BDRY, d_U_bc_coefs, sc_fill_pattern);
+        InterpolationTransactionComponent P_scratch_component(P_sol_idx, DATA_COARSEN_TYPE, BDRY_EXTRAP_TYPE, CONSISTENT_TYPE_2_BDRY, d_P_bc_coef , cc_fill_pattern);
+        std::vector<InterpolationTransactionComponent> U_P_components(2);
+        U_P_components[0] = U_scratch_component;
+        U_P_components[1] = P_scratch_component;
+        if (d_hier_bdry_fill_ops[level_num].isNull())
+        {
+            d_hier_bdry_fill_ops[level_num] = new HierarchyGhostCellInterpolation();
+            d_hier_bdry_fill_ops[level_num]->initializeOperatorState(U_P_components, d_hierarchy, level_num, level_num);
+        }
+        else
+        {
+            d_hier_bdry_fill_ops[level_num]->resetTransactionComponents(U_P_components);
+        }
+        d_hier_bdry_fill_ops[level_num]->setHomogeneousBc(true);
+        d_hier_bdry_fill_ops[level_num]->fillData(d_new_time);
+        if (level_num > d_coarsest_ln) xeqScheduleGhostFillNoCoarse(std::make_pair(U_sol_idx, P_sol_idx), level_num-1);
+
+        // Compute the residual, r = f - A*u.  We assume that u=0 for all levels
+        // coarser than level_num, and therefore that A*u = 0 on all levels
+        // coarser than level_num-1.  (A*u may be non-zero on level_num-1
+        // because of coarse-grid corrections at coarse-fine interfaces.)
+        if (d_hier_math_ops[level_num].isNull())
+        {
+            std::ostringstream stream;
+            stream << d_object_name << "::hier_math_ops_" << level_num;
+            d_hier_math_ops[level_num] = new HierarchyMathOps(stream.str(), d_hierarchy, std::max(d_coarsest_ln,level_num-1), level_num);
+        }
+
+        const double rho = d_problem_coefs.getRho();
+        const double mu = d_problem_coefs.getMu();
+        const double lambda = d_problem_coefs.getLambda();
+        PoissonSpecifications helmholtz_spec("");
+        helmholtz_spec.setCConstant((rho/d_dt)+0.5*lambda);
+        helmholtz_spec.setDConstant(          -0.5*mu    );
+
+        static const bool cf_bdry_synch = true;
+        d_hier_math_ops[level_num]->grad(
+            U_res_idx, U_res_sc_var,
+            cf_bdry_synch,
+            1.0, P_sol_idx, P_sol_cc_var, NULL, d_new_time);
+        d_hier_math_ops[level_num]->laplace(
+            U_res_idx, U_res_sc_var,
+            helmholtz_spec,
+            U_sol_idx, U_sol_sc_var, NULL, d_new_time,
+            1.0,
+            U_res_idx, U_res_sc_var);
+
+        d_hier_math_ops[level_num]->div(
+            P_res_idx, P_res_cc_var,
+            -1.0, U_sol_idx, U_sol_sc_var, NULL, d_new_time,
+            cf_bdry_synch);
+
+        HierarchySideDataOpsReal<NDIM,double> hier_sc_data_ops(d_hierarchy, std::max(d_coarsest_ln,level_num-1), level_num);
+        hier_sc_data_ops.axpy(U_res_idx, -1.0, U_res_idx, U_rhs_idx, false);
+        HierarchyCellDataOpsReal<NDIM,double> hier_cc_data_ops(d_hierarchy, std::max(d_coarsest_ln,level_num-1), level_num);
+        hier_cc_data_ops.axpy(P_res_idx, -1.0, P_res_idx, P_rhs_idx, false);
     }
-    d_hier_bdry_fill_ops[finest_level_num]->setHomogeneousBc(true);
-    d_hier_bdry_fill_ops[finest_level_num]->fillData(d_new_time);
 
-    // Compute the residual, r = f - A*u.
-    if (d_hier_math_ops[finest_level_num].isNull())
-    {
-        std::ostringstream stream;
-        stream << d_object_name << "::hier_math_ops_" << finest_level_num;
-        d_hier_math_ops[finest_level_num] = new HierarchyMathOps(stream.str(), d_hierarchy, coarsest_level_num, finest_level_num);
-    }
-
-    d_hier_math_ops[finest_level_num]->grad(U_res_idx, U_res_sc_var, /*cf_bdry_synch*/ true, 1.0, P_sol_idx, P_sol_cc_var, NULL, d_new_time);
-    const double rho = d_problem_coefs.getRho();
-    const double mu = d_problem_coefs.getMu();
-    const double lambda = d_problem_coefs.getLambda();
-    PoissonSpecifications helmholtz_spec("");
-    helmholtz_spec.setCConstant((rho/d_dt)+0.5*lambda);
-    helmholtz_spec.setDConstant(          -0.5*mu    );
-    d_hier_math_ops[finest_level_num]->laplace(U_res_idx, U_res_sc_var, helmholtz_spec, U_sol_idx, U_sol_sc_var, NULL, d_new_time, 1.0, U_res_idx, U_res_sc_var);
-    HierarchySideDataOpsReal<NDIM,double> hier_sc_data_ops(d_hierarchy, coarsest_level_num, finest_level_num);
-    hier_sc_data_ops.axpy(U_res_idx, -1.0, U_res_idx, U_rhs_idx, false);
-
-    d_hier_math_ops[finest_level_num]->div(P_res_idx, P_res_cc_var, -1.0, U_sol_idx, U_sol_sc_var, NULL, d_new_time, /*cf_bdry_synch*/ true);
-    HierarchyCellDataOpsReal<NDIM,double> hier_cc_data_ops(d_hierarchy, coarsest_level_num, finest_level_num);
-    hier_cc_data_ops.axpy(P_res_idx, -1.0, P_res_idx, P_rhs_idx, false);
-
-    IBAMR_TIMER_STOP(t_compute_residual);
+    t_compute_residual->stop();
     return;
 }// computeResidual
 
@@ -1233,8 +1268,7 @@ INSStaggeredBoxRelaxationFACOperator::initializeOperatorState(
     const SAMRAIVectorReal<NDIM,double>& solution,
     const SAMRAIVectorReal<NDIM,double>& rhs)
 {
-    IBAMR_TIMER_START(t_initialize_operator_state);
-
+    t_initialize_operator_state->start();
     d_in_initialize_operator_state = true;
 
     // Cache the level range to be reset.
@@ -1322,8 +1356,8 @@ INSStaggeredBoxRelaxationFACOperator::initializeOperatorState(
     d_U_bc_op = new CartSideRobinPhysBdryOp(d_side_scratch_idx, d_U_bc_coefs, false);
     d_P_bc_op = new CartCellRobinPhysBdryOp(d_cell_scratch_idx, d_P_bc_coef , false);
 
-    d_U_op_stencil_fill_pattern = new SideNoCornersFillPattern(GHOSTS, false, false, false);
-    d_P_op_stencil_fill_pattern = new CellNoCornersFillPattern(GHOSTS, false, false, false);
+    d_U_op_stencil_fill_pattern = new SideNoCornersFillPattern(GHOSTS, false, false);
+    d_P_op_stencil_fill_pattern = new CellNoCornersFillPattern(GHOSTS, false, false);
     d_U_synch_fill_pattern = new SideSynchCopyFillPattern();
 
     std::vector<RefinePatchStrategy<NDIM>*> prolongation_refine_patch_strategies;
@@ -1434,14 +1468,14 @@ INSStaggeredBoxRelaxationFACOperator::initializeOperatorState(
     const Box<NDIM> ghost_box = hier::Box<NDIM>::grow(box,BOX_GHOSTS);
 
     const double* const dx_coarsest = geometry->getDx();
-    blitz::TinyVector<double,NDIM> dx;
+    double dx[NDIM];
 
     for (int ln = coarsest_reset_ln; ln <= finest_reset_ln; ++ln)
     {
         const IntVector<NDIM>& ratio = d_hierarchy->getPatchLevel(ln)->getRatio();
-        for (unsigned int d = 0; d < NDIM; ++d)
+        for (int d = 0; d < NDIM; ++d)
         {
-            dx[d] = dx_coarsest[d]/static_cast<double>(ratio(d));
+            dx[d] = dx_coarsest[d]/double(ratio(d));
         }
         buildBoxOperator(d_box_op[ln], d_problem_coefs, d_dt, box, ghost_box, dx);
         int ierr;
@@ -1470,7 +1504,9 @@ INSStaggeredBoxRelaxationFACOperator::initializeOperatorState(
         {
             Pointer<Patch<NDIM> > patch = level->getPatch(p());
             const Box<NDIM>& patch_box = patch->getBox();
-            for (unsigned int axis = 0; axis < NDIM; ++axis)
+
+            d_patch_side_bc_box_overlap[ln][patch_counter].resize(NDIM);
+            for (int axis = 0; axis < NDIM; ++axis)
             {
                 const Box<NDIM> side_box = SideGeometry<NDIM>::toSideBox(patch_box,axis);
                 const Box<NDIM> side_ghost_box = Box<NDIM>::grow(side_box, 1);
@@ -1515,7 +1551,8 @@ INSStaggeredBoxRelaxationFACOperator::initializeOperatorState(
             int patch_counter1 = 0;
             for (PatchLevel<NDIM>::Iterator p1(level); p1; p1++, ++patch_counter1)
             {
-                for (unsigned int axis = 0; axis < NDIM; ++axis)
+                d_patch_side_smoother_bc_boxes[ln][patch_counter1].resize(NDIM);
+                for (int axis = 0; axis < NDIM; ++axis)
                 {
                     d_patch_side_smoother_bc_boxes[ln][patch_counter1][axis].clear();
                 }
@@ -1530,7 +1567,7 @@ INSStaggeredBoxRelaxationFACOperator::initializeOperatorState(
                     Pointer<Patch<NDIM> > src_patch = level->getPatch(p2());
                     const Box<NDIM>& src_patch_box = src_patch->getBox();
 
-                    for (unsigned int axis = 0; axis < NDIM; ++axis)
+                    for (int axis = 0; axis < NDIM; ++axis)
                     {
                         const Box<NDIM> overlap =
                             SideGeometry<NDIM>::toSideBox(dst_ghost_box,axis) *
@@ -1583,9 +1620,9 @@ INSStaggeredBoxRelaxationFACOperator::initializeOperatorState(
 
     // Indicate that the operator is initialized.
     d_is_initialized = true;
-    d_in_initialize_operator_state = false;
 
-    IBAMR_TIMER_STOP(t_initialize_operator_state);
+    d_in_initialize_operator_state = false;
+    t_initialize_operator_state->stop();
     return;
 }// initializeOperatorState
 
@@ -1598,7 +1635,7 @@ INSStaggeredBoxRelaxationFACOperator::deallocateOperatorState()
         return;
     }
 
-    IBAMR_TIMER_START(t_deallocate_operator_state);
+    t_deallocate_operator_state->start();
 
     if (d_is_initialized)
     {
@@ -1620,10 +1657,10 @@ INSStaggeredBoxRelaxationFACOperator::deallocateOperatorState()
             }
 
             int ierr;
-            ierr = MatDestroy(&d_box_op [ln]);  IBTK_CHKERRQ(ierr);
-            ierr = VecDestroy(&d_box_e  [ln]);  IBTK_CHKERRQ(ierr);
-            ierr = VecDestroy(&d_box_r  [ln]);  IBTK_CHKERRQ(ierr);
-            ierr = KSPDestroy(&d_box_ksp[ln]);  IBTK_CHKERRQ(ierr);
+            ierr = MatDestroy(d_box_op [ln]);  IBTK_CHKERRQ(ierr);
+            ierr = VecDestroy(d_box_e  [ln]);  IBTK_CHKERRQ(ierr);
+            ierr = VecDestroy(d_box_r  [ln]);  IBTK_CHKERRQ(ierr);
+            ierr = KSPDestroy(d_box_ksp[ln]);  IBTK_CHKERRQ(ierr);
         }
 
         // Delete the solution and rhs vectors.
@@ -1679,7 +1716,7 @@ INSStaggeredBoxRelaxationFACOperator::deallocateOperatorState()
     // Indicate that the operator is not initialized.
     d_is_initialized = false;
 
-    IBAMR_TIMER_STOP(t_deallocate_operator_state);
+    t_deallocate_operator_state->stop();
     return;
 }// deallocateOperatorState
 
@@ -1810,12 +1847,12 @@ INSStaggeredBoxRelaxationFACOperator::sanityCheck()
                    << "  invalid coarse solver maximum iterations: " << d_coarse_solver_max_its << std::endl);
     }
 
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (unsigned l = 0; l < d_U_bc_coefs.size(); ++l)
     {
-        if (d_U_bc_coefs[d] == NULL)
+        if (d_U_bc_coefs[l] == NULL)
         {
             TBOX_ERROR(d_object_name << ":\n"
-                       << "  invalid velocity physical bc object at depth = " << d << std::endl);
+                       << "  invalid velocity physical bc object at depth = " << l << std::endl);
         }
     }
 
@@ -1830,5 +1867,10 @@ INSStaggeredBoxRelaxationFACOperator::sanityCheck()
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBAMR::INSStaggeredBoxRelaxationFACOperator>;
 
 //////////////////////////////////////////////////////////////////////////////

@@ -51,14 +51,12 @@
 #include <ibamr/IBRodForceSpec.h>
 #include <ibamr/IBSourceSpec.h>
 #include <ibamr/IBSpringForceSpec.h>
-#include <ibamr/IBStandardSourceGen.h>
 #include <ibamr/IBTargetPointForceSpec.h>
 #include <ibamr/namespaces.h>
 
 // IBTK INCLUDES
 #include <ibtk/IndexUtilities.h>
-#include <ibtk/LNodeSet.h>
-#include <ibtk/LNodeSetData.h>
+#include <ibtk/LNodeIndexData.h>
 
 // SAMRAI INCLUDES
 #include <Box.h>
@@ -85,6 +83,8 @@ namespace IBAMR
 
 namespace
 {
+static const int NUM_ROD_PARAMS = 10;
+
 inline std::string
 discard_comments(
     const std::string& input_string)
@@ -124,7 +124,7 @@ IBStandardInitializer::IBStandardInitializer(
       d_silo_writer(NULL),
       d_base_filename(),
       d_length_scale_factor(1.0),
-      d_posn_shift(0.0),
+      d_posn_shift(NDIM,0.0),
       d_num_vertex(),
       d_vertex_offset(),
       d_vertex_posn(),
@@ -137,45 +137,35 @@ IBStandardInitializer::IBStandardInitializer(
       d_uniform_spring_rest_length(),
       d_using_uniform_spring_force_fcn_idx(),
       d_uniform_spring_force_fcn_idx(),
-#if ENABLE_SUBDOMAIN_INDICES
       d_using_uniform_spring_subdomain_idx(),
       d_uniform_spring_subdomain_idx(),
-#endif
       d_enable_beams(),
       d_beam_spec_data(),
       d_using_uniform_beam_bend_rigidity(),
       d_uniform_beam_bend_rigidity(),
       d_using_uniform_beam_curvature(),
       d_uniform_beam_curvature(),
-#if ENABLE_SUBDOMAIN_INDICES
       d_using_uniform_beam_subdomain_idx(),
       d_uniform_beam_subdomain_idx(),
-#endif
       d_enable_rods(),
       d_rod_edge_map(),
       d_rod_spec_data(),
       d_using_uniform_rod_properties(),
       d_uniform_rod_properties(),
-#if ENABLE_SUBDOMAIN_INDICES
       d_using_uniform_rod_subdomain_idx(),
       d_uniform_rod_subdomain_idx(),
-#endif
       d_enable_target_points(),
       d_target_spec_data(),
       d_using_uniform_target_stiffness(),
       d_uniform_target_stiffness(),
       d_using_uniform_target_damping(),
       d_uniform_target_damping(),
-#if ENABLE_SUBDOMAIN_INDICES
       d_using_uniform_target_subdomain_idx(),
       d_uniform_target_subdomain_idx(),
-#endif
       d_enable_anchor_points(),
       d_anchor_spec_data(),
-#if ENABLE_SUBDOMAIN_INDICES
       d_using_uniform_anchor_subdomain_idx(),
       d_uniform_anchor_subdomain_idx(),
-#endif
       d_enable_bdry_mass(),
       d_bdry_mass_spec_data(),
       d_using_uniform_bdry_mass(),
@@ -195,12 +185,12 @@ IBStandardInitializer::IBStandardInitializer(
 #endif
 
     // Register the specification objects with the StreamableManager class.
-    IBAnchorPointSpec     ::registerWithStreamableManager();
-    IBBeamForceSpec       ::registerWithStreamableManager();
-    IBInstrumentationSpec ::registerWithStreamableManager();
-    IBRodForceSpec        ::registerWithStreamableManager();
-    IBSourceSpec          ::registerWithStreamableManager();
-    IBSpringForceSpec     ::registerWithStreamableManager();
+    IBAnchorPointSpec::registerWithStreamableManager();
+    IBBeamForceSpec::registerWithStreamableManager();
+    IBInstrumentationSpec::registerWithStreamableManager();
+    IBRodForceSpec::registerWithStreamableManager();
+    IBSourceSpec::registerWithStreamableManager();
+    IBSpringForceSpec::registerWithStreamableManager();
     IBTargetPointForceSpec::registerWithStreamableManager();
 
     // Initialize object with data read from the input database.
@@ -242,19 +232,22 @@ IBStandardInitializer::IBStandardInitializer(
 
         // Process the (optional) source information.
         readSourceFiles();
+
+        // Wait for all processes to finish.
+        SAMRAI_MPI::barrier();
     }
     return;
 }// IBStandardInitializer
 
 IBStandardInitializer::~IBStandardInitializer()
 {
-    pout << d_object_name << ":  Deallocating initialization data.\n";
+    // intentionally blank
     return;
 }// ~IBStandardInitializer
 
 void
-IBStandardInitializer::registerLSiloDataWriter(
-    Pointer<LSiloDataWriter> silo_writer)
+IBStandardInitializer::registerLagSiloDataWriter(
+    Pointer<LagSiloDataWriter> silo_writer)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(!silo_writer.isNull());
@@ -275,28 +268,28 @@ IBStandardInitializer::registerLSiloDataWriter(
         {
             if (d_level_is_initialized[ln])
             {
-                initializeLSiloDataWriter(ln);
+                initializeLagSiloDataWriter(ln);
             }
         }
     }
     return;
-}// registerLSiloDataWriter
+}// registerLagSiloDataWriter
 
 bool
 IBStandardInitializer::getLevelHasLagrangianData(
     const int level_number,
-    const bool /*can_be_refined*/) const
+    const bool can_be_refined) const
 {
     return !d_num_vertex[level_number].empty();
 }// getLevelHasLagrangianData
 
-unsigned int
+int
 IBStandardInitializer::computeLocalNodeCountOnPatchLevel(
     const Pointer<PatchHierarchy<NDIM> > hierarchy,
     const int level_number,
-    const double /*init_data_time*/,
+    const double init_data_time,
     const bool can_be_refined,
-    const bool /*initial_time*/)
+    const bool initial_time)
 {
     // Loop over all patches in the specified level of the patch level and count
     // the number of local vertices.
@@ -320,13 +313,14 @@ IBStandardInitializer::initializeStructureIndexingOnPatchLevel(
     std::map<int,std::string>& strct_id_to_strct_name_map,
     std::map<int,std::pair<int,int> >& strct_id_to_lag_idx_range_map,
     const int level_number,
-    const double /*init_data_time*/,
-    const bool /*can_be_refined*/,
-    const bool /*initial_time*/,
-    LDataManager* const /*l_data_manager*/)
+    const double init_data_time,
+    const bool can_be_refined,
+    const bool initial_time,
+    LDataManager* const lag_manager)
 {
+    (void) lag_manager;
     int offset = 0;
-    for (int j = 0; j < static_cast<int>(d_base_filename[level_number].size()); ++j)
+    for (int j = 0; j < int(d_base_filename[level_number].size()); ++j)
     {
         strct_id_to_strct_name_map   [j] = d_base_filename[level_number][j];
         strct_id_to_lag_idx_range_map[j] = std::make_pair(offset,offset+d_num_vertex[level_number][j]);
@@ -335,20 +329,22 @@ IBStandardInitializer::initializeStructureIndexingOnPatchLevel(
     return;
 }// initializeStructureIndexingOnPatchLevel
 
-unsigned int
+int
 IBStandardInitializer::initializeDataOnPatchLevel(
     const int lag_node_index_idx,
-    const unsigned int global_index_offset,
-    const unsigned int local_index_offset,
-    Pointer<LData> X_data,
-    Pointer<LData> U_data,
+    const int global_index_offset,
+    const int local_index_offset,
+    Pointer<LNodeLevelData>& X_data,
+    Pointer<LNodeLevelData>& U_data,
     const Pointer<PatchHierarchy<NDIM> > hierarchy,
     const int level_number,
-    const double /*init_data_time*/,
+    const double init_data_time,
     const bool can_be_refined,
-    const bool /*initial_time*/,
-    LDataManager* const /*l_data_manager*/)
+    const bool initial_time,
+    LDataManager* const lag_manager)
 {
+    (void) lag_manager;
+
     // Determine the extents of the physical domain.
     Pointer<CartesianGridGeometry<NDIM> > grid_geom = hierarchy->getGridGeometry();
     const double* const XLower = grid_geom->getXLower();
@@ -360,15 +356,14 @@ IBStandardInitializer::initializeDataOnPatchLevel(
 
     // Loop over all patches in the specified level of the patch level and
     // initialize the local vertices.
-    blitz::Array<double,2>& X_array = *X_data->getLocalFormVecArray();
-    blitz::Array<double,2>& U_array = *U_data->getLocalFormVecArray();
     int local_idx = -1;
     int local_node_count = 0;
     Pointer<PatchLevel<NDIM> > level = hierarchy->getPatchLevel(level_number);
     for (PatchLevel<NDIM>::Iterator p(level); p; p++)
     {
         Pointer<Patch<NDIM> > patch = level->getPatch(p());
-        const Pointer<CartesianPatchGeometry<NDIM> > patch_geom = patch->getPatchGeometry();
+        const Pointer<CartesianPatchGeometry<NDIM> > patch_geom =
+            patch->getPatchGeometry();
         const Box<NDIM>& patch_box = patch->getBox();
         const CellIndex<NDIM>& patch_lower = patch_box.lower();
         const CellIndex<NDIM>& patch_upper = patch_box.upper();
@@ -376,7 +371,7 @@ IBStandardInitializer::initializeDataOnPatchLevel(
         const double* const xUpper = patch_geom->getXUpper();
         const double* const dx = patch_geom->getDx();
 
-        Pointer<LNodeSetData> index_data = patch->getPatchData(lag_node_index_idx);
+        Pointer<LNodeIndexData> index_data = patch->getPatchData(lag_node_index_idx);
 
         // Initialize the vertices whose initial locations will be within the
         // given patch.
@@ -387,17 +382,18 @@ IBStandardInitializer::initializeDataOnPatchLevel(
              it != patch_vertices.end(); ++it)
         {
             const std::pair<int,int>& point_idx = (*it);
-            const int lagrangian_idx = getCanonicalLagrangianIndex(point_idx, level_number) + global_index_offset;
-            const int local_petsc_idx = ++local_idx + local_index_offset;
-            const int global_petsc_idx = local_petsc_idx+global_index_offset;
+            const int current_global_idx = getCanonicalLagrangianIndex(
+                point_idx, level_number) + global_index_offset;
+            const int current_local_idx = ++local_idx + local_index_offset;
 
             // Get the coordinates of the present vertex.
-            const blitz::TinyVector<double,NDIM> X = getVertexPosn(point_idx, level_number);
+            const std::vector<double> X = getVertexPosn(point_idx, level_number);
 
             // Initialize the location of the present vertex.
+            double* const node_X = &(*X_data)(current_local_idx);
             for (int d = 0; d < NDIM; ++d)
             {
-                X_array(local_petsc_idx,d) = X[d];
+                node_X[d] = X[d];
 
                 if (X[d] <= XLower[d])
                 {
@@ -416,29 +412,33 @@ IBStandardInitializer::initializeDataOnPatchLevel(
 
             // Get the index of the cell in which the present vertex is
             // initially located.
-            const CellIndex<NDIM> idx = IndexUtilities::getCellIndex(X, xLower, xUpper, dx, patch_lower, patch_upper);
+            const CellIndex<NDIM> idx = IndexUtilities::getCellIndex(
+                X, xLower, xUpper, dx, patch_lower, patch_upper);
 
             // Initialize the specification objects associated with the present
             // vertex.
-            std::vector<Pointer<Streamable> > specs = initializeSpecs(point_idx, global_index_offset, level_number);
+            std::vector<Pointer<Streamable> > specs = initializeSpecs(
+                point_idx, global_index_offset, level_number);
 
-            // Create or retrieve a pointer to the LNodeSet associated with the
-            // current Cartesian grid cell.
+            // Create or retrieve a pointer to the LNodeIndexSet associated with
+            // the current Cartesian grid cell.
             if (!index_data->isElement(idx))
             {
-                index_data->appendItemPointer(idx, new LNodeSet());
+                index_data->appendItemPointer(idx, new LNodeIndexSet());
             }
-            LNodeSet* const node_set = index_data->getItem(idx);
+            LNodeIndexSet* const node_set = index_data->getItem(idx);
             static const IntVector<NDIM> periodic_offset(0);
-            static const blitz::TinyVector<double,NDIM> periodic_displacement(0.0);
-            node_set->push_back(new LNode(lagrangian_idx, global_petsc_idx, local_petsc_idx, periodic_offset, periodic_displacement, specs));
+            static const std::vector<double> periodic_displacement(NDIM,0.0);
+            node_set->push_back(new LNodeIndex(current_global_idx, current_local_idx,
+                                               &(*X_data)(current_local_idx),
+                                               periodic_offset, periodic_displacement,
+                                               specs));
 
             // Initialize the velocity of the present vertex.
-            std::fill(&U_array(local_petsc_idx,0),&U_array(local_petsc_idx,0)+NDIM,0.0);
+            double* const node_U = &(*U_data)(current_local_idx);
+            std::fill(node_U,node_U+NDIM,0.0);
         }
     }
-    X_data->restoreArrays();
-    U_data->restoreArrays();
 
     d_level_is_initialized[level_number] = true;
 
@@ -447,28 +447,28 @@ IBStandardInitializer::initializeDataOnPatchLevel(
     // locally refined grid.
     if (!d_silo_writer.isNull())
     {
-        initializeLSiloDataWriter(level_number);
+        initializeLagSiloDataWriter(level_number);
     }
     return local_node_count;
 }// initializeDataOnPatchLevel
 
-unsigned int
+int
 IBStandardInitializer::initializeMassDataOnPatchLevel(
-    const unsigned int /*global_index_offset*/,
-    const unsigned int local_index_offset,
-    Pointer<LData> M_data,
-    Pointer<LData> K_data,
+    const int global_index_offset,
+    const int local_index_offset,
+    Pointer<LNodeLevelData>& M_data,
+    Pointer<LNodeLevelData>& K_data,
     const Pointer<PatchHierarchy<NDIM> > hierarchy,
     const int level_number,
-    const double /*init_data_time*/,
+    const double init_data_time,
     const bool can_be_refined,
-    const bool /*initial_time*/,
-    LDataManager* const /*l_data_manager*/)
+    const bool initial_time,
+    LDataManager* const lag_manager)
 {
+    (void) lag_manager;
+
     // Loop over all patches in the specified level of the patch level and
     // initialize the local vertices.
-    blitz::Array<double,2>& M_array = *M_data->getLocalFormVecArray();
-    blitz::Array<double,2>& K_array = *K_data->getLocalFormVecArray();
     int local_idx = -1;
     int local_node_count = 0;
     Pointer<PatchLevel<NDIM> > level = hierarchy->getPatchLevel(level_number);
@@ -485,7 +485,7 @@ IBStandardInitializer::initializeMassDataOnPatchLevel(
              it != patch_vertices.end(); ++it)
         {
             const std::pair<int,int>& point_idx = (*it);
-            const int local_petsc_idx = ++local_idx + local_index_offset;
+            const int current_local_idx = ++local_idx + local_index_offset;
 
             // Initialize the mass and penalty stiffness coefficient
             // corresponding to the present vertex.
@@ -496,36 +496,35 @@ IBStandardInitializer::initializeMassDataOnPatchLevel(
             // Avoid division by zero at massless nodes.
             if (MathUtilities<double>::equalEps(M,0.0))
             {
-                M_array(local_petsc_idx) = std::numeric_limits<double>::epsilon();
-                K_array(local_petsc_idx) = 0.0;
+                (*M_data)(current_local_idx) = std::numeric_limits<double>::epsilon();
+                (*K_data)(current_local_idx) = 0.0;
             }
             else
             {
-                M_array(local_petsc_idx) = M;
-                K_array(local_petsc_idx) = K;
+                (*M_data)(current_local_idx) = M;
+                (*K_data)(current_local_idx) = K;
             }
         }
     }
-    M_data->restoreArrays();
-    K_data->restoreArrays();
     return local_node_count;
 }// initializeMassOnPatchLevel
 
-unsigned int
+int
 IBStandardInitializer::initializeDirectorDataOnPatchLevel(
-    const unsigned int /*global_index_offset*/,
-    const unsigned int local_index_offset,
-    Pointer<LData> D_data,
+    const int global_index_offset,
+    const int local_index_offset,
+    Pointer<LNodeLevelData>& D_data,
     const Pointer<PatchHierarchy<NDIM> > hierarchy,
     const int level_number,
-    const double /*init_data_time*/,
+    const double init_data_time,
     const bool can_be_refined,
-    const bool /*initial_time*/,
-    LDataManager* const /*l_data_manager*/)
+    const bool initial_time,
+    LDataManager* const lag_manager)
 {
+    (void) lag_manager;
+
     // Loop over all patches in the specified level of the patch level and
     // initialize the local vertices.
-    blitz::Array<double,2>& D_array = *D_data->getLocalFormVecArray();
     int local_idx = -1;
     int local_node_count = 0;
     Pointer<PatchLevel<NDIM> > level = hierarchy->getPatchLevel(level_number);
@@ -542,17 +541,16 @@ IBStandardInitializer::initializeDirectorDataOnPatchLevel(
              it != patch_vertices.end(); ++it)
         {
             const std::pair<int,int>& point_idx = (*it);
-            const int local_petsc_idx = ++local_idx + local_index_offset;
+            const int current_local_idx = ++local_idx + local_index_offset;
 
             // Initialize the director corresponding to the present vertex.
             const std::vector<double>& D = getVertexDirectors(point_idx, level_number);
             for (int d = 0; d < 3*3; ++d)
             {
-                D_array(local_petsc_idx,d) = D[d];
+                (*D_data)(current_local_idx,d)= D[d];
             }
         }
     }
-    D_data->restoreArrays();
     return local_node_count;
 }// initializeDirectorOnPatchLevel
 
@@ -560,7 +558,7 @@ void
 IBStandardInitializer::tagCellsForInitialRefinement(
     const Pointer<PatchHierarchy<NDIM> > hierarchy,
     const int level_number,
-    const double /*error_data_time*/,
+    const double error_data_time,
     const int tag_index)
 {
     // Loop over all patches in the specified level of the patch level and tag
@@ -570,7 +568,8 @@ IBStandardInitializer::tagCellsForInitialRefinement(
     for (PatchLevel<NDIM>::Iterator p(level); p; p++)
     {
         Pointer<Patch<NDIM> > patch = level->getPatch(p());
-        const Pointer<CartesianPatchGeometry<NDIM> > patch_geom = patch->getPatchGeometry();
+        const Pointer<CartesianPatchGeometry<NDIM> > patch_geom =
+            patch->getPatchGeometry();
         const Box<NDIM>& patch_box = patch->getBox();
         const CellIndex<NDIM>& patch_lower = patch_box.lower();
         const CellIndex<NDIM>& patch_upper = patch_box.upper();
@@ -594,11 +593,12 @@ IBStandardInitializer::tagCellsForInitialRefinement(
                 const std::pair<int,int>& point_idx = (*it);
 
                 // Get the coordinates of the present vertex.
-                const blitz::TinyVector<double,NDIM> X = getVertexPosn(point_idx, ln);
+                const std::vector<double> X = getVertexPosn(point_idx, ln);
 
                 // Get the index of the cell in which the present vertex is
                 // initially located.
-                const CellIndex<NDIM> i = IndexUtilities::getCellIndex(X, xLower, xUpper, dx, patch_lower, patch_upper);
+                const CellIndex<NDIM> i = IndexUtilities::getCellIndex(
+                    X, xLower, xUpper, dx, patch_lower, patch_upper);
 
                 // Tag the cell for refinement.
                 if (patch_box.contains(i)) (*tag_data)(i) = 1;
@@ -613,7 +613,7 @@ IBStandardInitializer::tagCellsForInitialRefinement(
 /////////////////////////////// PRIVATE //////////////////////////////////////
 
 void
-IBStandardInitializer::initializeLSiloDataWriter(
+IBStandardInitializer::initializeLagSiloDataWriter(
     const int level_number)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
@@ -634,7 +634,7 @@ IBStandardInitializer::initializeLSiloDataWriter(
     // memory available to a single MPI process.
     if (SAMRAI_MPI::getRank() == 0)
     {
-        for (unsigned int j = 0; j < d_num_vertex[level_number].size(); ++j)
+        for (unsigned j = 0; j < d_num_vertex[level_number].size(); ++j)
         {
             const std::string postfix = "_vertices";
             d_silo_writer->registerMarkerCloud(
@@ -643,7 +643,7 @@ IBStandardInitializer::initializeLSiloDataWriter(
         }
 
         bool registered_spring_edge_map = false;
-        for (unsigned int j = 0; j < d_num_vertex[level_number].size(); ++j)
+        for (unsigned j = 0; j < d_num_vertex[level_number].size(); ++j)
         {
             if (d_spring_edge_map[level_number][j].size() > 0)
             {
@@ -655,7 +655,7 @@ IBStandardInitializer::initializeLSiloDataWriter(
             }
         }
 
-        for (unsigned int j = 0; j < d_num_vertex[level_number].size(); ++j)
+        for (unsigned j = 0; j < d_num_vertex[level_number].size(); ++j)
         {
             if (d_rod_edge_map[level_number][j].size() > 0)
             {
@@ -667,7 +667,7 @@ IBStandardInitializer::initializeLSiloDataWriter(
         }
     }
     return;
-}// initializeLSiloDataWriter
+}// initializeLagSiloDataWriter
 
 void
 IBStandardInitializer::readVertexFiles()
@@ -680,11 +680,11 @@ IBStandardInitializer::readVertexFiles()
 
     for (int ln = 0; ln < d_max_levels; ++ln)
     {
-        const unsigned int num_base_filename = d_base_filename[ln].size();
+        const int num_base_filename = d_base_filename[ln].size();
         d_num_vertex[ln].resize(num_base_filename,std::numeric_limits<int>::max());
         d_vertex_offset[ln].resize(num_base_filename,std::numeric_limits<int>::max());
         d_vertex_posn[ln].resize(num_base_filename);
-        for (unsigned int j = 0; j < num_base_filename; ++j)
+        for (int j = 0; j < num_base_filename; ++j)
         {
             // Wait for the previous MPI process to finish reading the current file.
             if (d_use_file_batons && rank != 0) SAMRAI_MPI::recv(&flag, sz, rank-1, false, j);
@@ -730,7 +730,7 @@ IBStandardInitializer::readVertexFiles()
 
             // Each successive line provides the initial position of each vertex
             // in the input file.
-            d_vertex_posn[ln][j].resize(d_num_vertex[ln][j]);
+            d_vertex_posn[ln][j].resize(d_num_vertex[ln][j]*NDIM);
             for (int k = 0; k < d_num_vertex[ln][j]; ++k)
             {
                 if (!std::getline(file_stream, line_string))
@@ -741,13 +741,13 @@ IBStandardInitializer::readVertexFiles()
                 {
                     line_string = discard_comments(line_string);
                     std::istringstream line_stream(line_string);
-                    for (unsigned int d = 0; d < NDIM; ++d)
+                    for (int d = 0; d < NDIM; ++d)
                     {
-                        if (!(line_stream >> d_vertex_posn[ln][j][k][d]))
+                        if (!(line_stream >> d_vertex_posn[ln][j][k*NDIM+d]))
                         {
                             TBOX_ERROR(d_object_name << ":\n  Invalid entry in input file encountered on line " << k+2 << " of file " << vertex_filename << std::endl);
                         }
-                        d_vertex_posn[ln][j][k][d] = d_length_scale_factor*(d_vertex_posn[ln][j][k][d] + d_posn_shift[d]);
+                        d_vertex_posn[ln][j][k*NDIM+d] = d_length_scale_factor*(d_vertex_posn[ln][j][k*NDIM+d] + d_posn_shift[d]);
                     }
                 }
             }
@@ -780,10 +780,10 @@ IBStandardInitializer::readSpringFiles()
 
     for (int ln = 0; ln < d_max_levels; ++ln)
     {
-        const unsigned int num_base_filename = d_base_filename[ln].size();
+        const int num_base_filename = d_base_filename[ln].size();
         d_spring_edge_map[ln].resize(num_base_filename);
         d_spring_spec_data[ln].resize(num_base_filename);
-        for (unsigned int j = 0; j < num_base_filename; ++j)
+        for (int j = 0; j < num_base_filename; ++j)
         {
             bool warned = false;
 
@@ -828,10 +828,7 @@ IBStandardInitializer::readSpringFiles()
                 {
                     Edge e;
                     double kappa, length;
-                    int force_fcn_idx;
-#if ENABLE_SUBDOMAIN_INDICES
-                    int subdomain_idx;
-#endif
+                    int force_fcn_idx, subdomain_idx;
                     if (!std::getline(file_stream, line_string))
                     {
                         TBOX_ERROR(d_object_name << ":\n  Premature end to input file encountered before line " << k+2 << " of file " << spring_filename << std::endl);
@@ -885,12 +882,11 @@ IBStandardInitializer::readSpringFiles()
                         {
                             force_fcn_idx = 0;  // default force function specification.
                         }
-#if ENABLE_SUBDOMAIN_INDICES
+
                         if (!(line_stream >> subdomain_idx))
                         {
                             subdomain_idx = -1;  // default subdomain index.
                         }
-#endif
                     }
 
                     // Modify kappa, length, and subdomain_idx according to
@@ -908,12 +904,10 @@ IBStandardInitializer::readSpringFiles()
                     {
                         force_fcn_idx = d_uniform_spring_force_fcn_idx[ln][j];
                     }
-#if ENABLE_SUBDOMAIN_INDICES
                     if (d_using_uniform_spring_subdomain_idx[ln][j])
                     {
                         subdomain_idx = d_uniform_spring_subdomain_idx[ln][j];
                     }
-#endif
 
                     // Correct the edge numbers to be in the global Lagrangian indexing
                     // scheme.
@@ -928,8 +922,8 @@ IBStandardInitializer::readSpringFiles()
 
                     // Check to see if the edge has already been inserted in the edge map.
                     bool duplicate_edge = false;
-#ifdef DEBUG_CHECK_ASSERTIONS
-                    for (std::multimap<int,Edge>::const_iterator it = d_spring_edge_map[ln][j].lower_bound(e.first);
+                    for (std::multimap<int,Edge>::const_iterator it =
+                             d_spring_edge_map[ln][j].lower_bound(e.first);
                          it != d_spring_edge_map[ln][j].upper_bound(e.first); ++it)
                     {
                         const Edge& other_e = it->second;
@@ -943,21 +937,19 @@ IBStandardInitializer::readSpringFiles()
                             // Ensure that the link information is consistent.
                             if (!MathUtilities<double>::equalEps(d_spring_spec_data[ln][j].find(e)->second.stiffness  , kappa ) ||
                                 !MathUtilities<double>::equalEps(d_spring_spec_data[ln][j].find(e)->second.rest_length, length) ||
-                                (d_spring_spec_data[ln][j].find(e)->second.force_fcn_idx != force_fcn_idx)
-#if ENABLE_SUBDOMAIN_INDICES
-                                || (d_spring_spec_data[ln][j].find(e)->second.subdomain_idx != subdomain_idx)
-#endif
-                                )
+                                (d_spring_spec_data[ln][j].find(e)->second.force_fcn_idx != force_fcn_idx) ||
+                                (d_spring_spec_data[ln][j].find(e)->second.subdomain_idx != subdomain_idx))
                             {
                                 TBOX_ERROR(d_object_name << ":\n  Inconsistent duplicate edges in input file encountered on line " << k+2 << " of file " << spring_filename << std::endl
                                            << "  first vertex = " << e.first-d_vertex_offset[ln][j] << " second vertex = " << e.second-d_vertex_offset[ln][j] << std::endl
                                            << "  original spring constant      = " << d_spring_spec_data[ln][j].find(e)->second.stiffness     << std::endl
                                            << "  original resting length       = " << d_spring_spec_data[ln][j].find(e)->second.rest_length   << std::endl
-                                           << "  original force function index = " << d_spring_spec_data[ln][j].find(e)->second.force_fcn_idx << std::endl);
+                                           << "  original force function index = " << d_spring_spec_data[ln][j].find(e)->second.force_fcn_idx << std::endl
+                                           << "  original subdomain index      = " << d_spring_spec_data[ln][j].find(e)->second.subdomain_idx << std::endl);
                             }
                         }
                     }
-#endif
+
                     // Initialize the map data corresponding to the present edge.
                     //
                     // Note that in the edge map, each edge is associated with only the
@@ -969,9 +961,7 @@ IBStandardInitializer::readSpringFiles()
                         spec_data.stiffness     = kappa;
                         spec_data.rest_length   = length;
                         spec_data.force_fcn_idx = force_fcn_idx;
-#if ENABLE_SUBDOMAIN_INDICES
                         spec_data.subdomain_idx = subdomain_idx;
-#endif
                     }
 
                     // Check to see if the spring constant is zero and, if so,
@@ -1013,9 +1003,9 @@ IBStandardInitializer::readBeamFiles()
 
     for (int ln = 0; ln < d_max_levels; ++ln)
     {
-        const unsigned int num_base_filename = d_base_filename[ln].size();
+        const int num_base_filename = d_base_filename[ln].size();
         d_beam_spec_data[ln].resize(num_base_filename);
-        for (unsigned int j = 0; j < num_base_filename; ++j)
+        for (int j = 0; j < num_base_filename; ++j)
         {
             bool warned = false;
 
@@ -1059,10 +1049,8 @@ IBStandardInitializer::readBeamFiles()
                 {
                     int prev_idx, curr_idx, next_idx;
                     double bend;
-                    blitz::TinyVector<double,NDIM> curv(0.0);
-#if ENABLE_SUBDOMAIN_INDICES
+                    std::vector<double> curv(NDIM,0.0);
                     int subdomain_idx;
-#endif
                     if (!std::getline(file_stream, line_string))
                     {
                         TBOX_ERROR(d_object_name << ":\n  Premature end to input file encountered before line " << k+2 << " of file " << beam_filename << std::endl);
@@ -1112,7 +1100,7 @@ IBStandardInitializer::readBeamFiles()
                         }
 
                         bool curv_found_in_input = false;
-                        for (unsigned int d = 0; d < NDIM; ++d)
+                        for (int d = 0; d < NDIM; ++d)
                         {
                             double c;
                             if (!(line_stream >> c))
@@ -1129,12 +1117,11 @@ IBStandardInitializer::readBeamFiles()
                                 curv[d] = c;
                             }
                         }
-#if ENABLE_SUBDOMAIN_INDICES
+
                         if (!(line_stream >> subdomain_idx))
                         {
                             subdomain_idx = -1;  // default subdomain index.
                         }
-#endif
                     }
 
                     // Modify bend, curvature, and subdomain_idx according to
@@ -1148,12 +1135,10 @@ IBStandardInitializer::readBeamFiles()
                     {
                         curv = d_uniform_beam_curvature[ln][j];
                     }
-#if ENABLE_SUBDOMAIN_INDICES
                     if (d_using_uniform_beam_subdomain_idx[ln][j])
                     {
                         subdomain_idx = d_uniform_beam_subdomain_idx[ln][j];
                     }
-#endif
 
                     // Correct the node numbers to be in the global Lagrangian
                     // indexing scheme.
@@ -1170,9 +1155,7 @@ IBStandardInitializer::readBeamFiles()
                     spec_data.neighbor_idxs = std::make_pair(next_idx,prev_idx);
                     spec_data.bend_rigidity = bend;
                     spec_data.curvature     = curv;
-#if ENABLE_SUBDOMAIN_INDICES
                     spec_data.subdomain_idx = subdomain_idx;
-#endif
                     d_beam_spec_data[ln][j].insert(std::make_pair(curr_idx,spec_data));
 
                     // Check to see if the bending rigidity is zero and, if so,
@@ -1214,10 +1197,10 @@ IBStandardInitializer::readRodFiles()
 
     for (int ln = 0; ln < d_max_levels; ++ln)
     {
-        const unsigned int num_base_filename = d_base_filename[ln].size();
+        const int num_base_filename = d_base_filename[ln].size();
         d_rod_edge_map[ln].resize(num_base_filename);
         d_rod_spec_data[ln].resize(num_base_filename);
-        for (unsigned int j = 0; j < num_base_filename; ++j)
+        for (int j = 0; j < num_base_filename; ++j)
         {
             // Wait for the previous MPI process to finish reading the current file.
             if (d_use_file_batons && rank != 0) SAMRAI_MPI::recv(&flag, sz, rank-1, false, j);
@@ -1258,7 +1241,7 @@ IBStandardInitializer::readRodFiles()
                 for (int k = 0; k < num_rods; ++k)
                 {
                     int curr_idx, next_idx;
-                    blitz::TinyVector<double,IBRodForceSpec::NUM_MATERIAL_PARAMS> properties;
+                    std::vector<double> properties(NUM_ROD_PARAMS);
                     double& ds = properties[0];
                     double& a1 = properties[1];
                     double& a2 = properties[2];
@@ -1269,9 +1252,7 @@ IBStandardInitializer::readRodFiles()
                     double& kappa1 = properties[7];
                     double& kappa2 = properties[8];
                     double& tau = properties[9];
-#if ENABLE_SUBDOMAIN_INDICES
                     int subdomain_idx;
-#endif
 
                     if (!std::getline(file_stream, line_string))
                     {
@@ -1410,12 +1391,11 @@ IBStandardInitializer::readRodFiles()
                         {
                             curvature_data_found_in_input = true;
                         }
-#if ENABLE_SUBDOMAIN_INDICES
+
                         if (!(line_stream >> subdomain_idx))
                         {
                             subdomain_idx = -1;  // default subdomain index.
                         }
-#endif
                     }
 
                     // Modify properties and subdomain_idx according to whether
@@ -1425,12 +1405,10 @@ IBStandardInitializer::readRodFiles()
                     {
                         properties = d_uniform_rod_properties[ln][j];
                     }
-#if ENABLE_SUBDOMAIN_INDICES
                     if (d_using_uniform_rod_subdomain_idx[ln][j])
                     {
                         subdomain_idx = d_uniform_rod_subdomain_idx[ln][j];
                     }
-#endif
 
                     // Correct the node numbers to be in the global Lagrangian
                     // indexing scheme.
@@ -1447,12 +1425,10 @@ IBStandardInitializer::readRodFiles()
                     // Initialize the map data corresponding to the present rod.
                     //
                     // Note that in the rod property map, each edge is
-                    // associated with only the "current" vertex.
+                    // associated with only the "cur1rent" vertex.
                     RodSpec& rod_spec = d_rod_spec_data[ln][j][e];
                     rod_spec.properties = properties;
-#if ENABLE_SUBDOMAIN_INDICES
                     rod_spec.subdomain_idx = subdomain_idx;
-#endif
                 }
 
                 // Close the input file.
@@ -1484,9 +1460,9 @@ IBStandardInitializer::readTargetPointFiles()
 
     for (int ln = 0; ln < d_max_levels; ++ln)
     {
-        const unsigned int num_base_filename = d_base_filename[ln].size();
+        const int num_base_filename = d_base_filename[ln].size();
         d_target_spec_data[ln].resize(num_base_filename);
-        for (unsigned int j = 0; j < num_base_filename; ++j)
+        for (int j = 0; j < num_base_filename; ++j)
         {
             bool warned = false;
 
@@ -1496,9 +1472,7 @@ IBStandardInitializer::readTargetPointFiles()
             TargetSpec default_spec;
             default_spec.stiffness = 0.0;
             default_spec.damping = 0.0;
-#if ENABLE_SUBDOMAIN_INDICES
             default_spec.subdomain_idx = -1;
-#endif
             d_target_spec_data[ln][j].resize(d_num_vertex[ln][j], default_spec);
 
             const std::string target_point_stiffness_filename = d_base_filename[ln][j] + ".target";
@@ -1574,12 +1548,11 @@ IBStandardInitializer::readTargetPointFiles()
                             TBOX_ERROR(d_object_name << ":\n  Invalid entry in input file encountered on line " << k+2 << " of file " << target_point_stiffness_filename << std::endl
                                        << "  target point damping coefficient is negative" << std::endl);
                         }
-#if ENABLE_SUBDOMAIN_INDICES
+
                         if (!(line_stream >> d_target_spec_data[ln][j][n].subdomain_idx))
                         {
                             d_target_spec_data[ln][j][n].subdomain_idx = -1;  // default subdomain index.
                         }
-#endif
                     }
 
                     // Check to see if the penalty spring constant is zero and,
@@ -1628,7 +1601,6 @@ IBStandardInitializer::readTargetPointFiles()
                         d_target_spec_data[ln][j][k].damping = d_uniform_target_damping[ln][j];
                     }
                 }
-#if ENABLE_SUBDOMAIN_INDICES
                 if (d_using_uniform_target_subdomain_idx[ln][j])
                 {
                     for (int k = 0; k < d_num_vertex[ln][j]; ++k)
@@ -1636,7 +1608,6 @@ IBStandardInitializer::readTargetPointFiles()
                         d_target_spec_data[ln][j][k].subdomain_idx = d_uniform_target_subdomain_idx[ln][j];
                     }
                 }
-#endif
             }
 
             // Free the next MPI process to start reading the current file.
@@ -1660,18 +1631,16 @@ IBStandardInitializer::readAnchorPointFiles()
 
     for (int ln = 0; ln < d_max_levels; ++ln)
     {
-        const unsigned int num_base_filename = d_base_filename[ln].size();
+        const int num_base_filename = d_base_filename[ln].size();
         d_anchor_spec_data[ln].resize(num_base_filename);
-        for (unsigned int j = 0; j < num_base_filename; ++j)
+        for (int j = 0; j < num_base_filename; ++j)
         {
             // Wait for the previous MPI process to finish reading the current file.
             if (d_use_file_batons && rank != 0) SAMRAI_MPI::recv(&flag, sz, rank-1, false, j);
 
             AnchorSpec default_spec;
             default_spec.is_anchor_point = false;
-#if ENABLE_SUBDOMAIN_INDICES
             default_spec.subdomain_idx = -1;
-#endif
             d_anchor_spec_data[ln][j].resize(d_num_vertex[ln][j], default_spec);
 
             const std::string anchor_point_filename = d_base_filename[ln][j] + ".anchor";
@@ -1729,12 +1698,11 @@ IBStandardInitializer::readAnchorPointFiles()
                         }
 
                         d_anchor_spec_data[ln][j][n].is_anchor_point = true;
-#if ENABLE_SUBDOMAIN_INDICES
+
                         if (!(line_stream >> d_anchor_spec_data[ln][j][n].subdomain_idx))
                         {
                             d_anchor_spec_data[ln][j][n].subdomain_idx = -1;  // default subdomain index.
                         }
-#endif
                     }
                 }
 
@@ -1748,7 +1716,6 @@ IBStandardInitializer::readAnchorPointFiles()
 
             // Modify the anchor point properties according to whether uniform
             // values are to be employed for this particular structure.
-#if ENABLE_SUBDOMAIN_INDICES
             if (d_using_uniform_anchor_subdomain_idx[ln][j])
             {
                 for (int k = 0; k < d_num_vertex[ln][j]; ++k)
@@ -1756,7 +1723,6 @@ IBStandardInitializer::readAnchorPointFiles()
                     d_anchor_spec_data[ln][j][k].subdomain_idx = d_uniform_anchor_subdomain_idx[ln][j];
                 }
             }
-#endif
 
             // Free the next MPI process to start reading the current file.
             if (d_use_file_batons && rank != nodes-1) SAMRAI_MPI::send(&flag, sz, rank+1, false, j);
@@ -1776,9 +1742,9 @@ IBStandardInitializer::readBoundaryMassFiles()
 
     for (int ln = 0; ln < d_max_levels; ++ln)
     {
-        const unsigned int num_base_filename = d_base_filename[ln].size();
+        const int num_base_filename = d_base_filename[ln].size();
         d_bdry_mass_spec_data[ln].resize(num_base_filename);
-        for (unsigned int j = 0; j < num_base_filename; ++j)
+        for (int j = 0; j < num_base_filename; ++j)
         {
             // Wait for the previous MPI process to finish reading the current file.
             if (d_use_file_batons && rank != 0) SAMRAI_MPI::recv(&flag, sz, rank-1, false, j);
@@ -1920,9 +1886,9 @@ IBStandardInitializer::readDirectorFiles()
 
     for (int ln = 0; ln < d_max_levels; ++ln)
     {
-        const unsigned int num_base_filename = d_base_filename[ln].size();
+        const int num_base_filename = d_base_filename[ln].size();
         d_directors[ln].resize(num_base_filename);
-        for (unsigned int j = 0; j < num_base_filename; ++j)
+        for (int j = 0; j < num_base_filename; ++j)
         {
             // Wait for the previous MPI process to finish reading the current file.
             if (d_use_file_batons && rank != 0) SAMRAI_MPI::recv(&flag, sz, rank-1, false, j);
@@ -2024,9 +1990,9 @@ IBStandardInitializer::readInstrumentationFiles()
     std::vector<std::string> instrument_names;
     for (int ln = 0; ln < d_max_levels; ++ln)
     {
-        const unsigned int num_base_filename = d_base_filename[ln].size();
+        const int num_base_filename = d_base_filename[ln].size();
         d_instrument_idx[ln].resize(num_base_filename);
-        for (unsigned int j = 0; j < num_base_filename; ++j)
+        for (int j = 0; j < num_base_filename; ++j)
         {
             // Wait for the previous MPI process to finish reading the current file.
             if (d_use_file_batons && rank != 0) SAMRAI_MPI::recv(&flag, sz, rank-1, false, j);
@@ -2146,7 +2112,7 @@ IBStandardInitializer::readInstrumentationFiles()
                                        << "  meter index " << idx.first << " is out of range" << std::endl);
                         }
 
-                        if (idx.first >= static_cast<int>(encountered_instrument_idx.size()))
+                        if (idx.first >= int(encountered_instrument_idx.size()))
                         {
                             encountered_instrument_idx.resize(idx.first+1,false);
                         }
@@ -2162,7 +2128,7 @@ IBStandardInitializer::readInstrumentationFiles()
                                        << "  meter node index is negative" << std::endl);
                         }
 
-                        if (idx.second >= static_cast<int>(encountered_node_idx[idx.first].size()))
+                        if (idx.second >= int(encountered_node_idx[idx.first].size()))
                         {
                             encountered_node_idx[idx.first].resize(idx.second+1,false);
                         }
@@ -2199,7 +2165,7 @@ IBStandardInitializer::readInstrumentationFiles()
                     }
                 }
 
-                if (static_cast<int>(encountered_instrument_idx.size()) != num_inst)
+                if (int(encountered_instrument_idx.size()) != num_inst)
                 {
                     TBOX_ERROR(d_object_name << ":\n  "
                                << "  Not all anticipated instrument indices were found in input file " << inst_filename
@@ -2239,9 +2205,9 @@ IBStandardInitializer::readSourceFiles()
         int source_offset = 0;
         std::vector<std::string> source_names;
         std::vector<double> source_radii;
-        const unsigned int num_base_filename = d_base_filename[ln].size();
+        const int num_base_filename = d_base_filename[ln].size();
         d_source_idx[ln].resize(num_base_filename);
-        for (unsigned int j = 0; j < num_base_filename; ++j)
+        for (int j = 0; j < num_base_filename; ++j)
         {
             // Wait for the previous MPI process to finish reading the current file.
             if (d_use_file_batons && rank != 0) SAMRAI_MPI::recv(&flag, sz, rank-1, false, j);
@@ -2394,9 +2360,9 @@ IBStandardInitializer::readSourceFiles()
             // Free the next MPI process to start reading the current file.
             if (d_use_file_batons && rank != nodes-1) SAMRAI_MPI::send(&flag, sz, rank+1, false, j);
         }
-        IBStandardSourceGen::setNumSources(ln,source_offset);
-        IBStandardSourceGen::setSourceNames(ln,source_names);
-        IBStandardSourceGen::setSourceRadii(ln,source_radii);
+        IBSourceSpec::setNumSources(ln,source_offset);
+        IBSourceSpec::setSourceNames(ln,source_names);
+        IBSourceSpec::setSourceRadii(ln,source_radii);
     }
     return;
 }// readSourceFiles
@@ -2406,22 +2372,23 @@ IBStandardInitializer::getPatchVertices(
     std::vector<std::pair<int,int> >& patch_vertices,
     const Pointer<Patch<NDIM> > patch,
     const int level_number,
-    const bool /*can_be_refined*/) const
+    const bool can_be_refined) const
 {
     // Loop over all of the vertices to determine the indices of those vertices
     // within the present patch.
     //
     // NOTE: This is clearly not the best way to do this, but it will work for
     // now.
-    const Pointer<CartesianPatchGeometry<NDIM> > patch_geom = patch->getPatchGeometry();
+    const Pointer<CartesianPatchGeometry<NDIM> > patch_geom =
+        patch->getPatchGeometry();
     const double* const xLower = patch_geom->getXLower();
     const double* const xUpper = patch_geom->getXUpper();
 
-    for (unsigned int j = 0; j < d_num_vertex[level_number].size(); ++j)
+    for (unsigned j = 0; j < d_num_vertex[level_number].size(); ++j)
     {
         for (int k = 0; k < d_num_vertex[level_number][j]; ++k)
         {
-            const blitz::TinyVector<double,NDIM>& X = d_vertex_posn[level_number][j][k];
+            const double* const X = &d_vertex_posn[level_number][j][k*NDIM];
             const bool patch_owns_node =
                 ((  xLower[0] <= X[0])&&(X[0] < xUpper[0]))
 #if (NDIM > 1)
@@ -2445,12 +2412,13 @@ IBStandardInitializer::getCanonicalLagrangianIndex(
     return d_vertex_offset[level_number][point_index.first]+point_index.second;
 }// getCanonicalLagrangianIndex
 
-blitz::TinyVector<double,NDIM>
+std::vector<double>
 IBStandardInitializer::getVertexPosn(
     const std::pair<int,int>& point_index,
     const int level_number) const
 {
-    return d_vertex_posn[level_number][point_index.first][point_index.second];
+    const double* posn_ptr = &d_vertex_posn[level_number][point_index.first][point_index.second*NDIM];
+    return std::vector<double>(posn_ptr,posn_ptr+NDIM);
 }// getVertexPosn
 
 const IBStandardInitializer::TargetSpec&
@@ -2520,7 +2488,7 @@ IBStandardInitializer::getVertexSourceIndices(
 std::vector<Pointer<Streamable> >
 IBStandardInitializer::initializeSpecs(
     const std::pair<int,int>& point_index,
-    const unsigned int global_index_offset,
+    const int global_index_offset,
     const int level_number) const
 {
     std::vector<Pointer<Streamable> > vertex_specs;
@@ -2533,9 +2501,7 @@ IBStandardInitializer::initializeSpecs(
     {
         std::vector<int> slave_idxs, force_fcn_idxs;
         std::vector<double> stiffness, rest_length;
-#if ENABLE_SUBDOMAIN_INDICES
         std::vector<int> subdomain_idxs;
-#endif
         for (std::multimap<int,Edge>::const_iterator it = d_spring_edge_map[level_number][j].lower_bound(mastr_idx);
              it != d_spring_edge_map[level_number][j].upper_bound(mastr_idx); ++it)
         {
@@ -2558,17 +2524,11 @@ IBStandardInitializer::initializeSpecs(
             stiffness     .push_back(spec_data.stiffness    );
             rest_length   .push_back(spec_data.rest_length  );
             force_fcn_idxs.push_back(spec_data.force_fcn_idx);
-#if ENABLE_SUBDOMAIN_INDICES
             subdomain_idxs.push_back(spec_data.subdomain_idx);
-#endif
         }
         if (slave_idxs.size() > 0)
         {
-            vertex_specs.push_back(new IBSpringForceSpec(mastr_idx, slave_idxs, force_fcn_idxs, stiffness, rest_length
-#if ENABLE_SUBDOMAIN_INDICES
-                                                         , subdomain_idxs
-#endif
-                                                         ));
+            vertex_specs.push_back(new IBSpringForceSpec(mastr_idx, slave_idxs, force_fcn_idxs, stiffness, rest_length, subdomain_idxs));
         }
     }
 
@@ -2577,10 +2537,8 @@ IBStandardInitializer::initializeSpecs(
     {
         std::vector<std::pair<int,int> > beam_neighbor_idxs;
         std::vector<double> beam_bend_rigidity;
-        std::vector<blitz::TinyVector<double,NDIM> > beam_mesh_dependent_curvature;
-#if ENABLE_SUBDOMAIN_INDICES
+        std::vector<std::vector<double> > beam_mesh_dependent_curvature;
         std::vector<int> beam_subdomain_idxs;
-#endif
         for (std::multimap<int,BeamSpec>::const_iterator it = d_beam_spec_data[level_number][j].lower_bound(mastr_idx);
              it != d_beam_spec_data[level_number][j].upper_bound(mastr_idx); ++it)
         {
@@ -2588,17 +2546,11 @@ IBStandardInitializer::initializeSpecs(
             beam_neighbor_idxs.push_back(spec_data.neighbor_idxs);
             beam_bend_rigidity.push_back(spec_data.bend_rigidity);
             beam_mesh_dependent_curvature.push_back(spec_data.curvature);
-#if ENABLE_SUBDOMAIN_INDICES
             beam_subdomain_idxs.push_back(spec_data.subdomain_idx);
-#endif
         }
         if (!beam_neighbor_idxs.empty())
         {
-            vertex_specs.push_back(new IBBeamForceSpec(mastr_idx, beam_neighbor_idxs, beam_bend_rigidity, beam_mesh_dependent_curvature
-#if ENABLE_SUBDOMAIN_INDICES
-                                                       , beam_subdomain_idxs
-#endif
-                                                       ));
+            vertex_specs.push_back(new IBBeamForceSpec(mastr_idx, beam_neighbor_idxs, beam_bend_rigidity, beam_mesh_dependent_curvature, beam_subdomain_idxs));
         }
     }
 
@@ -2606,10 +2558,8 @@ IBStandardInitializer::initializeSpecs(
     if (d_enable_rods[level_number][j])
     {
         std::vector<int> rod_next_idxs;
-        std::vector<blitz::TinyVector<double,IBRodForceSpec::NUM_MATERIAL_PARAMS> > rod_material_params;
-#if ENABLE_SUBDOMAIN_INDICES
+        std::vector<std::vector<double> > rod_material_params;
         std::vector<int> rod_subdomain_idxs;
-#endif
         for (std::multimap<int,Edge>::const_iterator it = d_rod_edge_map[level_number][j].lower_bound(mastr_idx);
              it != d_rod_edge_map[level_number][j].upper_bound(mastr_idx); ++it)
         {
@@ -2630,17 +2580,11 @@ IBStandardInitializer::initializeSpecs(
             // The material properties.
             const RodSpec& spec_data = d_rod_spec_data[level_number][j].find(e)->second;
             rod_material_params.push_back(spec_data.properties);
-#if ENABLE_SUBDOMAIN_INDICES
             rod_subdomain_idxs.push_back(spec_data.subdomain_idx);
-#endif
         }
         if (!rod_next_idxs.empty())
         {
-            vertex_specs.push_back(new IBRodForceSpec(mastr_idx, rod_next_idxs, rod_material_params
-#if ENABLE_SUBDOMAIN_INDICES
-                                                      , rod_subdomain_idxs
-#endif
-                                                      ));
+            vertex_specs.push_back(new IBRodForceSpec(mastr_idx, rod_next_idxs, rod_material_params, rod_subdomain_idxs));
         }
     }
 
@@ -2651,15 +2595,9 @@ IBStandardInitializer::initializeSpecs(
         const TargetSpec& spec_data = getVertexTargetSpec(point_index, level_number);
         const double kappa_target = spec_data.stiffness;
         const double eta_target = spec_data.damping;
-#if ENABLE_SUBDOMAIN_INDICES
         const int subdomain_idx = spec_data.subdomain_idx;
-#endif
-        const blitz::TinyVector<double,NDIM> X_target = getVertexPosn(point_index, level_number);
-        vertex_specs.push_back(new IBTargetPointForceSpec(mastr_idx, kappa_target, eta_target, X_target
-#if ENABLE_SUBDOMAIN_INDICES
-                                                          , subdomain_idx
-#endif
-                                                          ));
+        const std::vector<double> X_target = getVertexPosn(point_index, level_number);
+        vertex_specs.push_back(new IBTargetPointForceSpec(mastr_idx, kappa_target, eta_target, X_target, subdomain_idx));
     }
 
     // Initialize any anchor point specifications associated with the present
@@ -2668,16 +2606,10 @@ IBStandardInitializer::initializeSpecs(
     {
         const AnchorSpec& spec_data = getVertexAnchorSpec(point_index, level_number);
         const bool is_anchor_point = spec_data.is_anchor_point;
-#if ENABLE_SUBDOMAIN_INDICES
         const int subdomain_idx = spec_data.subdomain_idx;
-#endif
         if (is_anchor_point)
         {
-            vertex_specs.push_back(new IBAnchorPointSpec(mastr_idx
-#if ENABLE_SUBDOMAIN_INDICES
-                                                         , subdomain_idx
-#endif
-                                                         ));
+            vertex_specs.push_back(new IBAnchorPointSpec(mastr_idx, subdomain_idx));
         }
     }
 
@@ -2754,10 +2686,8 @@ IBStandardInitializer::getFromInput(
     d_uniform_spring_rest_length.resize(d_max_levels);
     d_using_uniform_spring_force_fcn_idx.resize(d_max_levels);
     d_uniform_spring_force_fcn_idx.resize(d_max_levels);
-#if ENABLE_SUBDOMAIN_INDICES
     d_using_uniform_spring_subdomain_idx.resize(d_max_levels);
     d_uniform_spring_subdomain_idx.resize(d_max_levels);
-#endif
 
     d_enable_beams.resize(d_max_levels);
     d_beam_spec_data.resize(d_max_levels);
@@ -2765,20 +2695,16 @@ IBStandardInitializer::getFromInput(
     d_uniform_beam_bend_rigidity.resize(d_max_levels);
     d_using_uniform_beam_curvature.resize(d_max_levels);
     d_uniform_beam_curvature.resize(d_max_levels);
-#if ENABLE_SUBDOMAIN_INDICES
     d_using_uniform_beam_subdomain_idx.resize(d_max_levels);
     d_uniform_beam_subdomain_idx.resize(d_max_levels);
-#endif
 
     d_enable_rods.resize(d_max_levels);
     d_rod_edge_map.resize(d_max_levels);
     d_rod_spec_data.resize(d_max_levels);
     d_using_uniform_rod_properties.resize(d_max_levels);
     d_uniform_rod_properties.resize(d_max_levels);
-#if ENABLE_SUBDOMAIN_INDICES
     d_using_uniform_rod_subdomain_idx.resize(d_max_levels);
     d_uniform_rod_subdomain_idx.resize(d_max_levels);
-#endif
 
     d_enable_target_points.resize(d_max_levels);
     d_target_spec_data.resize(d_max_levels);
@@ -2786,17 +2712,13 @@ IBStandardInitializer::getFromInput(
     d_uniform_target_stiffness.resize(d_max_levels);
     d_using_uniform_target_damping.resize(d_max_levels);
     d_uniform_target_damping.resize(d_max_levels);
-#if ENABLE_SUBDOMAIN_INDICES
     d_using_uniform_target_subdomain_idx.resize(d_max_levels);
     d_uniform_target_subdomain_idx.resize(d_max_levels);
-#endif
 
     d_enable_anchor_points.resize(d_max_levels);
     d_anchor_spec_data.resize(d_max_levels);
-#if ENABLE_SUBDOMAIN_INDICES
     d_using_uniform_anchor_subdomain_idx.resize(d_max_levels);
     d_uniform_anchor_subdomain_idx.resize(d_max_levels);
-#endif
 
     d_enable_bdry_mass.resize(d_max_levels);
     d_bdry_mass_spec_data.resize(d_max_levels);
@@ -2893,7 +2815,7 @@ IBStandardInitializer::getFromInput(
     // Read in any sub-databases associated with the input file names.
     for (int ln = 0; ln < d_max_levels; ++ln)
     {
-        const unsigned int num_base_filename = d_base_filename[ln].size();
+        const int num_base_filename = d_base_filename[ln].size();
 
         d_enable_springs[ln].resize(num_base_filename,true);
         d_using_uniform_spring_stiffness[ln].resize(num_base_filename,false);
@@ -2902,44 +2824,34 @@ IBStandardInitializer::getFromInput(
         d_uniform_spring_rest_length[ln].resize(num_base_filename,-1.0);
         d_using_uniform_spring_force_fcn_idx[ln].resize(num_base_filename,false);
         d_uniform_spring_force_fcn_idx[ln].resize(num_base_filename,-1);
-#if ENABLE_SUBDOMAIN_INDICES
         d_using_uniform_spring_subdomain_idx[ln].resize(num_base_filename,false);
         d_uniform_spring_subdomain_idx[ln].resize(num_base_filename,-1);
-#endif
 
         d_enable_beams[ln].resize(num_base_filename,true);
         d_using_uniform_beam_bend_rigidity[ln].resize(num_base_filename,false);
         d_uniform_beam_bend_rigidity[ln].resize(num_base_filename,-1.0);
         d_using_uniform_beam_curvature[ln].resize(num_base_filename,false);
-        d_uniform_beam_curvature[ln].resize(num_base_filename,blitz::TinyVector<double,NDIM>(0.0));
-#if ENABLE_SUBDOMAIN_INDICES
+        d_uniform_beam_curvature[ln].resize(num_base_filename,std::vector<double>(NDIM,0.0));
         d_using_uniform_beam_subdomain_idx[ln].resize(num_base_filename,false);
         d_uniform_beam_subdomain_idx[ln].resize(num_base_filename,-1);
-#endif
 
         d_enable_rods[ln].resize(num_base_filename,true);
         d_using_uniform_rod_properties[ln].resize(num_base_filename,false);
-        d_uniform_rod_properties[ln].resize(num_base_filename,blitz::TinyVector<double,IBRodForceSpec::NUM_MATERIAL_PARAMS>(0.0));
-#if ENABLE_SUBDOMAIN_INDICES
+        d_uniform_rod_properties[ln].resize(num_base_filename,std::vector<double>(NUM_ROD_PARAMS,0.0));
         d_using_uniform_rod_subdomain_idx[ln].resize(num_base_filename,false);
         d_uniform_rod_subdomain_idx[ln].resize(num_base_filename,-1);
-#endif
 
         d_enable_target_points[ln].resize(num_base_filename,true);
         d_using_uniform_target_stiffness[ln].resize(num_base_filename,false);
         d_uniform_target_stiffness[ln].resize(num_base_filename,-1.0);
         d_using_uniform_target_damping[ln].resize(num_base_filename,false);
         d_uniform_target_damping[ln].resize(num_base_filename,-1.0);
-#if ENABLE_SUBDOMAIN_INDICES
         d_using_uniform_target_subdomain_idx[ln].resize(num_base_filename,false);
         d_uniform_target_subdomain_idx[ln].resize(num_base_filename,-1);
-#endif
 
         d_enable_anchor_points[ln].resize(num_base_filename,true);
-#if ENABLE_SUBDOMAIN_INDICES
         d_using_uniform_anchor_subdomain_idx[ln].resize(num_base_filename,false);
         d_uniform_anchor_subdomain_idx[ln].resize(num_base_filename,-1);
-#endif
 
         d_enable_bdry_mass[ln].resize(num_base_filename,true);
         d_using_uniform_bdry_mass[ln].resize(num_base_filename,false);
@@ -2951,12 +2863,13 @@ IBStandardInitializer::getFromInput(
 
         d_enable_sources[ln].resize(num_base_filename,true);
 
-        for (unsigned int j = 0; j < num_base_filename; ++j)
+        for (int j = 0; j < num_base_filename; ++j)
         {
             const std::string& base_filename = d_base_filename[ln][j];
             if (db->isDatabase(base_filename))
             {
-                Pointer<Database> sub_db = db->getDatabase(base_filename);
+                Pointer<Database> sub_db =
+                    db->getDatabase(base_filename);
 
                 // Determine whether to enable or disable any particular
                 // features.
@@ -3020,13 +2933,11 @@ IBStandardInitializer::getFromInput(
                     d_using_uniform_spring_force_fcn_idx[ln][j] = true;
                     d_uniform_spring_force_fcn_idx[ln][j] = sub_db->getInteger("uniform_spring_force_fcn_idx");
                 }
-#if ENABLE_SUBDOMAIN_INDICES
                 if (sub_db->keyExists("uniform_spring_subdomain_idx"))
                 {
                     d_using_uniform_spring_subdomain_idx[ln][j] = true;
                     d_uniform_spring_subdomain_idx[ln][j] = sub_db->getInteger("uniform_spring_subdomain_idx");
                 }
-#endif
 
                 if (sub_db->keyExists("uniform_beam_bend_rigidity"))
                 {
@@ -3041,28 +2952,24 @@ IBStandardInitializer::getFromInput(
                 if (sub_db->keyExists("uniform_beam_curvature"))
                 {
                     d_using_uniform_beam_curvature[ln][j] = true;
-                    sub_db->getDoubleArray("uniform_beam_curvature", d_uniform_beam_curvature[ln][j].data(), NDIM);
+                    sub_db->getDoubleArray("uniform_beam_curvature", &d_uniform_beam_curvature[ln][j][0], NDIM);
                 }
-#if ENABLE_SUBDOMAIN_INDICES
                 if (sub_db->keyExists("uniform_beam_subdomain_idx"))
                 {
                     d_using_uniform_beam_subdomain_idx[ln][j] = true;
                     d_uniform_beam_subdomain_idx[ln][j] = sub_db->getInteger("uniform_beam_subdomain_idx");
                 }
-#endif
 
                 if (sub_db->keyExists("uniform_rod_properties"))
                 {
                     d_using_uniform_rod_properties[ln][j] = true;
-                    sub_db->getDoubleArray("uniform_rod_properties", &d_uniform_rod_properties[ln][j][0], IBRodForceSpec::NUM_MATERIAL_PARAMS);
+                    sub_db->getDoubleArray("uniform_rod_properties", &d_uniform_rod_properties[ln][j][0], NUM_ROD_PARAMS);
                 }
-#if ENABLE_SUBDOMAIN_INDICES
                 if (sub_db->keyExists("uniform_rod_subdomain_idx"))
                 {
                     d_using_uniform_rod_subdomain_idx[ln][j] = true;
                     d_uniform_rod_subdomain_idx[ln][j] = sub_db->getInteger("uniform_rod_subdomain_idx");
                 }
-#endif
 
                 if (sub_db->keyExists("uniform_target_stiffness"))
                 {
@@ -3084,21 +2991,17 @@ IBStandardInitializer::getFromInput(
                                    << "  target point spring constant is negative" << std::endl);
                     }
                 }
-#if ENABLE_SUBDOMAIN_INDICES
                 if (sub_db->keyExists("uniform_target_subdomain_idx"))
                 {
                     d_using_uniform_target_subdomain_idx[ln][j] = true;
                     d_uniform_target_subdomain_idx[ln][j] = sub_db->getInteger("uniform_target_subdomain_idx");
                 }
-#endif
 
-#if ENABLE_SUBDOMAIN_INDICES
                 if (sub_db->keyExists("uniform_anchor_subdomain_idx"))
                 {
                     d_using_uniform_anchor_subdomain_idx[ln][j] = true;
                     d_uniform_anchor_subdomain_idx[ln][j] = sub_db->getInteger("uniform_anchor_subdomain_idx");
                 }
-#endif
 
                 if (sub_db->keyExists("uniform_bdry_mass"))
                 {
@@ -3128,159 +3031,151 @@ IBStandardInitializer::getFromInput(
 
     // Output the names of the input files to be read along with additional
     // debugging information.
-    pout << d_object_name << ":  Reading from input files.\n";
+    pout << d_object_name << ":  Reading from input files: " << std::endl;
     for (int ln = 0; ln < d_max_levels; ++ln)
     {
-        const unsigned int num_base_filename = d_base_filename[ln].size();
-        for (unsigned int j = 0; j < num_base_filename; ++j)
+        const int num_base_filename = d_base_filename[ln].size();
+        for (int j = 0; j < num_base_filename; ++j)
         {
             const std::string& base_filename = d_base_filename[ln][j];
-            pout << "  base filename: " << base_filename << "\n"
-                 << "  assigned to level " << ln << " of the Cartesian grid patch hierarchy\n";
+            pout << "  base filename: " << base_filename << std::endl
+                 << "  assigned to level " << ln << " of the Cartesian grid patch hierarchy" << std::endl
+                 << "     required files: " << base_filename << ".vertex" << std::endl
+                 << "     optional files: " << base_filename << ".spring, " << base_filename << ".beam, " << base_filename << ".rod, " << base_filename << ".target, " << base_filename << ".anchor, " << base_filename << ".mass, " << base_filename << ".director, " << base_filename << ".inst" << ".source" << std::endl;
             if (!d_enable_springs[ln][j])
             {
-                pout << "  NOTE: spring forces are DISABLED for " << base_filename << "\n";
+                pout << "  NOTE: spring forces are DISABLED for " << base_filename << std::endl;
             }
             else
             {
                 if (d_using_uniform_spring_stiffness[ln][j])
                 {
-                    pout << "  NOTE: uniform spring stiffnesses are being employed for the structure named " << base_filename << "\n"
-                         << "        any stiffness information in optional file " << base_filename << ".spring will be IGNORED\n";
+                    pout << "  NOTE: uniform spring stiffnesses are being employed for the structure named " << base_filename << std::endl
+                         << "        any stiffness information in optional file " << base_filename << ".spring will be IGNORED" << std::endl;
                 }
                 if (d_using_uniform_spring_rest_length[ln][j])
                 {
-                    pout << "  NOTE: uniform spring resting lengths are being employed for the structure named " << base_filename << "\n"
-                         << "        any resting length information in optional file " << base_filename << ".spring will be IGNORED\n";
+                    pout << "  NOTE: uniform spring resting lengths are being employed for the structure named " << base_filename << std::endl
+                         << "        any resting length information in optional file " << base_filename << ".spring will be IGNORED" << std::endl;
                 }
                 if (d_using_uniform_spring_force_fcn_idx[ln][j])
                 {
-                    pout << "  NOTE: uniform spring force functions are being employed for the structure named " << base_filename << "\n"
-                         << "        any force function index information in optional file " << base_filename << ".spring will be IGNORED\n";
+                    pout << "  NOTE: uniform spring force functions are being employed for the structure named " << base_filename << std::endl
+                         << "        any force function index information in optional file " << base_filename << ".spring will be IGNORED" << std::endl;
                 }
-#if ENABLE_SUBDOMAIN_INDICES
                 if (d_using_uniform_spring_subdomain_idx[ln][j])
                 {
-                    pout << "  NOTE: uniform spring subdomain indicies are being employed for the structure named " << base_filename << "\n"
-                         << "        any subdomain index information in optional file " << base_filename << ".spring will be IGNORED\n";
+                    pout << "  NOTE: uniform spring subdomain indicies are being employed for the structure named " << base_filename << std::endl
+                         << "        any subdomain index information in optional file " << base_filename << ".spring will be IGNORED" << std::endl;
                 }
-#endif
             }
 
             if (!d_enable_beams[ln][j])
             {
-                pout << "  NOTE: beam forces are DISABLED for " << base_filename << "\n";
+                pout << "  NOTE: beam forces are DISABLED for " << base_filename << std::endl;
             }
             else
             {
                 if (d_using_uniform_beam_bend_rigidity[ln][j])
                 {
-                    pout << "  NOTE: uniform beam bending rigidities are being employed for the structure named " << base_filename << "\n"
-                         << "        any stiffness information in optional file " << base_filename << ".beam will be IGNORED\n";
+                    pout << "  NOTE: uniform beam bending rigidities are being employed for the structure named " << base_filename << std::endl
+                         << "        any stiffness information in optional file " << base_filename << ".beam will be IGNORED" << std::endl;
                 }
                 if (d_using_uniform_beam_curvature[ln][j])
                 {
-                    pout << "  NOTE: uniform beam curvatures are being employed for the structure named " << base_filename << "\n"
-                         << "        any curvature information in optional file " << base_filename << ".beam will be IGNORED\n";
+                    pout << "  NOTE: uniform beam curvatures are being employed for the structure named " << base_filename << std::endl
+                         << "        any curvature information in optional file " << base_filename << ".beam will be IGNORED" << std::endl;
                 }
-#if ENABLE_SUBDOMAIN_INDICES
                 if (d_using_uniform_beam_subdomain_idx[ln][j])
                 {
-                    pout << "  NOTE: uniform beam subdomain indicies are being employed for the structure named " << base_filename << "\n"
-                         << "        any subdomain index information in optional file " << base_filename << ".beam will be IGNORED\n";
+                    pout << "  NOTE: uniform beam subdomain indicies are being employed for the structure named " << base_filename << std::endl
+                         << "        any subdomain index information in optional file " << base_filename << ".beam will be IGNORED" << std::endl;
                 }
-#endif
             }
 
             if (!d_enable_rods[ln][j])
             {
-                pout << "  NOTE: rod forces are DISABLED for " << base_filename << "\n";
+                pout << "  NOTE: rod forces are DISABLED for " << base_filename << std::endl;
             }
             else
             {
                 if (d_using_uniform_rod_properties[ln][j])
                 {
-                    pout << "  NOTE: uniform rod material properties are being employed for the structure named " << base_filename << "\n"
-                         << "        any material property information in optional file " << base_filename << ".rod will be IGNORED\n";
+                    pout << "  NOTE: uniform rod material properties are being employed for the structure named " << base_filename << std::endl
+                         << "        any material property information in optional file " << base_filename << ".rod will be IGNORED" << std::endl;
                 }
-#if ENABLE_SUBDOMAIN_INDICES
                 if (d_using_uniform_rod_subdomain_idx[ln][j])
                 {
-                    pout << "  NOTE: uniform rod subdomain indicies are being employed for the structure named " << base_filename << "\n"
-                         << "        any subdomain index information in optional file " << base_filename << ".rod will be IGNORED\n";
+                    pout << "  NOTE: uniform rod subdomain indicies are being employed for the structure named " << base_filename << std::endl
+                         << "        any subdomain index information in optional file " << base_filename << ".rod will be IGNORED" << std::endl;
                 }
-#endif
             }
 
             if (!d_enable_target_points[ln][j])
             {
-                pout << "  NOTE: target point penalty forces are DISABLED for " << base_filename << "\n";
+                pout << "  NOTE: target point penalty forces are DISABLED for " << base_filename << std::endl;
             }
             else
             {
                 if (d_using_uniform_target_stiffness[ln][j])
                 {
-                    pout << "  NOTE: uniform target point stiffnesses are being employed for the structure named " << base_filename << "\n"
-                         << "        any target point stiffness information in optional file " << base_filename << ".target will be IGNORED\n";
+                    pout << "  NOTE: uniform target point stiffnesses are being employed for the structure named " << base_filename << std::endl
+                         << "        any target point stiffness information in optional file " << base_filename << ".target will be IGNORED" << std::endl;
                 }
                 if (d_using_uniform_target_damping[ln][j])
                 {
-                    pout << "  NOTE: uniform target point damping factors are being employed for the structure named " << base_filename << "\n"
-                         << "        any target point damping factor information in optional file " << base_filename << ".target will be IGNORED\n";
+                    pout << "  NOTE: uniform target point damping factors are being employed for the structure named " << base_filename << std::endl
+                         << "        any target point damping factor information in optional file " << base_filename << ".target will be IGNORED" << std::endl;
                 }
-#if ENABLE_SUBDOMAIN_INDICES
                 if (d_using_uniform_target_subdomain_idx[ln][j])
                 {
-                    pout << "  NOTE: uniform target point subdomain indicies are being employed for the structure named " << base_filename << "\n"
-                         << "        any subdomain index information in optional file " << base_filename << ".target will be IGNORED\n";
+                    pout << "  NOTE: uniform target point subdomain indicies are being employed for the structure named " << base_filename << std::endl
+                         << "        any subdomain index information in optional file " << base_filename << ".target will be IGNORED" << std::endl;
                 }
-#endif
             }
 
             if (!d_enable_anchor_points[ln][j])
             {
-                pout << "  NOTE: anchor points are DISABLED for " << base_filename << "\n";
+                pout << "  NOTE: anchor points are DISABLED for " << base_filename << std::endl;
             }
             else
             {
-#if ENABLE_SUBDOMAIN_INDICES
                 if (d_using_uniform_anchor_subdomain_idx[ln][j])
                 {
-                    pout << "  NOTE: uniform anchor point subdomain indicies are being employed for the structure named " << base_filename << "\n"
-                         << "        any subdomain index information in optional file " << base_filename << ".anchor will be IGNORED\n";
+                    pout << "  NOTE: uniform anchor point subdomain indicies are being employed for the structure named " << base_filename << std::endl
+                         << "        any subdomain index information in optional file " << base_filename << ".anchor will be IGNORED" << std::endl;
                 }
-#endif
             }
 
             if (!d_enable_bdry_mass[ln][j])
             {
-                pout << "  NOTE: massive boundary points are DISABLED for " << base_filename << "\n";
+                pout << "  NOTE: massive boundary points are DISABLED for " << base_filename << std::endl;
             }
             else
             {
                 if (d_using_uniform_bdry_mass[ln][j])
                 {
-                    pout << "  NOTE: uniform boundary point masses are being employed for the structure named " << base_filename << "\n"
-                         << "        any boundary point mass information in optional file " << base_filename << ".mass will be IGNORED\n";
+                    pout << "  NOTE: uniform boundary point masses are being employed for the structure named " << base_filename << std::endl
+                         << "        any boundary point mass information in optional file " << base_filename << ".mass will be IGNORED" << std::endl;
                 }
                 if (d_using_uniform_bdry_mass_stiffness[ln][j])
                 {
-                    pout << "  NOTE: uniform massive boundary point stiffnesses are being employed for the structure named " << base_filename << "\n"
-                         << "        any massive boundary point stiffness information in optional file " << base_filename << ".mass will be IGNORED\n";
+                    pout << "  NOTE: uniform massive boundary point stiffnesses are being employed for the structure named " << base_filename << std::endl
+                         << "        any massive boundary point stiffness information in optional file " << base_filename << ".mass will be IGNORED" << std::endl;
                 }
             }
 
             if (!d_enable_instrumentation[ln][j])
             {
-                pout << "  NOTE: instrumentation is DISABLED for " << base_filename << "\n";
+                pout << "  NOTE: instrumentation is DISABLED for " << base_filename << std::endl;
             }
 
             if (!d_enable_sources[ln][j])
             {
-                pout << "  NOTE: sources/sinks are DISABLED for " << base_filename << "\n";
+                pout << "  NOTE: sources/sinks are DISABLED for " << base_filename << std::endl;
             }
 
-            pout << "\n";
+            pout << std::endl;
         }
     }
     return;
@@ -3289,5 +3184,10 @@ IBStandardInitializer::getFromInput(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBAMR
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBAMR::IBStandardInitializer>;
 
 //////////////////////////////////////////////////////////////////////////////

@@ -84,13 +84,13 @@ PETScNewtonKrylovSolver::PETScNewtonKrylovSolver(
       d_solver_x(NULL),
       d_solver_b(NULL),
       d_solver_r(NULL),
-      d_petsc_x(PETSC_NULL),
-      d_petsc_b(PETSC_NULL),
-      d_petsc_r(PETSC_NULL),
+      d_petsc_x(static_cast<Vec>(NULL)),
+      d_petsc_b(static_cast<Vec>(NULL)),
+      d_petsc_r(static_cast<Vec>(NULL)),
       d_options_prefix(options_prefix),
       d_petsc_comm(petsc_comm),
-      d_petsc_snes(PETSC_NULL),
-      d_petsc_jac (PETSC_NULL),
+      d_petsc_snes(static_cast<SNES>(NULL)),
+      d_petsc_jac (static_cast<Mat>(NULL)),
       d_managing_petsc_snes(true),
       d_user_provided_function(false),
       d_user_provided_jacobian(false),
@@ -122,13 +122,13 @@ PETScNewtonKrylovSolver::PETScNewtonKrylovSolver(
       d_solver_x(NULL),
       d_solver_b(NULL),
       d_solver_r(NULL),
-      d_petsc_x(PETSC_NULL),
-      d_petsc_b(PETSC_NULL),
-      d_petsc_r(PETSC_NULL),
+      d_petsc_x(static_cast<Vec>(NULL)),
+      d_petsc_b(static_cast<Vec>(NULL)),
+      d_petsc_r(static_cast<Vec>(NULL)),
       d_options_prefix(options_prefix),
       d_petsc_comm(PETSC_COMM_WORLD),
       d_petsc_snes(petsc_snes),
-      d_petsc_jac (PETSC_NULL),
+      d_petsc_jac (static_cast<Mat>(NULL)),
       d_managing_petsc_snes(false),
       d_user_provided_function(false),
       d_user_provided_jacobian(false),
@@ -192,15 +192,15 @@ PETScNewtonKrylovSolver::~PETScNewtonKrylovSolver()
 
     // Delete allocated PETSc solver components.
     int ierr;
-    if (d_petsc_jac != PETSC_NULL)
+    if (d_petsc_jac != static_cast<Mat>(NULL))
     {
-        ierr = MatDestroy(&d_petsc_jac); IBTK_CHKERRQ(ierr);
-        d_petsc_jac = PETSC_NULL;
+        ierr = MatDestroy(d_petsc_jac); IBTK_CHKERRQ(ierr);
+        d_petsc_jac = static_cast<Mat>(NULL);
     }
-    if (d_managing_petsc_snes && d_petsc_snes != PETSC_NULL)
+    if (d_managing_petsc_snes && d_petsc_snes != static_cast<SNES>(NULL))
     {
-        ierr = SNESDestroy(&d_petsc_snes); IBTK_CHKERRQ(ierr);
-        d_petsc_snes = PETSC_NULL;
+        ierr = SNESDestroy(d_petsc_snes); IBTK_CHKERRQ(ierr);
+        d_petsc_snes = static_cast<SNES>(NULL);
     }
     return;
 }// ~PETScNewtonKrylovSolver()
@@ -210,7 +210,7 @@ PETScNewtonKrylovSolver::solveSystem(
     SAMRAIVectorReal<NDIM,double>& x,
     SAMRAIVectorReal<NDIM,double>& b)
 {
-    IBTK_TIMER_START(t_solve_system);
+    t_solve_system->start();
 
     int ierr;
 
@@ -230,13 +230,13 @@ PETScNewtonKrylovSolver::solveSystem(
     // Determine the convergence reason.
     SNESConvergedReason reason;
     ierr = SNESGetConvergedReason(d_petsc_snes, &reason); IBTK_CHKERRQ(ierr);
-    const bool converged = (static_cast<int>(reason) > 0);
+    const bool converged = (int(reason) > 0);
     if (d_do_log) reportSNESConvergedReason(reason, plog);
 
     // Deallocate the solver, when necessary.
     if (deallocate_after_solve) deallocateSolverState();
 
-    IBTK_TIMER_STOP(t_solve_system);
+    t_solve_system->stop();
     return converged;
 }// solveSystem
 
@@ -245,7 +245,7 @@ PETScNewtonKrylovSolver::initializeSolverState(
     const SAMRAIVectorReal<NDIM,double>& x,
     const SAMRAIVectorReal<NDIM,double>& b)
 {
-    IBTK_TIMER_START(t_initialize_solver_state);
+    t_initialize_solver_state->start();
 
     int ierr;
 
@@ -368,7 +368,7 @@ PETScNewtonKrylovSolver::initializeSolverState(
     d_reinitializing_solver = false;
     d_is_initialized = true;
 
-    IBTK_TIMER_STOP(t_initialize_solver_state);
+    t_initialize_solver_state->stop();
     return;
 }// initializeSolverState
 
@@ -377,7 +377,7 @@ PETScNewtonKrylovSolver::deallocateSolverState()
 {
     if (!d_is_initialized) return;
 
-    IBTK_TIMER_START(t_deallocate_solver_state);
+    t_deallocate_solver_state->start();
 
     int ierr;
 
@@ -392,19 +392,19 @@ PETScNewtonKrylovSolver::deallocateSolverState()
 
     // Delete the solution and rhs vectors.
     PETScSAMRAIVectorReal::destroyPETScVector(d_petsc_x);
-    d_petsc_x = PETSC_NULL;
+    d_petsc_x = static_cast<Vec>(NULL);
     d_solver_x->resetLevels(d_solver_x->getCoarsestLevelNumber(), std::min(d_solver_x->getFinestLevelNumber(),d_solver_x->getPatchHierarchy()->getFinestLevelNumber()));
     d_solver_x->freeVectorComponents();
     d_solver_x.setNull();
 
     PETScSAMRAIVectorReal::destroyPETScVector(d_petsc_b);
-    d_petsc_b = PETSC_NULL;
+    d_petsc_b = static_cast<Vec>(NULL);
     d_solver_b->resetLevels(d_solver_b->getCoarsestLevelNumber(), std::min(d_solver_b->getFinestLevelNumber(),d_solver_b->getPatchHierarchy()->getFinestLevelNumber()));
     d_solver_b->freeVectorComponents();
     d_solver_b.setNull();
 
     PETScSAMRAIVectorReal::destroyPETScVector(d_petsc_r);
-    d_petsc_r = PETSC_NULL;
+    d_petsc_r = static_cast<Vec>(NULL);
     d_solver_r->resetLevels(d_solver_r->getCoarsestLevelNumber(), std::min(d_solver_r->getFinestLevelNumber(),d_solver_r->getPatchHierarchy()->getFinestLevelNumber()));
     d_solver_r->freeVectorComponents();
     d_solver_r.setNull();
@@ -412,14 +412,14 @@ PETScNewtonKrylovSolver::deallocateSolverState()
     // Destroy the SNES solver.
     if (d_managing_petsc_snes)
     {
-        ierr = SNESDestroy(&d_petsc_snes);  IBTK_CHKERRQ(ierr);
-        d_petsc_snes = PETSC_NULL;
+        ierr = SNESDestroy(d_petsc_snes);  IBTK_CHKERRQ(ierr);
+        d_petsc_snes = static_cast<SNES>(NULL);
     }
 
     // Indicate that the solver is NOT initialized.
     d_is_initialized = false;
 
-    IBTK_TIMER_STOP(t_deallocate_solver_state);
+    t_deallocate_solver_state->stop();
     return;
 }// deallocateSolverState
 
@@ -450,7 +450,7 @@ PETScNewtonKrylovSolver::reportSNESConvergedReason(
     const SNESConvergedReason& reason,
     std::ostream& os) const
 {
-    switch (static_cast<int>(reason))
+    switch (int(reason))
     {
         case SNES_CONVERGED_FNORM_ABS:
             os << d_object_name << ": converged: |F| less than specified absolute tolerance.\n";
@@ -458,8 +458,8 @@ PETScNewtonKrylovSolver::reportSNESConvergedReason(
         case SNES_CONVERGED_FNORM_RELATIVE:
             os << d_object_name << ": converged: |F| less than specified relative tolerance.\n";
             break;
-        case SNES_CONVERGED_SNORM_RELATIVE:
-            os << d_object_name << ": converged: |S| less than specified relative tolerance.\n";
+        case SNES_CONVERGED_PNORM_RELATIVE:
+            os << d_object_name << ": converged: |P| less than specified relative tolerance.\n";
             break;
         case SNES_CONVERGED_TR_DELTA:
             os << d_object_name << ": converged: trust-region delta.\n";
@@ -473,7 +473,7 @@ PETScNewtonKrylovSolver::reportSNESConvergedReason(
         case SNES_DIVERGED_MAX_IT:
             os << d_object_name << ": diverged: exceeded maximum number of iterations.\n";
             break;
-        case SNES_DIVERGED_LINE_SEARCH:
+        case SNES_DIVERGED_LS_FAILURE:
             os << d_object_name << ": diverged: line-search failure.\n";
             break;
         case SNES_DIVERGED_LOCAL_MIN:
@@ -483,7 +483,7 @@ PETScNewtonKrylovSolver::reportSNESConvergedReason(
             os << d_object_name << ": iterating.\n";
             break;
         default:
-            os << d_object_name << ": unknown completion code " << static_cast<int>(reason) << " reported.\n";
+            os << d_object_name << ": unknown completion code " << int(reason) << " reported.\n";
             break;
     }
     return;
@@ -492,7 +492,7 @@ PETScNewtonKrylovSolver::reportSNESConvergedReason(
 void
 PETScNewtonKrylovSolver::resetSNESOptions()
 {
-    if (d_petsc_snes != PETSC_NULL)
+    if (d_petsc_snes != static_cast<SNES>(NULL))
     {
         int ierr = SNESSetTolerances(d_petsc_snes,
                                      d_abs_residual_tol, // absolute residual tol
@@ -508,7 +508,7 @@ PETScNewtonKrylovSolver::resetSNESOptions()
 void
 PETScNewtonKrylovSolver::resetSNESFunction()
 {
-    if (d_petsc_snes != PETSC_NULL)
+    if (d_petsc_snes != static_cast<SNES>(NULL))
     {
         int ierr;
         ierr = SNESSetFunction(d_petsc_snes, d_petsc_r, PETScNewtonKrylovSolver::FormFunction_SAMRAI, static_cast<void*>(this)); IBTK_CHKERRQ(ierr);
@@ -519,14 +519,14 @@ PETScNewtonKrylovSolver::resetSNESFunction()
 void
 PETScNewtonKrylovSolver::resetSNESJacobian()
 {
-    if (d_petsc_snes != PETSC_NULL)
+    if (d_petsc_snes != static_cast<SNES>(NULL))
     {
         // Create and configure the Jacobian matrix.
         int ierr;
-        if (d_petsc_jac != PETSC_NULL)
+        if (d_petsc_jac != static_cast<Mat>(NULL))
         {
-            ierr = MatDestroy(&d_petsc_jac); IBTK_CHKERRQ(ierr);
-            d_petsc_jac = PETSC_NULL;
+            ierr = MatDestroy(d_petsc_jac); IBTK_CHKERRQ(ierr);
+            d_petsc_jac = static_cast<Mat>(NULL);
         }
         if (d_J.isNull() || !d_user_provided_jacobian)
         {
@@ -571,7 +571,7 @@ PETScNewtonKrylovSolver::resetSNESJacobian()
 
 PetscErrorCode
 PETScNewtonKrylovSolver::FormFunction_SAMRAI(
-    SNES /*snes*/,
+    SNES snes,
     Vec x,
     Vec f,
     void* p_ctx)
@@ -593,10 +593,12 @@ PETScNewtonKrylovSolver::FormJacobian_SAMRAI(
     SNES snes,
     Vec x,
     Mat* A,
-    Mat* /*B*/,
-    MatStructure* /*mat_structure*/,
+    Mat* B,
+    MatStructure* mat_structure,
     void* p_ctx)
 {
+    (void) snes;
+    (void) B;
     PETScNewtonKrylovSolver* newton_solver = static_cast<PETScNewtonKrylovSolver*>(p_ctx);
 #if (DEBUG_CHECK_ASSERTIONS)
     TBOX_ASSERT(newton_solver != NULL);
@@ -741,5 +743,10 @@ PETScNewtonKrylovSolver::MatGetVecs_SAMRAI(
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::PETScNewtonKrylovSolver>;
 
 //////////////////////////////////////////////////////////////////////////////

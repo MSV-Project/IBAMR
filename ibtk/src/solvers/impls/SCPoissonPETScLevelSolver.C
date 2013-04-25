@@ -88,10 +88,10 @@ SCPoissonPETScLevelSolver::SCPoissonPETScLevelSolver(
       d_homogeneous_bc(true),
       d_apply_time(0.0),
       d_options_prefix(""),
-      d_petsc_ksp(PETSC_NULL),
-      d_petsc_mat(PETSC_NULL),
-      d_petsc_x(PETSC_NULL),
-      d_petsc_b(PETSC_NULL),
+      d_petsc_ksp(static_cast<KSP>(NULL)),
+      d_petsc_mat(static_cast<Mat>(NULL)),
+      d_petsc_x(static_cast<Vec>(NULL)),
+      d_petsc_b(static_cast<Vec>(NULL)),
       d_max_iterations(10),
       d_abs_residual_tol(0.0),
       d_rel_residual_tol(1.0e-6),
@@ -121,7 +121,7 @@ SCPoissonPETScLevelSolver::SCPoissonPETScLevelSolver(
 
     // Setup a default boundary condition object that specifies homogeneous
     // Dirichlet boundary conditions.
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         d_default_bc_coef->setBoundaryValue(2*d  ,0.0);
         d_default_bc_coef->setBoundaryValue(2*d+1,0.0);
@@ -171,23 +171,24 @@ void
 SCPoissonPETScLevelSolver::setPhysicalBcCoef(
     RobinBcCoefStrategy<NDIM>* const bc_coef)
 {
-    setPhysicalBcCoefs(blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>(bc_coef));
+    setPhysicalBcCoefs(std::vector<RobinBcCoefStrategy<NDIM>*>(1,bc_coef));
     return;
 }// setPhysicalBcCoef
 
 void
 SCPoissonPETScLevelSolver::setPhysicalBcCoefs(
-    const blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs)
+    const std::vector<RobinBcCoefStrategy<NDIM>*>& bc_coefs)
 {
-    for (unsigned int d = 0; d < NDIM; ++d)
+    d_bc_coefs.resize(bc_coefs.size());
+    for (unsigned l = 0; l < bc_coefs.size(); ++l)
     {
-        if (bc_coefs[d] != NULL)
+        if (bc_coefs[l] != NULL)
         {
-            d_bc_coefs[d] = bc_coefs[d];
+            d_bc_coefs[l] = bc_coefs[l];
         }
         else
         {
-            d_bc_coefs[d] = d_default_bc_coef;
+            d_bc_coefs[l] = d_default_bc_coef;
         }
     }
     return;
@@ -214,7 +215,7 @@ SCPoissonPETScLevelSolver::solveSystem(
     SAMRAIVectorReal<NDIM,double>& x,
     SAMRAIVectorReal<NDIM,double>& b)
 {
-    IBTK_TIMER_START(t_solve_system);
+    t_solve_system->start();
 
     int ierr;
 
@@ -254,7 +255,7 @@ SCPoissonPETScLevelSolver::solveSystem(
     // Deallocate the solver, when necessary.
     if (deallocate_after_solve) deallocateSolverState();
 
-    IBTK_TIMER_STOP(t_solve_system);
+    t_solve_system->stop();
     return converged;
 }// solveSystem
 
@@ -263,7 +264,7 @@ SCPoissonPETScLevelSolver::initializeSolverState(
     const SAMRAIVectorReal<NDIM,double>& x,
     const SAMRAIVectorReal<NDIM,double>& b)
 {
-    IBTK_TIMER_START(t_initialize_solver_state);
+    t_initialize_solver_state->start();
 
     // Rudimentary error checking.
 #ifdef DEBUG_CHECK_ASSERTIONS
@@ -365,7 +366,7 @@ SCPoissonPETScLevelSolver::initializeSolverState(
     // Indicate that the solver is initialized.
     d_is_initialized = true;
 
-    IBTK_TIMER_STOP(t_initialize_solver_state);
+    t_initialize_solver_state->stop();
     return;
 }// initializeSolverState
 
@@ -374,20 +375,20 @@ SCPoissonPETScLevelSolver::deallocateSolverState()
 {
     if (!d_is_initialized) return;
 
-    IBTK_TIMER_START(t_deallocate_solver_state);
+    t_deallocate_solver_state->start();
 
     // Deallocate PETSc objects.
     int ierr;
-    ierr = KSPDestroy(&d_petsc_ksp); IBTK_CHKERRQ(ierr);
-    ierr = MatDestroy(&d_petsc_mat); IBTK_CHKERRQ(ierr);
-    ierr = VecDestroy(&d_petsc_x); IBTK_CHKERRQ(ierr);
-    ierr = VecDestroy(&d_petsc_b); IBTK_CHKERRQ(ierr);
+    ierr = KSPDestroy(d_petsc_ksp); IBTK_CHKERRQ(ierr);
+    ierr = MatDestroy(d_petsc_mat); IBTK_CHKERRQ(ierr);
+    ierr = VecDestroy(d_petsc_x); IBTK_CHKERRQ(ierr);
+    ierr = VecDestroy(d_petsc_b); IBTK_CHKERRQ(ierr);
     d_dof_index_fill.setNull();
 
-    d_petsc_ksp = PETSC_NULL;
-    d_petsc_mat = PETSC_NULL;
-    d_petsc_x = PETSC_NULL;
-    d_petsc_b = PETSC_NULL;
+    d_petsc_ksp = static_cast<KSP>(NULL);
+    d_petsc_mat = static_cast<Mat>(NULL);
+    d_petsc_x = static_cast<Vec>(NULL);
+    d_petsc_b = static_cast<Vec>(NULL);
 
     // Deallocate DOF index data.
     Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(d_level_num);
@@ -396,7 +397,7 @@ SCPoissonPETScLevelSolver::deallocateSolverState()
     // Indicate that the solver is NOT initialized.
     d_is_initialized = false;
 
-    IBTK_TIMER_STOP(t_deallocate_solver_state);
+    t_deallocate_solver_state->stop();
     return;
 }// deallocateSolverState
 
@@ -415,5 +416,10 @@ SCPoissonPETScLevelSolver::enableLogging(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::SCPoissonPETScLevelSolver>;
 
 //////////////////////////////////////////////////////////////////////////////

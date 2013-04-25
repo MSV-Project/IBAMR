@@ -153,8 +153,8 @@ main(
         const int U_interp_idx = var_db->registerClonedPatchDataIndex(U_var, U_idx);
         const int U_scratch_idx = var_db->registerVariableAndContext(U_var, scratch_ctx, 2);
 
-        tbox::Pointer<pdat::CellVariable<NDIM,double> > P_var = new pdat::CellVariable<NDIM,double>("INSStaggeredHierarchyIntegrator::P");
- //     tbox::Pointer<pdat::CellVariable<NDIM,double> > P_var = new pdat::CellVariable<NDIM,double>("INSStaggeredHierarchyIntegrator::P_extrap");
+//      tbox::Pointer<pdat::CellVariable<NDIM,double> > P_var = new pdat::CellVariable<NDIM,double>("INSStaggeredHierarchyIntegrator::P");
+        tbox::Pointer<pdat::CellVariable<NDIM,double> > P_var = new pdat::CellVariable<NDIM,double>("INSStaggeredHierarchyIntegrator::P_extrap");
         const int P_idx = var_db->registerVariableAndContext(P_var, current_ctx);
         const int P_interp_idx = var_db->registerClonedPatchDataIndex(P_var, P_idx);
         const int P_scratch_idx = var_db->registerVariableAndContext(P_var, scratch_ctx, 2);
@@ -221,6 +221,8 @@ main(
             coarse_patch_hierarchy->getFromDatabase(coarse_hier_db->getDatabase("PatchHierarchy"), hier_data);
 
             const double coarse_loop_time = coarse_hier_db->getDouble("loop_time");
+            const double coarse_end_time = coarse_hier_db->getDouble("end_time");
+            const double coarse_dt = coarse_hier_db->getDouble("dt");
 
             coarse_hier_db->close();
 
@@ -231,10 +233,17 @@ main(
             fine_patch_hierarchy->getFromDatabase(fine_hier_db->getDatabase("PatchHierarchy"), hier_data);
 
             const double fine_loop_time = fine_hier_db->getDouble("loop_time");
+            const double fine_end_time = fine_hier_db->getDouble("end_time");
+            const double fine_dt = fine_hier_db->getDouble("dt");
 
             fine_hier_db->close();
 
             TBOX_ASSERT(tbox::MathUtilities<double>::equalEps(coarse_loop_time, fine_loop_time));
+            (void) coarse_end_time;
+            (void) coarse_dt;
+            (void) fine_end_time;
+            (void) fine_dt;
+
             loop_time = fine_loop_time;
             tbox::pout << "     loop time = " << loop_time << endl;
 

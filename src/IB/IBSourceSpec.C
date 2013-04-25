@@ -45,6 +45,7 @@
 #endif
 
 // IBAMR INCLUDES
+#include <ibamr/IBSourceSpecFactory.h>
 #include <ibamr/namespaces.h>
 
 // IBTK INCLUDES
@@ -59,7 +60,12 @@ namespace IBAMR
 {
 /////////////////////////////// STATIC ///////////////////////////////////////
 
-int IBSourceSpec::STREAMABLE_CLASS_ID = StreamableManager::getUnregisteredID();
+bool IBSourceSpec::s_registered_factory = false;
+int  IBSourceSpec::s_class_id = -1;
+
+std::vector<int> IBSourceSpec::s_num_sources;
+std::vector<std::vector<std::string> > IBSourceSpec::s_source_names;
+std::vector<std::vector<double> > IBSourceSpec::s_source_radii;
 
 void
 IBSourceSpec::registerWithStreamableManager()
@@ -68,16 +74,47 @@ IBSourceSpec::registerWithStreamableManager()
     // register the factory class with the StreamableManager, and to ensure that
     // all processes employ the same class ID for the IBSourceSpec object.
     SAMRAI_MPI::barrier();
-    if (!getIsRegisteredWithStreamableManager())
+    if (!s_registered_factory)
     {
 #ifdef DEBUG_CHECK_ASSERTIONS
-        TBOX_ASSERT(STREAMABLE_CLASS_ID == StreamableManager::getUnregisteredID());
+        TBOX_ASSERT(s_class_id == -1);
 #endif
-        STREAMABLE_CLASS_ID = StreamableManager::getManager()->registerFactory(new IBSourceSpecFactory());
+        s_class_id = StreamableManager::getManager()->registerFactory(new IBSourceSpecFactory());
+        s_registered_factory = true;
     }
     SAMRAI_MPI::barrier();
     return;
 }// registerWithStreamableManager
+
+void
+IBSourceSpec::setNumSources(
+    const int ln,
+    const int num_sources)
+{
+    s_num_sources.resize(std::max(int(s_num_sources.size()),ln+1),0);
+    s_num_sources[ln] = num_sources;
+    return;
+}// getNumSources
+
+void
+IBSourceSpec::setSourceNames(
+    const int ln,
+    const std::vector<std::string>& names)
+{
+    s_source_names.resize(std::max(int(s_source_names.size()),ln+1));
+    s_source_names[ln] = names;
+    return;
+}// getSourceNames
+
+void
+IBSourceSpec::setSourceRadii(
+    const int ln,
+    const std::vector<double>& radii)
+{
+    s_source_radii.resize(std::max(int(s_source_radii.size()),ln+1));
+    s_source_radii[ln] = radii;
+    return;
+}// getSourceRadii
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
@@ -88,5 +125,10 @@ IBSourceSpec::registerWithStreamableManager()
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBAMR
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBAMR::IBSourceSpec>;
 
 //////////////////////////////////////////////////////////////////////////////

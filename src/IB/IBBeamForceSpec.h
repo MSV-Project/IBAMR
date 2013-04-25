@@ -35,20 +35,11 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
-#ifndef included_IBAMR_prefix_config
-// #include <IBAMR_prefix_config.h>
-#define included_IBAMR_prefix_config
-#endif
-
 // IBTK INCLUDES
 #include <ibtk/Streamable.h>
-#include <ibtk/StreamableFactory.h>
 
 // SAMRAI INCLUDES
 #include <tbox/AbstractStream.h>
-
-// BLITZ++ INCLUDES
-#include <blitz/tinyvec.h>
 
 // C++ STDLIB INCLUDES
 #include <utility>
@@ -97,39 +88,29 @@ public:
     getIsRegisteredWithStreamableManager();
 
     /*!
-     * The unique class ID for this object type assigned by the
-     * IBTK::StreamableManager.
-     */
-    static int STREAMABLE_CLASS_ID;
-
-    /*!
      * \brief Default constructor.
+     *
+     * \note The subdomain indices are ignored unless IBAMR is configured to
+     * enable support for subdomain indices.  Subdomain indices are not enabled
+     * by default.
      */
     IBBeamForceSpec(
-        unsigned int num_beams=0);
+        const int master_idx=-1,
+        const std::vector<NeighborIdxs>& neighbor_idxs=std::vector<NeighborIdxs>(),
+        const std::vector<double>& bend_rigidities=std::vector<double>(),
+        const std::vector<std::vector<double> >& mesh_dependent_curvatures=std::vector<std::vector<double> >(),
+        const std::vector<int>& subdomain_idxs=std::vector<int>());
 
     /*!
-     * \brief Alternative constructor.
+     * \brief Virtual destructor.
      */
-    IBBeamForceSpec(
-        int master_idx,
-        const std::vector<NeighborIdxs>& neighbor_idxs,
-        const std::vector<double>& bend_rigidities,
-        const std::vector<blitz::TinyVector<double,NDIM> >& mesh_dependent_curvatures
-#if ENABLE_SUBDOMAIN_INDICES
-        ,const std::vector<int>& subdomain_idxs
-#endif
-                    );
-
-    /*!
-     * \brief Destructor.
-     */
+    virtual
     ~IBBeamForceSpec();
 
     /*!
      * \return The number of beams attached to the master node.
      */
-    unsigned int
+    unsigned
     getNumberOfBeams() const;
 
     /*!
@@ -176,20 +157,22 @@ public:
      * \return A const reference to the mesh-dependent curvatures of the beams
      * attached to the master node.
      */
-    const std::vector<blitz::TinyVector<double,NDIM> >&
+    const std::vector<std::vector<double> >&
     getMeshDependentCurvatures() const;
 
     /*!
      * \return A non-const reference to the mesh-dependent curvatures of the
      * beams attached to the master node.
      */
-    std::vector<blitz::TinyVector<double,NDIM> >&
+    std::vector<std::vector<double> >&
     getMeshDependentCurvatures();
 
-#if ENABLE_SUBDOMAIN_INDICES
     /*!
      * \return A const reference to the subdomain indices associated with this
      * force spec object.
+     *
+     * \note IBAMR must be specifically configured to enable support for
+     * subdomain indices.  Subdomain indices are not enabled by default.
      */
     const std::vector<int>&
     getSubdomainIndices() const;
@@ -197,30 +180,32 @@ public:
     /*!
      * \return A non-const reference to the subdomain indices associated with
      * this force spec object.
+     *
+     * \note IBAMR must be specifically configured to enable support for
+     * subdomain indices.  Subdomain indices are not enabled by default.
      */
     std::vector<int>&
     getSubdomainIndices();
-#endif
 
     /*!
      * \brief Return the unique identifier used to specify the
      * IBTK::StreamableFactory object used by the IBTK::StreamableManager to
      * extract Streamable objects from data streams.
      */
-    int
+    virtual int
     getStreamableClassID() const;
 
     /*!
      * \brief Return an upper bound on the amount of space required to pack the
      * object to a buffer.
      */
-    size_t
+    virtual size_t
     getDataStreamSize() const;
 
     /*!
      * \brief Pack data into the output stream.
      */
-    void
+    virtual void
     packStream(
         SAMRAI::tbox::AbstractStream& stream);
 
@@ -249,12 +234,24 @@ private:
         const IBBeamForceSpec& that);
 
     /*!
+     * Indicates whether the factory has been registered with the
+     * IBTK::StreamableManager.
+     */
+    static bool s_registered_factory;
+
+    /*!
+     * The class ID for this object type assigned by the
+     * IBTK::StreamableManager.
+     */
+    static int s_class_id;
+
+    /*!
      * Data required to compute the beam forces.
      */
     int d_master_idx;
     std::vector<NeighborIdxs> d_neighbor_idxs;
     std::vector<double> d_bend_rigidities;
-    std::vector<blitz::TinyVector<double,NDIM> > d_mesh_dependent_curvatures;
+    std::vector<std::vector<double> > d_mesh_dependent_curvatures;
 
 #if ENABLE_SUBDOMAIN_INDICES
     /*!
@@ -262,78 +259,6 @@ private:
      */
     std::vector<int> d_subdomain_idxs;
 #endif
-
-    /*!
-     * \brief A factory class to rebuild IBBeamForceSpec objects from
-     * SAMRAI::tbox::AbstractStream data streams.
-     */
-    class Factory
-        : public IBTK::StreamableFactory
-    {
-    public:
-        /*!
-         * \brief Destructor.
-         */
-        ~Factory();
-
-        /*!
-         * \brief Return the unique identifier used to specify the
-         * IBTK::StreamableFactory object used by the IBTK::StreamableManager to
-         * extract IBBeamForceSpec objects from data streams.
-         */
-        int
-        getStreamableClassID() const;
-
-        /*!
-         * \brief Set the unique identifier used to specify the
-         * IBTK::StreamableFactory object used by the IBTK::StreamableManager to
-         * extract IBBeamForceSpec objects from data streams.
-         */
-        void
-        setStreamableClassID(
-            int class_id);
-
-        /*!
-         * \brief Build an IBBeamForceSpec object by unpacking data from the
-         * data stream.
-         */
-        SAMRAI::tbox::Pointer<IBTK::Streamable>
-        unpackStream(
-            SAMRAI::tbox::AbstractStream& stream,
-            const SAMRAI::hier::IntVector<NDIM>& offset);
-
-    private:
-        /*!
-         * \brief Default constructor.
-         */
-        Factory();
-
-        /*!
-         * \brief Copy constructor.
-         *
-         * \note This constructor is not implemented and should not be used.
-         *
-         * \param from The value to copy to this object.
-         */
-        Factory(
-            const Factory& from);
-
-        /*!
-         * \brief Assignment operator.
-         *
-         * \note This operator is not implemented and should not be used.
-         *
-         * \param that The value to assign to this object.
-         *
-         * \return A reference to this object.
-         */
-        Factory&
-        operator=(
-            const Factory& that);
-
-        friend class IBBeamForceSpec;
-    };
-    typedef IBBeamForceSpec::Factory IBBeamForceSpecFactory;
 };
 }// namespace IBAMR
 

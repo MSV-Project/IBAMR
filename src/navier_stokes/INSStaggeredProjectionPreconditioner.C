@@ -86,7 +86,7 @@ static Timer* t_deallocate_solver_state;
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
 INSStaggeredProjectionPreconditioner::INSStaggeredProjectionPreconditioner(
-    const INSProblemCoefs& problem_coefs,
+    const INSCoefs& problem_coefs,
     RobinBcCoefStrategy<NDIM>* Phi_bc_coef,
     const bool normalize_pressure,
     Pointer<LinearSolver> velocity_helmholtz_solver,
@@ -98,6 +98,7 @@ INSStaggeredProjectionPreconditioner::INSStaggeredProjectionPreconditioner(
       d_is_initialized(false),
       d_current_time(std::numeric_limits<double>::quiet_NaN()),
       d_new_time(std::numeric_limits<double>::quiet_NaN()),
+      d_dt(std::numeric_limits<double>::quiet_NaN()),
       d_problem_coefs(problem_coefs),
       d_pressure_helmholtz_spec("INSStaggeredProjectionPreconditioner::pressure_helmholtz_spec"),
       d_normalize_pressure(normalize_pressure),
@@ -172,24 +173,17 @@ INSStaggeredProjectionPreconditioner::~INSStaggeredProjectionPreconditioner()
 void
 INSStaggeredProjectionPreconditioner::setTimeInterval(
     const double current_time,
-    const double new_time)
+    const double new_time,
+    const double dt)
 {
     const double rho    = d_problem_coefs.getRho();
     const double mu     = d_problem_coefs.getMu();
     const double lambda = d_problem_coefs.getLambda();
     d_current_time = current_time;
     d_new_time = new_time;
-    if (MathUtilities<double>::equalEps(rho,0.0))
-    {
-        d_pressure_helmholtz_spec.setCConstant( 0.0   );
-        d_pressure_helmholtz_spec.setDConstant(-0.5*mu);
-    }
-    else
-    {
-        const double dt = d_new_time-d_current_time;
-        d_pressure_helmholtz_spec.setCConstant(1.0+0.5*dt*lambda/rho);
-        d_pressure_helmholtz_spec.setDConstant(   -0.5*dt*mu    /rho);
-    }
+    d_dt = dt;
+    d_pressure_helmholtz_spec.setCConstant(1.0+0.5*d_dt*lambda/rho);
+    d_pressure_helmholtz_spec.setDConstant(   -0.5*d_dt*mu    /rho);
     return;
 }// setTimeInterval
 
@@ -198,7 +192,7 @@ INSStaggeredProjectionPreconditioner::solveSystem(
     SAMRAIVectorReal<NDIM,double>& x,
     SAMRAIVectorReal<NDIM,double>& b)
 {
-    IBAMR_TIMER_START(t_solve_system);
+    t_solve_system->start();
 
     // Initialize the solver (if necessary).
     const bool deallocate_at_completion = !d_is_initialized;
@@ -208,7 +202,6 @@ INSStaggeredProjectionPreconditioner::solveSystem(
     const double rho    = d_problem_coefs.getRho();
 //  const double mu     = d_problem_coefs.getMu();
 //  const double lambda = d_problem_coefs.getLambda();
-    const double dt = d_new_time-d_current_time;
 
     // Get the vector components.
     const int U_in_idx = b.getComponentDescriptorIndex(0);
@@ -246,20 +239,22 @@ INSStaggeredProjectionPreconditioner::solveSystem(
     F_scratch_vec = new SAMRAIVectorReal<NDIM,double>("INSStaggeredProjectionPreconditioner::F_scratch", d_hierarchy, d_coarsest_ln, d_finest_ln);
     F_scratch_vec->addComponent(d_F_var, d_F_scratch_idx, d_wgt_cc_idx, d_hier_cc_data_ops);
 
+    Pointer<PatchHierarchy<NDIM> > hierarchy = x.getPatchHierarchy();
+    TBOX_ASSERT(hierarchy == b.getPatchHierarchy());
+
     // Solve for u^{*}.
     d_velocity_helmholtz_solver->solveSystem(*U_out_vec,*U_in_vec);
 
     // Compute F = -(rho/dt)*(P_in + div u^{*}).
-    const double div_fac = (MathUtilities<double>::equalEps(rho,0.0) || MathUtilities<double>::equalEps(dt,0.0) ? 1.0 : rho/dt);
     const bool u_star_cf_bdry_synch = true;
     d_hier_math_ops->div(
         d_F_scratch_idx, d_F_var, // dst
-        -div_fac,                 // alpha
+        -rho/d_dt,                // alpha
         U_out_idx, U_out_sc_var,  // src1
         d_no_fill_op,             // src1_bdry_fill
         d_new_time,               // src1_bdry_fill_time
         u_star_cf_bdry_synch,     // src1_cf_bdry_synch
-        -div_fac,                 // beta
+        -rho/d_dt,                // beta
         P_in_idx, P_in_cc_var);   // src2
 
     // Solve -div grad Phi = F = -(rho/dt)*(P_in + div u^{*}).
@@ -270,7 +265,7 @@ INSStaggeredProjectionPreconditioner::solveSystem(
     d_hier_math_ops->grad(
         U_out_idx, U_out_sc_var,         // dst
         u_new_cf_bdry_synch,             // dst_cf_bdry_synch
-        -1.0/div_fac,                    // alpha
+        -d_dt/rho,                       // alpha
         d_Phi_scratch_idx, d_Phi_var,    // src1
         d_Phi_bdry_fill_op,              // src1_bdry_fill
         0.5*(d_current_time+d_new_time), // src1_bdry_fill_time
@@ -293,7 +288,7 @@ INSStaggeredProjectionPreconditioner::solveSystem(
     // Deallocate the solver (if necessary).
     if (deallocate_at_completion) deallocateSolverState();
 
-    IBAMR_TIMER_STOP(t_solve_system);
+    t_solve_system->stop();
     return true;
 }// solveSystem
 
@@ -302,7 +297,7 @@ INSStaggeredProjectionPreconditioner::initializeSolverState(
     const SAMRAIVectorReal<NDIM,double>& x,
     const SAMRAIVectorReal<NDIM,double>& b)
 {
-    IBAMR_TIMER_START(t_initialize_solver_state);
+    t_initialize_solver_state->start();
 
     if (d_is_initialized) deallocateSolverState();
 
@@ -314,8 +309,6 @@ INSStaggeredProjectionPreconditioner::initializeSolverState(
     TBOX_ASSERT(d_hierarchy == b.getPatchHierarchy());
     TBOX_ASSERT(d_coarsest_ln == b.getCoarsestLevelNumber());
     TBOX_ASSERT(d_finest_ln == b.getFinestLevelNumber());
-#else
-    NULL_USE(b);
 #endif
     d_wgt_cc_var = d_hier_math_ops->getCellWeightVariable();
     d_wgt_sc_var = d_hier_math_ops->getSideWeightVariable();
@@ -323,7 +316,7 @@ INSStaggeredProjectionPreconditioner::initializeSolverState(
     d_wgt_sc_idx = d_hier_math_ops->getSideWeightPatchDescriptorIndex();
     d_volume = d_hier_math_ops->getVolumeOfPhysicalDomain();
 
-    Pointer<VariableFillPattern<NDIM> > fill_pattern = new CellNoCornersFillPattern(CELLG, false, false, true);
+    Pointer<VariableFillPattern<NDIM> > fill_pattern = new CellNoCornersFillPattern(CELLG, false, true);
     typedef HierarchyGhostCellInterpolation::InterpolationTransactionComponent InterpolationTransactionComponent;
     InterpolationTransactionComponent Phi_scratch_component(d_Phi_scratch_idx, DATA_COARSEN_TYPE, BDRY_EXTRAP_TYPE, CONSISTENT_TYPE_2_BDRY, d_Phi_bc_coef, fill_pattern);
     d_Phi_bdry_fill_op = new HierarchyGhostCellInterpolation();
@@ -343,9 +336,8 @@ INSStaggeredProjectionPreconditioner::initializeSolverState(
         }
     }
 
+    t_initialize_solver_state->stop();
     d_is_initialized = true;
-
-    IBAMR_TIMER_STOP(t_initialize_solver_state);
     return;
 }// initializeSolverState
 
@@ -354,7 +346,7 @@ INSStaggeredProjectionPreconditioner::deallocateSolverState()
 {
     if (!d_is_initialized) return;
 
-    IBAMR_TIMER_START(t_deallocate_solver_state);
+    t_deallocate_solver_state->start();
 
     // Deallocate scratch data.
     for (int ln = d_coarsest_ln; ln <= d_finest_ln; ++ln)
@@ -371,13 +363,13 @@ INSStaggeredProjectionPreconditioner::deallocateSolverState()
     }
     d_is_initialized = false;
 
-    IBAMR_TIMER_STOP(t_deallocate_solver_state);
+    t_deallocate_solver_state->stop();
     return;
 }// deallocateSolverState
 
 void
 INSStaggeredProjectionPreconditioner::setInitialGuessNonzero(
-    bool /*initial_guess_nonzero*/)
+    bool initial_guess_nonzero)
 {
     // intentionally blank
     return;
@@ -392,7 +384,7 @@ INSStaggeredProjectionPreconditioner::getInitialGuessNonzero() const
 
 void
 INSStaggeredProjectionPreconditioner::setMaxIterations(
-    int /*max_iterations*/)
+    int max_iterations)
 {
     // intentionally blank
     return;
@@ -407,7 +399,7 @@ INSStaggeredProjectionPreconditioner::getMaxIterations() const
 
 void
 INSStaggeredProjectionPreconditioner::setAbsoluteTolerance(
-    double /*abs_residual_tol*/)
+    double abs_residual_tol)
 {
     // intentionally blank
     return;
@@ -422,7 +414,7 @@ INSStaggeredProjectionPreconditioner::getAbsoluteTolerance() const
 
 void
 INSStaggeredProjectionPreconditioner::setRelativeTolerance(
-    double /*rel_residual_tol*/)
+    double rel_residual_tol)
 {
     // intentionally blank
     return;
@@ -463,5 +455,10 @@ INSStaggeredProjectionPreconditioner::enableLogging(
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBAMR
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBAMR::INSStaggeredProjectionPreconditioner>;
 
 //////////////////////////////////////////////////////////////////////////////

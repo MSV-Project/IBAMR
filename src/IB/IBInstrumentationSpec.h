@@ -37,7 +37,6 @@
 
 // IBTK INCLUDES
 #include <ibtk/Streamable.h>
-#include <ibtk/StreamableFactory.h>
 
 // SAMRAI INCLUDES
 #include <tbox/AbstractStream.h>
@@ -77,12 +76,6 @@ public:
     getIsRegisteredWithStreamableManager();
 
     /*!
-     * The unique class ID for this object type assigned by the
-     * IBTK::StreamableManager.
-     */
-    static int STREAMABLE_CLASS_ID;
-
-    /*!
      * \brief Set the names of the flow meters and pressure gauges.
      */
     static void
@@ -99,13 +92,14 @@ public:
      * \brief Default constructor.
      */
     IBInstrumentationSpec(
-        int master_idx=-1,
-        int meter_idx=-1,
-        int node_idx=-1);
+        const int master_idx=-1,
+        const int meter_idx=-1,
+        const int node_idx=-1);
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~IBInstrumentationSpec();
 
     /*!
@@ -153,20 +147,20 @@ public:
      * IBTK::StreamableFactory object used by the IBTK::StreamableManager to
      * extract Streamable objects from data streams.
      */
-    int
+    virtual int
     getStreamableClassID() const;
 
     /*!
      * \brief Return an upper bound on the amount of space required to pack the
      * object to a buffer.
      */
-    size_t
+    virtual size_t
     getDataStreamSize() const;
 
     /*!
      * \brief Pack data into the output stream.
      */
-    void
+    virtual void
     packStream(
         SAMRAI::tbox::AbstractStream& stream);
 
@@ -195,6 +189,18 @@ private:
         const IBInstrumentationSpec& that);
 
     /*!
+     * Indicates whether the factory has been registered with the
+     * IBTK::StreamableManager.
+     */
+    static bool s_registered_factory;
+
+    /*!
+     * The class ID for this object type assigned by the
+     * IBTK::StreamableManager.
+     */
+    static int s_class_id;
+
+    /*!
      * The names of the instrument names.
      */
     static std::vector<std::string> s_instrument_names;
@@ -203,78 +209,6 @@ private:
      * Data required to define the instrument.
      */
     int d_master_idx, d_meter_idx, d_node_idx;
-
-    /*!
-     * \brief A factory class to rebuild IBInstrumentationSpec objects from
-     * SAMRAI::tbox::AbstractStream data streams.
-     */
-    class Factory
-        : public IBTK::StreamableFactory
-    {
-    public:
-        /*!
-         * \brief Destructor.
-         */
-        ~Factory();
-
-        /*!
-         * \brief Return the unique identifier used to specify the
-         * IBTK::StreamableFactory object used by the IBTK::StreamableManager to
-         * extract IBInstrumentationSpec objects from data streams.
-         */
-        int
-        getStreamableClassID() const;
-
-        /*!
-         * \brief Set the unique identifier used to specify the
-         * IBTK::StreamableFactory object used by the IBTK::StreamableManager to
-         * extract IBInstrumentationSpec objects from data streams.
-         */
-        void
-        setStreamableClassID(
-            int class_id);
-
-        /*!
-         * \brief Build an IBInstrumentationSpec object by unpacking data from
-         * the data stream.
-         */
-        SAMRAI::tbox::Pointer<IBTK::Streamable>
-        unpackStream(
-            SAMRAI::tbox::AbstractStream& stream,
-            const SAMRAI::hier::IntVector<NDIM>& offset);
-
-    private:
-        /*!
-         * \brief Default constructor.
-         */
-        Factory();
-
-        /*!
-         * \brief Copy constructor.
-         *
-         * \note This constructor is not implemented and should not be used.
-         *
-         * \param from The value to copy to this object.
-         */
-        Factory(
-            const Factory& from);
-
-        /*!
-         * \brief Assignment operator.
-         *
-         * \note This operator is not implemented and should not be used.
-         *
-         * \param that The value to assign to this object.
-         *
-         * \return A reference to this object.
-         */
-        Factory&
-        operator=(
-            const Factory& that);
-
-        friend class IBInstrumentationSpec;
-    };
-    typedef IBInstrumentationSpec::Factory IBInstrumentationSpecFactory;
 };
 }// namespace IBAMR
 

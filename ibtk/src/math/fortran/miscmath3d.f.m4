@@ -80,6 +80,9 @@ c
 c
 c     Compute the linear sum.
 c
+!$OMP  PARALLEL DO
+!$OMP& DEFAULT(SHARED) PRIVATE(i0,i1,i2)
+!$OMP& SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0
@@ -87,6 +90,7 @@ c
             enddo
          enddo
       enddo
+!$OMP END PARALLEL DO
 c
       return
       end
@@ -131,6 +135,9 @@ c
 c
 c     Compute the linear sum.
 c
+!$OMP  PARALLEL DO
+!$OMP& DEFAULT(SHARED) PRIVATE(i0,i1,i2)
+!$OMP& SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0
@@ -138,6 +145,7 @@ c
             enddo
          enddo
       enddo
+!$OMP END PARALLEL DO
 c
       return
       end
@@ -178,6 +186,9 @@ c
 c
 c     Compute the linear sum.
 c
+!$OMP  PARALLEL DO
+!$OMP& DEFAULT(SHARED) PRIVATE(i0,i1,i2)
+!$OMP& SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0
@@ -185,6 +196,7 @@ c
             enddo
          enddo
       enddo
+!$OMP END PARALLEL DO
 c
       return
       end
@@ -230,6 +242,9 @@ c
 c
 c     Compute the linear sum.
 c
+!$OMP  PARALLEL DO
+!$OMP& DEFAULT(SHARED) PRIVATE(i0,i1,i2)
+!$OMP& SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0
@@ -237,6 +252,7 @@ c
             enddo
          enddo
       enddo
+!$OMP END PARALLEL DO
 c
       return
       end
@@ -281,6 +297,9 @@ c
 c
 c     Compute the linear sum.
 c
+!$OMP  PARALLEL DO
+!$OMP& DEFAULT(SHARED) PRIVATE(i0,i1,i2)
+!$OMP& SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0
@@ -289,6 +308,7 @@ c
             enddo
          enddo
       enddo
+!$OMP END PARALLEL DO
 c
       return
       end
@@ -328,6 +348,9 @@ c
 c
 c     Compute the pointwise norm.
 c
+!$OMP  PARALLEL DO
+!$OMP& DEFAULT(SHARED) PRIVATE(i0,i1,i2)
+!$OMP& SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0
@@ -341,6 +364,7 @@ c
             enddo
          enddo
       enddo
+!$OMP END PARALLEL DO
 c
       return
       end
@@ -380,6 +404,9 @@ c
 c
 c     Compute the pointwise norm.
 c
+!$OMP  PARALLEL DO
+!$OMP& DEFAULT(SHARED) PRIVATE(i0,i1,i2)
+!$OMP& SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0
@@ -393,6 +420,7 @@ c
             enddo
          enddo
       enddo
+!$OMP END PARALLEL DO
 c
       return
       end
@@ -432,6 +460,9 @@ c
 c
 c     Compute the pointwise norm.
 c
+!$OMP  PARALLEL DO
+!$OMP& DEFAULT(SHARED) PRIVATE(i0,i1,i2)
+!$OMP& SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0
@@ -445,6 +476,7 @@ c
             enddo
          enddo
       enddo
+!$OMP END PARALLEL DO
 c
       return
       end

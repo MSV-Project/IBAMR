@@ -54,9 +54,9 @@ PETScMatLOWrapper::PETScMatLOWrapper(
       d_x(NULL),
       d_y(NULL),
       d_z(NULL),
-      d_petsc_x(PETSC_NULL),
-      d_petsc_y(PETSC_NULL),
-      d_petsc_z(PETSC_NULL)
+      d_petsc_x(static_cast<Vec>(NULL)),
+      d_petsc_y(static_cast<Vec>(NULL)),
+      d_petsc_z(static_cast<Vec>(NULL))
 {
     // intentionally blank
     return;
@@ -72,7 +72,7 @@ PETScMatLOWrapper::~PETScMatLOWrapper()
 inline bool
 PETScMatLOWrapper::isSymmetric() const
 {
-    PetscBool set, is_symmetric;
+    PetscTruth set, is_symmetric;
     int ierr = MatIsSymmetricKnown(d_petsc_mat,&set,&is_symmetric); IBTK_CHKERRQ(ierr);
     return (set && is_symmetric);
 }// isSymmetric

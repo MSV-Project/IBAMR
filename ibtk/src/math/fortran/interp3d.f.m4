@@ -83,6 +83,8 @@ c
 c     Compute the face centered vector field (u0,u1,u2) from the cell
 c     centered vector field V.
 c
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i0,i1,i2)
+!$OMP DO SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0+1
@@ -90,6 +92,8 @@ c
             enddo
          enddo
       enddo
+!$OMP END DO NOWAIT
+!$OMP DO SCHEDULE(STATIC)
       do i0 = ilower0,iupper0
          do i2 = ilower2,iupper2
             do i1 = ilower1,iupper1+1
@@ -97,6 +101,8 @@ c
             enddo
          enddo
       enddo
+!$OMP END DO NOWAIT
+!$OMP DO SCHEDULE(STATIC)
       do i1 = ilower1,iupper1
          do i0 = ilower0,iupper0
             do i2 = ilower2,iupper2+1
@@ -104,70 +110,8 @@ c
             enddo
          enddo
       enddo
-c
-      return
-      end
-c
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-c
-c     Compute the face centered normal vector field (u0,u1,u2) from the
-c     cell centered scalar field V using simple averaging.
-c
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-c
-      subroutine ctofcwiseinterp2nd3d(
-     &     u0,u1,u2,u_gcw,
-     &     V,V_gcw,
-     &     ilower0,iupper0,
-     &     ilower1,iupper1,
-     &     ilower2,iupper2)
-c
-      implicit none
-c
-c     Input.
-c
-      INTEGER u_gcw,V_gcw
-
-      INTEGER ilower0,iupper0
-      INTEGER ilower1,iupper1
-      INTEGER ilower2,iupper2
-
-      REAL V(CELL3d(ilower,iupper,V_gcw))
-c
-c     Output.
-c
-      REAL u0(FACE3d0(ilower,iupper,u_gcw))
-      REAL u1(FACE3d1(ilower,iupper,u_gcw))
-      REAL u2(FACE3d2(ilower,iupper,u_gcw))
-c
-c     Local variables.
-c
-      INTEGER i0,i1,i2
-c
-c     Compute the face centered vector field (u0,u1,u2) from the cell
-c     centered scalar field V.
-c
-      do i2 = ilower2,iupper2
-         do i1 = ilower1,iupper1
-            do i0 = ilower0,iupper0+1
-               u0(i0,i1,i2) = 0.5d0*(V(i0-1,i1,i2)+V(i0,i1,i2))
-            enddo
-         enddo
-      enddo
-      do i0 = ilower0,iupper0
-         do i2 = ilower2,iupper2
-            do i1 = ilower1,iupper1+1
-               u1(i1,i2,i0) = 0.5d0*(V(i0,i1-1,i2)+V(i0,i1,i2))
-            enddo
-         enddo
-      enddo
-      do i1 = ilower1,iupper1
-         do i0 = ilower0,iupper0
-            do i2 = ilower2,iupper2+1
-               u2(i2,i0,i1) = 0.5d0*(V(i0,i1,i2-1)+V(i0,i1,i2))
-            enddo
-         enddo
-      enddo
+!$OMP END DO
+!$OMP END PARALLEL
 c
       return
       end
@@ -211,6 +155,8 @@ c
 c     Compute the side centered vector field (u0,u1,u2) from the cell
 c     centered vector field V.
 c
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i0,i1,i2)
+!$OMP DO SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0+1
@@ -218,6 +164,8 @@ c
             enddo
          enddo
       enddo
+!$OMP END DO NOWAIT
+!$OMP DO SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1+1
             do i0 = ilower0,iupper0
@@ -225,6 +173,8 @@ c
             enddo
          enddo
       enddo
+!$OMP END DO NOWAIT
+!$OMP DO SCHEDULE(STATIC)
       do i2 = ilower2,iupper2+1
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0
@@ -232,70 +182,8 @@ c
             enddo
          enddo
       enddo
-c
-      return
-      end
-c
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-c
-c     Compute the side centered normal vector field (u0,u1,u2) from the
-c     cell centered scalar field V using simple averaging.
-c
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-c
-      subroutine ctoscwiseinterp2nd3d(
-     &     u0,u1,u2,u_gcw,
-     &     V,V_gcw,
-     &     ilower0,iupper0,
-     &     ilower1,iupper1,
-     &     ilower2,iupper2)
-c
-      implicit none
-c
-c     Input.
-c
-      INTEGER u_gcw,V_gcw
-
-      INTEGER ilower0,iupper0
-      INTEGER ilower1,iupper1
-      INTEGER ilower2,iupper2
-
-      REAL V(CELL3d(ilower,iupper,V_gcw))
-c
-c     Output.
-c
-      REAL u0(SIDE3d0(ilower,iupper,u_gcw))
-      REAL u1(SIDE3d1(ilower,iupper,u_gcw))
-      REAL u2(SIDE3d2(ilower,iupper,u_gcw))
-c
-c     Local variables.
-c
-      INTEGER i0,i1,i2
-c
-c     Compute the side centered vector field (u0,u1,u2) from the cell
-c     centered scalar field V.
-c
-      do i2 = ilower2,iupper2
-         do i1 = ilower1,iupper1
-            do i0 = ilower0,iupper0+1
-               u0(i0,i1,i2) = 0.5d0*(V(i0-1,i1,i2)+V(i0,i1,i2))
-            enddo
-         enddo
-      enddo
-      do i2 = ilower2,iupper2
-         do i1 = ilower1,iupper1+1
-            do i0 = ilower0,iupper0
-               u1(i0,i1,i2) = 0.5d0*(V(i0,i1-1,i2)+V(i0,i1,i2))
-            enddo
-         enddo
-      enddo
-      do i2 = ilower2,iupper2+1
-         do i1 = ilower1,iupper1
-            do i0 = ilower0,iupper0
-               u2(i0,i1,i2) = 0.5d0*(V(i0,i1,i2-1)+V(i0,i1,i2))
-            enddo
-         enddo
-      enddo
+!$OMP END DO
+!$OMP END PARALLEL
 c
       return
       end
@@ -339,6 +227,8 @@ c
 c     Compute the cell centered vector field U from the face centered
 c     vector field (v0,v1,v2).
 c
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i0,i1,i2)
+!$OMP DO SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0
@@ -346,6 +236,8 @@ c
             enddo
          enddo
       enddo
+!$OMP END DO NOWAIT
+!$OMP DO SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0
@@ -353,6 +245,8 @@ c
             enddo
          enddo
       enddo
+!$OMP END DO NOWAIT
+!$OMP DO SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0
@@ -360,6 +254,8 @@ c
             enddo
          enddo
       enddo
+!$OMP END DO
+!$OMP END PARALLEL
 c
       return
       end
@@ -403,6 +299,8 @@ c
 c     Compute the cell centered vector field U from the side centered
 c     vector field (v0,v1,v2).
 c
+!$OMP PARALLEL DEFAULT(SHARED) PRIVATE(i0,i1,i2)
+!$OMP DO SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0
@@ -410,6 +308,8 @@ c
             enddo
          enddo
       enddo
+!$OMP END DO NOWAIT
+!$OMP DO SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0
@@ -417,6 +317,8 @@ c
             enddo
          enddo
       enddo
+!$OMP END DO NOWAIT
+!$OMP DO SCHEDULE(STATIC)
       do i2 = ilower2,iupper2
          do i1 = ilower1,iupper1
             do i0 = ilower0,iupper0
@@ -424,6 +326,8 @@ c
             enddo
          enddo
       enddo
+!$OMP END DO
+!$OMP END PARALLEL
 c
       return
       end
@@ -480,6 +384,9 @@ c     Compute the cell centered vector field U from the side centered
 c     vector field (v0,v1,v2).
 c
       if ( direction.eq.0 ) then
+!$OMP  PARALLEL DO
+!$OMP$ DEFAULT(SHARED) PRIVATE(i0,i1,i2)
+!$OMP$ SCHEDULE(STATIC)
          do i2 = ilower2,iupper2
             do i1 = ilower1,iupper1
                do i0 = ilower0,iupper0
@@ -488,7 +395,11 @@ c
                enddo
             enddo
          enddo
+!$OMP END PARALLEL DO
       elseif ( direction.eq.1 ) then
+!$OMP  PARALLEL DO
+!$OMP$ DEFAULT(SHARED) PRIVATE(i0,i1,i2)
+!$OMP$ SCHEDULE(STATIC)
          do i2 = ilower2,iupper2
             do i1 = ilower1,iupper1
                do i0 = ilower0,iupper0
@@ -497,7 +408,11 @@ c
                enddo
             enddo
          enddo
+!$OMP END PARALLEL DO
       else
+!$OMP  PARALLEL DO
+!$OMP$ DEFAULT(SHARED) PRIVATE(i0,i1,i2)
+!$OMP$ SCHEDULE(STATIC)
          do i2 = ilower2,iupper2
             do i1 = ilower1,iupper1
                do i0 = ilower0,iupper0
@@ -506,6 +421,7 @@ c
                enddo
             enddo
          enddo
+!$OMP END PARALLEL DO
       endif
 c
       return

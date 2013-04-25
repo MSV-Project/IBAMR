@@ -66,7 +66,7 @@ public:
      */
     VecCellVariable(
         const std::string& name,
-        int depth);
+        const int depth);
 
     /*!
      * \brief Virtual destructor for cell variable objects.

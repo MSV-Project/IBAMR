@@ -65,8 +65,9 @@ public:
     CartCellDoubleCubicCoarsen();
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~CartCellDoubleCubicCoarsen();
 
     /*!
@@ -78,7 +79,7 @@ public:
      * Return true if the coarsening operation matches the variable and name
      * string identifier request; false, otherwise.
      */
-    bool
+    virtual bool
     findCoarsenOperator(
         const SAMRAI::tbox::Pointer<SAMRAI::hier::Variable<NDIM> >& var,
         const std::string& op_name) const;
@@ -86,7 +87,7 @@ public:
     /*!
      * Return name string identifier of the coarsening operation.
      */
-    const std::string&
+    virtual const std::string&
     getOperatorName() const;
 
     /*!
@@ -95,7 +96,7 @@ public:
      * operators with lower priority will be performed before those with higher
      * priority.
      */
-    int
+    virtual int
     getOperatorPriority() const;
 
     /*!
@@ -104,7 +105,7 @@ public:
      * sufficient ghost cell data surrounding the interior to satisfy the
      * stencil width requirements for each coarsening operator.
      */
-    SAMRAI::hier::IntVector<NDIM>
+    virtual SAMRAI::hier::IntVector<NDIM>
     getStencilWidth() const;
 
     /*!
@@ -114,12 +115,12 @@ public:
      * patch is guaranteed to contain sufficient data for the stencil width of
      * the coarsening operator.
      */
-    void
+    virtual void
     coarsen(
         SAMRAI::hier::Patch<NDIM>& coarse,
         const SAMRAI::hier::Patch<NDIM>& fine,
-        int dst_component,
-        int src_component,
+        const int dst_component,
+        const int src_component,
         const SAMRAI::hier::Box<NDIM>& coarse_box,
         const SAMRAI::hier::IntVector<NDIM>& ratio) const;
 

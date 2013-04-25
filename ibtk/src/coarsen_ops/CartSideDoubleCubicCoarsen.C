@@ -39,8 +39,6 @@
 #define included_IBTK_config
 #endif
 
-
-
 #ifndef included_SAMRAI_config
 #include <SAMRAI_config.h>
 #define included_SAMRAI_config
@@ -58,10 +56,10 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define SC_CUBIC_COARSEN_FC FC_GLOBAL(sccubiccoarsen2d,SCCUBICCOARSEN2D)
+#define SC_CUBIC_COARSEN_FC FC_FUNC(sccubiccoarsen2d,SCCUBICCOARSEN2D)
 #endif
 #if (NDIM == 3)
-#define SC_CUBIC_COARSEN_FC FC_GLOBAL(sccubiccoarsen3d,SCCUBICCOARSEN3D)
+#define SC_CUBIC_COARSEN_FC FC_FUNC(sccubiccoarsen3d,SCCUBICCOARSEN3D)
 #endif
 
 // Function interfaces
@@ -182,7 +180,7 @@ CartSideDoubleCubicCoarsen::coarsen(
         TBOX_ERROR("CartSideDoubleCubicCoarsen::coarsen():\n"
                    << "   coarse patch data does not have uniform ghost cell widths" << std::endl);
     }
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         if (ratio(d)%2 == 1)
         {
@@ -243,5 +241,10 @@ CartSideDoubleCubicCoarsen::coarsen(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::CartSideDoubleCubicCoarsen>;
 
 //////////////////////////////////////////////////////////////////////////////

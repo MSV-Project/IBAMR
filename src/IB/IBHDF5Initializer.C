@@ -53,8 +53,7 @@
 
 // IBTK INCLUDES
 #include <ibtk/IndexUtilities.h>
-#include <ibtk/LNodeSet.h>
-#include <ibtk/LNodeSetData.h>
+#include <ibtk/LNodeIndexData.h>
 
 // SAMRAI INCLUDES
 #include <Box.h>
@@ -215,12 +214,12 @@ IBHDF5Initializer::~IBHDF5Initializer()
 bool
 IBHDF5Initializer::getLevelHasLagrangianData(
     const int level_number,
-    const bool /*can_be_refined*/) const
+    const bool can_be_refined) const
 {
     return !d_filenames[level_number].empty();
 }// getLevelHasLagrangianData
 
-unsigned int
+int
 IBHDF5Initializer::computeLocalNodeCountOnPatchLevel(
     const Pointer<PatchHierarchy<NDIM> > hierarchy,
     const int level_number,
@@ -238,19 +237,19 @@ IBHDF5Initializer::computeLocalNodeCountOnPatchLevel(
     return std::accumulate(d_level_num_local_vertex.begin(),d_level_num_local_vertex.end(),0);
 }// computeLocalNodeCountOnPatchLevel
 
-unsigned int
+int
 IBHDF5Initializer::initializeDataOnPatchLevel(
     const int lag_node_index_idx,
-    const unsigned int global_index_offset,
-    const unsigned int local_index_offset,
-    Pointer<LData> X_data,
-    Pointer<LData> U_data,
+    const int global_index_offset,
+    const int local_index_offset,
+    Pointer<LNodeLevelData>& X_data,
+    Pointer<LNodeLevelData>& U_data,
     const Pointer<PatchHierarchy<NDIM> > hierarchy,
     const int level_number,
     const double init_data_time,
     const bool can_be_refined,
     const bool initial_time,
-    LDataManager* const /*l_data_manager*/)
+    LDataManager* const lag_manager)
 {
     if (!can_be_refined && level_number != d_max_levels-1)
     {
@@ -267,8 +266,6 @@ IBHDF5Initializer::initializeDataOnPatchLevel(
 
     // Loop over all vertices in the specified level and initialize the data in
     // the appropriate Cartesian grid patches.
-    blitz::Array<double,2>& X_array = *X_data->getLocalFormVecArray();
-    blitz::Array<double,2>& U_array = *U_data->getLocalFormVecArray();
     Pointer<PatchLevel<NDIM> > level = hierarchy->getPatchLevel(level_number);
     const int num_filenames = d_filenames[level_number].size();
     int local_idx = -1;
@@ -277,18 +274,17 @@ IBHDF5Initializer::initializeDataOnPatchLevel(
     {
         for (int k = 0; k < d_level_num_local_vertex[j]; ++k, ++local_node_count)
         {
-            const blitz::TinyVector<double,NDIM>& X = d_level_posns[j][k];
+            const std::vector<double>& X = d_level_posns[j][k];
             const std::pair<int,int>& vertex_idx = d_level_vertex_idxs[j][k];
             const Index<NDIM>& i = d_level_cell_idxs[j][k];
             const int patch_num = d_level_patch_nums[j][k];
 
             // Compute the index information for the present vertex.
-            const int lagrangian_idx = getCanonicalLagrangianIndex(vertex_idx,global_index_offset);
-            const int local_petsc_idx = ++local_idx + local_index_offset;
-            const int global_petsc_idx = local_petsc_idx+global_index_offset;
+            const int current_global_idx = getCanonicalLagrangianIndex(vertex_idx,global_index_offset);
+            const int current_local_idx = ++local_idx + local_index_offset;
 
             // Ensure the point lies within the physical domain.
-            for (unsigned int d = 0; d < NDIM; ++d)
+            for (int d = 0; d < NDIM; ++d)
             {
                 if (X[d] <= gridXLower[d])
                 {
@@ -313,10 +309,11 @@ IBHDF5Initializer::initializeDataOnPatchLevel(
 
             // Ensure the point lies with the present grid patch.
             Pointer<Patch<NDIM> > patch = level->getPatch(patch_num);
-            const Pointer<CartesianPatchGeometry<NDIM> > patch_geom = patch->getPatchGeometry();
+            const Pointer<CartesianPatchGeometry<NDIM> > patch_geom =
+                patch->getPatchGeometry();
             const double* const patchXLower = patch_geom->getXLower();
             const double* const patchXUpper = patch_geom->getXUpper();
-            for (unsigned int d = 0; d < NDIM; ++d)
+            for (int d = 0; d < NDIM; ++d)
             {
                 if (X[d] < patchXLower[d])
                 {
@@ -337,16 +334,19 @@ IBHDF5Initializer::initializeDataOnPatchLevel(
             }
 
             // Initialize the position of the present vertex.
-            std::copy(X.begin(),X.end(),&X_array(local_petsc_idx,0));
+            double* const vertex_X = &(*X_data)(current_local_idx);
+            std::copy(X.begin(),X.end(),vertex_X);
 
             // Initialize the velocity of the present vertex.
-            std::fill(&U_array(local_petsc_idx,0),&U_array(local_petsc_idx,0)+NDIM,0.0);
+            double* const vertex_U = &(*U_data)(current_local_idx);
+            std::fill(vertex_U,vertex_U+NDIM,0.0);
 
             // Initialize the specification objects associated with the present
             // vertex.
-            std::vector<Pointer<Streamable> > vertex_specs = initializeSpecs(std::make_pair(j,k), vertex_idx, global_index_offset);
+            std::vector<Pointer<Streamable> > vertex_specs = initializeSpecs(
+                std::make_pair(j,k), vertex_idx, global_index_offset);
 
-            // Initialize the LNode data.
+            // Initialize the LNodeIndex data.
             const Box<NDIM>& patch_box = patch->getBox();
             if (!patch_box.contains(i))
             {
@@ -359,19 +359,17 @@ IBHDF5Initializer::initializeDataOnPatchLevel(
                            << "  assigned patch number = " << patch_num << "\n"
                            << "  assigned patch box = " << patch_box << "\n");
             }
-            Pointer<LNodeSetData> index_data = patch->getPatchData(lag_node_index_idx);
+            Pointer<LNodeIndexData> index_data = patch->getPatchData(lag_node_index_idx);
             if (!index_data->isElement(i))
             {
-                index_data->appendItemPointer(i, new LNodeSet());
+                index_data->appendItemPointer(i, new LNodeIndexSet());
             }
-            LNodeSet* const node_set = index_data->getItem(i);
+            LNodeIndexSet* const node_set = index_data->getItem(i);
             const IntVector<NDIM> periodic_offset(0);
-            const blitz::TinyVector<double,NDIM> periodic_displacement(0.0);
-            node_set->push_back(new LNode(lagrangian_idx, global_petsc_idx, local_petsc_idx, periodic_offset, periodic_displacement, vertex_specs));
+            const std::vector<double> periodic_displacement(NDIM,0.0);
+            node_set->push_back(new LNodeIndex(current_global_idx, current_local_idx, &(*X_data)(current_local_idx), periodic_offset, periodic_displacement, vertex_specs));
         }
     }
-    X_data->restoreArrays();
-    U_data->restoreArrays();
 
     // Sanity check.
     const int expected_local_node_count = std::accumulate(d_level_num_local_vertex.begin(),d_level_num_local_vertex.end(),0);
@@ -386,9 +384,11 @@ IBHDF5Initializer::initializeDataOnPatchLevel(
     std::vector<std::string> all_instrument_names;
     for (int ln = 0; ln <= level_number; ++ln)
     {
-        for (int j = 0; j < static_cast<int>(d_instrument_names[ln].size()); ++j)
+        for (int j = 0; j < int(d_instrument_names[ln].size()); ++j)
         {
-            all_instrument_names.insert(all_instrument_names.end(), d_instrument_names[ln][j].begin(), d_instrument_names[ln][j].end());
+            all_instrument_names.insert(
+                all_instrument_names.end(),
+                d_instrument_names[ln][j].begin(), d_instrument_names[ln][j].end());
         }
     }
     IBInstrumentationSpec::setInstrumentNames(all_instrument_names);
@@ -398,18 +398,18 @@ IBHDF5Initializer::initializeDataOnPatchLevel(
     return local_node_count;
 }// initializeDataOnPatchLevel
 
-unsigned int
+int
 IBHDF5Initializer::initializeMassDataOnPatchLevel(
-    const unsigned int /*global_index_offset*/,
-    const unsigned int /*local_index_offset*/,
-    Pointer<LData> /*M_data*/,
-    Pointer<LData> /*K_data*/,
-    const Pointer<PatchHierarchy<NDIM> > /*hierarchy*/,
-    const int /*level_number*/,
-    const double /*init_data_time*/,
-    const bool /*can_be_refined*/,
-    const bool /*initial_time*/,
-    LDataManager* const /*l_data_manager*/)
+    const int global_index_offset,
+    const int local_index_offset,
+    Pointer<LNodeLevelData>& M_data,
+    Pointer<LNodeLevelData>& K_data,
+    const Pointer<PatchHierarchy<NDIM> > hierarchy,
+    const int level_number,
+    const double init_data_time,
+    const bool can_be_refined,
+    const bool initial_time,
+    LDataManager* const lag_manager)
 {
     TBOX_ERROR(d_object_name << "::initializeMassDataOnPatchLevel():\n  Not implemented.\n");
     int local_node_count = 0;
@@ -420,7 +420,7 @@ void
 IBHDF5Initializer::tagCellsForInitialRefinement(
     const Pointer<PatchHierarchy<NDIM> > hierarchy,
     const int level_number,
-    const double /*error_data_time*/,
+    const double error_data_time,
     const int tag_index)
 {
     Pointer<PatchLevel<NDIM> > tag_level = hierarchy->getPatchLevel(level_number);
@@ -509,7 +509,9 @@ IBHDF5Initializer::findLocalPatchIndices(
 
         std::vector<Index<NDIM> > file_cell_idxs;
         std::vector<int> file_patch_nums;
-        findLocalPatchIndicesFromHDF5(file_cell_idxs, file_patch_nums, file_id, base_group_name, level, filename);
+        findLocalPatchIndicesFromHDF5(
+            file_cell_idxs, file_patch_nums,
+            file_id, base_group_name, level, filename);
         cell_idxs.insert(cell_idxs.end(),file_cell_idxs.begin(),file_cell_idxs.end());
         patch_nums.insert(patch_nums.end(),file_patch_nums.begin(),file_patch_nums.end());
 
@@ -565,7 +567,7 @@ IBHDF5Initializer::findLocalPatchIndicesFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid vertex dataset dimension in input file " << filename << "\n");
         }
-        const int num_vertex = static_cast<int>(dims[0]);
+        const int num_vertex = int(dims[0]);
 
         // Define the file dataspace.
         static const int rankf = 2;
@@ -611,7 +613,8 @@ IBHDF5Initializer::findLocalPatchIndicesFromHDF5(
                 for (PatchLevel<NDIM>::Iterator p(level); p; p++)
                 {
                     Pointer<Patch<NDIM> > patch = level->getPatch(p());
-                    const Pointer<CartesianPatchGeometry<NDIM> > patch_geom = patch->getPatchGeometry();
+                    const Pointer<CartesianPatchGeometry<NDIM> > patch_geom =
+                        patch->getPatchGeometry();
                     const double* const xLower = patch_geom->getXLower();
                     const double* const xUpper = patch_geom->getXUpper();
                     const bool patch_owns_node =
@@ -629,7 +632,8 @@ IBHDF5Initializer::findLocalPatchIndicesFromHDF5(
                         const Box<NDIM>& patch_box = patch->getBox();
                         const Index<NDIM>& patch_lower = patch_box.lower();
                         const Index<NDIM>& patch_upper = patch_box.upper();
-                        const Index<NDIM> i = IndexUtilities::getCellIndex(X, xLower, xUpper, dx, patch_lower, patch_upper);
+                        const Index<NDIM> i = IndexUtilities::getCellIndex(
+                            X, xLower, xUpper, dx, patch_lower, patch_upper);
                         cell_idxs.push_back(i);
                         patch_nums.push_back(p());
                         break;
@@ -656,9 +660,9 @@ void
 IBHDF5Initializer::buildLevelDataCache(
     const Pointer<PatchHierarchy<NDIM> > hierarchy,
     const int level_number,
-    const double /*init_data_time*/,
-    const bool /*can_be_refined*/,
-    const bool /*initial_time*/)
+    const double init_data_time,
+    const bool can_be_refined,
+    const bool initial_time)
 {
     if (d_cache_level_number != level_number)
     {
@@ -739,10 +743,10 @@ IBHDF5Initializer::buildLevelDataCache(
             int& num_vertex       = d_level_num_vertex      [j];
             int& num_local_vertex = d_level_num_local_vertex[j];
 
-            std::vector<blitz::TinyVector<double,NDIM> >& posns       = d_level_posns      [j];
-            std::vector<std::pair<int,int> >&             vertex_idxs = d_level_vertex_idxs[j];
-            std::vector<Index<NDIM> >&                    cell_idxs   = d_level_cell_idxs  [j];
-            std::vector<int>&                             patch_nums  = d_level_patch_nums [j];
+            std::vector<std::vector<double> >&       posns       = d_level_posns      [j];
+            std::vector<std::pair<int,int> >&        vertex_idxs = d_level_vertex_idxs[j];
+            std::vector<Index<NDIM> >& cell_idxs   = d_level_cell_idxs  [j];
+            std::vector<int>&                        patch_nums  = d_level_patch_nums [j];
 
             if (j == 0)
             {
@@ -856,7 +860,7 @@ void
 IBHDF5Initializer::buildLevelVertexDataCacheFromHDF5(
     int& num_vertex,
     int& num_local_vertex,
-    std::vector<blitz::TinyVector<double,NDIM> >& posns,
+    std::vector<std::vector<double> >& posns,
     std::vector<std::pair<int,int> >& vertex_idxs,
     std::vector<Index<NDIM> >& cell_idxs,
     std::vector<int>& patch_nums,
@@ -866,7 +870,7 @@ IBHDF5Initializer::buildLevelVertexDataCacheFromHDF5(
     const Pointer<PatchLevel<NDIM> > level,
     const std::string& filename,
     const int file_number,
-    const int /*num_files*/) const
+    const int num_files) const
 {
     num_vertex       = 0;
     num_local_vertex = 0;
@@ -903,7 +907,7 @@ IBHDF5Initializer::buildLevelVertexDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid vertex dataset dimension in input file " << filename << "\n");
         }
-        num_vertex = static_cast<int>(dims[0]);
+        num_vertex = int(dims[0]);
 
         // Define the file dataspace.
         static const int rankf = 2;
@@ -949,7 +953,8 @@ IBHDF5Initializer::buildLevelVertexDataCacheFromHDF5(
                 for (PatchLevel<NDIM>::Iterator p(level); p; p++)
                 {
                     Pointer<Patch<NDIM> > patch = level->getPatch(p());
-                    const Pointer<CartesianPatchGeometry<NDIM> > patch_geom = patch->getPatchGeometry();
+                    const Pointer<CartesianPatchGeometry<NDIM> > patch_geom =
+                        patch->getPatchGeometry();
                     const double* const xLower = patch_geom->getXLower();
                     const double* const xUpper = patch_geom->getXUpper();
                     const bool patch_owns_node =
@@ -969,15 +974,11 @@ IBHDF5Initializer::buildLevelVertexDataCacheFromHDF5(
                         const Box<NDIM>& patch_box = patch->getBox();
                         const Index<NDIM>& patch_lower = patch_box.lower();
                         const Index<NDIM>& patch_upper = patch_box.upper();
-                        const Index<NDIM> i = IndexUtilities::getCellIndex(X, xLower, xUpper, dx, patch_lower, patch_upper);
+                        const Index<NDIM> i = IndexUtilities::getCellIndex(
+                            X, xLower, xUpper, dx, patch_lower, patch_upper);
 
                         const int index = k+index_offset;
-#if (NDIM == 2)
-                        posns.push_back(blitz::TinyVector<double,NDIM>(X[0],X[1]));
-#endif
-#if (NDIM == 3)
-                        posns.push_back(blitz::TinyVector<double,NDIM>(X[0],X[1],X[2]));
-#endif
+                        posns.push_back(std::vector<double>(X,X+NDIM));
                         vertex_idxs.push_back(std::make_pair(file_number,index));
                         cell_idxs.push_back(i);
                         patch_nums.push_back(p());
@@ -1012,10 +1013,10 @@ IBHDF5Initializer::buildLevelSpringDataCacheFromHDF5(
     const std::set<int>& local_vertex_idx_set,
     const hid_t file_id,
     const std::string& base_group_name,
-    const Pointer<PatchLevel<NDIM> > /*level*/,
+    const Pointer<PatchLevel<NDIM> > level,
     const std::string& filename,
-    const int /*file_number*/,
-    const int /*num_files*/) const
+    const int file_number,
+    const int num_files) const
 {
     num_spring       = 0;
     num_local_spring = 0;
@@ -1078,7 +1079,7 @@ IBHDF5Initializer::buildLevelSpringDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid spring dataset dimension in input file " << filename << "\n");
         }
-        const int node1_idx_size = static_cast<int>(dims[0]);
+        const int node1_idx_size = int(dims[0]);
 
         H5LTget_dataset_ndims(file_id, node2_idx_dset_name.c_str(), &rank);
         if (rank != 1)
@@ -1090,7 +1091,7 @@ IBHDF5Initializer::buildLevelSpringDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid spring dataset dimension in input file " << filename << "\n");
         }
-        const int node2_idx_size = static_cast<int>(dims[0]);
+        const int node2_idx_size = int(dims[0]);
 
         H5LTget_dataset_ndims(file_id, force_fcn_idx_dset_name.c_str(), &rank);
         if (rank != 1)
@@ -1102,7 +1103,7 @@ IBHDF5Initializer::buildLevelSpringDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid spring dataset dimension in input file " << filename << "\n");
         }
-        const int force_fcn_idx_size = static_cast<int>(dims[0]);
+        const int force_fcn_idx_size = int(dims[0]);
 
         H5LTget_dataset_ndims(file_id, stiffness_dset_name.c_str(), &rank);
         if (rank != 1)
@@ -1114,7 +1115,7 @@ IBHDF5Initializer::buildLevelSpringDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid spring dataset dimension in input file " << filename << "\n");
         }
-        const int stiffness_size = static_cast<int>(dims[0]);
+        const int stiffness_size = int(dims[0]);
 
         H5LTget_dataset_ndims(file_id, rest_length_dset_name.c_str(), &rank);
         if (rank != 1)
@@ -1126,7 +1127,7 @@ IBHDF5Initializer::buildLevelSpringDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid spring dataset dimension in input file " << filename << "\n");
         }
-        const int rest_length_size = static_cast<int>(dims[0]);
+        const int rest_length_size = int(dims[0]);
 
         if ((node1_idx_size != node2_idx_size    ) ||
             (node1_idx_size != force_fcn_idx_size) ||
@@ -1204,7 +1205,7 @@ IBHDF5Initializer::buildLevelSpringDataCacheFromHDF5(
                         it = spring_data_map.insert(spring_data_map.end(), std::make_pair(node1_idx,new IBSpringForceSpec()));
                     }
 
-                    Pointer<IBSpringForceSpec> old_spring_data = it->second;
+                    Pointer<IBSpringForceSpec> old_spring_data = (*it).second;
                     TBOX_ASSERT(old_spring_data->getMasterNodeIndex() == -1 ||
                                 old_spring_data->getMasterNodeIndex() == node1_idx);
 
@@ -1218,9 +1219,10 @@ IBHDF5Initializer::buildLevelSpringDataCacheFromHDF5(
                     stiffnesses   .push_back(stiffness    );
                     rest_lengths  .push_back(rest_length  );
 
-                    Pointer<IBSpringForceSpec> new_spring_data = new IBSpringForceSpec(node1_idx, slave_idxs, force_fcn_idxs, stiffnesses, rest_lengths);
+                    Pointer<IBSpringForceSpec> new_spring_data = new IBSpringForceSpec(
+                        node1_idx, slave_idxs, force_fcn_idxs, stiffnesses, rest_lengths);
 
-                    it->second = new_spring_data;
+                    (*it).second = new_spring_data;
                 }
             }
         }
@@ -1251,10 +1253,10 @@ IBHDF5Initializer::buildLevelBeamDataCacheFromHDF5(
     const std::set<int>& local_vertex_idx_set,
     const hid_t file_id,
     const std::string& base_group_name,
-    const Pointer<PatchLevel<NDIM> > /*level*/,
+    const Pointer<PatchLevel<NDIM> > level,
     const std::string& filename,
-    const int /*file_number*/,
-    const int /*num_files*/) const
+    const int file_number,
+    const int num_files) const
 {
     num_beam       = 0;
     num_local_beam = 0;
@@ -1270,7 +1272,7 @@ IBHDF5Initializer::buildLevelBeamDataCacheFromHDF5(
         const std::string node3_idx_dset_name     = beam_group_name + "/node3_idx"    ;
         const std::string bend_rigidity_dset_name = beam_group_name + "/bend_rigidity";
         std::string rest_curvature_dset_name[NDIM];
-        for (unsigned int d = 0; d < NDIM; ++d)
+        for (int d = 0; d < NDIM; ++d)
         {
             std::ostringstream os;
             os << "_" << d;
@@ -1302,7 +1304,7 @@ IBHDF5Initializer::buildLevelBeamDataCacheFromHDF5(
         }
 
         hid_t rest_curvature_dset[NDIM];
-        for (unsigned int d = 0; d < NDIM; ++d)
+        for (int d = 0; d < NDIM; ++d)
         {
             rest_curvature_dset[d] = H5Dopen1(file_id, rest_curvature_dset_name[d].c_str());
             if (rest_curvature_dset < 0)
@@ -1327,7 +1329,7 @@ IBHDF5Initializer::buildLevelBeamDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid beam dataset dimension in input file " << filename << "\n");
         }
-        const int node1_idx_size = static_cast<int>(dims[0]);
+        const int node1_idx_size = int(dims[0]);
 
         H5LTget_dataset_ndims(file_id, node2_idx_dset_name.c_str(), &rank);
         if (rank != 1)
@@ -1339,7 +1341,7 @@ IBHDF5Initializer::buildLevelBeamDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid beam dataset dimension in input file " << filename << "\n");
         }
-        const int node2_idx_size = static_cast<int>(dims[0]);
+        const int node2_idx_size = int(dims[0]);
 
         H5LTget_dataset_ndims(file_id, node3_idx_dset_name.c_str(), &rank);
         if (rank != 1)
@@ -1351,7 +1353,7 @@ IBHDF5Initializer::buildLevelBeamDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid beam dataset dimension in input file " << filename << "\n");
         }
-        const int node3_idx_size = static_cast<int>(dims[0]);
+        const int node3_idx_size = int(dims[0]);
 
         H5LTget_dataset_ndims(file_id, bend_rigidity_dset_name.c_str(), &rank);
         if (rank != 1)
@@ -1363,10 +1365,10 @@ IBHDF5Initializer::buildLevelBeamDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid beam dataset dimension in input file " << filename << "\n");
         }
-        const int bend_rigidity_size = static_cast<int>(dims[0]);
+        const int bend_rigidity_size = int(dims[0]);
 
         int rest_curvature_size[NDIM];
-        for (unsigned int d = 0; d < NDIM; ++d)
+        for (int d = 0; d < NDIM; ++d)
         {
             H5LTget_dataset_ndims(file_id, rest_curvature_dset_name[d].c_str(), &rank);
             if (rank != 1)
@@ -1378,7 +1380,7 @@ IBHDF5Initializer::buildLevelBeamDataCacheFromHDF5(
             {
                 TBOX_ERROR(d_object_name << ":\n  Invalid beam dataset dimension in input file " << filename << "\n");
             }
-            rest_curvature_size[d] = static_cast<int>(dims[0]);
+            rest_curvature_size[d] = int(dims[0]);
         }
 
         if ((node1_idx_size != node2_idx_size    ) ||
@@ -1387,7 +1389,7 @@ IBHDF5Initializer::buildLevelBeamDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid beam dataset dimension in input file " << filename << "\n");
         }
-        for (unsigned int d = 0; d < NDIM; ++d)
+        for (int d = 0; d < NDIM; ++d)
         {
             if (node1_idx_size != rest_curvature_size[d])
             {
@@ -1437,7 +1439,7 @@ IBHDF5Initializer::buildLevelBeamDataCacheFromHDF5(
             H5Dread(node2_idx_dset    , H5T_NATIVE_INT   , memspace, filespace, H5P_DEFAULT, &node2_idx_buf    [0]);
             H5Dread(node3_idx_dset    , H5T_NATIVE_INT   , memspace, filespace, H5P_DEFAULT, &node3_idx_buf    [0]);
             H5Dread(bend_rigidity_dset, H5T_NATIVE_DOUBLE, memspace, filespace, H5P_DEFAULT, &bend_rigidity_buf[0]);
-            for (unsigned int d = 0; d < NDIM; ++d)
+            for (int d = 0; d < NDIM; ++d)
             {
                 H5Dread(rest_curvature_dset[d], H5T_NATIVE_DOUBLE, memspace, filespace, H5P_DEFAULT, &rest_curvature_buf[d][0]);
             }
@@ -1455,8 +1457,8 @@ IBHDF5Initializer::buildLevelBeamDataCacheFromHDF5(
                 const int& node2_idx = node2_idx_buf[k];
                 const int& node3_idx = node3_idx_buf[k];
                 const double& bend_rigidity = bend_rigidity_buf[k];
-                blitz::TinyVector<double,NDIM> rest_curvature;
-                for (unsigned int d = 0; d < NDIM; ++d)
+                std::vector<double> rest_curvature(NDIM);
+                for (int d = 0; d < NDIM; ++d)
                 {
                     rest_curvature[d] = rest_curvature_buf[d][k];
                 }
@@ -1470,21 +1472,22 @@ IBHDF5Initializer::buildLevelBeamDataCacheFromHDF5(
                         it = beam_data_map.insert(beam_data_map.end(), std::make_pair(node2_idx,new IBBeamForceSpec()));
                     }
 
-                    Pointer<IBBeamForceSpec> old_beam_data = it->second;
+                    Pointer<IBBeamForceSpec> old_beam_data = (*it).second;
                     TBOX_ASSERT(old_beam_data->getMasterNodeIndex() == -1 ||
                                 old_beam_data->getMasterNodeIndex() == node2_idx);
 
-                    std::vector<std::pair<int,int> >&             neighbor_idxs   = old_beam_data->getNeighborNodeIndices();
-                    std::vector<double>&                          bend_rigidities = old_beam_data->getBendingRigidities();
-                    std::vector<blitz::TinyVector<double,NDIM> >& rest_curvatures = old_beam_data->getMeshDependentCurvatures();
+                    std::vector<std::pair<int,int> >&  neighbor_idxs   = old_beam_data->getNeighborNodeIndices();
+                    std::vector<double>&               bend_rigidities = old_beam_data->getBendingRigidities();
+                    std::vector<std::vector<double> >& rest_curvatures = old_beam_data->getMeshDependentCurvatures();
 
                     neighbor_idxs  .push_back(std::make_pair(node1_idx,node3_idx));
                     bend_rigidities.push_back(bend_rigidity                      );
                     rest_curvatures.push_back(rest_curvature                     );
 
-                    Pointer<IBBeamForceSpec> new_beam_data = new IBBeamForceSpec(node2_idx, neighbor_idxs, bend_rigidities, rest_curvatures);
+                    Pointer<IBBeamForceSpec> new_beam_data = new IBBeamForceSpec(
+                        node2_idx, neighbor_idxs, bend_rigidities, rest_curvatures);
 
-                    it->second = new_beam_data;
+                    (*it).second = new_beam_data;
                 }
             }
         }
@@ -1496,7 +1499,7 @@ IBHDF5Initializer::buildLevelBeamDataCacheFromHDF5(
         H5Dclose(node2_idx_dset);
         H5Dclose(node3_idx_dset);
         H5Dclose(bend_rigidity_dset);
-        for (unsigned int d = 0; d < NDIM; ++d)
+        for (int d = 0; d < NDIM; ++d)
         {
             H5Dclose(rest_curvature_dset[d]);
         }
@@ -1518,10 +1521,10 @@ IBHDF5Initializer::buildLevelTargetPointDataCacheFromHDF5(
     const std::set<int>& local_vertex_idx_set,
     const hid_t file_id,
     const std::string& base_group_name,
-    const Pointer<PatchLevel<NDIM> > /*level*/,
+    const Pointer<PatchLevel<NDIM> > level,
     const std::string& filename,
-    const int /*file_number*/,
-    const int /*num_files*/) const
+    const int file_number,
+    const int num_files) const
 {
     num_target_point       = 0;
     num_local_target_point = 0;
@@ -1570,7 +1573,7 @@ IBHDF5Initializer::buildLevelTargetPointDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid target point dataset dimension in input file " << filename << "\n");
         }
-        const int node_idx_size = static_cast<int>(dims[0]);
+        const int node_idx_size = int(dims[0]);
 
         H5LTget_dataset_ndims(file_id, stiffness_dset_name.c_str(), &rank);
         if (rank != 1)
@@ -1582,7 +1585,7 @@ IBHDF5Initializer::buildLevelTargetPointDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid target point dataset dimension in input file " << filename << "\n");
         }
-        const int stiffness_size = static_cast<int>(dims[0]);
+        const int stiffness_size = int(dims[0]);
 
         H5LTget_dataset_ndims(file_id, damping_dset_name.c_str(), &rank);
         if (rank != 1)
@@ -1594,7 +1597,7 @@ IBHDF5Initializer::buildLevelTargetPointDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid target point dataset dimension in input file " << filename << "\n");
         }
-        const int damping_size = static_cast<int>(dims[0]);
+        const int damping_size = int(dims[0]);
 
         if ((node_idx_size != stiffness_size) ||
             (node_idx_size != damping_size  ) )
@@ -1662,7 +1665,7 @@ IBHDF5Initializer::buildLevelTargetPointDataCacheFromHDF5(
                     }
                     else
                     {
-                        target_point_data = it->second;
+                        target_point_data = (*it).second;
                         TBOX_ASSERT(target_point_data->getMasterNodeIndex() == node_idx);
                     }
                     target_point_data->getMasterNodeIndex() = node_idx;
@@ -1697,10 +1700,10 @@ IBHDF5Initializer::buildLevelInstrumentationDataCacheFromHDF5(
     const std::set<int>& local_vertex_idx_set,
     const hid_t file_id,
     const std::string& base_group_name,
-    const Pointer<PatchLevel<NDIM> > /*level*/,
+    const Pointer<PatchLevel<NDIM> > level,
     const std::string& filename,
-    const int /*file_number*/,
-    const int /*num_files*/) const
+    const int file_number,
+    const int num_files) const
 {
     num_inst_point       = 0;
     num_local_inst_point = 0;
@@ -1774,7 +1777,7 @@ IBHDF5Initializer::buildLevelInstrumentationDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid instrumentation dataset dimension in input file " << filename << "\n");
         }
-        const int node_idx_size = static_cast<int>(dims[0]);
+        const int node_idx_size = int(dims[0]);
 
         H5LTget_dataset_ndims(file_id, meter_idx_dset_name.c_str(), &rank);
         if (rank != 1)
@@ -1786,7 +1789,7 @@ IBHDF5Initializer::buildLevelInstrumentationDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid instrumentation dataset dimension in input file " << filename << "\n");
         }
-        const int meter_idx_size = static_cast<int>(dims[0]);
+        const int meter_idx_size = int(dims[0]);
 
         H5LTget_dataset_ndims(file_id, meter_node_idx_dset_name.c_str(), &rank);
         if (rank != 1)
@@ -1798,7 +1801,7 @@ IBHDF5Initializer::buildLevelInstrumentationDataCacheFromHDF5(
         {
             TBOX_ERROR(d_object_name << ":\n  Invalid instrumentation dataset dimension in input file " << filename << "\n");
         }
-        const int meter_node_idx_size = static_cast<int>(dims[0]);
+        const int meter_node_idx_size = int(dims[0]);
 
         if ((node_idx_size != meter_idx_size) || (node_idx_size != meter_node_idx_size))
         {
@@ -1864,7 +1867,7 @@ IBHDF5Initializer::buildLevelInstrumentationDataCacheFromHDF5(
                     }
                     else
                     {
-                        inst_point_data = it->second;
+                        inst_point_data = (*it).second;
                         TBOX_ASSERT(inst_point_data->getMasterNodeIndex() == node_idx);
                     }
                     inst_point_data->getMasterNodeIndex() = node_idx;
@@ -1946,10 +1949,11 @@ IBHDF5Initializer::initializeSpecs(
     // Initialize any spring specifications associated with the present vertex.
     if (d_enable_springs[ln][j])
     {
-        std::map<int,Pointer<IBSpringForceSpec> >::const_iterator cit = d_level_spring_data_map[j].find(k);
+        std::map<int,Pointer<IBSpringForceSpec> >::const_iterator cit =
+            d_level_spring_data_map[j].find(k);
         if (cit != d_level_spring_data_map[j].end())
         {
-            Pointer<IBSpringForceSpec> spring_data = cit->second;
+            Pointer<IBSpringForceSpec> spring_data = (*cit).second;
             if (specs_need_reset)
             {
                 if (d_using_uniform_spring_force_fcn_idx[ln][j])
@@ -1982,10 +1986,11 @@ IBHDF5Initializer::initializeSpecs(
     // Initialize any beam specifications associated with the present vertex.
     if (d_enable_beams[ln][j])
     {
-        std::map<int,Pointer<IBBeamForceSpec> >::const_iterator cit = d_level_beam_data_map[j].find(k);
+        std::map<int,Pointer<IBBeamForceSpec> >::const_iterator cit =
+            d_level_beam_data_map[j].find(k);
         if (cit != d_level_beam_data_map[j].end())
         {
-            Pointer<IBBeamForceSpec> beam_data = cit->second;
+            Pointer<IBBeamForceSpec> beam_data = (*cit).second;
             if (specs_need_reset)
             {
                 if (d_using_uniform_beam_bend_rigidity[ln][j])
@@ -1998,8 +2003,8 @@ IBHDF5Initializer::initializeSpecs(
                 for (std::vector<std::pair<int,int> >::iterator it = neighbor_idxs.begin();
                      it != neighbor_idxs.end(); ++it)
                 {
-                    it->first  += vertex_offset;
-                    it->second += vertex_offset;
+                    (*it).first  += vertex_offset;
+                    (*it).second += vertex_offset;
                 }
             }
             vertex_specs.push_back(beam_data);
@@ -2022,10 +2027,11 @@ IBHDF5Initializer::initializeSpecs(
         }
         else
         {
-            std::map<int,Pointer<IBTargetPointForceSpec> >::const_iterator cit = d_level_target_point_data_map[j].find(k);
+            std::map<int,Pointer<IBTargetPointForceSpec> >::const_iterator cit =
+                d_level_target_point_data_map[j].find(k);
             if (cit != d_level_target_point_data_map[j].end())
             {
-                Pointer<IBTargetPointForceSpec> target_point_data = cit->second;
+                Pointer<IBTargetPointForceSpec> target_point_data = (*cit).second;
                 if (specs_need_reset)
                 {
                     target_point_data->getMasterNodeIndex() += vertex_offset;
@@ -2041,7 +2047,7 @@ IBHDF5Initializer::initializeSpecs(
     int instrument_index_offset = 0;
     for (int coarser_ln = 0; coarser_ln < ln; ++coarser_ln)
     {
-        for (int file_number = 0; file_number < static_cast<int>(d_instrument_names[coarser_ln].size());
+        for (int file_number = 0; file_number < int(d_instrument_names[coarser_ln].size());
              ++file_number)
         {
             instrument_index_offset += d_instrument_names[coarser_ln][file_number].size();
@@ -2054,10 +2060,11 @@ IBHDF5Initializer::initializeSpecs(
 
     if (d_enable_instrumentation[ln][j])
     {
-        std::map<int,Pointer<IBInstrumentationSpec> >::const_iterator cit = d_level_inst_point_data_map[j].find(k);
+        std::map<int,Pointer<IBInstrumentationSpec> >::const_iterator cit =
+            d_level_inst_point_data_map[j].find(k);
         if (cit != d_level_inst_point_data_map[j].end())
         {
-            Pointer<IBInstrumentationSpec> inst_point_data = cit->second;
+            Pointer<IBInstrumentationSpec> inst_point_data = (*cit).second;
             if (specs_need_reset)
             {
                 inst_point_data->getMasterNodeIndex() += vertex_offset;
@@ -2353,5 +2360,10 @@ IBHDF5Initializer::getFromInput(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBAMR
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBAMR::IBHDF5Initializer>;
 
 //////////////////////////////////////////////////////////////////////////////

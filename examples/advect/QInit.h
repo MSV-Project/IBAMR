@@ -40,12 +40,14 @@
 
 // SAMRAI INCLUDES
 #include <CartesianGridGeometry.h>
+#include <GridGeometry.h>
+#include <tbox/Array.h>
+#include <tbox/Database.h>
 
-// BLITZ++ INCLUDES
-#include <blitz/tinyvec.h>
-
-// C++ namespace delcarations
-#include <ibamr/app_namespaces.h>
+// NAMESPACE
+using namespace IBTK;
+using namespace SAMRAI;
+using namespace std;
 
 /////////////////////////////// CLASS DEFINITION /////////////////////////////
 
@@ -61,33 +63,34 @@ public:
      */
     QInit(
         const string& object_name,
-        Pointer<GridGeometry<NDIM> > grid_geom,
-        Pointer<Database> input_db);
+        tbox::Pointer<hier::GridGeometry<NDIM> > grid_geom,
+        tbox::Pointer<tbox::Database> input_db);
 
     /*!
      * \brief Destructor.
      */
+    virtual
     ~QInit();
 
     /*!
      * Indicates whether the concrete CartGridFunction object is time
      * dependent.
      */
-    bool
+    virtual bool
     isTimeDependent() const
         { return false; }
 
     /*!
      * Set the data on the patch interior to the exact answer.
      */
-    void
+    virtual void
     setDataOnPatch(
-        int data_idx,
-        Pointer<Variable<NDIM> > var,
-        Pointer<Patch<NDIM> > patch,
-        double data_time,
-        bool initial_time=false,
-        Pointer<PatchLevel<NDIM> > level=Pointer<PatchLevel<NDIM> >(NULL));
+        const int data_idx,
+        tbox::Pointer<hier::Variable<NDIM> > var,
+        tbox::Pointer<hier::Patch<NDIM> > patch,
+        const double data_time,
+        const bool initial_time=false,
+        tbox::Pointer<hier::PatchLevel<NDIM> > level=tbox::Pointer<hier::PatchLevel<NDIM> >(NULL));
 
 protected:
 
@@ -127,7 +130,7 @@ private:
      */
     void
     getFromInput(
-        Pointer<Database> db);
+        tbox::Pointer<tbox::Database> db);
 
     /*
      * The object name is used as a handle to databases stored in restart files
@@ -138,12 +141,12 @@ private:
     /*
      * The grid geometry.
      */
-    Pointer<CartesianGridGeometry<NDIM> > d_grid_geom;
+    tbox::Pointer<geom::CartesianGridGeometry<NDIM> > d_grid_geom;
 
     /*
      * The center of the initial data.
      */
-    TinyVector<double,NDIM> d_X;
+    tbox::Array<double> d_X;
 
     /*
      * The initialization type.

@@ -52,7 +52,7 @@ namespace IBTK
  * implementation of solvers for linear problems of the form \f$Ax=b\f$.
  */
 class LinearSolver
-    : public SAMRAI::tbox::DescribedClass
+    : public virtual SAMRAI::tbox::DescribedClass
 {
 public:
     /*!
@@ -72,16 +72,6 @@ public:
     //\{
 
     /*!
-     * \brief Set the current time interval (for a time-dependent solver).
-     *
-     * \note An empty default implementation is provided.
-     */
-    virtual void
-    setTimeInterval(
-        double current_time,
-        double new_time);
-
-    /*!
      * \brief Set the nullspace of the linear system.
      *
      * Should not assume the basis vector, if any, to be normalized.  If the
@@ -92,7 +82,7 @@ public:
      */
     virtual void
     setNullspace(
-        bool contains_constant_vector,
+        const bool contains_constant_vector,
         SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> > nullspace_basis_vec);
 
     /*!
@@ -106,7 +96,7 @@ public:
      */
     virtual void
     setNullspace(
-        bool contains_constant_vector,
+        const bool contains_constant_vector,
         const std::vector<SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> > >& nullspace_basis_vecs);
 
     /*!

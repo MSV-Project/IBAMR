@@ -64,7 +64,7 @@ getIndexRange(
     int& i_lower,
     int& i_upper,
     const int data_idx,
-    SAMRAI::tbox::Pointer<SAMRAI::pdat::CellVariable<NDIM,double> > /*data_var*/,
+    SAMRAI::tbox::Pointer<SAMRAI::pdat::CellVariable<NDIM,double> > data_var,
     Pointer<PatchLevel<NDIM> > patch_level)
 {
     n_local = 0;
@@ -89,7 +89,7 @@ getIndexRange(
     int& i_lower,
     int& i_upper,
     const int data_idx,
-    SAMRAI::tbox::Pointer<SAMRAI::pdat::SideVariable<NDIM,double> > /*data_var*/,
+    SAMRAI::tbox::Pointer<SAMRAI::pdat::SideVariable<NDIM,double> > data_var,
     Pointer<PatchLevel<NDIM> > patch_level)
 {
     n_local = 0;
@@ -97,7 +97,7 @@ getIndexRange(
     {
         Pointer<Patch<NDIM> > patch = patch_level->getPatch(p());
         Pointer<SideData<NDIM,double> > data = patch->getPatchData(data_idx);
-        for (unsigned int component_axis = 0; component_axis < NDIM; ++component_axis)
+        for (int component_axis = 0; component_axis < NDIM; ++component_axis)
         {
             n_local += data->getDepth()*SideGeometry<NDIM>::toSideBox(data->getGhostBox(), component_axis).size();
         }
@@ -130,9 +130,9 @@ PETScMatUtilities::constructPatchLaplaceOp(
 #endif
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch.getPatchGeometry();
     const double* const dx = pgeom->getDx();
-    if (mat != PETSC_NULL)
+    if (mat != static_cast<Mat>(NULL))
     {
-        int ierr = MatDestroy(&mat); IBTK_CHKERRQ(ierr);
+        int ierr = MatDestroy(mat); IBTK_CHKERRQ(ierr);
     }
     const Box<NDIM>& dst_ghost_box = dst_data.getGhostBox();
     const Box<NDIM>& src_ghost_box = src_data.getGhostBox();
@@ -146,13 +146,14 @@ PETScMatUtilities::constructPatchLaplaceOp(
 
 void
 PETScMatUtilities::constructPatchLaplaceOps(
-    blitz::TinyVector<Mat,NDIM>& mats,
+    std::vector<Mat>& mats,
     const double C,
     const double D,
     SideData<NDIM,double>& src_data,
     SideData<NDIM,double>& dst_data,
     Patch<NDIM>& patch)
 {
+    mats.resize(NDIM);
     const Box<NDIM>& patch_box = patch.getBox();
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(patch_box == src_data.getBox());
@@ -160,11 +161,11 @@ PETScMatUtilities::constructPatchLaplaceOps(
 #endif
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch.getPatchGeometry();
     const double* const dx = pgeom->getDx();
-    for (unsigned int component_axis = 0; component_axis < NDIM; ++component_axis)
+    for (int component_axis = 0; component_axis < NDIM; ++component_axis)
     {
-        if (mats[component_axis] != PETSC_NULL)
+        if (mats[component_axis] != static_cast<Mat>(NULL))
         {
-            int ierr = MatDestroy(&mats[component_axis]); IBTK_CHKERRQ(ierr);
+            int ierr = MatDestroy(mats[component_axis]); IBTK_CHKERRQ(ierr);
         }
         const Box<NDIM> side_box = SideGeometry<NDIM>::toSideBox(patch_box, component_axis);
         const Box<NDIM> dst_ghost_box = SideGeometry<NDIM>::toSideBox(dst_data.getGhostBox(), component_axis);
@@ -191,9 +192,9 @@ PETScMatUtilities::constructPatchLevelLaplaceOp(
     Pointer<RefineSchedule<NDIM> > dof_index_fill)
 {
     int ierr;
-    if (mat != PETSC_NULL)
+    if (mat != static_cast<Mat>(NULL))
     {
-        ierr = MatDestroy(&mat); IBTK_CHKERRQ(ierr);
+        ierr = MatDestroy(mat); IBTK_CHKERRQ(ierr);
     }
 
     static const int stencil_sz = 2*NDIM+1;
@@ -249,7 +250,7 @@ PETScMatUtilities::constructPatchLevelLaplaceOp(
                 {
                     // Stencil for finite difference operator.
                     d_nnz[local_idx] += 1;
-                    for (unsigned int axis = 0; axis < NDIM; ++axis)
+                    for (int axis = 0; axis < NDIM; ++axis)
                     {
                         for (int shift = -1; shift <= 1; shift += 2)
                         {
@@ -288,8 +289,7 @@ PETScMatUtilities::constructPatchLevelLaplaceOp(
     }
 
     // Create an empty matrix.
-    // NOTE: rortiz: MatCreateMPIAIJ is replaced with MatCreateAIJ
-    ierr = MatCreateAIJ(PETSC_COMM_WORLD,
+    ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD,
                            n_local, n_local,
                            PETSC_DETERMINE, PETSC_DETERMINE,
                            PETSC_DEFAULT, &d_nnz[0],
@@ -323,7 +323,7 @@ PETScMatUtilities::constructPatchLevelLaplaceOp(
         const double* const dx = pgeom->getDx();
         std::vector<double> mat_vals(stencil_sz,0.0);
         mat_vals[NDIM] = C;
-        for (unsigned int axis = 0; axis < NDIM; ++axis)
+        for (int axis = 0; axis < NDIM; ++axis)
         {
             const double& h = dx[axis];
             mat_vals[NDIM-axis-1] +=     D/(h*h);
@@ -346,7 +346,7 @@ PETScMatUtilities::constructPatchLevelLaplaceOp(
                     const int n = stencil_sz;
                     std::vector<int> idxn(stencil_sz);
                     idxn[NDIM] = (*dof_master_index)(i,d);
-                    for (unsigned int axis = 0; axis < NDIM; ++axis)
+                    for (int axis = 0; axis < NDIM; ++axis)
                     {
                         for (int shift = -1; shift <= 1; shift += 2)
                         {
@@ -394,9 +394,9 @@ PETScMatUtilities::constructPatchLevelLaplaceOp(
     Pointer<RefineSchedule<NDIM> > dof_index_fill)
 {
     int ierr;
-    if (mat != PETSC_NULL)
+    if (mat != static_cast<Mat>(NULL))
     {
-        ierr = MatDestroy(&mat); IBTK_CHKERRQ(ierr);
+        ierr = MatDestroy(mat); IBTK_CHKERRQ(ierr);
     }
 
     static const int stencil_sz = 2*NDIM+1;
@@ -438,7 +438,7 @@ PETScMatUtilities::constructPatchLevelLaplaceOp(
         Pointer<SideData<NDIM,double> > data = patch->getPatchData(data_idx);
         Pointer<SideData<NDIM,int> > dof_index = patch->getPatchData(dof_index_idx);
         Pointer<SideData<NDIM,int> > dof_master_index = patch->getPatchData(dof_master_index_idx);
-        for (unsigned int component_axis = 0; component_axis < NDIM; ++component_axis)
+        for (int component_axis = 0; component_axis < NDIM; ++component_axis)
         {
             const Box<NDIM>& patch_box = SideGeometry<NDIM>::toSideBox(patch->getBox(), component_axis);
             const Box<NDIM>& ghost_box = SideGeometry<NDIM>::toSideBox(data->getGhostBox(), component_axis);
@@ -455,7 +455,7 @@ PETScMatUtilities::constructPatchLevelLaplaceOp(
                     {
                         // Stencil for finite difference operator.
                         d_nnz[local_idx] += 1;
-                        for (unsigned int axis = 0; axis < NDIM; ++axis)
+                        for (int axis = 0; axis < NDIM; ++axis)
                         {
                             for (int shift = -1; shift <= 1; shift += 2)
                             {
@@ -495,8 +495,7 @@ PETScMatUtilities::constructPatchLevelLaplaceOp(
     }
 
     // Create an empty matrix.
-    // NOTE: rortiz: MatCreateMPIAIJ is replaced with MatCreateAIJ
-    ierr = MatCreateAIJ(PETSC_COMM_WORLD,
+    ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD,
                            n_local, n_local,
                            PETSC_DETERMINE, PETSC_DETERMINE,
                            PETSC_DEFAULT, &d_nnz[0],
@@ -522,7 +521,7 @@ PETScMatUtilities::constructPatchLevelLaplaceOp(
         Pointer<SideData<NDIM,double> > data = patch->getPatchData(data_idx);
         Pointer<SideData<NDIM,int> > dof_index = patch->getPatchData(dof_index_idx);
         Pointer<SideData<NDIM,int> > dof_master_index = patch->getPatchData(dof_master_index_idx);
-        for (unsigned int component_axis = 0; component_axis < NDIM; ++component_axis)
+        for (int component_axis = 0; component_axis < NDIM; ++component_axis)
         {
             const Box<NDIM>& patch_box = SideGeometry<NDIM>::toSideBox(patch->getBox(), component_axis);
             const Box<NDIM>& ghost_box = SideGeometry<NDIM>::toSideBox(data->getGhostBox(), component_axis);
@@ -532,7 +531,7 @@ PETScMatUtilities::constructPatchLevelLaplaceOp(
             const double* const dx = pgeom->getDx();
             std::vector<double> mat_vals(stencil_sz,0.0);
             mat_vals[NDIM] = C;
-            for (unsigned int axis = 0; axis < NDIM; ++axis)
+            for (int axis = 0; axis < NDIM; ++axis)
             {
                 const double& h = dx[axis];
                 mat_vals[NDIM-axis-1] +=     D/(h*h);
@@ -555,7 +554,7 @@ PETScMatUtilities::constructPatchLevelLaplaceOp(
                         const int n = stencil_sz;
                         std::vector<int> idxn(stencil_sz);
                         idxn[NDIM] = (*dof_master_index)(i,d);
-                        for (unsigned int axis = 0; axis < NDIM; ++axis)
+                        for (int axis = 0; axis < NDIM; ++axis)
                         {
                             for (int shift = -1; shift <= 1; shift += 2)
                             {
@@ -631,9 +630,9 @@ PETScMatUtilities::constructPatchLevelInterpOp(
     Pointer<RefineSchedule<NDIM> > dof_index_fill)
 {
     int ierr;
-    if (mat != PETSC_NULL)
+    if (mat != static_cast<Mat>(NULL))
     {
-        ierr = MatDestroy(&mat); IBTK_CHKERRQ(ierr);
+        ierr = MatDestroy(mat); IBTK_CHKERRQ(ierr);
     }
 
     // Create a clone of the DOF index data and fill ghost cell values using the
@@ -675,8 +674,7 @@ PETScMatUtilities::constructPatchLevelInterpOp(
     std::vector<int> o_nnz(m_local,static_cast<int>(pow(stencil_sz,NDIM)));
 
     // Create an empty matrix.
-    // NOTE: rortiz: MatCreateMPIAIJ is replaced with MatCreateAIJ
-    ierr = MatCreateAIJ(PETSC_COMM_WORLD,
+    ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD,
                            m_local, n_local,
                            PETSC_DETERMINE, PETSC_DETERMINE,
                            PETSC_DEFAULT, &d_nnz[0],
@@ -696,10 +694,10 @@ PETScMatUtilities::constructPatchLevelInterpOp(
     const double* const XUpper = grid_geom->getXUpper();
     const double* const dx0 = grid_geom->getDx();
     const IntVector<NDIM>& ratio = patch_level->getRatio();
-    blitz::TinyVector<double,NDIM> dx;
-    for (unsigned int d = 0; d < NDIM; ++d)
+    double dx[NDIM];
+    for (int d = 0; d < NDIM; ++d)
     {
-        dx[d] = dx0[d] / static_cast<double>(ratio(d));
+        dx[d] = dx0[d] / double(ratio(d));
     }
 
     const BoxArray<NDIM>& domain_boxes = patch_level->getPhysicalDomain();
@@ -716,18 +714,18 @@ PETScMatUtilities::constructPatchLevelInterpOp(
         // Determine the index of the Cartesian grid cell containing the IB
         // point.
         const double* const X = &X_arr[NDIM*k];
-        const Index<NDIM> idx = IndexUtilities::getCellIndex(X, XLower, XUpper, dx.data(), domain_lower, domain_upper);
+        const Index<NDIM> idx = IndexUtilities::getCellIndex(X, XLower, XUpper, dx, domain_lower, domain_upper);
 
         // Determine the position of the center of the Cartesian grid cell
         // containing the IB point.
 #if (NDIM == 2)
-        const blitz::TinyVector<double,NDIM> X_cell( (static_cast<double>(idx(0) - domain_lower(0))+0.5)*dx[0] + XLower[0] ,
-                                                     (static_cast<double>(idx(1) - domain_lower(1))+0.5)*dx[1] + XLower[1] );
+        const double X_cell[NDIM] = { (double(idx(0) - domain_lower(0))+0.5)*dx[0] + XLower[0] ,
+                                      (double(idx(1) - domain_lower(1))+0.5)*dx[1] + XLower[1] };
 #endif
 #if (NDIM == 3)
-        const blitz::TinyVector<double,NDIM> X_cell( (static_cast<double>(idx(0) - domain_lower(0))+0.5)*dx[0] + XLower[0] ,
-                                                     (static_cast<double>(idx(1) - domain_lower(1))+0.5)*dx[1] + XLower[1] ,
-                                                     (static_cast<double>(idx(2) - domain_lower(2))+0.5)*dx[2] + XLower[2] );
+        const double X_cell[NDIM] = { (double(idx(0) - domain_lower(0))+0.5)*dx[0] + XLower[0] ,
+                                      (double(idx(1) - domain_lower(1))+0.5)*dx[1] + XLower[1] ,
+                                      (double(idx(2) - domain_lower(2))+0.5)*dx[2] + XLower[2] };
 #endif
 
         // Find the local patch that contains the IB point.
@@ -742,11 +740,11 @@ PETScMatUtilities::constructPatchLevelInterpOp(
         Pointer<SideData<NDIM,int> > dof_master_index = patch->getPatchData(dof_master_index_idx);
 
         // Construct the interpolation for the current IB point.
-        for (unsigned int component_axis = 0; component_axis < NDIM; ++component_axis)
+        for (int component_axis = 0; component_axis < NDIM; ++component_axis)
         {
             // Compute the stencil box.
             Box<NDIM> stencil_box(idx,idx);
-            for (unsigned int d = 0; d < NDIM; ++d)
+            for (int d = 0; d < NDIM; ++d)
             {
                 if (d == component_axis)
                 {
@@ -770,12 +768,12 @@ PETScMatUtilities::constructPatchLevelInterpOp(
             const Index<NDIM>& stencil_box_lower = stencil_box.lower();
 
             // Compute the weights of the 1-dimensional delta functions.
-            blitz::TinyVector<std::vector<double>,NDIM> w(std::vector<double>(stencil_sz,0.0));
-            for (unsigned int d = 0; d < NDIM; ++d)
+            std::vector<std::vector<double> > w(NDIM,std::vector<double>(stencil_sz,0.0));
+            for (int d = 0; d < NDIM; ++d)
             {
                 for (int i = stencil_box_lower(d), j = 0; i <= stencil_box.upper()(d); ++i, ++j)
                 {
-                    const double X_grid = (static_cast<double>(i - domain_lower(d)) + (d == component_axis ? 0.0 : 0.5))*dx[d] + XLower[d];
+                    const double X_grid = (double(i - domain_lower(d)) + (d == component_axis ? 0.0 : 0.5))*dx[d] + XLower[d];
                     w[d][j] = ib4_delta_fcn((X_grid - X[d])/dx[d]);
                 }
             }
@@ -789,7 +787,7 @@ PETScMatUtilities::constructPatchLevelInterpOp(
             for (Box<NDIM>::Iterator b(stencil_box); b; b++, stencil_idx++)
             {
                 const SideIndex<NDIM> s_i(b(), component_axis, SideIndex<NDIM>::Lower);
-                for (unsigned int d = 0; d < NDIM; ++d)
+                for (int d = 0; d < NDIM; ++d)
                 {
                     stencil_box_vals[stencil_idx] *= w[d][s_i(d) - stencil_box_lower(d)];
                 }
@@ -865,14 +863,16 @@ PETScMatUtilities::constructBoxLaplaceOp(
 
     // Setup the finite difference stencil.  The stencil order is chosen to try
     // to optimize performance when setting the matrix coefficients.
-    blitz::TinyVector<int,NDIM> num_cells;
-    for (unsigned int d = 0; d < NDIM; ++d)
+    static const int x_axis = 0; (void) x_axis;
+    static const int y_axis = 1; (void) y_axis;
+    static const int z_axis = 2; (void) z_axis;
+    std::vector<int> num_cells(NDIM);
+    for (int d = 0; d < NDIM; ++d)
     {
         num_cells[d] = src_ghost_box.numberCells(d);
     }
     std::vector<int> mat_stencil(stencil_sz);
 #if (NDIM == 2)
-    static const int x_axis = 0;
     mat_stencil[0] = -num_cells[x_axis]; // ylower
     mat_stencil[1] = -1;                 // xlower
     mat_stencil[2] = 0;
@@ -880,8 +880,6 @@ PETScMatUtilities::constructBoxLaplaceOp(
     mat_stencil[4] = +num_cells[x_axis]; // yupper
 #endif
 #if (NDIM == 3)
-    static const int x_axis = 0;
-    static const int y_axis = 1;
     mat_stencil[0] = -num_cells[x_axis]*num_cells[y_axis]; // zlower
     mat_stencil[1] = -num_cells[x_axis];                   // ylower
     mat_stencil[2] = -1;                                   // xlower
@@ -900,7 +898,7 @@ PETScMatUtilities::constructBoxLaplaceOp(
     // of the boundary conditions.
     std::vector<double> mat_vals(stencil_sz,0.0);
     mat_vals[NDIM] = C;
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         const double& h = dx[axis];
         mat_vals[NDIM-axis-1] +=     D/(h*h);
@@ -957,5 +955,7 @@ PETScMatUtilities::constructBoxLaplaceOp(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
 
 //////////////////////////////////////////////////////////////////////////////

@@ -32,9 +32,6 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
-// IBTK INCLUDES
-#include <ibtk/StreamableManager.h>
-
 // SAMRAI INCLUDES
 #include <tbox/PIO.h>
 #include <tbox/Utilities.h>
@@ -48,31 +45,26 @@ namespace IBAMR
 inline bool
 IBAnchorPointSpec::getIsRegisteredWithStreamableManager()
 {
-    return (STREAMABLE_CLASS_ID != IBTK::StreamableManager::getUnregisteredID());
+    return s_registered_factory;
 }// getIsRegisteredWithStreamableManager
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
 inline
 IBAnchorPointSpec::IBAnchorPointSpec(
-    const int node_idx
-#if ENABLE_SUBDOMAIN_INDICES
-    ,const int subdomain_idx
-#endif
-                                     )
+    const int node_idx,
+    const int subdomain_idx)
     : d_node_idx(node_idx)
 #if ENABLE_SUBDOMAIN_INDICES
     , d_subdomain_idx(subdomain_idx)
 #endif
 {
-#ifdef DEBUG_CHECK_ASSERTIONS
-    if (!getIsRegisteredWithStreamableManager())
+    if (!s_registered_factory)
     {
         TBOX_ERROR("IBAnchorPointSpec::IBAnchorPointSpec():\n"
                    << "  must call IBAnchorPointSpec::registerWithStreamableManager() before\n"
                    << "  creating any IBAnchorPointSpec objects.\n");
     }
-#endif
     return;
 }// IBAnchorPointSpec
 
@@ -95,24 +87,32 @@ IBAnchorPointSpec::getNodeIndex()
     return d_node_idx;
 }// getNodeIndex
 
-#if ENABLE_SUBDOMAIN_INDICES
 inline const int&
 IBAnchorPointSpec::getSubdomainIndex() const
 {
+#if ENABLE_SUBDOMAIN_INDICES
     return d_subdomain_idx;
+#else
+    static int dummy_idx = -1;
+    return dummy_idx;
+#endif
 }// getSubdomainIndex
 
 inline int&
 IBAnchorPointSpec::getSubdomainIndex()
 {
+#if ENABLE_SUBDOMAIN_INDICES
     return d_subdomain_idx;
-}// getSubdomainIndex
+#else
+    static int dummy_idx = -1;
+    return dummy_idx;
 #endif
+}// getSubdomainIndex
 
 inline int
 IBAnchorPointSpec::getStreamableClassID() const
 {
-    return STREAMABLE_CLASS_ID;
+    return s_class_id;
 }// getStreamableClassID
 
 inline size_t

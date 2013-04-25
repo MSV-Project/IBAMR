@@ -36,6 +36,8 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 // SAMRAI INCLUDES
+#include <CartesianSideDoubleConservativeLinearRefine.h>
+#include <CartesianSideDoubleWeightedAverage.h>
 #include <CoarsenOperator.h>
 #include <RefineOperator.h>
 #include <RefinePatchStrategy.h>
@@ -58,13 +60,11 @@ public:
      * \brief Constructor.
      */
     CartSideDoubleDivPreservingRefine(
-        int u_dst_idx,
-        int u_src_idx,
-        int indicator_idx,
-        SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineOperator<NDIM> > refine_op,
-        SAMRAI::tbox::Pointer<SAMRAI::xfer::CoarsenOperator<NDIM> > coarsen_op,
-        double fill_time,
-        SAMRAI::xfer::RefinePatchStrategy<NDIM>* phys_bdry_op);
+        const int u_dst_idx,
+        const int u_src_idx,
+        const int indicator_idx,
+        const double fill_time=0.0,
+        SAMRAI::xfer::RefinePatchStrategy<NDIM>* const phys_bdry_op=NULL);
 
     /*!
      * \brief Virtual destructor.
@@ -76,7 +76,7 @@ public:
      * \brief The number of required ghost cells.
      *
      * \note This value is chosen to allow refinement ratios up to 4.  A larger
-     * value would be necessary for refinement ratios greater than 4.
+     * value is necessary for refinement ratios greater than 4.
      */
     static const int REFINE_OP_STENCIL_WIDTH = 4;
 
@@ -100,7 +100,7 @@ public:
     virtual void
     setPhysicalBoundaryConditions(
         SAMRAI::hier::Patch<NDIM>& patch,
-        double fill_time,
+        const double fill_time,
         const SAMRAI::hier::IntVector<NDIM>& ghost_width_to_fill);
 
     /*!
@@ -204,14 +204,14 @@ private:
     SAMRAI::xfer::RefinePatchStrategy<NDIM>* const d_phys_bdry_op;
 
     /*!
-     * The basic linear refine operator.
+     * The standard conservative linear refine operator.
      */
-    SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineOperator<NDIM> > d_refine_op;
+    SAMRAI::geom::CartesianSideDoubleConservativeLinearRefine<NDIM> d_conservative_linear_refine_op;
 
     /*!
-     * The basic coarsening operator.
+     * The standard conservative coarsening operator.
      */
-    SAMRAI::tbox::Pointer<SAMRAI::xfer::CoarsenOperator<NDIM> > d_coarsen_op;
+    SAMRAI::geom::CartesianSideDoubleWeightedAverage<NDIM> d_conservative_coarsen_op;
 };
 }// namespace IBTK
 

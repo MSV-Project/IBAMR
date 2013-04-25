@@ -46,9 +46,6 @@
 #include <PoissonSpecifications.h>
 #include <RefineSchedule.h>
 
-// BLITZ++ INCLUDES
-#include <blitz/tinyvec.h>
-
 // C++ STDLIB INCLUDES
 #include <vector>
 
@@ -111,8 +108,9 @@ public:
         SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db=NULL);
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~CCPoissonPETScLevelSolver();
 
     /*!
@@ -120,7 +118,7 @@ public:
      */
     void
     setOptionsPrefix(
-        const std::string& options_prefix);
+        const std::string options_prefix);
 
     /*!
      * \name Functions for specifying the Poisson problem.
@@ -143,9 +141,9 @@ public:
      *
      * \param bc_coef  Pointer to an object that can set the Robin boundary condition coefficients
      */
-    void
+    virtual void
     setPhysicalBcCoef(
-        SAMRAI::solv::RobinBcCoefStrategy<NDIM>* bc_coef);
+        SAMRAI::solv::RobinBcCoefStrategy<NDIM>* const bc_coef);
 
     /*!
      * \brief Set the SAMRAI::solv::RobinBcCoefStrategy object used to specify
@@ -157,30 +155,16 @@ public:
      *
      * \param bc_coefs  Vector of pointers to objects that can set the Robin boundary condition coefficients
      */
-    void
+    virtual void
     setPhysicalBcCoefs(
         const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& bc_coefs);
 
     /*!
-     * \brief Set the SAMRAI::solv::RobinBcCoefStrategy object used to specify
-     * physical boundary conditions.
-     *
-     * \note Any of the elements of \a bc_coefs may be NULL.  In this case,
-     * homogeneous Dirichlet boundary conditions are employed for that data
-     * depth.
-     *
-     * \param bc_coefs  Vector of pointers to objects that can set the Robin boundary condition coefficients
-     */
-    void
-    setPhysicalBcCoefs(
-        const blitz::TinyVector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs);
-
-    /*!
      * \brief Specify whether the boundary conditions are homogeneous.
      */
-    void
+    virtual void
     setHomogeneousBc(
-        bool homogeneous_bc);
+        const bool homogeneous_bc);
 
     /*!
      * \brief Set the hierarchy time, for use with the refinement schedules and
@@ -188,7 +172,7 @@ public:
      */
     void
     setTime(
-        double time);
+        const double time);
 
     //\}
 
@@ -234,7 +218,7 @@ public:
      * \return \p true if the solver converged to the specified tolerances, \p
      * false otherwise
      */
-    bool
+    virtual bool
     solveSystem(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -276,7 +260,7 @@ public:
      *
      * \see deallocateSolverState
      */
-    void
+    virtual void
     initializeSolverState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -290,7 +274,7 @@ public:
      *
      * \see initializeSolverState
      */
-    void
+    virtual void
     deallocateSolverState();
 
     //\}
@@ -303,53 +287,53 @@ public:
     /*!
      * \brief Set whether the initial guess is non-zero.
      */
-    void
+    virtual void
     setInitialGuessNonzero(
         bool initial_guess_nonzero=true);
 
     /*!
      * \brief Get whether the initial guess is non-zero.
      */
-    bool
+    virtual bool
     getInitialGuessNonzero() const;
 
     /*!
      * \brief Set the maximum number of iterations to use per solve.
      */
-    void
+    virtual void
     setMaxIterations(
         int max_iterations);
 
     /*!
      * \brief Get the maximum number of iterations to use per solve.
      */
-    int
+    virtual int
     getMaxIterations() const;
 
     /*!
      * \brief Set the absolute residual tolerance for convergence.
      */
-    void
+    virtual void
     setAbsoluteTolerance(
         double abs_residual_tol);
 
     /*!
      * \brief Get the absolute residual tolerance for convergence.
      */
-    double
+    virtual double
     getAbsoluteTolerance() const;
 
     /*!
      * \brief Set the relative residual tolerance for convergence.
      */
-    void
+    virtual void
     setRelativeTolerance(
         double rel_residual_tol);
 
     /*!
      * \brief Get the relative residual tolerance for convergence.
      */
-    double
+    virtual double
     getRelativeTolerance() const;
 
     //\}
@@ -362,13 +346,13 @@ public:
     /*!
      * \brief Return the iteration count from the most recent linear solve.
      */
-    int
+    virtual int
     getNumIterations() const;
 
     /*!
      * \brief Return the residual norm from the most recent iteration.
      */
-    double
+    virtual double
     getResidualNorm() const;
 
     //\}
@@ -381,7 +365,7 @@ public:
     /*!
      * \brief Enable or disable logging.
      */
-    void
+    virtual void
     enableLogging(
         bool enabled=true);
 

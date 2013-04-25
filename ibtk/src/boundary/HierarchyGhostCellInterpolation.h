@@ -47,9 +47,6 @@
 #include <PatchHierarchy.h>
 #include <RefineAlgorithm.h>
 
-// BLITZ++ INCLUDES
-#include <blitz/tinyvec.h>
-
 // C++ STDLIB INCLUDES
 #include <vector>
 
@@ -67,7 +64,7 @@ namespace IBTK
  * and refining.
  */
 class HierarchyGhostCellInterpolation
-    : public SAMRAI::tbox::DescribedClass
+    : public virtual SAMRAI::tbox::DescribedClass
 {
 public:
     /*!
@@ -86,10 +83,10 @@ public:
          */
         inline
         InterpolationTransactionComponent(
-            int data_idx=-1,
+            const int data_idx=-1,
             const std::string& coarsen_op_name="NONE",
             const std::string& phys_bdry_extrap_type="NONE",
-            bool consistent_type_2_bdry=false,
+            const bool consistent_type_2_bdry=false,
             SAMRAI::solv::RobinBcCoefStrategy<NDIM>* robin_bc_coef=NULL,
             SAMRAI::tbox::Pointer<SAMRAI::xfer::VariableFillPattern<NDIM> > fill_pattern=NULL)
             : d_data_idx(data_idx),
@@ -108,39 +105,17 @@ public:
          */
         inline
         InterpolationTransactionComponent(
-            int data_idx,
+            const int data_idx,
             const std::string& coarsen_op_name,
             const std::string& phys_bdry_extrap_type,
-            bool consistent_type_2_bdry,
-            const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& robin_bc_coefs,
+            const bool consistent_type_2_bdry,
+            const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*> robin_bc_coefs,
             SAMRAI::tbox::Pointer<SAMRAI::xfer::VariableFillPattern<NDIM> > fill_pattern=NULL)
             : d_data_idx(data_idx),
               d_coarsen_op_name(coarsen_op_name),
               d_phys_bdry_extrap_type(phys_bdry_extrap_type),
               d_consistent_type_2_bdry(consistent_type_2_bdry),
               d_robin_bc_coefs(robin_bc_coefs),
-              d_fill_pattern(fill_pattern.isNull() ? new SAMRAI::xfer::BoxGeometryFillPattern<NDIM>() : fill_pattern)
-            {
-                // intentionally blank
-                return;
-            }// InterpolationTransactionComponent
-
-        /*!
-         * \brief Alternate constructor.
-         */
-        inline
-        InterpolationTransactionComponent(
-            int data_idx,
-            const std::string& coarsen_op_name,
-            const std::string& phys_bdry_extrap_type,
-            bool consistent_type_2_bdry,
-            const blitz::TinyVector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*,NDIM>& robin_bc_coefs,
-            SAMRAI::tbox::Pointer<SAMRAI::xfer::VariableFillPattern<NDIM> > fill_pattern=NULL)
-            : d_data_idx(data_idx),
-              d_coarsen_op_name(coarsen_op_name),
-              d_phys_bdry_extrap_type(phys_bdry_extrap_type),
-              d_consistent_type_2_bdry(consistent_type_2_bdry),
-              d_robin_bc_coefs(robin_bc_coefs.data(),robin_bc_coefs.data()+NDIM),
               d_fill_pattern(fill_pattern.isNull() ? new SAMRAI::xfer::BoxGeometryFillPattern<NDIM>() : fill_pattern)
             {
                 // intentionally blank
@@ -216,6 +191,7 @@ public:
     /*!
      * \brief Destructor.
      */
+    virtual
     ~HierarchyGhostCellInterpolation();
 
     /*!
@@ -223,7 +199,7 @@ public:
      */
     void
     setHomogeneousBc(
-        bool homogeneous_bc);
+        const bool homogeneous_bc);
 
     /*!
      * \brief Setup the hierarchy ghost cell interpolation operator to perform
@@ -232,10 +208,10 @@ public:
      */
     void
     initializeOperatorState(
-        InterpolationTransactionComponent transaction_comp,
+        const InterpolationTransactionComponent transaction_comp,
         SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        int coarsest_ln=-1,
-        int finest_ln=-1);
+        const int coarsest_ln=-1,
+        const int finest_ln=-1);
 
     /*!
      * \brief Setup the hierarchy ghost cell interpolation operator to perform
@@ -244,10 +220,10 @@ public:
      */
     void
     initializeOperatorState(
-        const std::vector<InterpolationTransactionComponent>& transaction_comps,
+        const std::vector<InterpolationTransactionComponent> transaction_comps,
         SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        int coarsest_ln=-1,
-        int finest_ln=-1);
+        const int coarsest_ln=-1,
+        const int finest_ln=-1);
 
     /*!
      * \brief Reset transaction component with the interpolation operator.
@@ -282,7 +258,7 @@ public:
      */
     void
     fillData(
-        double fill_time);
+        const double& fill_time);
 
 protected:
 

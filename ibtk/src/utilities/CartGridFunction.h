@@ -56,7 +56,7 @@ namespace IBTK
  * evaluating functions to set values in SAMRAI::hier::PatchData objects.
  */
 class CartGridFunction
-    : public SAMRAI::tbox::DescribedClass
+    : public virtual SAMRAI::tbox::DescribedClass
 {
 public:
     /*!
@@ -92,13 +92,13 @@ public:
      */
     virtual void
     setDataOnPatchHierarchy(
-        int data_idx,
+        const int data_idx,
         SAMRAI::tbox::Pointer<SAMRAI::hier::Variable<NDIM> > var,
         SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        double data_time,
-        bool initial_time=false,
-        int coarsest_ln=-1,
-        int finest_ln=-1);
+        const double data_time,
+        const bool initial_time=false,
+        const int coarsest_ln=-1,
+        const int finest_ln=-1);
 
     /*!
      * \brief Evaluate the function on the patch interiors on the specified
@@ -108,11 +108,11 @@ public:
      */
     virtual void
     setDataOnPatchLevel(
-        int data_idx,
+        const int data_idx,
         SAMRAI::tbox::Pointer<SAMRAI::hier::Variable<NDIM> > var,
         SAMRAI::tbox::Pointer<SAMRAI::hier::PatchLevel<NDIM> > patch_level,
-        double data_time,
-        bool initial_time=false);
+        const double data_time,
+        const bool initial_time=false);
 
     /*!
      * \brief Pure virtual function to evaluate the function on the patch
@@ -120,11 +120,11 @@ public:
      */
     virtual void
     setDataOnPatch(
-        int data_idx,
+        const int data_idx,
         SAMRAI::tbox::Pointer<SAMRAI::hier::Variable<NDIM> > var,
         SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
-        double data_time,
-        bool initial_time=false,
+        const double data_time,
+        const bool initial_time=false,
         SAMRAI::tbox::Pointer<SAMRAI::hier::PatchLevel<NDIM> > patch_level=SAMRAI::tbox::Pointer<SAMRAI::hier::PatchLevel<NDIM> >(NULL)) = 0;
 
     //\}

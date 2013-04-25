@@ -51,7 +51,7 @@ namespace IBTK
  * integer keys in parallel.
  */
 class ParallelSet
-    : public SAMRAI::tbox::DescribedClass
+    : public virtual SAMRAI::tbox::DescribedClass
 {
 public:
     /*!
@@ -96,7 +96,7 @@ public:
      */
     void
     addItem(
-        int key);
+        const int key);
 
     /*!
      * \brief Remove an item from the set.
@@ -111,7 +111,7 @@ public:
      */
     void
     removeItem(
-        int key);
+        const int key);
 
     /*!
      * \brief Communicate data to (re-)initialize the set.

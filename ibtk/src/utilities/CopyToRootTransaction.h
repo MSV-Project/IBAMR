@@ -51,22 +51,23 @@ namespace IBTK
  * \note This class is designed to be used with uniform grid data only.
  */
 class CopyToRootTransaction
-    : public SAMRAI::tbox::Transaction
+    : public virtual SAMRAI::tbox::Transaction
 {
 public:
     /*!
      * \brief Constructor
      */
     CopyToRootTransaction(
-        int src_proc,
-        int dst_proc,
+        const int src_proc,
+        const int dst_proc,
         SAMRAI::tbox::Pointer<SAMRAI::hier::PatchLevel<NDIM> > patch_level,
-        int src_patch_data_idx,
+        const int src_patch_data_idx,
         SAMRAI::tbox::Pointer<SAMRAI::hier::PatchData<NDIM> > dst_patch_data);
 
     /*!
      * \brief Destructor
      */
+    virtual
     ~CopyToRootTransaction();
 
     /*!
@@ -79,7 +80,7 @@ public:
      * Return a boolean indicating whether this transaction can estimate the
      * size of an incoming message.
      */
-    bool
+    virtual bool
     canEstimateIncomingMessageSize();
 
     /*!
@@ -87,51 +88,51 @@ public:
      * This routine is only called if the transaction can estimate the
      * size of the incoming message.
      */
-    int
+    virtual int
     computeIncomingMessageSize();
 
     /*!
      * Return the buffer space needed for the outgoing message.
      */
-    int
+    virtual int
     computeOutgoingMessageSize();
 
     /*!
      * Return the sending processor for the communications transaction.
      */
-    int
+    virtual int
     getSourceProcessor();
 
     /*!
      * Return the receiving processor for the communications transaction.
      */
-    int
+    virtual int
     getDestinationProcessor();
 
     /*!
      * Pack the transaction data into the message stream.
      */
-    void
+    virtual void
     packStream(
         SAMRAI::tbox::AbstractStream& stream);
 
     /*!
      * Unpack the transaction data from the message stream.
      */
-    void
+    virtual void
     unpackStream(
         SAMRAI::tbox::AbstractStream& stream);
 
     /*!
      * Perform the local data copy for the transaction.
      */
-    void
+    virtual void
     copyLocalData();
 
     /*!
      * Print out transaction information.
      */
-    void
+    virtual void
     printClassData(
         std::ostream& stream) const;
 

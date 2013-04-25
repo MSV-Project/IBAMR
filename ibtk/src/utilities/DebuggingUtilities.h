@@ -36,7 +36,7 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 // IBTK INCLUDES
-#include <ibtk/LData.h>
+#include <ibtk/LNodeLevelData.h>
 
 // SAMRAI INCLUDES
 #include <PatchHierarchy.h>
@@ -56,52 +56,52 @@ public:
      */
     static bool
     checkCellDataForNaNs(
-        int patch_data_idx,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        bool interior_only=true,
-        int coarsest_ln=-1,
-        int finest_ln=-1);
+        const int patch_data_idx,
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        const bool interior_only=true,
+        const int coarsest_ln=-1,
+        const int finest_ln=-1);
 
     /*!
      * \brief Check a face-centered variable for NaN or unusually large values.
      */
     static bool
     checkFaceDataForNaNs(
-        int patch_data_idx,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        bool interior_only=true,
-        int coarsest_ln=-1,
-        int finest_ln=-1);
+        const int patch_data_idx,
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        const bool interior_only=true,
+        const int coarsest_ln=-1,
+        const int finest_ln=-1);
 
     /*!
      * \brief Check a node-centered variable for NaN or unusually large values.
      */
     static bool
     checkNodeDataForNaNs(
-        int patch_data_idx,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        bool interior_only=true,
-        int coarsest_ln=-1,
-        int finest_ln=-1);
+        const int patch_data_idx,
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        const bool interior_only=true,
+        const int coarsest_ln=-1,
+        const int finest_ln=-1);
 
     /*!
      * \brief Check a side-centered variable for NaN or unusually large values.
      */
     static bool
     checkSideDataForNaNs(
-        int patch_data_idx,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        bool interior_only=true,
-        int coarsest_ln=-1,
-        int finest_ln=-1);
+        const int patch_data_idx,
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        const bool interior_only=true,
+        const int coarsest_ln=-1,
+        const int finest_ln=-1);
 
     /*!
      * \brief Save the local portion of a cell-centered variable to disk.
      */
     static void
     saveCellData(
-        int patch_data_idx,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        const int patch_data_idx,
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
         const std::string& filename,
         const std::string& dirname);
 
@@ -110,8 +110,8 @@ public:
      */
     static void
     saveFaceData(
-        int patch_data_idx,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        const int patch_data_idx,
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
         const std::string& filename,
         const std::string& dirname);
 
@@ -120,8 +120,8 @@ public:
      */
     static void
     saveNodeData(
-        int patch_data_idx,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        const int patch_data_idx,
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
         const std::string& filename,
         const std::string& dirname);
 
@@ -130,8 +130,8 @@ public:
      */
     static void
     saveSideData(
-        int patch_data_idx,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        const int patch_data_idx,
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
         const std::string& filename,
         const std::string& dirname);
 
@@ -140,8 +140,8 @@ public:
      */
     static void
     saveLagrangianData(
-        SAMRAI::tbox::Pointer<LData> lag_data,
-        bool save_ghost_nodes,
+        const SAMRAI::tbox::Pointer<LNodeLevelData> lag_data,
+        const bool save_ghost_nodes,
         const std::string& filename,
         const std::string& dirname);
 

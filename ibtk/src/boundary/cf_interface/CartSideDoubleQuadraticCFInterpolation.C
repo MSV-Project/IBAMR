@@ -39,7 +39,6 @@
 #define included_IBTK_config
 #endif
 
-
 #ifndef included_SAMRAI_config
 #include <SAMRAI_config.h>
 #define included_SAMRAI_config
@@ -59,12 +58,12 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define SC_QUAD_TANGENTIAL_INTERPOLATION_FC FC_GLOBAL(scquadtangentialinterpolation2d,SCQUADTANGENTIALINTERPOLATION2D)
-#define SC_QUAD_NORMAL_INTERPOLATION_FC FC_GLOBAL(scquadnormalinterpolation2d,SCQUADNORMALINTERPOLATION2D)
+#define SC_QUAD_TANGENTIAL_INTERPOLATION_FC FC_FUNC(scquadtangentialinterpolation2d,SCQUADTANGENTIALINTERPOLATION2D)
+#define SC_QUAD_NORMAL_INTERPOLATION_FC FC_FUNC(scquadnormalinterpolation2d,SCQUADNORMALINTERPOLATION2D)
 #endif
 #if (NDIM == 3)
-#define SC_QUAD_TANGENTIAL_INTERPOLATION_FC FC_GLOBAL(scquadtangentialinterpolation3d,SCQUADTANGENTIALINTERPOLATION3D)
-#define SC_QUAD_NORMAL_INTERPOLATION_FC FC_GLOBAL(scquadnormalinterpolation3d,SCQUADNORMALINTERPOLATION3D)
+#define SC_QUAD_TANGENTIAL_INTERPOLATION_FC FC_FUNC(scquadtangentialinterpolation3d,SCQUADTANGENTIALINTERPOLATION3D)
+#define SC_QUAD_NORMAL_INTERPOLATION_FC FC_FUNC(scquadnormalinterpolation3d,SCQUADNORMALINTERPOLATION3D)
 #endif
 
 // Function interfaces
@@ -171,9 +170,9 @@ CartSideDoubleQuadraticCFInterpolation::~CartSideDoubleQuadraticCFInterpolation(
 
 void
 CartSideDoubleQuadraticCFInterpolation::setPhysicalBoundaryConditions(
-    Patch<NDIM>& /*patch*/,
-    const double /*fill_time*/,
-    const IntVector<NDIM>& /*ghost_width_to_fill*/)
+    Patch<NDIM>& patch,
+    const double fill_time,
+    const IntVector<NDIM>& ghost_width_to_fill)
 {
     // intentionally blank
     return;
@@ -190,10 +189,10 @@ CartSideDoubleQuadraticCFInterpolation::getRefineOpStencilWidth() const
 
 void
 CartSideDoubleQuadraticCFInterpolation::preprocessRefine(
-    Patch<NDIM>& /*fine*/,
-    const Patch<NDIM>& /*coarse*/,
-    const Box<NDIM>& /*fine_box*/,
-    const IntVector<NDIM>& /*ratio*/)
+    Patch<NDIM>& fine,
+    const Patch<NDIM>& coarse,
+    const Box<NDIM>& fine_box,
+    const IntVector<NDIM>& ratio)
 {
     // intentionally blank
     return;
@@ -279,7 +278,7 @@ CartSideDoubleQuadraticCFInterpolation::postprocessRefine(
         {
             const BoundaryBox<NDIM>& bdry_box = cf_bdry_codim1_boxes[k];
             const Box<NDIM> bc_fill_box = pgeom_fine->getBoundaryFillBox(bdry_box, patch_box_fine, ghost_width_to_fill);
-            const unsigned int location_index = bdry_box.getLocationIndex();
+            const int location_index = bdry_box.getLocationIndex();
             for (int depth = 0; depth < data_depth; ++depth)
             {
                 double* const U_fine0 = fdata->getPointer(0,depth);
@@ -440,7 +439,7 @@ void
 CartSideDoubleQuadraticCFInterpolation::computeNormalExtension(
     Patch<NDIM>& patch,
     const IntVector<NDIM>& ratio,
-    const IntVector<NDIM>& /*ghost_width_to_fill*/)
+    const IntVector<NDIM>& ghost_width_to_fill)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(!d_hierarchy.isNull());
@@ -509,7 +508,7 @@ CartSideDoubleQuadraticCFInterpolation::computeNormalExtension(
         {
             const BoundaryBox<NDIM>& bdry_box = cf_bdry_codim1_boxes[k];
             const Box<NDIM> bc_fill_box = pgeom->getBoundaryFillBox(bdry_box, patch_box, ghost_width_to_fill);
-            const unsigned int location_index = bdry_box.getLocationIndex();
+            const int location_index = bdry_box.getLocationIndex();
             for (int depth = 0; depth < data_depth; ++depth)
             {
                 double* const U0 = data->getPointer(0,depth);
@@ -563,5 +562,10 @@ CartSideDoubleQuadraticCFInterpolation::computeNormalExtension(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::CartSideDoubleQuadraticCFInterpolation>;
 
 //////////////////////////////////////////////////////////////////////////////

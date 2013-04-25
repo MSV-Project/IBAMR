@@ -68,19 +68,19 @@ namespace IBAMR
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
 INSStaggeredPressureBcCoef::INSStaggeredPressureBcCoef(
-    const INSProblemCoefs* problem_coefs,
-    const blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs,
+    const INSCoefs& problem_coefs,
+    const std::vector<RobinBcCoefStrategy<NDIM>*>& u_bc_coefs,
     const bool homogeneous_bc)
     : d_problem_coefs(problem_coefs),
       d_u_current_idx(-1),
       d_u_new_idx(-1),
-      d_bc_coefs(static_cast<RobinBcCoefStrategy<NDIM>*>(NULL)),
+      d_u_bc_coefs(NDIM,static_cast<RobinBcCoefStrategy<NDIM>*>(NULL)),
       d_current_time(std::numeric_limits<double>::quiet_NaN()),
       d_new_time(std::numeric_limits<double>::quiet_NaN()),
       d_target_idx(-1),
       d_homogeneous_bc(false)
 {
-    setPhysicalBoundaryConditions(bc_coefs);
+    setVelocityPhysicalBcCoefs(u_bc_coefs);
     setHomogeneousBc(homogeneous_bc);
     return;
 }// INSStaggeredPressureBcCoef
@@ -108,20 +108,17 @@ INSStaggeredPressureBcCoef::setVelocityNewPatchDataIndex(
 }// setVelocityNewPatchDataIndex
 
 void
-INSStaggeredPressureBcCoef::setINSProblemCoefs(
-    const INSProblemCoefs* problem_coefs)
+INSStaggeredPressureBcCoef::setVelocityPhysicalBcCoefs(
+    const std::vector<RobinBcCoefStrategy<NDIM>*>& u_bc_coefs)
 {
-    d_problem_coefs = problem_coefs;
+    if (u_bc_coefs.size() != NDIM)
+    {
+        TBOX_ERROR("INSStaggeredPressureBcCoef::setVelocityPhysicalBcCoefs():\n"
+                   << "  precisely NDIM boundary condition objects must be provided." << std::endl);
+    }
+    d_u_bc_coefs = u_bc_coefs;
     return;
-}// setINSProblemCoefs
-
-void
-INSStaggeredPressureBcCoef::setPhysicalBoundaryConditions(
-    const blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs)
-{
-    d_bc_coefs = bc_coefs;
-    return;
-}// setPhysicalBoundaryConditions
+}// setVelocityPhysicalBcCoefs
 
 void
 INSStaggeredPressureBcCoef::setTimeInterval(
@@ -161,20 +158,19 @@ INSStaggeredPressureBcCoef::setBcCoefs(
 {
     const double half_time = 0.5*(d_current_time+d_new_time);
 #ifdef DEBUG_CHECK_ASSERTIONS
-    for (unsigned int d = 0; d < NDIM; ++d)
+    TBOX_ASSERT(d_u_bc_coefs.size() == NDIM);
+    for (unsigned l = 0; l < d_u_bc_coefs.size(); ++l)
     {
-        TBOX_ASSERT(d_bc_coefs[d] != NULL);
+        TBOX_ASSERT(d_u_bc_coefs[l] != NULL);
     }
     TBOX_ASSERT(MathUtilities<double>::equalEps(fill_time,d_new_time) ||
                 MathUtilities<double>::equalEps(fill_time,half_time));
     TBOX_ASSERT(!acoef_data.isNull());
     TBOX_ASSERT(!bcoef_data.isNull());
     TBOX_ASSERT(!gcoef_data.isNull());
-#else
-    NULL_USE(fill_time);
 #endif
-    const unsigned int location_index   = bdry_box.getLocationIndex();
-    const unsigned int bdry_normal_axis = location_index/2;
+    const int location_index   = bdry_box.getLocationIndex();
+    const int bdry_normal_axis = location_index/2;
     const bool is_lower        = location_index%2 == 0;
     const Box<NDIM>& bc_coef_box = acoef_data->getBox();
 #ifdef DEBUG_CHECK_ASSERTIONS
@@ -184,7 +180,7 @@ INSStaggeredPressureBcCoef::setBcCoefs(
 #endif
 
     // Set the unmodified velocity bc coefs.
-    d_bc_coefs[bdry_normal_axis]->setBcCoefs(acoef_data, bcoef_data, gcoef_data, variable, patch, bdry_box, half_time);
+    d_u_bc_coefs[bdry_normal_axis]->setBcCoefs(acoef_data, bcoef_data, gcoef_data, variable, patch, bdry_box, half_time);
 
     // Modify the velocity boundary conditions to correspond to pressure
     // boundary conditions.
@@ -207,7 +203,7 @@ INSStaggeredPressureBcCoef::setBcCoefs(
     const Box<NDIM> ghost_box = u_current_data->getGhostBox() * u_new_data->getGhostBox();
     Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch.getPatchGeometry();
     const double* const dx = pgeom->getDx();
-    const double mu = d_problem_coefs->getMu();
+    const double mu = d_problem_coefs.getMu();
     for (Box<NDIM>::Iterator it(bc_coef_box); it; it++)
     {
         const Index<NDIM>& i = it();
@@ -246,7 +242,7 @@ INSStaggeredPressureBcCoef::setBcCoefs(
                 i_intr1(bdry_normal_axis) -= 2;
             }
 
-            for (unsigned int d = 0; d < NDIM; ++d)
+            for (int d = 0; d < NDIM; ++d)
             {
                 if (d != bdry_normal_axis)
                 {
@@ -260,7 +256,7 @@ INSStaggeredPressureBcCoef::setBcCoefs(
 
             double du_norm_current_dx_norm = 0.0;
             double du_norm_new_dx_norm     = 0.0;
-            for (unsigned int axis = 0; axis < NDIM; ++axis)
+            for (int axis = 0; axis < NDIM; ++axis)
             {
                 if (axis != bdry_normal_axis)
                 {
@@ -298,15 +294,16 @@ IntVector<NDIM>
 INSStaggeredPressureBcCoef::numberOfExtensionsFillable() const
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    for (unsigned int d = 0; d < NDIM; ++d)
+    TBOX_ASSERT(d_u_bc_coefs.size() == NDIM);
+    for (unsigned l = 0; l < d_u_bc_coefs.size(); ++l)
     {
-        TBOX_ASSERT(d_bc_coefs[d] != NULL);
+        TBOX_ASSERT(d_u_bc_coefs[l] != NULL);
     }
 #endif
     IntVector<NDIM> ret_val(std::numeric_limits<int>::max());
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
-        ret_val = IntVector<NDIM>::min(ret_val, d_bc_coefs[d]->numberOfExtensionsFillable());
+        ret_val = IntVector<NDIM>::min(ret_val, d_u_bc_coefs[d]->numberOfExtensionsFillable());
     }
     return ret_val;
 }// numberOfExtensionsFillable
@@ -318,5 +315,7 @@ INSStaggeredPressureBcCoef::numberOfExtensionsFillable() const
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBAMR
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
 
 //////////////////////////////////////////////////////////////////////////////

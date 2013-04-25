@@ -52,18 +52,19 @@ namespace IBTK
  * finite-difference approach.
  */
 class PETScMFFDJacobianOperator
-    : public JacobianOperator
+    : public virtual JacobianOperator
 {
 public:
     /*!
      * \brief Default constructor.
      */
     PETScMFFDJacobianOperator(
-        const std::string& options_prefix="");
+        std::string options_prefix="");
 
     /*!
-     * \brief Empty destructor.
+     * \brief Virtual empty destructor.
      */
+    virtual
     ~PETScMFFDJacobianOperator();
 
     /*!
@@ -92,7 +93,7 @@ public:
      *
      * \param x value where the Jacobian is to be evaluated
      */
-    void
+    virtual void
     formJacobian(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& u);
 
@@ -102,7 +103,7 @@ public:
      * \note This member function returns a NULL pointer if the operator is not
      * initialized, or if formJacobian() has not been called.
      */
-    SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> >
+    virtual SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> >
     getBaseVector() const;
 
     //\}
@@ -134,7 +135,7 @@ public:
      * \param x input
      * \param y output: y=Ax
      */
-    void
+    virtual void
     apply(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
@@ -171,7 +172,7 @@ public:
      *
      * \note The default implementation is empty.
      */
-    void
+    virtual void
     initializeOperatorState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& in,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& out);
@@ -188,7 +189,7 @@ public:
      *
      * \note The default implementation is empty.
      */
-    void
+    virtual void
     deallocateOperatorState();
 
     //\}
@@ -203,7 +204,7 @@ public:
      *
      * \param enabled logging state: true=on, false=off
      */
-    void
+    virtual void
     enableLogging(
         bool enabled=true);
 

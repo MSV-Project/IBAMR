@@ -58,9 +58,6 @@
 #include <tbox/Database.h>
 #include <tbox/Pointer.h>
 
-// BLITZ++ INCLUDES
-#include <blitz/tinyvec.h>
-
 // C++ STDLIB INCLUDES
 #include <ostream>
 #include <string>
@@ -123,8 +120,9 @@ public:
         SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db=NULL);
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~SCPoissonHypreLevelSolver();
 
     /*!
@@ -149,16 +147,16 @@ public:
      *
      * \param bc_coefs  Vector of pointers to objects that can set the Robin boundary condition coefficients
      */
-    void
+    virtual void
     setPhysicalBcCoefs(
-        const blitz::TinyVector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs);
+        const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& bc_coefs);
 
     /*!
      * \brief Specify whether the boundary conditions are homogeneous.
      */
-    void
+    virtual void
     setHomogeneousBc(
-        bool homogeneous_bc);
+        const bool homogeneous_bc);
 
     /*!
      * \brief Set the hierarchy time, for use with the refinement schedules and
@@ -166,7 +164,7 @@ public:
      */
     void
     setTime(
-        double time);
+        const double time);
 
     //\}
 
@@ -212,7 +210,7 @@ public:
      * \return \p true if the solver converged to the specified tolerances, \p
      * false otherwise
      */
-    bool
+    virtual bool
     solveSystem(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -254,7 +252,7 @@ public:
      *
      * \see deallocateSolverState
      */
-    void
+    virtual void
     initializeSolverState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -268,7 +266,7 @@ public:
      *
      * \see initializeSolverState
      */
-    void
+    virtual void
     deallocateSolverState();
 
     //\}
@@ -281,53 +279,53 @@ public:
     /*!
      * \brief Set whether the initial guess is non-zero.
      */
-    void
+    virtual void
     setInitialGuessNonzero(
         bool initial_guess_nonzero=true);
 
     /*!
      * \brief Get whether the initial guess is non-zero.
      */
-    bool
+    virtual bool
     getInitialGuessNonzero() const;
 
     /*!
      * \brief Set the maximum number of iterations to use per solve.
      */
-    void
+    virtual void
     setMaxIterations(
         int max_iterations);
 
     /*!
      * \brief Get the maximum number of iterations to use per solve.
      */
-    int
+    virtual int
     getMaxIterations() const;
 
     /*!
      * \brief Set the absolute residual tolerance for convergence.
      */
-    void
+    virtual void
     setAbsoluteTolerance(
         double abs_residual_tol);
 
     /*!
      * \brief Get the absolute residual tolerance for convergence.
      */
-    double
+    virtual double
     getAbsoluteTolerance() const;
 
     /*!
      * \brief Set the relative residual tolerance for convergence.
      */
-    void
+    virtual void
     setRelativeTolerance(
         double rel_residual_tol);
 
     /*!
      * \brief Get the relative residual tolerance for convergence.
      */
-    double
+    virtual double
     getRelativeTolerance() const;
 
     //\}
@@ -340,13 +338,13 @@ public:
     /*!
      * \brief Return the iteration count from the most recent linear solve.
      */
-    int
+    virtual int
     getNumIterations() const;
 
     /*!
      * \brief Return the residual norm from the most recent iteration.
      */
-    double
+    virtual double
     getResidualNorm() const;
 
     //\}
@@ -359,7 +357,7 @@ public:
     /*!
      * \brief Enable or disable logging.
      */
-    void
+    virtual void
     enableLogging(
         bool enabled=true);
 
@@ -408,16 +406,16 @@ private:
     setupHypreSolver();
     bool
     solveSystem(
-        int x_idx,
-        int b_idx);
+        const int x_idx,
+        const int b_idx);
     void
     copyToHypre(
         HYPRE_SStructVector vector,
-        SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> > src_data,
+        const SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> >& src_data,
         const SAMRAI::hier::Box<NDIM>& box);
     void
     copyFromHypre(
-        SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> > dst_data,
+        SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> >& dst_data,
         HYPRE_SStructVector vector,
         const SAMRAI::hier::Box<NDIM>& box);
     void
@@ -431,9 +429,12 @@ private:
      */
     void
     adjustBoundaryRhsEntries_constant_coefficients(
-        SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> > rhs_data,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
-        const SAMRAI::tbox::Array<SAMRAI::hier::BoundaryBox<NDIM> >& physical_codim1_boxes);
+        SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> >& rhs_data,
+        const double D,
+        const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& bc_coefs,
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> >& patch,
+        const SAMRAI::tbox::Array<SAMRAI::hier::BoundaryBox<NDIM> >& physical_codim1_boxes,
+        const double* const dx);
 
     /*!
      * \brief Object name.
@@ -469,7 +470,7 @@ private:
      * related data.
      */
     SAMRAI::solv::LocationIndexRobinBcCoefs<NDIM>* const d_default_bc_coef;
-    blitz::TinyVector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*,NDIM> d_bc_coefs;
+    std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*> d_bc_coefs;
     bool d_homogeneous_bc;
     double d_apply_time;
 

@@ -88,10 +88,10 @@ CCPoissonPETScLevelSolver::CCPoissonPETScLevelSolver(
       d_homogeneous_bc(true),
       d_apply_time(0.0),
       d_options_prefix(""),
-      d_petsc_ksp(PETSC_NULL),
-      d_petsc_mat(PETSC_NULL),
-      d_petsc_x(PETSC_NULL),
-      d_petsc_b(PETSC_NULL),
+      d_petsc_ksp(static_cast<KSP>(NULL)),
+      d_petsc_mat(static_cast<Mat>(NULL)),
+      d_petsc_x(static_cast<Vec>(NULL)),
+      d_petsc_b(static_cast<Vec>(NULL)),
       d_max_iterations(10),
       d_abs_residual_tol(0.0),
       d_rel_residual_tol(1.0e-6),
@@ -121,7 +121,7 @@ CCPoissonPETScLevelSolver::CCPoissonPETScLevelSolver(
 
     // Setup a default boundary condition object that specifies homogeneous
     // Dirichlet boundary conditions.
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         d_default_bc_coef->setBoundaryValue(2*d  ,0.0);
         d_default_bc_coef->setBoundaryValue(2*d+1,0.0);
@@ -180,7 +180,7 @@ CCPoissonPETScLevelSolver::setPhysicalBcCoefs(
     const std::vector<RobinBcCoefStrategy<NDIM>*>& bc_coefs)
 {
     d_bc_coefs.resize(bc_coefs.size());
-    for (unsigned int l = 0; l < bc_coefs.size(); ++l)
+    for (unsigned l = 0; l < bc_coefs.size(); ++l)
     {
         if (bc_coefs[l] != NULL)
         {
@@ -191,14 +191,6 @@ CCPoissonPETScLevelSolver::setPhysicalBcCoefs(
             d_bc_coefs[l] = d_default_bc_coef;
         }
     }
-    return;
-}// setPhysicalBcCoefs
-
-void
-CCPoissonPETScLevelSolver::setPhysicalBcCoefs(
-    const blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs)
-{
-    setPhysicalBcCoefs(std::vector<RobinBcCoefStrategy<NDIM>*>(&bc_coefs[0],&bc_coefs[0]+NDIM));
     return;
 }// setPhysicalBcCoefs
 
@@ -223,7 +215,7 @@ CCPoissonPETScLevelSolver::solveSystem(
     SAMRAIVectorReal<NDIM,double>& x,
     SAMRAIVectorReal<NDIM,double>& b)
 {
-    IBTK_TIMER_START(t_solve_system);
+    t_solve_system->start();
 
     int ierr;
 
@@ -263,7 +255,7 @@ CCPoissonPETScLevelSolver::solveSystem(
     // Deallocate the solver, when necessary.
     if (deallocate_after_solve) deallocateSolverState();
 
-    IBTK_TIMER_STOP(t_solve_system);
+    t_solve_system->stop();
     return converged;
 }// solveSystem
 
@@ -272,7 +264,7 @@ CCPoissonPETScLevelSolver::initializeSolverState(
     const SAMRAIVectorReal<NDIM,double>& x,
     const SAMRAIVectorReal<NDIM,double>& b)
 {
-    IBTK_TIMER_START(t_initialize_solver_state);
+    t_initialize_solver_state->start();
 
     // Rudimentary error checking.
 #ifdef DEBUG_CHECK_ASSERTIONS
@@ -374,7 +366,7 @@ CCPoissonPETScLevelSolver::initializeSolverState(
     // Indicate that the solver is initialized.
     d_is_initialized = true;
 
-    IBTK_TIMER_STOP(t_initialize_solver_state);
+    t_initialize_solver_state->stop();
     return;
 }// initializeSolverState
 
@@ -383,20 +375,20 @@ CCPoissonPETScLevelSolver::deallocateSolverState()
 {
     if (!d_is_initialized) return;
 
-    IBTK_TIMER_START(t_deallocate_solver_state);
+    t_deallocate_solver_state->start();
 
     // Deallocate PETSc objects.
     int ierr;
-    ierr = KSPDestroy(&d_petsc_ksp); IBTK_CHKERRQ(ierr);
-    ierr = MatDestroy(&d_petsc_mat); IBTK_CHKERRQ(ierr);
-    ierr = VecDestroy(&d_petsc_x); IBTK_CHKERRQ(ierr);
-    ierr = VecDestroy(&d_petsc_b); IBTK_CHKERRQ(ierr);
+    ierr = KSPDestroy(d_petsc_ksp); IBTK_CHKERRQ(ierr);
+    ierr = MatDestroy(d_petsc_mat); IBTK_CHKERRQ(ierr);
+    ierr = VecDestroy(d_petsc_x); IBTK_CHKERRQ(ierr);
+    ierr = VecDestroy(d_petsc_b); IBTK_CHKERRQ(ierr);
     d_dof_index_fill.setNull();
 
-    d_petsc_ksp = PETSC_NULL;
-    d_petsc_mat = PETSC_NULL;
-    d_petsc_x = PETSC_NULL;
-    d_petsc_b = PETSC_NULL;
+    d_petsc_ksp = static_cast<KSP>(NULL);
+    d_petsc_mat = static_cast<Mat>(NULL);
+    d_petsc_x = static_cast<Vec>(NULL);
+    d_petsc_b = static_cast<Vec>(NULL);
 
     // Deallocate DOF index data.
     Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(d_level_num);
@@ -405,7 +397,7 @@ CCPoissonPETScLevelSolver::deallocateSolverState()
     // Indicate that the solver is NOT initialized.
     d_is_initialized = false;
 
-    IBTK_TIMER_STOP(t_deallocate_solver_state);
+    t_deallocate_solver_state->stop();
     return;
 }// deallocateSolverState
 
@@ -424,5 +416,10 @@ CCPoissonPETScLevelSolver::enableLogging(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::CCPoissonPETScLevelSolver>;
 
 //////////////////////////////////////////////////////////////////////////////

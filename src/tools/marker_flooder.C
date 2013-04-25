@@ -78,23 +78,19 @@ discard_comments(
     return output_string;
 }// discard_comments
 
-// number of Cartesian grid points in each coordinate direction
-static const blitz::TinyVector<int,NDIM> N(64 , 64 , 96);
-
-// length of computational domain
-static const blitz::TinyVector<double,NDIM> L(10.0 , 10.0 , 15.0);
-
-// Cartesian grid spacing
-static const blitz::TinyVector<double,NDIM> dx(L[0]/static_cast<double>(N[0]) , L[1]/static_cast<double>(N[1]) , L[2]/double(N[2]));
+// Mesh spacing parameters.
+static const int N[NDIM] = {64 , 64 , 96};                                                  // number of Cartesian grid points in each coordinate direction
+static const double L[NDIM] = {10.0 , 10.0 , 15.0};                                         // length of computational domain
+static const double dx[NDIM] = {L[0]/double(N[0]) , L[1]/double(N[1]) , L[2]/double(N[2])}; // Cartesian grid spacing
 
 inline TinyVector<int,NDIM>
 get_index(
     const TinyVector<double,NDIM>& X)
 {
     TinyVector<int,NDIM> i;
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
-        i[d] = static_cast<int>(floor(X[d]/dx[d]));
+        i[d] = int(floor(X[d]/dx[d]));
     }
     return i;
 }// get_index
@@ -104,9 +100,9 @@ get_posn(
     const TinyVector<int,NDIM>& i)
 {
     TinyVector<double,NDIM> X;
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
-        X[d] = (static_cast<double>(i[d])+0.5)*dx[d];
+        X[d] = (double(i[d])+0.5)*dx[d];
     }
     return X;
 }// get_posn
@@ -115,7 +111,7 @@ inline bool
 valid_index(
     const TinyVector<int,NDIM>& i)
 {
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         if (i[d] < 0 || i[d] >= N[d]) return false;
     }
@@ -158,7 +154,7 @@ main(
     // Construct an array of bools to keep track of which cells are occupied in
     // the grid.
     TinyVector<int,NDIM> extents;
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         extents[d] = N[d];
     }
@@ -235,7 +231,7 @@ main(
         line_string = discard_comments(line_string);
         istringstream line_stream(line_string);
         TinyVector<double,NDIM> X;
-        for (unsigned int d = 0; d < NDIM; ++d)
+        for (int d = 0; d < NDIM; ++d)
         {
             line_stream >> X[d];
         }
@@ -267,7 +263,7 @@ main(
              cit != active_set.end(); ++cit)
         {
             const TinyVector<int,NDIM>& i = (*cit);
-            for (unsigned int d = 0; d < NDIM; ++d)
+            for (int d = 0; d < NDIM; ++d)
             {
                 TinyVector<int,NDIM> i_lo = i;
                 i_lo(d) -= 1;
@@ -300,7 +296,7 @@ main(
     {
         const TinyVector<int,NDIM>& i = (*cit);
         const TinyVector<double,NDIM> X = get_posn(i);
-        for (unsigned int d = 0; d < NDIM; ++d)
+        for (int d = 0; d < NDIM; ++d)
         {
             output_file_stream << setw(7) << fixed << setprecision(3) << X[d] << (d == NDIM-1 ? "" : " ");
         }

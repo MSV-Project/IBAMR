@@ -34,8 +34,6 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
-
-
 #ifndef included_IBTK_config
 #include <IBTK_config.h>
 #define included_IBTK_config
@@ -60,124 +58,121 @@
 #include <tbox/Array.h>
 #include <tbox/Utilities.h>
 
-// BLITZ++ INCLUDES
-#include <blitz/tinyvec.h>
-
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define LAPLACE_FC FC_GLOBAL(laplace2d, LAPLACE2D)
-#define LAPLACE_ADD_FC FC_GLOBAL(laplaceadd2d, LAPLACEADD2D)
-#define DAMPED_LAPLACE_FC FC_GLOBAL(dampedlaplace2d, DAMPEDLAPLACE2D)
-#define DAMPED_LAPLACE_ADD_FC FC_GLOBAL(dampedlaplaceadd2d, DAMPEDLAPLACEADD2D)
+#define LAPLACE_FC FC_FUNC(laplace2d, LAPLACE2D)
+#define LAPLACE_ADD_FC FC_FUNC(laplaceadd2d, LAPLACEADD2D)
+#define DAMPED_LAPLACE_FC FC_FUNC(dampedlaplace2d, DAMPEDLAPLACE2D)
+#define DAMPED_LAPLACE_ADD_FC FC_FUNC(dampedlaplaceadd2d, DAMPEDLAPLACEADD2D)
 
-#define MULTIPLY1_FC FC_GLOBAL(multiply12d, MULTIPLY12D)
-#define MULTIPLY_ADD1_FC FC_GLOBAL(multiplyadd12d, MULTIPLYADD12D)
-#define MULTIPLY2_FC FC_GLOBAL(multiply22d, MULTIPLY22D)
-#define MULTIPLY_ADD2_FC FC_GLOBAL(multiplyadd22d, MULTIPLYADD22D)
-#define MULTIPLY_ADD3_FC FC_GLOBAL(multiplyadd32d, MULTIPLYADD32D)
+#define MULTIPLY1_FC FC_FUNC(multiply12d, MULTIPLY12D)
+#define MULTIPLY_ADD1_FC FC_FUNC(multiplyadd12d, MULTIPLYADD12D)
+#define MULTIPLY2_FC FC_FUNC(multiply22d, MULTIPLY22D)
+#define MULTIPLY_ADD2_FC FC_FUNC(multiplyadd22d, MULTIPLYADD22D)
+#define MULTIPLY_ADD3_FC FC_FUNC(multiplyadd32d, MULTIPLYADD32D)
 
-#define PW_L1_NORM_FC FC_GLOBAL(pwl1norm2d, PWL1NORM2D)
-#define PW_L2_NORM_FC FC_GLOBAL(pwl2norm2d, PWL2NORM2D)
-#define PW_MAX_NORM_FC FC_GLOBAL(pwmaxnorm2d, PWMAXNORM2D)
+#define PW_L1_NORM_FC FC_FUNC(pwl1norm2d, PWL1NORM2D)
+#define PW_L2_NORM_FC FC_FUNC(pwl2norm2d, PWL2NORM2D)
+#define PW_MAX_NORM_FC FC_FUNC(pwmaxnorm2d, PWMAXNORM2D)
 
-#define C_TO_C_CURL_FC FC_GLOBAL(ctoccurl2d, CTOCCURL2D)
-#define C_TO_C_DIV_FC FC_GLOBAL(ctocdiv2d, CTOCDIV2D)
-#define C_TO_C_DIV_ADD_FC FC_GLOBAL(ctocdivadd2d, CTOCDIVADD2D)
-#define C_TO_C_GRAD_FC FC_GLOBAL(ctocgrad2d, CTOCGRAD2D)
-#define C_TO_C_GRAD_ADD_FC FC_GLOBAL(ctocgradadd2d, CTOCGRADADD2D)
+#define C_TO_C_CURL_FC FC_FUNC(ctoccurl2d, CTOCCURL2D)
+#define C_TO_C_DIV_FC FC_FUNC(ctocdiv2d, CTOCDIV2D)
+#define C_TO_C_DIV_ADD_FC FC_FUNC(ctocdivadd2d, CTOCDIVADD2D)
+#define C_TO_C_GRAD_FC FC_FUNC(ctocgrad2d, CTOCGRAD2D)
+#define C_TO_C_GRAD_ADD_FC FC_FUNC(ctocgradadd2d, CTOCGRADADD2D)
 
-#define C_TO_C_ANISO_F_LAPLACE_FC FC_GLOBAL(ctocanisoflaplace2d, CTOCANISOFLAPLACE2D)
-#define C_TO_C_ANISO_F_LAPLACE_ADD_FC FC_GLOBAL(ctocanisoflaplaceadd2d, CTOCANISOFLAPLACEADD2D)
-#define C_TO_C_ANISO_F_DAMPED_LAPLACE_FC FC_GLOBAL(ctocanisofdampedlaplace2d, CTOCANISOFDAMPEDLAPLACE2D)
-#define C_TO_C_ANISO_F_DAMPED_LAPLACE_ADD_FC FC_GLOBAL(ctocanisofdampedlaplaceadd2d, CTOCANISOFDAMPEDLAPLACEADD2D)
+#define C_TO_C_ANISO_F_LAPLACE_FC FC_FUNC(ctocanisoflaplace2d, CTOCANISOFLAPLACE2D)
+#define C_TO_C_ANISO_F_LAPLACE_ADD_FC FC_FUNC(ctocanisoflaplaceadd2d, CTOCANISOFLAPLACEADD2D)
+#define C_TO_C_ANISO_F_DAMPED_LAPLACE_FC FC_FUNC(ctocanisofdampedlaplace2d, CTOCANISOFDAMPEDLAPLACE2D)
+#define C_TO_C_ANISO_F_DAMPED_LAPLACE_ADD_FC FC_FUNC(ctocanisofdampedlaplaceadd2d, CTOCANISOFDAMPEDLAPLACEADD2D)
 
-#define C_TO_C_ANISO_S_LAPLACE_FC FC_GLOBAL(ctocanisoslaplace2d, CTOCANISOSLAPLACE2D)
-#define C_TO_C_ANISO_S_LAPLACE_ADD_FC FC_GLOBAL(ctocanisoslaplaceadd2d, CTOCANISOSLAPLACEADD2D)
-#define C_TO_C_ANISO_S_DAMPED_LAPLACE_FC FC_GLOBAL(ctocanisosdampedlaplace2d, CTOCANISOSDAMPEDLAPLACE2D)
-#define C_TO_C_ANISO_S_DAMPED_LAPLACE_ADD_FC FC_GLOBAL(ctocanisosdampedlaplaceadd2d, CTOCANISOSDAMPEDLAPLACEADD2D)
+#define C_TO_C_ANISO_S_LAPLACE_FC FC_FUNC(ctocanisoslaplace2d, CTOCANISOSLAPLACE2D)
+#define C_TO_C_ANISO_S_LAPLACE_ADD_FC FC_FUNC(ctocanisoslaplaceadd2d, CTOCANISOSLAPLACEADD2D)
+#define C_TO_C_ANISO_S_DAMPED_LAPLACE_FC FC_FUNC(ctocanisosdampedlaplace2d, CTOCANISOSDAMPEDLAPLACE2D)
+#define C_TO_C_ANISO_S_DAMPED_LAPLACE_ADD_FC FC_FUNC(ctocanisosdampedlaplaceadd2d, CTOCANISOSDAMPEDLAPLACEADD2D)
 
-#define C_TO_F_GRAD_FC FC_GLOBAL(ctofgrad2d, CTOFGRAD2D)
-#define C_TO_F_FLUX_FC FC_GLOBAL(ctofflux2d, CTOFFLUX2D)
-#define C_TO_F_ANISO_FLUX_FC FC_GLOBAL(ctofanisoflux2d, CTOFANISOFLUX2D)
-#define C_TO_F_GRAD_ADD_FC FC_GLOBAL(ctofgradadd2d, CTOFGRADADD2D)
-#define C_TO_F_INTERP_FC FC_GLOBAL(ctofinterp2nd2d, CTOFINTERP2ND2D)
+#define C_TO_F_GRAD_FC FC_FUNC(ctofgrad2d, CTOFGRAD2D)
+#define C_TO_F_FLUX_FC FC_FUNC(ctofflux2d, CTOFFLUX2D)
+#define C_TO_F_ANISO_FLUX_FC FC_FUNC(ctofanisoflux2d, CTOFANISOFLUX2D)
+#define C_TO_F_GRAD_ADD_FC FC_FUNC(ctofgradadd2d, CTOFGRADADD2D)
+#define C_TO_F_INTERP_FC FC_FUNC(ctofinterp2nd2d, CTOFINTERP2ND2D)
 
-#define C_TO_S_GRAD_FC FC_GLOBAL(ctosgrad2d, CTOSGRAD2D)
-#define C_TO_S_FLUX_FC FC_GLOBAL(ctosflux2d, CTOSFLUX2D)
-#define C_TO_S_ANISO_FLUX_FC FC_GLOBAL(ctosanisoflux2d, CTOSANISOFLUX2D)
-#define C_TO_S_GRAD_ADD_FC FC_GLOBAL(ctosgradadd2d, CTOSGRADADD2D)
-#define C_TO_S_INTERP_FC FC_GLOBAL(ctosinterp2nd2d, CTOSINTERP2ND2D)
+#define C_TO_S_GRAD_FC FC_FUNC(ctosgrad2d, CTOSGRAD2D)
+#define C_TO_S_FLUX_FC FC_FUNC(ctosflux2d, CTOSFLUX2D)
+#define C_TO_S_ANISO_FLUX_FC FC_FUNC(ctosanisoflux2d, CTOSANISOFLUX2D)
+#define C_TO_S_GRAD_ADD_FC FC_FUNC(ctosgradadd2d, CTOSGRADADD2D)
+#define C_TO_S_INTERP_FC FC_FUNC(ctosinterp2nd2d, CTOSINTERP2ND2D)
 
-#define F_TO_C_CURL_FC FC_GLOBAL(ftoccurl2d, FTOCCURL2D)
-#define F_TO_C_DIV_FC FC_GLOBAL(ftocdiv2d, FTOCDIV2D)
-#define F_TO_C_DIV_ADD_FC FC_GLOBAL(ftocdivadd2d, FTOCDIVADD2D)
-#define F_TO_C_INTERP_FC FC_GLOBAL(ftocinterp2nd2d, FTOCINTERP2ND2D)
+#define F_TO_C_CURL_FC FC_FUNC(ftoccurl2d, FTOCCURL2D)
+#define F_TO_C_DIV_FC FC_FUNC(ftocdiv2d, FTOCDIV2D)
+#define F_TO_C_DIV_ADD_FC FC_FUNC(ftocdivadd2d, FTOCDIVADD2D)
+#define F_TO_C_INTERP_FC FC_FUNC(ftocinterp2nd2d, FTOCINTERP2ND2D)
 
-#define S_TO_C_CURL_FC FC_GLOBAL(stoccurl2d, STOCCURL2D)
-#define S_TO_C_DIV_FC FC_GLOBAL(stocdiv2d, STOCDIV2D)
-#define S_TO_C_DIV_ADD_FC FC_GLOBAL(stocdivadd2d, STOCDIVADD2D)
-#define S_TO_C_INTERP_FC FC_GLOBAL(stocinterp2nd2d, STOCINTERP2ND2D)
+#define S_TO_C_CURL_FC FC_FUNC(stoccurl2d, STOCCURL2D)
+#define S_TO_C_DIV_FC FC_FUNC(stocdiv2d, STOCDIV2D)
+#define S_TO_C_DIV_ADD_FC FC_FUNC(stocdivadd2d, STOCDIVADD2D)
+#define S_TO_C_INTERP_FC FC_FUNC(stocinterp2nd2d, STOCINTERP2ND2D)
 
-#define S_TO_S_VC_LAPLACE_FC FC_GLOBAL(stosvclaplace2d, STOSVCLAPLACE2D)
+#define S_TO_S_VC_LAPLACE_FC FC_FUNC(stosvclaplace2d, STOSVCLAPLACE2D)
 #endif // if (NDIM == 2)
 
 #if (NDIM == 3)
-#define LAPLACE_FC FC_GLOBAL(laplace3d, LAPLACE3D)
-#define LAPLACE_ADD_FC FC_GLOBAL(laplaceadd3d, LAPLACEADD3D)
-#define DAMPED_LAPLACE_FC FC_GLOBAL(dampedlaplace3d, DAMPEDLAPLACE3D)
-#define DAMPED_LAPLACE_ADD_FC FC_GLOBAL(dampedlaplaceadd3d, DAMPEDLAPLACEADD3D)
+#define LAPLACE_FC FC_FUNC(laplace3d, LAPLACE3D)
+#define LAPLACE_ADD_FC FC_FUNC(laplaceadd3d, LAPLACEADD3D)
+#define DAMPED_LAPLACE_FC FC_FUNC(dampedlaplace3d, DAMPEDLAPLACE3D)
+#define DAMPED_LAPLACE_ADD_FC FC_FUNC(dampedlaplaceadd3d, DAMPEDLAPLACEADD3D)
 
-#define MULTIPLY1_FC FC_GLOBAL(multiply13d, MULTIPLY13D)
-#define MULTIPLY_ADD1_FC FC_GLOBAL(multiplyadd13d, MULTIPLYADD13D)
-#define MULTIPLY2_FC FC_GLOBAL(multiply23d, MULTIPLY23D)
-#define MULTIPLY_ADD2_FC FC_GLOBAL(multiplyadd23d, MULTIPLYADD23D)
-#define MULTIPLY_ADD3_FC FC_GLOBAL(multiplyadd33d, MULTIPLYADD33D)
+#define MULTIPLY1_FC FC_FUNC(multiply13d, MULTIPLY13D)
+#define MULTIPLY_ADD1_FC FC_FUNC(multiplyadd13d, MULTIPLYADD13D)
+#define MULTIPLY2_FC FC_FUNC(multiply23d, MULTIPLY23D)
+#define MULTIPLY_ADD2_FC FC_FUNC(multiplyadd23d, MULTIPLYADD23D)
+#define MULTIPLY_ADD3_FC FC_FUNC(multiplyadd33d, MULTIPLYADD33D)
 
-#define PW_L1_NORM_FC FC_GLOBAL(pwl1norm3d, PWL1NORM3D)
-#define PW_L2_NORM_FC FC_GLOBAL(pwl2norm3d, PWL2NORM3D)
-#define PW_MAX_NORM_FC FC_GLOBAL(pwmaxnorm3d, PWMAXNORM3D)
+#define PW_L1_NORM_FC FC_FUNC(pwl1norm3d, PWL1NORM3D)
+#define PW_L2_NORM_FC FC_FUNC(pwl2norm3d, PWL2NORM3D)
+#define PW_MAX_NORM_FC FC_FUNC(pwmaxnorm3d, PWMAXNORM3D)
 
-#define C_TO_C_CURL_FC FC_GLOBAL(ctoccurl3d, CTOCCURL3D)
-#define C_TO_C_DIV_FC FC_GLOBAL(ctocdiv3d, CTOCDIV3D)
-#define C_TO_C_DIV_ADD_FC FC_GLOBAL(ctocdivadd3d, CTOCDIVADD3D)
-#define C_TO_C_GRAD_FC FC_GLOBAL(ctocgrad3d, CTOCGRAD3D)
-#define C_TO_C_GRAD_ADD_FC FC_GLOBAL(ctocgradadd3d, CTOCGRADADD3D)
+#define C_TO_C_CURL_FC FC_FUNC(ctoccurl3d, CTOCCURL3D)
+#define C_TO_C_DIV_FC FC_FUNC(ctocdiv3d, CTOCDIV3D)
+#define C_TO_C_DIV_ADD_FC FC_FUNC(ctocdivadd3d, CTOCDIVADD3D)
+#define C_TO_C_GRAD_FC FC_FUNC(ctocgrad3d, CTOCGRAD3D)
+#define C_TO_C_GRAD_ADD_FC FC_FUNC(ctocgradadd3d, CTOCGRADADD3D)
 
-#define C_TO_C_ANISO_F_LAPLACE_FC FC_GLOBAL(ctocanisoflaplace3d, CTOCANISOFLAPLACE3D)
-#define C_TO_C_ANISO_F_LAPLACE_ADD_FC FC_GLOBAL(ctocanisoflaplaceadd3d, CTOCANISOFLAPLACEADD3D)
-#define C_TO_C_ANISO_F_DAMPED_LAPLACE_FC FC_GLOBAL(ctocanisofdampedlaplace3d, CTOCANISOFDAMPEDLAPLACE3D)
-#define C_TO_C_ANISO_F_DAMPED_LAPLACE_ADD_FC FC_GLOBAL(ctocanisofdampedlaplaceadd3d, CTOCANISOFDAMPEDLAPLACEADD3D)
+#define C_TO_C_ANISO_F_LAPLACE_FC FC_FUNC(ctocanisoflaplace3d, CTOCANISOFLAPLACE3D)
+#define C_TO_C_ANISO_F_LAPLACE_ADD_FC FC_FUNC(ctocanisoflaplaceadd3d, CTOCANISOFLAPLACEADD3D)
+#define C_TO_C_ANISO_F_DAMPED_LAPLACE_FC FC_FUNC(ctocanisofdampedlaplace3d, CTOCANISOFDAMPEDLAPLACE3D)
+#define C_TO_C_ANISO_F_DAMPED_LAPLACE_ADD_FC FC_FUNC(ctocanisofdampedlaplaceadd3d, CTOCANISOFDAMPEDLAPLACEADD3D)
 
-#define C_TO_C_ANISO_S_LAPLACE_FC FC_GLOBAL(ctocanisoslaplace3d, CTOCANISOSLAPLACE3D)
-#define C_TO_C_ANISO_S_LAPLACE_ADD_FC FC_GLOBAL(ctocanisoslaplaceadd3d, CTOCANISOSLAPLACEADD3D)
-#define C_TO_C_ANISO_S_DAMPED_LAPLACE_FC FC_GLOBAL(ctocanisosdampedlaplace3d, CTOCANISOSDAMPEDLAPLACE3D)
-#define C_TO_C_ANISO_S_DAMPED_LAPLACE_ADD_FC FC_GLOBAL(ctocanisosdampedlaplaceadd3d, CTOCANISOSDAMPEDLAPLACEADD3D)
+#define C_TO_C_ANISO_S_LAPLACE_FC FC_FUNC(ctocanisoslaplace3d, CTOCANISOSLAPLACE3D)
+#define C_TO_C_ANISO_S_LAPLACE_ADD_FC FC_FUNC(ctocanisoslaplaceadd3d, CTOCANISOSLAPLACEADD3D)
+#define C_TO_C_ANISO_S_DAMPED_LAPLACE_FC FC_FUNC(ctocanisosdampedlaplace3d, CTOCANISOSDAMPEDLAPLACE3D)
+#define C_TO_C_ANISO_S_DAMPED_LAPLACE_ADD_FC FC_FUNC(ctocanisosdampedlaplaceadd3d, CTOCANISOSDAMPEDLAPLACEADD3D)
 
-#define C_TO_F_GRAD_FC FC_GLOBAL(ctofgrad3d, CTOFGRAD3D)
-#define C_TO_F_FLUX_FC FC_GLOBAL(ctofflux3d, CTOFFLUX3D)
-#define C_TO_F_ANISO_FLUX_FC FC_GLOBAL(ctofanisoflux3d, CTOFANISOFLUX3D)
-#define C_TO_F_GRAD_ADD_FC FC_GLOBAL(ctofgradadd3d, CTOFGRADADD3D)
-#define C_TO_F_INTERP_FC FC_GLOBAL(ctofinterp2nd3d, CTOFINTERP2ND3D)
+#define C_TO_F_GRAD_FC FC_FUNC(ctofgrad3d, CTOFGRAD3D)
+#define C_TO_F_FLUX_FC FC_FUNC(ctofflux3d, CTOFFLUX3D)
+#define C_TO_F_ANISO_FLUX_FC FC_FUNC(ctofanisoflux3d, CTOFANISOFLUX3D)
+#define C_TO_F_GRAD_ADD_FC FC_FUNC(ctofgradadd3d, CTOFGRADADD3D)
+#define C_TO_F_INTERP_FC FC_FUNC(ctofinterp2nd3d, CTOFINTERP2ND3D)
 
-#define C_TO_S_GRAD_FC FC_GLOBAL(ctosgrad3d, CTOSGRAD3D)
-#define C_TO_S_FLUX_FC FC_GLOBAL(ctosflux3d, CTOSFLUX3D)
-#define C_TO_S_ANISO_FLUX_FC FC_GLOBAL(ctosanisoflux3d, CTOSANISOFLUX3D)
-#define C_TO_S_GRAD_ADD_FC FC_GLOBAL(ctosgradadd3d, CTOSGRADADD3D)
-#define C_TO_S_INTERP_FC FC_GLOBAL(ctosinterp2nd3d, CTOSINTERP2ND3D)
+#define C_TO_S_GRAD_FC FC_FUNC(ctosgrad3d, CTOSGRAD3D)
+#define C_TO_S_FLUX_FC FC_FUNC(ctosflux3d, CTOSFLUX3D)
+#define C_TO_S_ANISO_FLUX_FC FC_FUNC(ctosanisoflux3d, CTOSANISOFLUX3D)
+#define C_TO_S_GRAD_ADD_FC FC_FUNC(ctosgradadd3d, CTOSGRADADD3D)
+#define C_TO_S_INTERP_FC FC_FUNC(ctosinterp2nd3d, CTOSINTERP2ND3D)
 
-#define F_TO_C_CURL_FC FC_GLOBAL(ftoccurl3d, FTOCCURL3D)
-#define F_TO_C_DIV_FC FC_GLOBAL(ftocdiv3d, FTOCDIV3D)
-#define F_TO_C_DIV_ADD_FC FC_GLOBAL(ftocdivadd3d, FTOCDIVADD3D)
-#define F_TO_C_INTERP_FC FC_GLOBAL(ftocinterp2nd3d, FTOCINTERP2ND3D)
+#define F_TO_C_CURL_FC FC_FUNC(ftoccurl3d, FTOCCURL3D)
+#define F_TO_C_DIV_FC FC_FUNC(ftocdiv3d, FTOCDIV3D)
+#define F_TO_C_DIV_ADD_FC FC_FUNC(ftocdivadd3d, FTOCDIVADD3D)
+#define F_TO_C_INTERP_FC FC_FUNC(ftocinterp2nd3d, FTOCINTERP2ND3D)
 
-#define F_TO_F_CURL_FC FC_GLOBAL(ftofcurl3d, FTOFCURL3D)
+#define F_TO_F_CURL_FC FC_FUNC(ftofcurl3d, FTOFCURL3D)
 
-#define S_TO_C_CURL_FC FC_GLOBAL(stoccurl3d, STOCCURL3D)
-#define S_TO_C_DIV_FC FC_GLOBAL(stocdiv3d, STOCDIV3D)
-#define S_TO_C_DIV_ADD_FC FC_GLOBAL(stocdivadd3d, STOCDIVADD3D)
-#define S_TO_C_INTERP_FC FC_GLOBAL(stocinterp2nd3d, STOCINTERP2ND3D)
+#define S_TO_C_CURL_FC FC_FUNC(stoccurl3d, STOCCURL3D)
+#define S_TO_C_DIV_FC FC_FUNC(stocdiv3d, STOCDIV3D)
+#define S_TO_C_DIV_ADD_FC FC_FUNC(stocdivadd3d, STOCDIVADD3D)
+#define S_TO_C_INTERP_FC FC_FUNC(stocinterp2nd3d, STOCINTERP2ND3D)
 
-#define S_TO_S_CURL_FC FC_GLOBAL(stoscurl3d, STOSCURL3D)
+#define S_TO_S_CURL_FC FC_FUNC(stoscurl3d, STOSCURL3D)
 #endif // if (NDIM == 3)
 
 extern "C"
@@ -947,9 +942,9 @@ PatchMathOps::~PatchMathOps()
 
 void
 PatchMathOps::curl(
-    Pointer<CellData<NDIM,double> > dst,
-    const Pointer<CellData<NDIM,double> > src,
-    const Pointer<Patch<NDIM> > patch) const
+    Pointer<CellData<NDIM,double> >& dst,
+    const Pointer<CellData<NDIM,double> >& src,
+    const Pointer<Patch<NDIM> >& patch) const
 {
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
     const double* const dx = pgeom->getDx();
@@ -1041,9 +1036,9 @@ PatchMathOps::curl(
 
 void
 PatchMathOps::curl(
-    Pointer<CellData<NDIM,double> > dst,
-    const Pointer<FaceData<NDIM,double> > src,
-    const Pointer<Patch<NDIM> > patch) const
+    Pointer<CellData<NDIM,double> >& dst,
+    const Pointer<FaceData<NDIM,double> >& src,
+    const Pointer<Patch<NDIM> >& patch) const
 {
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
     const double* const dx = pgeom->getDx();
@@ -1135,16 +1130,13 @@ PatchMathOps::curl(
 
 void
 PatchMathOps::curl(
-    Pointer<FaceData<NDIM,double> > dst,
-    const Pointer<FaceData<NDIM,double> > src,
-    const Pointer<Patch<NDIM> > patch) const
+    Pointer<FaceData<NDIM,double> >& dst,
+    const Pointer<FaceData<NDIM,double> >& src,
+    const Pointer<Patch<NDIM> >& patch) const
 {
 #if (NDIM != 3)
     TBOX_ERROR("PatchMathOps::curl():\n"
                << "  not implemented for NDIM != 3" << std::endl);
-    NULL_USE(dst);
-    NULL_USE(src);
-    NULL_USE(patch);
 #endif
 #if (NDIM == 3)
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
@@ -1217,9 +1209,9 @@ PatchMathOps::curl(
 
 void
 PatchMathOps::curl(
-    Pointer<CellData<NDIM,double> > dst,
-    const Pointer<SideData<NDIM,double> > src,
-    const Pointer<Patch<NDIM> > patch) const
+    Pointer<CellData<NDIM,double> >& dst,
+    const Pointer<SideData<NDIM,double> >& src,
+    const Pointer<Patch<NDIM> >& patch) const
 {
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
     const double* const dx = pgeom->getDx();
@@ -1311,16 +1303,13 @@ PatchMathOps::curl(
 
 void
 PatchMathOps::curl(
-    Pointer<SideData<NDIM,double> > dst,
-    const Pointer<SideData<NDIM,double> > src,
-    const Pointer<Patch<NDIM> > patch) const
+    Pointer<SideData<NDIM,double> >& dst,
+    const Pointer<SideData<NDIM,double> >& src,
+    const Pointer<Patch<NDIM> >& patch) const
 {
 #if (NDIM != 3)
     TBOX_ERROR("PatchMathOps::curl():\n"
                << "  not implemented for NDIM != 3" << std::endl);
-    NULL_USE(dst);
-    NULL_USE(src);
-    NULL_USE(patch);
 #endif
 #if (NDIM == 3)
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
@@ -1393,12 +1382,12 @@ PatchMathOps::curl(
 
 void
 PatchMathOps::div(
-    Pointer<CellData<NDIM,double> > dst,
-    const double alpha,
-    const Pointer<CellData<NDIM,double> > src1,
-    const double beta,
-    const Pointer<CellData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<CellData<NDIM,double> >& dst,
+    const double& alpha,
+    const Pointer<CellData<NDIM,double> >& src1,
+    const double& beta,
+    const Pointer<CellData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int l,
     const int m) const
 {
@@ -1518,12 +1507,12 @@ PatchMathOps::div(
 
 void
 PatchMathOps::div(
-    Pointer<CellData<NDIM,double> > dst,
-    const double alpha,
-    const Pointer<FaceData<NDIM,double> > src1,
-    const double beta,
-    const Pointer<CellData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<CellData<NDIM,double> >& dst,
+    const double& alpha,
+    const Pointer<FaceData<NDIM,double> >& src1,
+    const double& beta,
+    const Pointer<CellData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int l,
     const int m) const
 {
@@ -1625,12 +1614,12 @@ PatchMathOps::div(
 
 void
 PatchMathOps::div(
-    Pointer<CellData<NDIM,double> > dst,
-    const double alpha,
-    const Pointer<SideData<NDIM,double> > src1,
-    const double beta,
-    const Pointer<CellData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<CellData<NDIM,double> >& dst,
+    const double& alpha,
+    const Pointer<SideData<NDIM,double> >& src1,
+    const double& beta,
+    const Pointer<CellData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int l,
     const int m) const
 {
@@ -1732,12 +1721,12 @@ PatchMathOps::div(
 
 void
 PatchMathOps::grad(
-    Pointer<CellData<NDIM,double> > dst,
-    const double alpha,
-    const Pointer<CellData<NDIM,double> > src1,
-    const double beta,
-    const Pointer<CellData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<CellData<NDIM,double> >& dst,
+    const double& alpha,
+    const Pointer<CellData<NDIM,double> >& src1,
+    const double& beta,
+    const Pointer<CellData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int l) const
 {
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
@@ -1864,12 +1853,12 @@ PatchMathOps::grad(
 
 void
 PatchMathOps::grad(
-    Pointer<FaceData<NDIM,double> > dst,
-    const double alpha,
-    const Pointer<CellData<NDIM,double> > src1,
-    const double beta,
-    const Pointer<FaceData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<FaceData<NDIM,double> >& dst,
+    const double& alpha,
+    const Pointer<CellData<NDIM,double> >& src1,
+    const double& beta,
+    const Pointer<FaceData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int l) const
 {
     // Compute the gradient.
@@ -1989,12 +1978,12 @@ PatchMathOps::grad(
 
 void
 PatchMathOps::grad(
-    Pointer<SideData<NDIM,double> > dst,
-    const double alpha,
-    const Pointer<CellData<NDIM,double> > src1,
-    const double beta,
-    const Pointer<SideData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<SideData<NDIM,double> >& dst,
+    const double& alpha,
+    const Pointer<CellData<NDIM,double> >& src1,
+    const double& beta,
+    const Pointer<SideData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int l) const
 {
     // Compute the gradient.
@@ -2114,12 +2103,12 @@ PatchMathOps::grad(
 
 void
 PatchMathOps::grad(
-    Pointer<FaceData<NDIM,double> > dst,
-    const Pointer<FaceData<NDIM,double> > alpha,
-    const Pointer<CellData<NDIM,double> > src1,
-    const double beta,
-    const Pointer<FaceData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<FaceData<NDIM,double> >& dst,
+    const Pointer<FaceData<NDIM,double> >& alpha,
+    const Pointer<CellData<NDIM,double> >& src1,
+    const double& beta,
+    const Pointer<FaceData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int l) const
 {
     // Compute the gradient.
@@ -2314,12 +2303,12 @@ PatchMathOps::grad(
 
 void
 PatchMathOps::grad(
-    Pointer<SideData<NDIM,double> > dst,
-    const Pointer<SideData<NDIM,double> > alpha,
-    const Pointer<CellData<NDIM,double> > src1,
-    const double beta,
-    const Pointer<SideData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<SideData<NDIM,double> >& dst,
+    const Pointer<SideData<NDIM,double> >& alpha,
+    const Pointer<CellData<NDIM,double> >& src1,
+    const double& beta,
+    const Pointer<SideData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int l) const
 {
     // Compute the gradient.
@@ -2506,9 +2495,9 @@ PatchMathOps::grad(
 
 void
 PatchMathOps::interp(
-    Pointer<CellData<NDIM,double> > dst,
-    const Pointer<FaceData<NDIM,double> > src,
-    const Pointer<Patch<NDIM> > patch) const
+    Pointer<CellData<NDIM,double> >& dst,
+    const Pointer<FaceData<NDIM,double> >& src,
+    const Pointer<Patch<NDIM> >& patch) const
 {
     const int U_ghosts = (dst->getGhostCellWidth()).max();
     const int v_ghosts = (src->getGhostCellWidth()).max();
@@ -2571,15 +2560,15 @@ PatchMathOps::interp(
             ,patch_box.lower(2),patch_box.upper(2)
 #endif
                          );
-    }
+    }// for (int depth = 0; depth < src->getDepth(); ++depth)
     return;
 }// interp
 
 void
 PatchMathOps::interp(
-    Pointer<CellData<NDIM,double> > dst,
-    const Pointer<SideData<NDIM,double> > src,
-    const Pointer<Patch<NDIM> > patch) const
+    Pointer<CellData<NDIM,double> >& dst,
+    const Pointer<SideData<NDIM,double> >& src,
+    const Pointer<Patch<NDIM> >& patch) const
 {
     const int U_ghosts = (dst->getGhostCellWidth()).max();
     const int v_ghosts = (src->getGhostCellWidth()).max();
@@ -2642,15 +2631,15 @@ PatchMathOps::interp(
             ,patch_box.lower(2),patch_box.upper(2)
 #endif
                          );
-    }
+    }// for (int depth = 0; depth < src->getDepth(); ++depth)
     return;
 }// interp
 
 void
 PatchMathOps::interp(
-    Pointer<FaceData<NDIM,double> > dst,
-    const Pointer<CellData<NDIM,double> > src,
-    const Pointer<Patch<NDIM> > patch) const
+    Pointer<FaceData<NDIM,double> >& dst,
+    const Pointer<CellData<NDIM,double> >& src,
+    const Pointer<Patch<NDIM> >& patch) const
 {
     const int u_ghosts = (dst->getGhostCellWidth()).max();
     const int V_ghosts = (src->getGhostCellWidth()).max();
@@ -2722,15 +2711,15 @@ PatchMathOps::interp(
             ,patch_box.lower(2),patch_box.upper(2)
 #endif
                          );
-    }
+    }// for (int depth = 0; depth < dst->getDepth(); ++depth)
     return;
 }// interp
 
 void
 PatchMathOps::interp(
-    Pointer<SideData<NDIM,double> > dst,
-    const Pointer<CellData<NDIM,double> > src,
-    const Pointer<Patch<NDIM> > patch) const
+    Pointer<SideData<NDIM,double> >& dst,
+    const Pointer<CellData<NDIM,double> >& src,
+    const Pointer<Patch<NDIM> >& patch) const
 {
     const int u_ghosts = (dst->getGhostCellWidth()).max();
     const int V_ghosts = (src->getGhostCellWidth()).max();
@@ -2802,19 +2791,19 @@ PatchMathOps::interp(
             ,patch_box.lower(2),patch_box.upper(2)
 #endif
                          );
-    }
+    }// for (int depth = 0; depth < dst->getDepth(); ++depth)
     return;
 }// interp
 
 void
 PatchMathOps::laplace(
-    Pointer<CellData<NDIM,double> > dst,
-    const double alpha,
-    const double beta,
-    const Pointer<CellData<NDIM,double> > src1,
-    const double gamma,
-    const Pointer<CellData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<CellData<NDIM,double> >& dst,
+    const double& alpha,
+    const double& beta,
+    const Pointer<CellData<NDIM,double> >& src1,
+    const double& gamma,
+    const Pointer<CellData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int l,
     const int m,
     const int n) const
@@ -2961,13 +2950,13 @@ PatchMathOps::laplace(
 
 void
 PatchMathOps::laplace(
-    Pointer<SideData<NDIM,double> > dst,
-    const double alpha,
-    const double beta,
-    const Pointer<SideData<NDIM,double> > src1,
-    const double gamma,
-    const Pointer<SideData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<SideData<NDIM,double> >& dst,
+    const double& alpha,
+    const double& beta,
+    const Pointer<SideData<NDIM,double> >& src1,
+    const double& gamma,
+    const Pointer<SideData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int l,
     const int m,
     const int n) const
@@ -2975,15 +2964,15 @@ PatchMathOps::laplace(
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
     const double* const dx = pgeom->getDx();
 
-    blitz::TinyVector<double*,NDIM> F;
-    for (unsigned int d = 0; d < NDIM; ++d)
+    std::vector<double*> F(NDIM);
+    for (int d = 0; d < NDIM; ++d)
     {
-        F[d] = dst->getPointer(d,l);
+        F[d]  = dst->getPointer(d,l);
     }
     const int F_ghosts = (dst->getGhostCellWidth()).max();
 
-    blitz::TinyVector<const double*,NDIM> U;
-    for (unsigned int d = 0; d < NDIM; ++d)
+    std::vector<const double*> U(NDIM);
+    for (int d = 0; d < NDIM; ++d)
     {
         U[d] = src1->getPointer(d,m);
     }
@@ -3041,10 +3030,10 @@ PatchMathOps::laplace(
 
     if (src2.isNull() || (gamma == 0.0))
     {
-        blitz::TinyVector<int,NDIM> ilower, iupper;
-        for (unsigned int d = 0; d < NDIM; ++d)
+        std::vector<int> ilower(NDIM), iupper(NDIM);
+        for (int d = 0; d < NDIM; ++d)
         {
-            for (unsigned int dd = 0; dd < NDIM; ++dd)
+            for (int dd = 0; dd < NDIM; ++dd)
             {
                 ilower[dd] = patch_box.lower(dd);
                 iupper[dd] = patch_box.upper(dd);
@@ -3081,8 +3070,8 @@ PatchMathOps::laplace(
     }
     else
     {
-        blitz::TinyVector<const double*,NDIM> V;
-        for (unsigned int d = 0; d < NDIM; ++d)
+        std::vector<const double*> V(NDIM);
+        for (int d = 0; d < NDIM; ++d)
         {
             V[d] = src2->getPointer(d,n);
         }
@@ -3101,10 +3090,10 @@ PatchMathOps::laplace(
                        << "  dst, src1, and src2 must all live on the same patch" << std::endl);
         }
 #endif
-        blitz::TinyVector<int,NDIM> ilower, iupper;
-        for (unsigned int d = 0; d < NDIM; ++d)
+        std::vector<int> ilower(NDIM), iupper(NDIM);
+        for (int d = 0; d < NDIM; ++d)
         {
-            for (unsigned int dd = 0; dd < NDIM; ++dd)
+            for (int dd = 0; dd < NDIM; ++dd)
             {
                 ilower[dd] = patch_box.lower(dd);
                 iupper[dd] = patch_box.upper(dd);
@@ -3148,13 +3137,13 @@ PatchMathOps::laplace(
 
 void
 PatchMathOps::laplace(
-    Pointer<CellData<NDIM,double> > dst,
-    const Pointer<FaceData<NDIM,double> > alpha,
-    const double beta,
-    const Pointer<CellData<NDIM,double> > src1,
-    const double gamma,
-    const Pointer<CellData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<CellData<NDIM,double> >& dst,
+    const Pointer<FaceData<NDIM,double> >& alpha,
+    const double& beta,
+    const Pointer<CellData<NDIM,double> >& src1,
+    const double& gamma,
+    const Pointer<CellData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int l,
     const int m,
     const int n) const
@@ -3344,13 +3333,13 @@ PatchMathOps::laplace(
 
 void
 PatchMathOps::laplace(
-    Pointer<CellData<NDIM,double> > dst,
-    const Pointer<SideData<NDIM,double> > alpha,
-    const double beta,
-    const Pointer<CellData<NDIM,double> > src1,
-    const double gamma,
-    const Pointer<CellData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<CellData<NDIM,double> >& dst,
+    const Pointer<SideData<NDIM,double> >& alpha,
+    const double& beta,
+    const Pointer<CellData<NDIM,double> >& src1,
+    const double& gamma,
+    const Pointer<CellData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int l,
     const int m,
     const int n) const
@@ -3540,14 +3529,14 @@ PatchMathOps::laplace(
 
 void
 PatchMathOps::vc_laplace(
-    Pointer<SideData<NDIM,double> > dst,
-    const double alpha,
-    const double beta,
-    const Pointer<NodeData<NDIM,double> > coef,
-    const Pointer<SideData<NDIM,double> > src1,
-    const double gamma_in,
-    const Pointer<SideData<NDIM,double> > src2_in,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<SideData<NDIM,double> >& dst,
+    const double& alpha,
+    const double& beta,
+    const Pointer<NodeData<NDIM,double> >& coef,
+    const Pointer<SideData<NDIM,double> >& src1,
+    const double& gamma_in,
+    const Pointer<SideData<NDIM,double> >& src2_in,
+    const Pointer<Patch<NDIM> >& patch,
     const int l,
     const int m,
     const int n) const
@@ -3695,29 +3684,18 @@ PatchMathOps::vc_laplace(
 #if (NDIM == 3)
     TBOX_ERROR("PatchMathOps::vc_laplace():\n"
                << "  not presently implemented for NDIM = 3." << std::endl);
-    NULL_USE(dst);
-    NULL_USE(alpha);
-    NULL_USE(beta);
-    NULL_USE(coef);
-    NULL_USE(src1);
-    NULL_USE(gamma_in);
-    NULL_USE(src2_in);
-    NULL_USE(patch);
-    NULL_USE(l);
-    NULL_USE(m);
-    NULL_USE(n);
 #endif
     return;
 }// vc_laplace
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<CellData<NDIM,double> > dst,
-    const double alpha,
-    const Pointer<CellData<NDIM,double> > src1,
-    const double beta,
-    const Pointer<CellData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<CellData<NDIM,double> >& dst,
+    const double& alpha,
+    const Pointer<CellData<NDIM,double> >& src1,
+    const double& beta,
+    const Pointer<CellData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int i,
     const int j,
     const int k) const
@@ -3805,12 +3783,12 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<CellData<NDIM,double> > dst,
-    const Pointer<CellData<NDIM,double> > alpha,
-    const Pointer<CellData<NDIM,double> > src1,
-    const double beta,
-    const Pointer<CellData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<CellData<NDIM,double> >& dst,
+    const Pointer<CellData<NDIM,double> >& alpha,
+    const Pointer<CellData<NDIM,double> >& src1,
+    const double& beta,
+    const Pointer<CellData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int i,
     const int j,
     const int k,
@@ -3914,12 +3892,12 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<CellData<NDIM,double> > dst,
-    const Pointer<CellData<NDIM,double> > alpha,
-    const Pointer<CellData<NDIM,double> > src1,
-    const Pointer<CellData<NDIM,double> > beta,
-    const Pointer<CellData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<CellData<NDIM,double> >& dst,
+    const Pointer<CellData<NDIM,double> >& alpha,
+    const Pointer<CellData<NDIM,double> >& src1,
+    const Pointer<CellData<NDIM,double> >& beta,
+    const Pointer<CellData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int i,
     const int j,
     const int k,
@@ -4029,17 +4007,17 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<FaceData<NDIM,double> > dst,
-    const double alpha,
-    const Pointer<FaceData<NDIM,double> > src1,
-    const double beta,
-    const Pointer<FaceData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<FaceData<NDIM,double> >& dst,
+    const double& alpha,
+    const Pointer<FaceData<NDIM,double> >& src1,
+    const double& beta,
+    const Pointer<FaceData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int i,
     const int j,
     const int k) const
 {
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         double* const D       = dst->getPointer(axis,i);
         const int D_ghosts    = (dst->getGhostCellWidth()).max();
@@ -4126,18 +4104,18 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<FaceData<NDIM,double> > dst,
-    const Pointer<FaceData<NDIM,double> > alpha,
-    const Pointer<FaceData<NDIM,double> > src1,
-    const double beta,
-    const Pointer<FaceData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<FaceData<NDIM,double> >& dst,
+    const Pointer<FaceData<NDIM,double> >& alpha,
+    const Pointer<FaceData<NDIM,double> >& src1,
+    const double& beta,
+    const Pointer<FaceData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int i,
     const int j,
     const int k,
     const int l) const
 {
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         double* const D       = dst->getPointer(axis,i);
         const int D_ghosts    = (dst->getGhostCellWidth()).max();
@@ -4239,12 +4217,12 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<FaceData<NDIM,double> > dst,
-    const Pointer<FaceData<NDIM,double> > alpha,
-    const Pointer<FaceData<NDIM,double> > src1,
-    const Pointer<FaceData<NDIM,double> > beta,
-    const Pointer<FaceData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<FaceData<NDIM,double> >& dst,
+    const Pointer<FaceData<NDIM,double> >& alpha,
+    const Pointer<FaceData<NDIM,double> >& src1,
+    const Pointer<FaceData<NDIM,double> >& beta,
+    const Pointer<FaceData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int i,
     const int j,
     const int k,
@@ -4258,7 +4236,7 @@ PatchMathOps::pointwiseMultiply(
         return;
     }
 
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         double* const D       = dst->getPointer(axis,i);
         const int D_ghosts    = (dst->getGhostCellWidth()).max();
@@ -4358,12 +4336,12 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<NodeData<NDIM,double> > dst,
-    const double alpha,
-    const Pointer<NodeData<NDIM,double> > src1,
-    const double beta,
-    const Pointer<NodeData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<NodeData<NDIM,double> >& dst,
+    const double& alpha,
+    const Pointer<NodeData<NDIM,double> >& src1,
+    const double& beta,
+    const Pointer<NodeData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int i,
     const int j,
     const int k) const
@@ -4452,12 +4430,12 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<NodeData<NDIM,double> > dst,
-    const Pointer<NodeData<NDIM,double> > alpha,
-    const Pointer<NodeData<NDIM,double> > src1,
-    const double beta,
-    const Pointer<NodeData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<NodeData<NDIM,double> >& dst,
+    const Pointer<NodeData<NDIM,double> >& alpha,
+    const Pointer<NodeData<NDIM,double> >& src1,
+    const double& beta,
+    const Pointer<NodeData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int i,
     const int j,
     const int k,
@@ -4562,12 +4540,12 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<NodeData<NDIM,double> > dst,
-    const Pointer<NodeData<NDIM,double> > alpha,
-    const Pointer<NodeData<NDIM,double> > src1,
-    const Pointer<NodeData<NDIM,double> > beta,
-    const Pointer<NodeData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<NodeData<NDIM,double> >& dst,
+    const Pointer<NodeData<NDIM,double> >& alpha,
+    const Pointer<NodeData<NDIM,double> >& src1,
+    const Pointer<NodeData<NDIM,double> >& beta,
+    const Pointer<NodeData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int i,
     const int j,
     const int k,
@@ -4678,17 +4656,17 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<SideData<NDIM,double> > dst,
-    const double alpha,
-    const Pointer<SideData<NDIM,double> > src1,
-    const double beta,
-    const Pointer<SideData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<SideData<NDIM,double> >& dst,
+    const double& alpha,
+    const Pointer<SideData<NDIM,double> >& src1,
+    const double& beta,
+    const Pointer<SideData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int i,
     const int j,
     const int k) const
 {
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         double* const D       = dst->getPointer(axis,i);
         const int D_ghosts    = (dst->getGhostCellWidth()).max();
@@ -4775,18 +4753,18 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<SideData<NDIM,double> > dst,
-    const Pointer<SideData<NDIM,double> > alpha,
-    const Pointer<SideData<NDIM,double> > src1,
-    const double beta,
-    const Pointer<SideData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<SideData<NDIM,double> >& dst,
+    const Pointer<SideData<NDIM,double> >& alpha,
+    const Pointer<SideData<NDIM,double> >& src1,
+    const double& beta,
+    const Pointer<SideData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int i,
     const int j,
     const int k,
     const int l) const
 {
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         double* const D       = dst->getPointer(axis,i);
         const int D_ghosts    = (dst->getGhostCellWidth()).max();
@@ -4888,12 +4866,12 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<SideData<NDIM,double> > dst,
-    const Pointer<SideData<NDIM,double> > alpha,
-    const Pointer<SideData<NDIM,double> > src1,
-    const Pointer<SideData<NDIM,double> > beta,
-    const Pointer<SideData<NDIM,double> > src2,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<SideData<NDIM,double> >& dst,
+    const Pointer<SideData<NDIM,double> >& alpha,
+    const Pointer<SideData<NDIM,double> >& src1,
+    const Pointer<SideData<NDIM,double> >& beta,
+    const Pointer<SideData<NDIM,double> >& src2,
+    const Pointer<Patch<NDIM> >& patch,
     const int i,
     const int j,
     const int k,
@@ -4907,7 +4885,7 @@ PatchMathOps::pointwiseMultiply(
         return;
     }
 
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         double* const D       = dst->getPointer(axis,i);
         const int D_ghosts    = (dst->getGhostCellWidth()).max();
@@ -5007,9 +4985,9 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseL1Norm(
-    Pointer<CellData<NDIM,double> > dst,
-    const Pointer<CellData<NDIM,double> > src,
-    const Pointer<Patch<NDIM> > patch) const
+    Pointer<CellData<NDIM,double> >& dst,
+    const Pointer<CellData<NDIM,double> >& src,
+    const Pointer<Patch<NDIM> >& patch) const
 {
     double* const U       = dst->getPointer();
     const int U_ghosts    = (dst->getGhostCellWidth()).max();
@@ -5067,9 +5045,9 @@ PatchMathOps::pointwiseL1Norm(
 
 void
 PatchMathOps::pointwiseL2Norm(
-    Pointer<CellData<NDIM,double> > dst,
-    const Pointer<CellData<NDIM,double> > src,
-    const Pointer<Patch<NDIM> > patch) const
+    Pointer<CellData<NDIM,double> >& dst,
+    const Pointer<CellData<NDIM,double> >& src,
+    const Pointer<Patch<NDIM> >& patch) const
 {
     double* const U       = dst->getPointer();
     const int U_ghosts    = (dst->getGhostCellWidth()).max();
@@ -5127,9 +5105,9 @@ PatchMathOps::pointwiseL2Norm(
 
 void
 PatchMathOps::pointwiseMaxNorm(
-    Pointer<CellData<NDIM,double> > dst,
-    const Pointer<CellData<NDIM,double> > src,
-    const Pointer<Patch<NDIM> > patch) const
+    Pointer<CellData<NDIM,double> >& dst,
+    const Pointer<CellData<NDIM,double> >& src,
+    const Pointer<Patch<NDIM> >& patch) const
 {
     double* const U       = dst->getPointer();
     const int U_ghosts    = (dst->getGhostCellWidth()).max();
@@ -5187,9 +5165,9 @@ PatchMathOps::pointwiseMaxNorm(
 
 void
 PatchMathOps::pointwiseL1Norm(
-    Pointer<NodeData<NDIM,double> > dst,
-    const Pointer<NodeData<NDIM,double> > src,
-    const Pointer<Patch<NDIM> > patch) const
+    Pointer<NodeData<NDIM,double> >& dst,
+    const Pointer<NodeData<NDIM,double> >& src,
+    const Pointer<Patch<NDIM> >& patch) const
 {
     double* const U       = dst->getPointer();
     const int U_ghosts    = (dst->getGhostCellWidth()).max();
@@ -5248,9 +5226,9 @@ PatchMathOps::pointwiseL1Norm(
 
 void
 PatchMathOps::pointwiseL2Norm(
-    Pointer<NodeData<NDIM,double> > dst,
-    const Pointer<NodeData<NDIM,double> > src,
-    const Pointer<Patch<NDIM> > patch) const
+    Pointer<NodeData<NDIM,double> >& dst,
+    const Pointer<NodeData<NDIM,double> >& src,
+    const Pointer<Patch<NDIM> >& patch) const
 {
     double* const U       = dst->getPointer();
     const int U_ghosts    = (dst->getGhostCellWidth()).max();
@@ -5309,9 +5287,9 @@ PatchMathOps::pointwiseL2Norm(
 
 void
 PatchMathOps::pointwiseMaxNorm(
-    Pointer<NodeData<NDIM,double> > dst,
-    const Pointer<NodeData<NDIM,double> > src,
-    const Pointer<Patch<NDIM> > patch) const
+    Pointer<NodeData<NDIM,double> >& dst,
+    const Pointer<NodeData<NDIM,double> >& src,
+    const Pointer<Patch<NDIM> >& patch) const
 {
     double* const U       = dst->getPointer();
     const int U_ghosts    = (dst->getGhostCellWidth()).max();
@@ -5375,5 +5353,10 @@ PatchMathOps::pointwiseMaxNorm(
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::PatchMathOps>;
 
 //////////////////////////////////////////////////////////////////////////////

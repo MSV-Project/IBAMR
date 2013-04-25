@@ -30,7 +30,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "IBHierarchyIntegrator.h"
+#include "IBEulerianForceFunction.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
@@ -65,29 +65,55 @@ namespace IBAMR
 
 ////////////////////////////// PUBLIC ///////////////////////////////////////
 
-IBHierarchyIntegrator::IBEulerianForceFunction::IBEulerianForceFunction(
-    const IBHierarchyIntegrator* const ib_solver)
-    : CartGridFunction(ib_solver->getName()+"::IBEulerianForceFunction"),
-      d_ib_solver(ib_solver)
+IBEulerianForceFunction::IBEulerianForceFunction(
+    const std::string& object_name,
+    const int F_current_idx,
+    const int F_new_idx,
+    const int F_half_idx)
+    : CartGridFunction(object_name),
+      d_current_time(std::numeric_limits<double>::quiet_NaN()),
+      d_new_time(std::numeric_limits<double>::quiet_NaN()),
+      d_F_current_idx(F_current_idx),
+      d_F_new_idx(F_new_idx),
+      d_F_half_idx(F_half_idx),
+      d_body_force_fcn(NULL)
 {
     // intentionally blank
     return;
 }// IBEulerianForceFunction
 
-IBHierarchyIntegrator::IBEulerianForceFunction::~IBEulerianForceFunction()
+IBEulerianForceFunction::~IBEulerianForceFunction()
 {
     // intentionally blank
     return;
 }// ~IBEulerianForceFunction
 
+void
+IBEulerianForceFunction::setTimeInterval(
+    const double current_time,
+    const double new_time)
+{
+    d_current_time = current_time;
+    d_new_time = new_time;
+    return;
+}// setTimeInterval
+
 bool
-IBHierarchyIntegrator::IBEulerianForceFunction::isTimeDependent() const
+IBEulerianForceFunction::isTimeDependent() const
 {
     return true;
 }// isTimeDependent
 
 void
-IBHierarchyIntegrator::IBEulerianForceFunction::setDataOnPatch(
+IBEulerianForceFunction::registerBodyForceSpecification(
+    Pointer<CartGridFunction> F_fcn)
+{
+    d_body_force_fcn = F_fcn;
+    return;
+}// registerBodyForceSpecification
+
+void
+IBEulerianForceFunction::setDataOnPatch(
     const int data_idx,
     Pointer<Variable<NDIM> > var,
     Pointer<Patch<NDIM> > patch,
@@ -104,9 +130,9 @@ IBHierarchyIntegrator::IBEulerianForceFunction::setDataOnPatch(
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(!f_cc_data.isNull() || !f_sc_data.isNull());
 #endif
-    if (!d_ib_solver->d_body_force_fcn.isNull())
+    if (!d_body_force_fcn.isNull())
     {
-        d_ib_solver->d_body_force_fcn->setDataOnPatch(data_idx, var, patch, data_time, initial_time, level);
+        d_body_force_fcn->setDataOnPatch(data_idx, var, patch, data_time, initial_time);
     }
     else
     {
@@ -116,7 +142,26 @@ IBHierarchyIntegrator::IBEulerianForceFunction::setDataOnPatch(
 
     if (initial_time) return;
 
-    Pointer<PatchData<NDIM> > f_ib_data = patch->getPatchData(d_ib_solver->d_f_idx);
+    int ib_data_idx = -1;
+    if (MathUtilities<double>::equalEps(data_time, d_current_time))
+    {
+        ib_data_idx = d_F_current_idx;
+    }
+    else if (MathUtilities<double>::equalEps(data_time, d_new_time))
+    {
+        ib_data_idx = d_F_new_idx;
+    }
+    else if (MathUtilities<double>::equalEps(data_time, 0.5*(d_current_time+d_new_time)))
+    {
+        ib_data_idx = d_F_half_idx;
+    }
+    else
+    {
+        TBOX_ERROR(d_object_name << "::setDataOnPatch():\n"
+                   << "  data time " << data_time << " is not the current, new, or half time." << std::endl);
+    }
+
+    Pointer<PatchData<NDIM> > f_ib_data = patch->getPatchData(ib_data_idx);
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(!f_ib_data.isNull());
 #endif
@@ -146,5 +191,10 @@ IBHierarchyIntegrator::IBEulerianForceFunction::setDataOnPatch(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBAMR
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBAMR::IBEulerianForceFunction>;
 
 //////////////////////////////////////////////////////////////////////////////

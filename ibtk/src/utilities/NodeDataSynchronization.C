@@ -54,8 +54,8 @@ NodeDataSynchronization::NodeDataSynchronization()
       d_finest_ln(-1),
       d_coarsen_alg(NULL),
       d_coarsen_scheds(),
-      d_refine_alg(),
-      d_refine_scheds()
+      d_refine_alg(NDIM),
+      d_refine_scheds(NDIM)
 {
     // intentionally blank
     return;
@@ -97,7 +97,7 @@ NodeDataSynchronization::initializeOperatorState(
     VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
     bool registered_coarsen_op = false;
     d_coarsen_alg = new CoarsenAlgorithm<NDIM>();
-    for (unsigned int comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
+    for (unsigned comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
     {
         const std::string& coarsen_op_name = d_transaction_comps[comp_idx].d_coarsen_op_name;
         if (coarsen_op_name != "NONE")
@@ -133,10 +133,10 @@ NodeDataSynchronization::initializeOperatorState(
     }
 
     // Setup cached refine algorithms and schedules.
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         d_refine_alg[axis] = new RefineAlgorithm<NDIM>();
-        for (unsigned int comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
+        for (unsigned comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
         {
             const int data_idx = d_transaction_comps[comp_idx].d_data_idx;
             Pointer<Variable<NDIM> > var;
@@ -205,7 +205,7 @@ NodeDataSynchronization::resetTransactionComponents(
     VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
     bool registered_coarsen_op = false;
     d_coarsen_alg = new CoarsenAlgorithm<NDIM>();
-    for (unsigned int comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
+    for (unsigned comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
     {
         const std::string& coarsen_op_name = d_transaction_comps[comp_idx].d_coarsen_op_name;
         if (coarsen_op_name != "NONE")
@@ -237,10 +237,10 @@ NodeDataSynchronization::resetTransactionComponents(
     }
 
     // Reset cached refine algorithms and schedules.
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         d_refine_alg[axis] = new RefineAlgorithm<NDIM>();
-        for (unsigned int comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
+        for (unsigned comp_idx = 0; comp_idx < d_transaction_comps.size(); ++comp_idx)
         {
             const int data_idx = d_transaction_comps[comp_idx].d_data_idx;
             Pointer<Variable<NDIM> > var;
@@ -277,7 +277,7 @@ NodeDataSynchronization::deallocateOperatorState()
     d_coarsen_alg.setNull();
     d_coarsen_scheds.clear();
 
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         d_refine_alg[axis].setNull();
         d_refine_scheds[axis].clear();
@@ -290,7 +290,7 @@ NodeDataSynchronization::deallocateOperatorState()
 
 void
 NodeDataSynchronization::synchronizeData(
-    const double fill_time)
+    const double& fill_time)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(d_is_initialized);
@@ -300,7 +300,7 @@ NodeDataSynchronization::synchronizeData(
         Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(ln);
 
         // Synchronize data on the current level.
-        for (unsigned int axis = 0; axis < NDIM; ++axis)
+        for (int axis = 0; axis < NDIM; ++axis)
         {
             d_refine_scheds[axis][ln]->fillData(fill_time);
         }
@@ -319,5 +319,10 @@ NodeDataSynchronization::synchronizeData(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::NodeDataSynchronization>;
 
 //////////////////////////////////////////////////////////////////////////////

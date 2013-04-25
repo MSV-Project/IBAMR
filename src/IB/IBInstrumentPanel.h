@@ -60,7 +60,7 @@ namespace IBAMR
  * \note Use of class IBInstrumentPanel requires the Blitz++ array library.
  */
 class IBInstrumentPanel
-    : public SAMRAI::tbox::DescribedClass
+    : public virtual SAMRAI::tbox::DescribedClass
 {
 public:
     /*!
@@ -71,8 +71,9 @@ public:
         SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db);
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~IBInstrumentPanel();
 
     /*!
@@ -136,18 +137,18 @@ public:
      */
     void
     initializeHierarchyIndependentData(
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        IBTK::LDataManager* l_data_manager);
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        IBTK::LDataManager* const lag_manager);
 
     /*!
      * \brief Initialize hierarchy- and configuration-dependent data.
      */
     void
     initializeHierarchyDependentData(
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        IBTK::LDataManager* l_data_manager,
-        int timestep_num,
-        double data_time);
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        IBTK::LDataManager* const lag_manager,
+        const int timestep_num,
+        const double data_time);
 
     /*!
      * \brief Compute the flow rates and pressures in the various distributed
@@ -155,12 +156,12 @@ public:
      */
     void
     readInstrumentData(
-        int U_data_idx,
-        int P_data_idx,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        IBTK::LDataManager* l_data_manager,
-        int timestep_num,
-        double data_time);
+        const int U_data_idx,
+        const int P_data_idx,
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        IBTK::LDataManager* const lag_manager,
+        const int timestep_num,
+        const double data_time);
 
     /*!
      * \brief Set the directory where plot data is to be written.
@@ -178,8 +179,8 @@ public:
      */
     void
     writePlotData(
-        int timestep_num,
-        double simulation_time);
+        const int timestep_num,
+        const double simulation_time);
 
 private:
     /*!
@@ -237,7 +238,7 @@ private:
      * \brief Instrumentation data.
      */
     bool d_initialized;
-    unsigned int d_num_meters;
+    int d_num_meters;
     std::vector<int> d_num_perimeter_nodes;
     std::vector<blitz::TinyVector<double,NDIM> > d_X_centroid;
     std::vector<blitz::Array<blitz::TinyVector<double,NDIM>,1> > d_X_perimeter;
@@ -264,9 +265,9 @@ private:
             {
 
                 return (lhs(0) < rhs(0)
-#if (NDIM > 1)
+#if (NDIM>1)
                         || (lhs(0) == rhs(0) && lhs(1) < rhs(1))
-#if (NDIM > 2)
+#if (NDIM>2)
                         || (lhs(0) == rhs(0) && lhs(1) == rhs(1) && lhs(2) < rhs(2))
 #endif
 #endif

@@ -70,12 +70,13 @@ public:
     PETScSNESFunctionGOWrapper(
         const std::string& object_name,
         const SNES& petsc_snes,
-        PetscErrorCode (*petsc_snes_form_func)(SNES,Vec,Vec,void*),
-        void* petsc_snes_func_ctx);
+        PetscErrorCode (* const petsc_snes_form_func)(SNES,Vec,Vec,void*),
+        void* const petsc_snes_func_ctx);
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~PETScSNESFunctionGOWrapper();
 
     /*!
@@ -132,7 +133,7 @@ public:
      * \param x input
      * \param y output: y=F[x]
      */
-    void
+    virtual void
     apply(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
@@ -166,7 +167,7 @@ public:
      * \param in input vector
      * \param out output vector
      */
-    void
+    virtual void
     initializeOperatorState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& in,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& out);
@@ -181,7 +182,7 @@ public:
      *
      * \see initializeOperatorState
      */
-    void
+    virtual void
     deallocateOperatorState();
 
     //\}
@@ -196,7 +197,7 @@ public:
      *
      * \param enabled logging state: true=on, false=off
      */
-    void
+    virtual void
     enableLogging(
         bool enabled=true);
 

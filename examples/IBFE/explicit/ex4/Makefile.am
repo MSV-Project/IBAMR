@@ -2,7 +2,7 @@
 include $(top_srcdir)/config/Make-rules
 
 ## Dimension-dependent testers
-EXTRA_DIST = input2d
+EXTRA_DIST = input2d input3d
 
 EXTRA_PROGRAMS =
 if LIBMESH_ENABLED

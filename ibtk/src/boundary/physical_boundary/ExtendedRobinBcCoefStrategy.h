@@ -50,7 +50,7 @@ namespace IBTK
  * inhomogeneous boundary data.
  */
 class ExtendedRobinBcCoefStrategy
-    : public SAMRAI::solv::RobinBcCoefStrategy<NDIM>
+    : public virtual SAMRAI::solv::RobinBcCoefStrategy<NDIM>
 {
 public:
     /*!
@@ -74,7 +74,7 @@ public:
      */
     virtual void
     setTargetPatchDataIndex(
-        int target_idx) = 0;
+        const int target_idx) = 0;
 
     /*!
      * \brief Set whether the class is filling homogeneous or inhomogeneous
@@ -82,7 +82,7 @@ public:
      */
     virtual void
     setHomogeneousBc(
-        bool homogeneous_bc) = 0;
+        const bool homogeneous_bc) = 0;
 
     //\}
 

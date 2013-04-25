@@ -131,8 +131,9 @@ public:
         const std::string& options_prefix="");
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~PETScKrylovLinearSolver();
 
     /*!
@@ -180,24 +181,16 @@ public:
     //\{
 
     /*!
-     * \brief Set the current time interval (for a time-dependent solver).
-     */
-    void
-    setTimeInterval(
-        double current_time,
-        double new_time);
-
-    /*!
      * \brief Set the linear operator used when solving \f$Ax=b\f$.
      */
-    void
+    virtual void
     setOperator(
         SAMRAI::tbox::Pointer<LinearOperator> A);
 
     /*!
      * \brief Retrieve the linear operator used when solving \f$Ax=b\f$.
      */
-    SAMRAI::tbox::Pointer<LinearOperator>
+    virtual SAMRAI::tbox::Pointer<LinearOperator>
     getOperator() const;
 
     /*!
@@ -206,7 +199,7 @@ public:
      *
      * \note If the preconditioner is NULL, no preconditioning is performed.
      */
-    void
+    virtual void
     setPreconditioner(
         SAMRAI::tbox::Pointer<LinearSolver> pc_solver=NULL);
 
@@ -214,7 +207,7 @@ public:
      * \brief Retrieve the preconditioner used by the Krylov subspace method
      * when solving \f$Ax=b\f$.
      */
-    SAMRAI::tbox::Pointer<LinearSolver>
+    virtual SAMRAI::tbox::Pointer<LinearSolver>
     getPreconditioner() const;
 
     /*!
@@ -222,9 +215,9 @@ public:
      *
      * The basis vector, if any, will be normalized by the solver.
      */
-    void
+    virtual void
     setNullspace(
-        bool contains_constant_vector,
+        const bool contains_constant_vector,
         SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> > nullspace_basis_vec);
 
     /*!
@@ -233,9 +226,9 @@ public:
      * Basis vectors must be orthogonal but are not required to be orthonormal.
      * Basis vectors will be normalized automatically.
      */
-    void
+    virtual void
     setNullspace(
-        bool contains_constant_vector,
+        const bool contains_constant_vector,
         const std::vector<SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> > >& nullspace_basis_vecs);
 
     /*!
@@ -275,7 +268,7 @@ public:
      * \return \p true if the solver converged to the specified tolerances, \p
      * false otherwise
      */
-    bool
+    virtual bool
     solveSystem(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -321,7 +314,7 @@ public:
      *
      * \see deallocateSolverState
      */
-    void
+    virtual void
     initializeSolverState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -339,7 +332,7 @@ public:
      *
      * \see initializeSolverState
      */
-    void
+    virtual void
     deallocateSolverState();
 
     //\}
@@ -352,53 +345,53 @@ public:
     /*!
      * \brief Set whether the initial guess is non-zero.
      */
-    void
+    virtual void
     setInitialGuessNonzero(
         bool initial_guess_nonzero=true);
 
     /*!
      * \brief Get whether the initial guess is non-zero.
      */
-    bool
+    virtual bool
     getInitialGuessNonzero() const;
 
     /*!
      * \brief Set the maximum number of iterations to use per solve.
      */
-    void
+    virtual void
     setMaxIterations(
         int max_iterations);
 
     /*!
      * \brief Get the maximum number of iterations to use per solve.
      */
-    int
+    virtual int
     getMaxIterations() const;
 
     /*!
      * \brief Set the absolute residual tolerance for convergence.
      */
-    void
+    virtual void
     setAbsoluteTolerance(
         double abs_residual_tol);
 
     /*!
      * \brief Get the absolute residual tolerance for convergence.
      */
-    double
+    virtual double
     getAbsoluteTolerance() const;
 
     /*!
      * \brief Set the relative residual tolerance for convergence.
      */
-    void
+    virtual void
     setRelativeTolerance(
         double rel_residual_tol);
 
     /*!
      * \brief Get the relative residual tolerance for convergence.
      */
-    double
+    virtual double
     getRelativeTolerance() const;
 
     //\}
@@ -411,13 +404,13 @@ public:
     /*!
      * \brief Return the iteration count from the most recent linear solve.
      */
-    int
+    virtual int
     getNumIterations() const;
 
     /*!
      * \brief Return the residual norm from the most recent iteration.
      */
-    double
+    virtual double
     getResidualNorm() const;
 
     //\}
@@ -430,7 +423,7 @@ public:
     /*!
      * \brief Enable or disable logging.
      */
-    void
+    virtual void
     enableLogging(
         bool enabled=true);
 
@@ -577,11 +570,20 @@ private:
     /*!
      * \brief Apply the preconditioner to \a x and store the result in \a y.
      */
+#if (PETSC_VERSION_MAJOR == 3 && PETSC_VERSION_MINOR == 0)
+    static PetscErrorCode
+    PCApply_SAMRAI(
+        void* ctx,
+        Vec x,
+        Vec y);
+#endif
+#if (PETSC_VERSION_MAJOR == 3 && PETSC_VERSION_MINOR == 1)
     static PetscErrorCode
     PCApply_SAMRAI(
         PC pc,
         Vec x,
         Vec y);
+#endif
 
     //\}
 

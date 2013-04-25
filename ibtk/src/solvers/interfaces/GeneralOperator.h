@@ -49,7 +49,7 @@ namespace IBTK
  * \f$.
  */
 class GeneralOperator
-    : public SAMRAI::tbox::DescribedClass
+    : public virtual SAMRAI::tbox::DescribedClass
 {
 public:
     /*!
@@ -58,7 +58,7 @@ public:
     GeneralOperator();
 
     /*!
-     * \brief Empty virtual destructor.
+     * \brief Virtual empty destructor.
      */
     virtual
     ~GeneralOperator();

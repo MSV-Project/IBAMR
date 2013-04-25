@@ -123,8 +123,9 @@ public:
         const std::string& options_prefix="");
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~PETScNewtonKrylovSolver();
 
     /*!
@@ -148,27 +149,27 @@ public:
     /*!
      * \brief Set the nonlinear operator \f$F[x]\f$ used by the solver.
      */
-    void
+    virtual void
     setOperator(
         SAMRAI::tbox::Pointer<GeneralOperator> op);
 
     /*!
      * \brief Retrieve the nonlinear operator \f$F[x]\f$ used by the solver.
      */
-    SAMRAI::tbox::Pointer<GeneralOperator>
+    virtual SAMRAI::tbox::Pointer<GeneralOperator>
     getOperator() const;
 
     /*!
      * \brief Return the vector in which the approximate solution is stored.
      */
-    SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> >
+    virtual SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> >
     getSolutionVector() const;
 
     /*!
      * \brief Return the vector in which the nonlinear function evaluation is
      * stored.
      */
-    SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> >
+    virtual SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> >
     getFunctionVector() const;
 
     /*!
@@ -178,7 +179,7 @@ public:
      * Jacobian-free inexact Newton-Krylov method is employed to approximate the
      * action of the Jacobian.
      */
-    void
+    virtual void
     setJacobian(
         SAMRAI::tbox::Pointer<JacobianOperator> J);
 
@@ -186,14 +187,14 @@ public:
      * \brief Retrieve the Jacobian operator \f$J[x] = F'[x]\f$ used by the
      * solver.
      */
-    SAMRAI::tbox::Pointer<JacobianOperator>
+    virtual SAMRAI::tbox::Pointer<JacobianOperator>
     getJacobian() const;
 
     /*!
      * \brief Retrieve the Krylov linear solver used in computing Newton step
      * directions.
      */
-    SAMRAI::tbox::Pointer<KrylovLinearSolver>
+    virtual SAMRAI::tbox::Pointer<KrylovLinearSolver>
     getLinearSolver() const;
 
     /*!
@@ -233,7 +234,7 @@ public:
      * \return \p true if the solver converged to the specified tolerances, \p
      * false otherwise
      */
-    bool
+    virtual bool
     solveSystem(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -280,7 +281,7 @@ public:
      *
      * \see deallocateSolverState
      */
-    void
+    virtual void
     initializeSolverState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -298,7 +299,7 @@ public:
      *
      * \see initializeSolverState
      */
-    void
+    virtual void
     deallocateSolverState();
 
     //\}
@@ -311,60 +312,60 @@ public:
     /*!
      * \brief Set the maximum number of nonlinear iterations to use per solve.
      */
-    void
+    virtual void
     setMaxIterations(
         int max_iterations);
 
     /*!
      * \brief Get the maximum number of nonlinear iterations to use per solve.
      */
-    int
+    virtual int
     getMaxIterations() const;
 
     /*!
      * \brief Set the maximum number of function evaluations to use per solve.
      */
-    void
+    virtual void
     setMaxEvaluations(
         int max_evaluations);
 
     /*!
      * \brief Get the maximum number of function evaluations to use per solve.
      */
-    int
+    virtual int
     getMaxEvaluations() const;
 
     /*!
      * \brief Set the absolute residual tolerance for convergence.
      */
-    void
+    virtual void
     setAbsoluteTolerance(
         double abs_residual_tol);
 
     /*!
      * \brief Get the absolute residual tolerance for convergence.
      */
-    double
+    virtual double
     getAbsoluteTolerance() const;
 
     /*!
      * \brief Set the relative residual tolerance for convergence.
      */
-    void
+    virtual void
     setRelativeTolerance(
         double rel_residual_tol);
 
     /*!
      * \brief Get the relative residual tolerance for convergence.
      */
-    double
+    virtual double
     getRelativeTolerance() const;
 
     /*!
      * \brief Set the tolerance in terms of the norm of the change in the
      * solution between steps.
      */
-    void
+    virtual void
     setSolutionTolerance(
         double solution_tol);
 
@@ -372,7 +373,7 @@ public:
      * \brief Get the tolerance in terms of the norm of the change in the
      * solution between steps.
      */
-    double
+    virtual double
     getSolutionTolerance() const;
 
     //\}
@@ -385,20 +386,20 @@ public:
     /*!
      * \brief Return the iteration count from the most recent nonlinear solve.
      */
-    int
+    virtual int
     getNumIterations() const;
 
     /*!
      * \brief Return the number of linear iterations from the most recent
      * nonlinear solve.
      */
-    int
+    virtual int
     getNumLinearIterations() const;
 
     /*!
      * \brief Return the residual norm from the most recent iteration.
      */
-    double
+    virtual double
     getResidualNorm() const;
 
     //\}
@@ -411,7 +412,7 @@ public:
     /*!
      * \brief Enable or disable logging.
      */
-    void
+    virtual void
     enableLogging(
         bool enabled=true);
 

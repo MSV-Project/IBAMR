@@ -56,11 +56,9 @@ static const std::string PATTERN_NAME = "CELL_NO_CORNERS_FILL_PATTERN";
 
 CellNoCornersFillPattern::CellNoCornersFillPattern(
     const int stencil_width,
-    const bool include_dst_patch_box,
     const bool include_edges_on_dst_level,
     const bool include_edges_on_src_level)
     : d_stencil_width(stencil_width),
-      d_include_dst_patch_box(include_dst_patch_box),
       d_include_edges_on_dst_level(include_edges_on_dst_level),
       d_include_edges_on_src_level(include_edges_on_src_level),
       d_target_level_num(-1)
@@ -79,7 +77,7 @@ Pointer<BoxOverlap<NDIM> >
 CellNoCornersFillPattern::calculateOverlap(
     const BoxGeometry<NDIM>& dst_geometry,
     const BoxGeometry<NDIM>& src_geometry,
-    const Box<NDIM>& /*dst_patch_box*/,
+    const Box<NDIM>& dst_patch_box,
     const Box<NDIM>& src_mask,
     const bool overwrite_interior,
     const IntVector<NDIM>& src_offset) const
@@ -103,7 +101,7 @@ CellNoCornersFillPattern::calculateOverlap(
         BoxList<NDIM> stencil_boxes;
         if (NDIM == 2 || (!d_include_edges_on_src_level && !d_include_edges_on_dst_level))
         {
-            for (unsigned int i = 0; i < NDIM; ++i)
+            for (int i = 0; i < NDIM; ++i)
             {
                 Box<NDIM> box = dst_box;
                 box.lower()(i) -= d_stencil_width(i);
@@ -113,9 +111,9 @@ CellNoCornersFillPattern::calculateOverlap(
         }
         else
         {
-            for (unsigned int j = 0; j < NDIM; ++j)
+            for (int j = 0; j < NDIM; ++j)
             {
-                for (unsigned int i = 0; i < NDIM; ++i)
+                for (int i = 0; i < NDIM; ++i)
                 {
                     if (i == j) continue;
                     Box<NDIM> box = dst_box;
@@ -144,7 +142,7 @@ CellNoCornersFillPattern::calculateOverlap(
 }// calculateOverlap
 
 Pointer<BoxOverlap<NDIM> >
-CellNoCornersFillPattern::calculateOverlapOnLevel(
+CellNoCornersFillPattern::calculateOverlap(
     const BoxGeometry<NDIM>& dst_geometry,
     const BoxGeometry<NDIM>& src_geometry,
     const Box<NDIM>& dst_patch_box,
@@ -152,7 +150,7 @@ CellNoCornersFillPattern::calculateOverlapOnLevel(
     const bool overwrite_interior,
     const IntVector<NDIM>& src_offset,
     const int dst_level_num,
-    const int /*src_level_num*/) const
+    const int src_level_num) const
 {
     Pointer<CellOverlap<NDIM> > box_geom_overlap =
         dst_geometry.calculateOverlap(src_geometry, src_mask, overwrite_interior, src_offset);
@@ -175,7 +173,7 @@ CellNoCornersFillPattern::calculateOverlapOnLevel(
             (!d_include_edges_on_dst_level && dst_level_num == d_target_level_num) ||
             (!d_include_edges_on_src_level && dst_level_num != d_target_level_num))
         {
-            for (unsigned int i = 0; i < NDIM; ++i)
+            for (int i = 0; i < NDIM; ++i)
             {
                 Box<NDIM> box = dst_box;
                 box.lower()(i) -= d_stencil_width(i);
@@ -185,9 +183,9 @@ CellNoCornersFillPattern::calculateOverlapOnLevel(
         }
         else
         {
-            for (unsigned int j = 0; j < NDIM; ++j)
+            for (int j = 0; j < NDIM; ++j)
             {
-                for (unsigned int i = 0; i < NDIM; ++i)
+                for (int i = 0; i < NDIM; ++i)
                 {
                     if (i == j) continue;
                     Box<NDIM> box = dst_box;
@@ -205,10 +203,6 @@ CellNoCornersFillPattern::calculateOverlapOnLevel(
         {
             BoxList<NDIM> overlap_boxes(stencil_boxes);
             overlap_boxes.intersectBoxes(it1());
-            if (dst_level_num == d_target_level_num && !d_include_dst_patch_box)
-            {
-                overlap_boxes.removeIntersections(dst_patch_box);
-            }
             for (BoxList<NDIM>::Iterator it2(overlap_boxes); it2; it2++)
             {
                 const Box<NDIM>& overlap_box = it2();
@@ -217,7 +211,7 @@ CellNoCornersFillPattern::calculateOverlapOnLevel(
         }
     }
     return new CellOverlap<NDIM>(dst_boxes, src_offset);
-}// calculateOverlapOnLevel
+}// calculateOverlap
 
 void
 CellNoCornersFillPattern::setTargetPatchLevelNumber(
@@ -246,5 +240,10 @@ CellNoCornersFillPattern::getPatternName() const
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::CellNoCornersFillPattern>;
 
 //////////////////////////////////////////////////////////////////////////////

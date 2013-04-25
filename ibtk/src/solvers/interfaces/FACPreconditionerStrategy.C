@@ -59,25 +59,16 @@ FACPreconditionerStrategy::~FACPreconditionerStrategy()
 
 void
 FACPreconditionerStrategy::setFACPreconditioner(
-    ConstPointer<FACPreconditioner> /*preconditioner*/)
+    ConstPointer<FACPreconditioner> preconditioner)
 {
     // intentionally blank
     return;
 }// setPreconditioner
 
 void
-FACPreconditionerStrategy::setTimeInterval(
-    const double /*current_time*/,
-    const double /*new_time*/)
-{
-    // intentionally blank
-    return;
-}// setTimeInterval
-
-void
 FACPreconditionerStrategy::initializeOperatorState(
-    const SAMRAIVectorReal<NDIM,double>& /*solution*/,
-    const SAMRAIVectorReal<NDIM,double>& /*rhs*/)
+    const SAMRAIVectorReal<NDIM,double>& solution,
+    const SAMRAIVectorReal<NDIM,double>& rhs)
 {
     // intentionally blank
     return;
@@ -95,5 +86,10 @@ FACPreconditionerStrategy::deallocateOperatorState()
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::FACPreconditionerStrategy>;
 
 //////////////////////////////////////////////////////////////////////////////

@@ -62,8 +62,8 @@ c
       REAL function median(a,b,c)
       implicit none
       REAL a,b,c
-      REAL minmod
-      median = a + minmod(b-a,c-a)
+      REAL minmod2
+      median = a + minmod2(b-a,c-a)
       return
       end
 c
@@ -199,7 +199,7 @@ c
      &     dx,dt,
      &     ifirst0,ilast0,ifirst1,ilast1,
      &     nQgc0,nQgc1,
-     &     Q0,Q1,
+     &     Q,Qscratch1,
      &     dQ,Q_L,Q_R,
      &     nugc0,nugc1,
      &     nqhalfgc0,nqhalfgc1,
@@ -208,6 +208,7 @@ c
      &     qhalf0,qhalf1)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c
@@ -220,9 +221,9 @@ c
 
       REAL dx(0:NDIM-1),dt
 
-      REAL Q0(CELL2dVECG(ifirst,ilast,nQgc))
-      REAL Q1(ifirst1-nQgc1:ilast1+nQgc1,
-     &        ifirst0-nQgc0:ilast0+nQgc0)
+      REAL Q(CELL2dVECG(ifirst,ilast,nQgc))
+      REAL Qscratch1(ifirst1-nQgc1:ilast1+nQgc1,
+     &               ifirst0-nQgc0:ilast0+nQgc0)
       REAL dQ(CELL2dVECG(ifirst,ilast,nQgc))
       REAL Q_L(CELL2dVECG(ifirst,ilast,nQgc))
       REAL Q_R(CELL2dVECG(ifirst,ilast,nQgc))
@@ -247,7 +248,7 @@ c     indices.
 c
       do ic1 = ifirst1-nQgc1,ilast1+nQgc1
          do ic0 = ifirst0-nQgc0,ilast0+nQgc0
-            Q1(ic1,ic0) = Q0(ic0,ic1)
+            Qscratch1(ic1,ic0) = Q(ic0,ic1)
          enddo
       enddo
 c
@@ -260,7 +261,7 @@ c
      &     dx(0),dt,
      &     ifirst0,ilast0,ifirst1,ilast1,
      &     nQgc0,nQgc1,
-     &     Q0,dQ,Q_L,Q_R,
+     &     Q,dQ,Q_L,Q_R,
      &     nugc0,nugc1,
      &     nqhalfgc0,nqhalfgc1,
      &     u0,
@@ -270,7 +271,7 @@ c
      &     dx(1),dt,
      &     ifirst1,ilast1,ifirst0,ilast0,
      &     nQgc1,nQgc0,
-     &     Q1,dQ,Q_L,Q_R,
+     &     Qscratch1,dQ,Q_L,Q_R,
      &     nugc1,nugc0,
      &     nqhalfgc1,nqhalfgc0,
      &     u1,
@@ -301,7 +302,6 @@ c
 c
       return
       end
-c
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c
 c     A Godunov predictor used to predict face and time centered values
@@ -322,9 +322,9 @@ c
      &     ifirst0,ilast0,ifirst1,ilast1,
      &     nQgc0,nQgc1,
      &     nFgc0,nFgc1,
-     &     Q0,Q1,
+     &     Q,Qscratch1,
      &     dQ,Q_L,Q_R,
-     &     F0,F1,
+     &     F,Fscratch1,
      &     nugc0,nugc1,
      &     nqhalfgc0,nqhalfgc1,
      &     u0,u1,
@@ -332,6 +332,7 @@ c
      &     qhalf0,qhalf1)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c
@@ -345,16 +346,16 @@ c
 
       REAL dx(0:NDIM-1),dt
 
-      REAL Q0(CELL2dVECG(ifirst,ilast,nQgc))
-      REAL Q1(ifirst1-nQgc1:ilast1+nQgc1,
-     &        ifirst0-nQgc0:ilast0+nQgc0)
+      REAL Q(CELL2dVECG(ifirst,ilast,nQgc))
+      REAL Qscratch1(ifirst1-nQgc1:ilast1+nQgc1,
+     &               ifirst0-nQgc0:ilast0+nQgc0)
       REAL dQ(CELL2dVECG(ifirst,ilast,nQgc))
       REAL Q_L(CELL2dVECG(ifirst,ilast,nQgc))
       REAL Q_R(CELL2dVECG(ifirst,ilast,nQgc))
 
-      REAL F0(CELL2dVECG(ifirst,ilast,nFgc))
-      REAL F1(ifirst1-nFgc1:ilast1+nFgc1,
-     &        ifirst0-nFgc0:ilast0+nFgc0)
+      REAL F(CELL2dVECG(ifirst,ilast,nFgc))
+      REAL Fscratch1(ifirst1-nFgc1:ilast1+nFgc1,
+     &               ifirst0-nFgc0:ilast0+nFgc0)
 
       REAL u0(FACE2d0VECG(ifirst,ilast,nugc))
       REAL u1(FACE2d1VECG(ifirst,ilast,nugc))
@@ -376,13 +377,13 @@ c     permuted indices.
 c
       do ic1 = ifirst1-nQgc1,ilast1+nQgc1
          do ic0 = ifirst0-nQgc0,ilast0+nQgc0
-            Q1(ic1,ic0) = Q0(ic0,ic1)
+            Qscratch1(ic1,ic0) = Q(ic0,ic1)
          enddo
       enddo
 
       do ic1 = ifirst1-nFgc1,ilast1+nFgc1
          do ic0 = ifirst0-nFgc0,ilast0+nFgc0
-            F1(ic1,ic0) = F0(ic0,ic1)
+            Fscratch1(ic1,ic0) = F(ic0,ic1)
          enddo
       enddo
 c
@@ -396,8 +397,8 @@ c
      &     ifirst0,ilast0,ifirst1,ilast1,
      &     nQgc0,nQgc1,
      &     nFgc0,nFgc1,
-     &     Q0,dQ,Q_L,Q_R,
-     &     F0,
+     &     Q,dQ,Q_L,Q_R,
+     &     F,
      &     nugc0,nugc1,
      &     nqhalfgc0,nqhalfgc1,
      &     u0,
@@ -408,8 +409,8 @@ c
      &     ifirst1,ilast1,ifirst0,ilast0,
      &     nQgc1,nQgc0,
      &     nFgc1,nFgc0,
-     &     Q1,dQ,Q_L,Q_R,
-     &     F1,
+     &     Qscratch1,dQ,Q_L,Q_R,
+     &     Fscratch1,
      &     nugc1,nugc0,
      &     nqhalfgc1,nqhalfgc0,
      &     u1,
@@ -460,6 +461,7 @@ c
      &     qhalf0,qhalf1)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c
@@ -520,6 +522,7 @@ c
      &     qhalf0)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Functions.
 c
@@ -554,12 +557,12 @@ c     Predict face centered values using a PLM (piecewise linear method)
 c     with unlimited second-order slopes.
 c
       do ic1 = ifirst1-1,ilast1+1
-         Qx = 0.5d0*(Q(ifirst0-1+1,ic1)-Q(ifirst0-1-1,ic1))
+         Qx = half*(Q(ifirst0-1+1,ic1)-Q(ifirst0-1-1,ic1))
          unorm = 0.5d0*(u0(ifirst0-1,ic1)+u0(ifirst0-1+1,ic1))
          do ic0 = ifirst0-1,ilast0
             qL = Q(ic0  ,ic1)
      &           + 0.5d0*(1.d0-unorm*dt/dx0)*Qx
-            Qx = 0.5d0*(Q(ic0+1+1,ic1)-Q(ic0+1-1,ic1))
+            Qx = half*(Q(ic0+1+1,ic1)-Q(ic0+1-1,ic1))
             unorm = 0.5d0*(u0(ic0+1,ic1)+u0(ic0+2,ic1))
             qR = Q(ic0+1,ic1)
      &           - 0.5d0*(1.d0+unorm*dt/dx0)*Qx
@@ -585,6 +588,7 @@ c
      &     qhalf0)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Functions.
 c
@@ -621,13 +625,13 @@ c     Predict face centered values using a PLM (piecewise linear method)
 c     with unlimited second-order slopes.
 c
       do ic1 = ifirst1-1,ilast1+1
-         Qx = 0.5d0*(Q(ifirst0-1+1,ic1)-Q(ifirst0-1-1,ic1))
+         Qx = half*(Q(ifirst0-1+1,ic1)-Q(ifirst0-1-1,ic1))
          unorm = 0.5d0*(u0(ifirst0-1,ic1)+u0(ifirst0-1+1,ic1))
          do ic0 = ifirst0-1,ilast0
             qL = Q(ic0  ,ic1)
      &           + 0.5d0*(1.d0-unorm*dt/dx0)*Qx
      &           + 0.5d0*dt*F(ic0  ,ic1)
-            Qx = 0.5d0*(Q(ic0+1+1,ic1)-Q(ic0+1-1,ic1))
+            Qx = half*(Q(ic0+1+1,ic1)-Q(ic0+1-1,ic1))
             unorm = 0.5d0*(u0(ic0+1,ic1)+u0(ic0+2,ic1))
             qR = Q(ic0+1,ic1)
      &           - 0.5d0*(1.d0+unorm*dt/dx0)*Qx
@@ -652,9 +656,7 @@ c
      &     qhalf0)
 c
       implicit none
-      REAL sixth,twothird
-      parameter (sixth=0.16666666666667d0)
-      parameter (twothird=0.66666666666667d0)
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Functions.
 c
@@ -690,13 +692,13 @@ c     with unlimited fourth-order slopes.
 c
       do ic1 = ifirst1-1,ilast1+1
          Qx = twothird*(Q(ifirst0-1+1,ic1)-Q(ifirst0-1-1,ic1))
-     &        - sixth*0.5d0*(Q(ifirst0-1+2,ic1)-Q(ifirst0-1-2,ic1))
+     &        - sixth*half*(Q(ifirst0-1+2,ic1)-Q(ifirst0-1-2,ic1))
          unorm = 0.5d0*(u0(ifirst0-1,ic1)+u0(ifirst0-1+1,ic1))
          do ic0 = ifirst0-1,ilast0
             qL = Q(ic0  ,ic1)
      &           + 0.5d0*(1.d0-unorm*dt/dx0)*Qx
             Qx = twothird*(Q(ic0+1+1,ic1)-Q(ic0+1-1,ic1))
-     &           - sixth*0.5d0*(Q(ic0+1+2,ic1)-Q(ic0+1-2,ic1))
+     &           - sixth*half*(Q(ic0+1+2,ic1)-Q(ic0+1-2,ic1))
             unorm = 0.5d0*(u0(ic0+1,ic1)+u0(ic0+2,ic1))
             qR = Q(ic0+1,ic1)
      &           - 0.5d0*(1.d0+unorm*dt/dx0)*Qx
@@ -722,9 +724,7 @@ c
      &     qhalf0)
 c
       implicit none
-      REAL sixth,twothird
-      parameter (sixth=0.16666666666667d0)
-      parameter (twothird=0.66666666666667d0)
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Functions.
 c
@@ -762,14 +762,14 @@ c     with unlimited fourth-order slopes.
 c
       do ic1 = ifirst1-1,ilast1+1
          Qx = twothird*(Q(ifirst0-1+1,ic1)-Q(ifirst0-1-1,ic1))
-     &        - sixth*0.5d0*(Q(ifirst0-1+2,ic1)-Q(ifirst0-1-2,ic1))
+     &        - sixth*half*(Q(ifirst0-1+2,ic1)-Q(ifirst0-1-2,ic1))
          unorm = 0.5d0*(u0(ifirst0-1,ic1)+u0(ifirst0-1+1,ic1))
          do ic0 = ifirst0-1,ilast0
             qL = Q(ic0  ,ic1)
      &           + 0.5d0*(1.d0-unorm*dt/dx0)*Qx
      &           + 0.5d0*dt*F(ic0  ,ic1)
             Qx = twothird*(Q(ic0+1+1,ic1)-Q(ic0+1-1,ic1))
-     &           - sixth*0.5d0*(Q(ic0+1+2,ic1)-Q(ic0+1-2,ic1))
+     &           - sixth*half*(Q(ic0+1+2,ic1)-Q(ic0+1-2,ic1))
             unorm = 0.5d0*(u0(ic0+1,ic1)+u0(ic0+2,ic1))
             qR = Q(ic0+1,ic1)
      &           - 0.5d0*(1.d0+unorm*dt/dx0)*Qx
@@ -794,6 +794,7 @@ c
      &     qhalf0)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Functions.
 c
@@ -874,6 +875,7 @@ c
      &     qhalf0)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Functions.
 c
@@ -956,6 +958,7 @@ c
      &     qhalf0)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Functions.
 c
@@ -1066,6 +1069,7 @@ c
      &     qhalf0)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Functions.
 c
@@ -1178,6 +1182,7 @@ c
      &     qhalf0)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Functions.
 c
@@ -1343,6 +1348,7 @@ c
      &     qhalf0)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Functions.
 c
@@ -1509,6 +1515,7 @@ c
      &     qhalf0)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Functions.
 c
@@ -1570,6 +1577,7 @@ c
      &     qhalf0)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c
@@ -1611,229 +1619,4 @@ c
       return
       end
 c
-      subroutine godunov_extrapolate2d(
-     &     ifirst0,ilast0,ifirst1,ilast1,
-     &     nQgc0,nQgc1,
-     &     Q0,Q1,
-     &     dQ,Q_L,Q_R,
-     &     nugc0,nugc1,
-     &     nqhalfgc0,nqhalfgc1,
-     &     u0,u1,
-     &     qhalf0,qhalf1)
-c
-      implicit none
-c
-c     Input.
-c
-      INTEGER ifirst0,ilast0,ifirst1,ilast1
-
-      INTEGER nQgc0,nQgc1
-
-      INTEGER nugc0,nugc1
-      INTEGER nqhalfgc0,nqhalfgc1
-
-      REAL Q0(CELL2dVECG(ifirst,ilast,nQgc))
-      REAL Q1(ifirst1-nQgc1:ilast1+nQgc1,
-     &        ifirst0-nQgc0:ilast0+nQgc0)
-      REAL dQ(CELL2dVECG(ifirst,ilast,nQgc))
-      REAL Q_L(CELL2dVECG(ifirst,ilast,nQgc))
-      REAL Q_R(CELL2dVECG(ifirst,ilast,nQgc))
-
-      REAL u0(FACE2d0VECG(ifirst,ilast,nugc))
-      REAL u1(FACE2d1VECG(ifirst,ilast,nugc))
-c
-c     Input/Output.
-c
-      REAL qhalf0(FACE2d0VECG(ifirst,ilast,nqhalfgc))
-      REAL qhalf1(FACE2d1VECG(ifirst,ilast,nqhalfgc))
-c
-c     Local variables.
-c
-      INTEGER ic0,ic1
-c
-c     Make a permuted copy of Q.
-c
-      do ic1 = ifirst1-nQgc1,ilast1+nQgc1
-         do ic0 = ifirst0-nQgc0,ilast0+nQgc0
-            Q1(ic1,ic0) = Q0(ic0,ic1)
-         enddo
-      enddo
-c
-c     Extrapolate values in the x-direction.
-c
-      call godunov_xsPPM7_extrapolate2d(
-     &     ifirst0,ilast0,ifirst1,ilast1,
-     &     nQgc0,nQgc1,
-     &     Q0,dQ,Q_L,Q_R,
-     &     nugc0,nugc1,
-     &     nqhalfgc0,nqhalfgc1,
-     &     u0,
-     &     qhalf0)
-c
-c     Extrapolate values in the y-direction.
-c
-      call godunov_xsPPM7_extrapolate2d(
-     &     ifirst1,ilast1,ifirst0,ilast0,
-     &     nQgc1,nQgc0,
-     &     Q1,dQ,Q_L,Q_R,
-     &     nugc1,nugc0,
-     &     nqhalfgc1,nqhalfgc0,
-     &     u1,
-     &     qhalf1)
-c
-      return
-      end
-c
-      subroutine godunov_xsPPM7_extrapolate2d(
-     &     ifirst0,ilast0,ifirst1,ilast1,
-     &     nQgc0,nQgc1,
-     &     Q,dQ,Q_L,Q_R,
-     &     nugc0,nugc1,
-     &     nqhalfgc0,nqhalfgc1,
-     &     u0,
-     &     qhalf0)
-c
-      implicit none
-c
-c     Functions.
-c
-      REAL median,sign_eps,WENO5_interp
-c
-c     Input.
-c
-      INTEGER ifirst0,ilast0,ifirst1,ilast1
-
-      INTEGER nQgc0,nQgc1
-
-      INTEGER nugc0,nugc1
-      INTEGER nqhalfgc0,nqhalfgc1
-
-      REAL Q(CELL2dVECG(ifirst,ilast,nQgc))
-      REAL dQ(CELL2dVECG(ifirst,ilast,nQgc))
-      REAL Q_L(CELL2dVECG(ifirst,ilast,nQgc))
-      REAL Q_R(CELL2dVECG(ifirst,ilast,nQgc))
-
-      REAL u0(FACE2d0VECG(ifirst,ilast,nugc))
-c
-c     Input/Output.
-c
-      REAL qhalf0(FACE2d0VECG(ifirst,ilast,nqhalfgc))
-c
-c     Local variables.
-c
-      INTEGER ic0,ic1
-      REAL QQ,QQ_L,QQ_R
-      REAL QQ_star_L,QQ_star_R
-      REAL QQ_WENO(-2:2)
-      REAL QQ_WENO_L,QQ_WENO_R
-      REAL QQ_4th_L,QQ_4th_R
-      REAL dQQ_C,dQQ_L,dQQ_R,dQQ
-      REAL P0,P1,P2
-      INTEGER i
-c
-c     Extrapolate face centered values using the xsPPM7 scheme of Rider,
-c     Greenough, and Kamm.
-c
-!!!!! do ic1 = ifirst1-1,ilast1+1
-      do ic1 = ifirst1,ilast1
-         do ic0 = ifirst0-2,ilast0+2
-            dQQ_C = 0.5d0*(Q(ic0+1,ic1)-Q(ic0-1,ic1))
-            dQQ_L =       (Q(ic0  ,ic1)-Q(ic0-1,ic1))
-            dQQ_R =       (Q(ic0+1,ic1)-Q(ic0  ,ic1))
-            if (dQQ_R*dQQ_L .gt. 1.d-12) then
-               dQQ = min(abs(dQQ_C),2.d0*abs(dQQ_L),2.d0*abs(dQQ_R))*
-     c              sign(1.d0,dQQ_C)
-            else
-               dQQ = 0.d0
-            endif
-            dQ(ic0,ic1) = dQQ
-         enddo
-
-         do ic0 = ifirst0-1,ilast0+1
-c
-c     Compute a 7th order interpolation.
-c
-            QQ   = Q(ic0,ic1)
-            QQ_L = (1.d0/420.d0)*(
-     &           -   3.d0*Q(ic0+3,ic1)
-     &           +  25.d0*Q(ic0+2,ic1)
-     &           - 101.d0*Q(ic0+1,ic1)
-     &           + 319.d0*Q(ic0  ,ic1)
-     &           + 214.d0*Q(ic0-1,ic1)
-     &           -  38.d0*Q(ic0-2,ic1)
-     &           +   4.d0*Q(ic0-3,ic1))
-            QQ_R = (1.d0/420.d0)*(
-     &           -   3.d0*Q(ic0-3,ic1)
-     &           +  25.d0*Q(ic0-2,ic1)
-     &           - 101.d0*Q(ic0-1,ic1)
-     &           + 319.d0*Q(ic0  ,ic1)
-     &           + 214.d0*Q(ic0+1,ic1)
-     &           -  38.d0*Q(ic0+2,ic1)
-     &           +   4.d0*Q(ic0+3,ic1))
-            Q_L(ic0,ic1) = QQ_L
-            Q_R(ic0,ic1) = QQ_R
-c
-c     Check for extrema or violations of monotonicity.
-c
-            call monotonize(
-     &           Q(ic0-1,ic1),
-     &           QQ_L,QQ_R,QQ_star_L,QQ_star_R)
-            if ( ((QQ_star_L-QQ_L)**2.d0 .ge. 1.d-12) .or.
-     &           ((QQ_star_R-QQ_R)**2.d0 .ge. 1.d-12) ) then
-               do i = -2,2
-                  QQ_WENO(i) = Q(ic0-i,ic1)
-               enddo
-               QQ_WENO_L = WENO5_interp(QQ_WENO)
-               do i = -2,2
-                  QQ_WENO(i) = Q(ic0+i,ic1)
-               enddo
-               QQ_WENO_R = WENO5_interp(QQ_WENO)
-               if ( ((QQ_star_L-QQ)**2.d0 .le. 1.d-12) .or.
-     &              ((QQ_star_R-QQ)**2.d0 .le. 1.d-12) ) then
-                  QQ_WENO_L = median(QQ,QQ_WENO_L,QQ_L)
-                  QQ_WENO_R = median(QQ,QQ_WENO_R,QQ_R)
-                  call monotonize(
-     &                 Q(ic0-1,ic1),
-     &                 QQ_WENO_L,QQ_WENO_R,QQ_star_L,QQ_star_R)
-               else
-                  QQ_4th_L = 0.5d0*(Q(ic0-1,ic1)+Q(ic0  ,ic1)) -
-     &                 (1.d0/6.d0)*(dQ(ic0  ,ic1)-dQ(ic0-1,ic1))
-                  QQ_4th_R = 0.5d0*(Q(ic0  ,ic1)+Q(ic0+1,ic1)) -
-     &                 (1.d0/6.d0)*(dQ(ic0+1,ic1)-dQ(ic0  ,ic1))
-                  QQ_4th_L = median(QQ_4th_L,QQ_WENO_L,QQ_L)
-                  QQ_4th_R = median(QQ_4th_R,QQ_WENO_R,QQ_R)
-                  call monotonize(
-     &                 Q(ic0-1,ic1),
-     &                 QQ_4th_L,QQ_4th_R,QQ_star_L,QQ_star_R)
-               endif
-               Q_L(ic0,ic1) = median(QQ_WENO_L,QQ_star_L,QQ_L)
-               Q_R(ic0,ic1) = median(QQ_WENO_R,QQ_star_R,QQ_R)
-            endif
-         enddo
-
-         do ic0 = ifirst0-1,ilast0
-            QQ        = Q  (ic0  ,ic1)
-            QQ_star_L = Q_L(ic0  ,ic1)
-            QQ_star_R = Q_R(ic0  ,ic1)
-            P0 = 1.5d0*QQ-0.25d0*(QQ_star_L+QQ_star_R)
-            P1 = QQ_star_R-QQ_star_L
-            P2 = 3.d0*(QQ_star_L+QQ_star_R)-6.d0*QQ
-            QQ_L = P0 + 0.5d0*P1 + 0.25d0*P2
-
-            QQ        = Q  (ic0+1,ic1)
-            QQ_star_L = Q_L(ic0+1,ic1)
-            QQ_star_R = Q_R(ic0+1,ic1)
-            P0 = 1.5d0*QQ-0.25d0*(QQ_star_L+QQ_star_R)
-            P1 = QQ_star_R-QQ_star_L
-            P2 = 3.d0*(QQ_star_L+QQ_star_R)-6.d0*QQ
-            QQ_R = P0 - 0.5d0*P1 + 0.25d0*P2
-
-            qhalf0(ic0+1,ic1) =
-     &           0.5d0*(QQ_L+QQ_R)+
-     &           sign_eps(u0(ic0+1,ic1))*0.5d0*(QQ_L-QQ_R)
-         enddo
-      enddo
-c
-      return
-      end
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc

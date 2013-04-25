@@ -109,7 +109,7 @@ public:
     static size_t
     getSizeOfData(
         const SAMRAI::hier::Box<NDIM>& box,
-        unsigned int depth,
+        const int depth,
         const SAMRAI::hier::IntVector<NDIM>& ghosts);
 
     /*!
@@ -126,7 +126,7 @@ public:
      */
     VecCellData(
         const SAMRAI::hier::Box<NDIM>& box,
-        unsigned int depth,
+        const int depth,
         const SAMRAI::hier::IntVector<NDIM>& ghosts);
 
     /*!
@@ -139,7 +139,7 @@ public:
      * \brief Return the depth (e.g., the number of components in each spatial
      * location) of the array.
      */
-    unsigned int
+    int
     getDepth() const;
 
     /*!
@@ -169,7 +169,7 @@ public:
     TYPE&
     operator()(
         const SAMRAI::pdat::CellIndex<NDIM>& i,
-        unsigned int depth);
+        const int depth);
 
     /*!
      * \brief Return a const reference to cell data entry corresponding to a
@@ -178,7 +178,7 @@ public:
     const TYPE&
     operator()(
         const SAMRAI::pdat::CellIndex<NDIM>& i,
-        unsigned int depth) const;
+        const int depth) const;
 
     /*!
      * \brief Return a reference to the Blitz++ array object for the cell
@@ -203,7 +203,7 @@ public:
      * source and destination).  Currently, source data must be CellData or
      * VecCellData of the TYPE.  If not, then an unrecoverable error results.
      */
-    void
+    virtual void
     copy(
         const SAMRAI::hier::PatchData<NDIM>& src);
 
@@ -217,7 +217,7 @@ public:
      * VecCellData of the same TYPE.  If not, then an unrecoverable error
      * results.
      */
-    void
+    virtual void
     copy2(
         SAMRAI::hier::PatchData<NDIM>& dst) const;
 
@@ -228,7 +228,7 @@ public:
      * Source data must be VecCellData of the same TYPE and the overlap must be
      * a CellOverlap.  If not, then an unrecoverable error results.
      */
-    void
+    virtual void
     copy(
         const SAMRAI::hier::PatchData<NDIM>& src,
         const SAMRAI::hier::BoxOverlap<NDIM>& overlap);
@@ -240,7 +240,7 @@ public:
      * Destination data must be VecCellData of the same TYPE and the overlap
      * must be a CellOverlap.  If not, then an unrecoverable error results.
      */
-    void
+    virtual void
     copy2(
         SAMRAI::hier::PatchData<NDIM>& dst,
         const SAMRAI::hier::BoxOverlap<NDIM>& overlap) const;
@@ -290,7 +290,7 @@ public:
      * This routine is defined for the standard types (bool, char, double,
      * float, int, and dcomplex).
      */
-    bool
+    virtual bool
     canEstimateStreamSizeFromBox() const;
 
     /*!
@@ -300,7 +300,7 @@ public:
      * This routine is defined for the standard types (bool, char, double,
      * float, int, and dcomplex).
      */
-    int
+    virtual int
     getDataStreamSize(
         const SAMRAI::hier::BoxOverlap<NDIM>& overlap) const;
 
@@ -308,7 +308,7 @@ public:
      * \brief Pack data to stream from this patch data object over the specified
      * box overlap region.  The overlap must be a CellOverlap.
      */
-    void
+    virtual void
     packStream(
         SAMRAI::tbox::AbstractStream& stream,
         const SAMRAI::hier::BoxOverlap<NDIM>& overlap) const;
@@ -317,7 +317,7 @@ public:
      * \brief Unpack data from stream into this patch data object over the
      * specified box overlap region.  The overlap must be a CellOverlap.
      */
-    void
+    virtual void
     unpackStream(
         SAMRAI::tbox::AbstractStream& stream,
         const SAMRAI::hier::BoxOverlap<NDIM>& overlap);
@@ -328,7 +328,7 @@ public:
     void
     fill(
         const TYPE& t,
-        unsigned int d=0);
+        const int d=0);
 
     /*!
      * \brief Fill all values at depth d within the box with the value t.
@@ -337,7 +337,7 @@ public:
     fill(
         const TYPE& t,
         const SAMRAI::hier::Box<NDIM>& box,
-        unsigned int d=0);
+        const int d=0);
 
     /*!
      * \brief Fill all depth components with value t.
@@ -372,7 +372,7 @@ public:
     print(
         const SAMRAI::hier::Box<NDIM>& box,
         std::ostream& os=SAMRAI::tbox::plog,
-        int prec=12) const;
+        const int prec=12) const;
 
     /*!
      * \brief Print all cell data values at the given array depth in the
@@ -394,15 +394,15 @@ public:
     void
     print(
         const SAMRAI::hier::Box<NDIM>& box,
-        unsigned int depth,
+        const int depth,
         std::ostream& os=SAMRAI::tbox::plog,
-        int prec=12) const;
+        const int prec=12) const;
 
     /*!
      * Check that class version and restart file version are equal.  If so, read
      * data members from the database.
      */
-    void
+    virtual void
     getSpecializedFromDatabase(
         SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> database);
 
@@ -410,7 +410,7 @@ public:
      * Write out the class version number and other data members to the
      * database.
      */
-    void
+    virtual void
     putSpecializedToDatabase(
         SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> database);
 
@@ -466,7 +466,7 @@ private:
     putArrayToDatabase(
         SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> database);
 
-    unsigned int d_depth;
+    int d_depth;
     blitz::Array<TYPE,NDIM+1> d_data;
 
 };

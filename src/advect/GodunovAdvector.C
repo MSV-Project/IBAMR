@@ -34,8 +34,6 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
-
-
 #ifndef included_IBAMR_config
 #include <IBAMR_config.h>
 #define included_IBAMR_config
@@ -63,21 +61,21 @@
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define ADVECT_DERIVATIVE_FC FC_GLOBAL_(advect_derivative2d, ADVECT_DERIVATIVE2D)
-#define ADVECT_FLUX_FC FC_GLOBAL_(advect_flux2d, ADVECT_FLUX2D)
-#define ADVECT_STABLEDT_FC FC_GLOBAL_(advect_stabledt2d, ADVECT_STABLEDT2D)
-#define GODUNOV_INCOMPRESSIBILITY_FIX_FC FC_GLOBAL_(godunov_incompressibility_fix2d, GODUNOV_INCOMPRESSIBILITY_FIX2D)
-#define GODUNOV_PREDICT_FC FC_GLOBAL_(godunov_predict2d, GODUNOV_PREDICT2D)
-#define GODUNOV_PREDICT_WITH_SOURCE_FC FC_GLOBAL_(godunov_predict_with_source2d, GODUNOV_PREDICT_WITH_SOURCE2D)
+#define ADVECT_DERIVATIVE_FC FC_FUNC_(advect_derivative2d, ADVECT_DERIVATIVE2D)
+#define ADVECT_FLUX_FC FC_FUNC_(advect_flux2d, ADVECT_FLUX2D)
+#define ADVECT_STABLEDT_FC FC_FUNC_(advect_stabledt2d, ADVECT_STABLEDT2D)
+#define GODUNOV_INCOMPRESSIBILITY_FIX_FC FC_FUNC_(godunov_incompressibility_fix2d, GODUNOV_INCOMPRESSIBILITY_FIX2D)
+#define GODUNOV_PREDICT_FC FC_FUNC_(godunov_predict2d, GODUNOV_PREDICT2D)
+#define GODUNOV_PREDICT_WITH_SOURCE_FC FC_FUNC_(godunov_predict_with_source2d, GODUNOV_PREDICT_WITH_SOURCE2D)
 #endif
 
 #if (NDIM == 3)
-#define ADVECT_DERIVATIVE_FC FC_GLOBAL_(advect_derivative3d, ADVECT_DERIVATIVE3D)
-#define ADVECT_FLUX_FC FC_GLOBAL_(advect_flux3d, ADVECT_FLUX3D)
-#define ADVECT_STABLEDT_FC FC_GLOBAL_(advect_stabledt3d, ADVECT_STABLEDT3D)
-#define GODUNOV_INCOMPRESSIBILITY_FIX_FC FC_GLOBAL_(godunov_incompressibility_fix3d, GODUNOV_INCOMPRESSIBILITY_FIX3D)
-#define GODUNOV_PREDICT_FC FC_GLOBAL_(godunov_predict3d, GODUNOV_PREDICT3D)
-#define GODUNOV_PREDICT_WITH_SOURCE_FC FC_GLOBAL_(godunov_predict_with_source3d, GODUNOV_PREDICT_WITH_SOURCE3D)
+#define ADVECT_DERIVATIVE_FC FC_FUNC_(advect_derivative3d, ADVECT_DERIVATIVE3D)
+#define ADVECT_FLUX_FC FC_FUNC_(advect_flux3d, ADVECT_FLUX3D)
+#define ADVECT_STABLEDT_FC FC_FUNC_(advect_stabledt3d, ADVECT_STABLEDT3D)
+#define GODUNOV_INCOMPRESSIBILITY_FIX_FC FC_FUNC_(godunov_incompressibility_fix3d, GODUNOV_INCOMPRESSIBILITY_FIX3D)
+#define GODUNOV_PREDICT_FC FC_FUNC_(godunov_predict3d, GODUNOV_PREDICT3D)
+#define GODUNOV_PREDICT_WITH_SOURCE_FC FC_FUNC_(godunov_predict_with_source3d, GODUNOV_PREDICT_WITH_SOURCE3D)
 #endif
 
 extern "C"
@@ -249,7 +247,7 @@ GodunovAdvector::GodunovAdvector(
     const bool register_for_restart)
     : d_object_name(object_name),
       d_registered_for_restart(register_for_restart)
-#if (NDIM == 3)
+#if (NDIM==3)
     , d_using_full_ctu(true)
 #endif
 {
@@ -469,7 +467,7 @@ GodunovAdvector::predictNormalVelocity(
 
     predict(v_half_tmp, u_ADV, V, patch, dt);
 
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         ArrayData<NDIM,double>& v_half_arr = v_half.getArrayData(axis);
         const ArrayData<NDIM,double>& v_half_tmp_arr =
@@ -493,7 +491,7 @@ GodunovAdvector::predictNormalVelocityWithSourceTerm(
 
     predictWithSourceTerm(v_half_tmp, u_ADV, V, F, patch, dt);
 
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         ArrayData<NDIM,double>& v_half_arr = v_half.getArrayData(axis);
         const ArrayData<NDIM,double>& v_half_tmp_arr =
@@ -522,8 +520,6 @@ GodunovAdvector::enforceIncompressibility(
 
     TBOX_ASSERT(v_half.getBox()   == patch.getBox());
     TBOX_ASSERT(v_half.getDepth() == NDIM);
-#else
-    NULL_USE(u_ADV);
 #endif
     const Index<NDIM>& ilower = patch.getBox().lower();
     const Index<NDIM>& iupper = patch.getBox().upper();
@@ -531,7 +527,7 @@ GodunovAdvector::enforceIncompressibility(
     const IntVector<NDIM>& grad_phi_ghost_cells = grad_phi.getGhostCellWidth();
     const IntVector<NDIM>&   v_half_ghost_cells = v_half  .getGhostCellWidth();
 
-    for (unsigned int depth = 0; depth < NDIM; ++depth)
+    for (int depth = 0; depth < NDIM; ++depth)
     {
 #if (NDIM == 2)
         GODUNOV_INCOMPRESSIBILITY_FIX_FC(
@@ -606,7 +602,7 @@ GodunovAdvector::predict(
     CellData<NDIM,double> Q_R(patch.getBox(),1,Q_ghost_cells);
     CellData<NDIM,double> Q_temp1(patch.getBox(),1,Q_ghost_cells);
     FaceData<NDIM,double> q_half_temp(patch.getBox(),1,q_half_ghost_cells);
-#if (NDIM > 2)
+#if (NDIM>2)
     CellData<NDIM,double> Q_temp2(patch.getBox(),1,Q_ghost_cells);
 #endif
 
@@ -681,7 +677,7 @@ GodunovAdvector::predictWithSourceTerm(
     CellData<NDIM,double> Q_temp1(patch.getBox(),1,Q_ghost_cells);
     CellData<NDIM,double> F_temp1(patch.getBox(),1,F_ghost_cells);
     FaceData<NDIM,double> q_half_temp(patch.getBox(),1,q_half_ghost_cells);
-#if (NDIM > 2)
+#if (NDIM>2)
     CellData<NDIM,double> Q_temp2(patch.getBox(),1,Q_ghost_cells);
     CellData<NDIM,double> F_temp2(patch.getBox(),1,F_ghost_cells);
 #endif
@@ -726,15 +722,14 @@ GodunovAdvector::predictWithSourceTerm(
 void
 GodunovAdvector::getFromInput(
     Pointer<Database> db,
-    bool /*is_from_restart*/)
+    bool is_from_restart)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(!db.isNull());
 #endif
+    (void) is_from_restart;
 #if (NDIM == 3)
     d_using_full_ctu = db->getBoolWithDefault("using_full_ctu", d_using_full_ctu);
-#else
-    NULL_USE(db);
 #endif
     return;
 }// getFromInput
@@ -773,5 +768,10 @@ GodunovAdvector::getFromRestart()
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBAMR
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBAMR::GodunovAdvector>;
 
 //////////////////////////////////////////////////////////////////////////////

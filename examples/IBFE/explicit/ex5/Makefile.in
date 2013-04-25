@@ -43,7 +43,6 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/ax_blas.m4 \
 	$(top_srcdir)/m4/ax_cxx_have_stl.m4 \
 	$(top_srcdir)/m4/ax_cxx_namespaces.m4 \
 	$(top_srcdir)/m4/ax_lapack.m4 $(top_srcdir)/m4/ax_mpi.m4 \
-	$(top_srcdir)/m4/ax_prefix_config_h.m4 \
 	$(top_srcdir)/m4/blitz.m4 $(top_srcdir)/m4/hdf5.m4 \
 	$(top_srcdir)/m4/hypre.m4 $(top_srcdir)/m4/lib-ld.m4 \
 	$(top_srcdir)/m4/lib-link.m4 $(top_srcdir)/m4/lib-prefix.m4 \
@@ -404,7 +403,10 @@ IBAMR3d_LIBS = ${top_builddir}/lib/libIBAMR3d.a ${top_builddir}/ibtk/lib/libIBTK
 pkg_includedir = $(includedir)/@PACKAGE@
 SUFFIXES = .f.m4
 SOURCES = main.C
-EXTRA_DIST = input2d
+EXTRA_DIST = input2d input3d
+#if SAMRAI3D_ENABLED
+#EXTRA_PROGRAMS += main3d
+#endif
 main2d_CXXFLAGS = $(AM_CXXFLAGS) -DNDIM=2
 main2d_LDADD = $(IBAMR_LDFLAGS) $(IBAMR2d_LIBS) $(IBAMR_LIBS)
 main2d_SOURCES = $(SOURCES)
@@ -680,6 +682,10 @@ uninstall-am:
 
 .f.m4.f:
 	$(M4) $(FM4FLAGS) $(AM_FM4FLAGS) -DTOP_SRCDIR=$(top_srcdir) -DSAMRAI_FORTDIR=@SAMRAI_FORTDIR@ $< > $@
+
+#main3d_CXXFLAGS = $(AM_CXXFLAGS) -DNDIM=3
+#main3d_LDADD = $(IBAMR_LDFLAGS) $(IBAMR3d_LIBS) $(IBAMR_LIBS)
+#main3d_SOURCES = $(SOURCES)
 
 examples: $(EXTRA_PROGRAMS)
 	if test "$(top_srcdir)" != "$(top_builddir)" ; then \

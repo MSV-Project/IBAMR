@@ -57,8 +57,9 @@ public:
     CartCellDoubleQuadraticRefine();
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~CartCellDoubleQuadraticRefine();
 
     /*!
@@ -70,7 +71,7 @@ public:
      * Return true if the refining operation matches the variable and name
      * string identifier request; false, otherwise.
      */
-    bool
+    virtual bool
     findRefineOperator(
         const SAMRAI::tbox::Pointer<SAMRAI::hier::Variable<NDIM> >& var,
         const std::string& op_name) const;
@@ -78,7 +79,7 @@ public:
     /*!
      * Return name string identifier of the refining operation.
      */
-    const std::string&
+    virtual const std::string&
     getOperatorName() const;
 
     /*!
@@ -87,7 +88,7 @@ public:
      * operators with lower priority will be performed before those with higher
      * priority.
      */
-    int
+    virtual int
     getOperatorPriority() const;
 
     /*!
@@ -96,7 +97,7 @@ public:
      * sufficient ghost cell data surrounding the interior to satisfy the
      * stencil width requirements for each refining operator.
      */
-    SAMRAI::hier::IntVector<NDIM>
+    virtual SAMRAI::hier::IntVector<NDIM>
     getStencilWidth() const;
 
     /*!
@@ -106,12 +107,12 @@ public:
      * is guaranteed to contain sufficient data for the stencil width of the
      * refining operator.
      */
-    void
+    virtual void
     refine(
         SAMRAI::hier::Patch<NDIM>& fine,
         const SAMRAI::hier::Patch<NDIM>& coarse,
-        int dst_component,
-        int src_component,
+        const int dst_component,
+        const int src_component,
         const SAMRAI::hier::Box<NDIM>& fine_box,
         const SAMRAI::hier::IntVector<NDIM>& ratio) const;
 

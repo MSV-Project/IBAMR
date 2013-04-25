@@ -56,18 +56,19 @@ namespace IBTK
  * direction, then in the y direction, and finally in the z direction.
  */
 class NodeSynchCopyFillPattern
-    : public SAMRAI::xfer::VariableFillPattern<NDIM>
+    : public virtual SAMRAI::xfer::VariableFillPattern<NDIM>
 {
 public:
     /*!
      * \brief Constructor
      */
     NodeSynchCopyFillPattern(
-        unsigned int axis);
+        const int axis);
 
     /*!
      * \brief Destructor
      */
+    virtual
     ~NodeSynchCopyFillPattern();
 
     /*!
@@ -92,7 +93,7 @@ public:
         const SAMRAI::hier::BoxGeometry<NDIM>& src_geometry,
         const SAMRAI::hier::Box<NDIM>& dst_patch_box,
         const SAMRAI::hier::Box<NDIM>& src_mask,
-        bool overwrite_interior,
+        const bool overwrite_interior,
         const SAMRAI::hier::IntVector<NDIM>& src_offset) const;
 
     /*!
@@ -139,7 +140,7 @@ private:
         const NodeSynchCopyFillPattern& that);
 
     SAMRAI::hier::IntVector<NDIM> d_stencil_width;
-    const unsigned int d_axis;
+    const int d_axis;
 };
 }// namespace IBTK
 

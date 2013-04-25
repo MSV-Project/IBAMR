@@ -110,13 +110,13 @@ VecDot_SAMRAI(
     Vec y,
     PetscScalar* val)
 {
-    IBTK_TIMER_START(t_vec_dot);
+    t_vec_dot->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
-    TBOX_ASSERT(y != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
+    TBOX_ASSERT(y != static_cast<Vec>(NULL));
 #endif
     *val = PSVR_CAST2(x)->dot(PSVR_CAST2(y));
-    IBTK_TIMER_STOP(t_vec_dot);
+    t_vec_dot->stop();
     PetscFunctionReturn(0);
 }// VecDot
 
@@ -127,21 +127,19 @@ VecMDot_SAMRAI(
     const Vec* y,
     PetscScalar* val)
 {
-    IBTK_TIMER_START(t_vec_m_dot);
+    t_vec_m_dot->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
     for (PetscInt i = 0; i < nv; ++i)
     {
-        TBOX_ASSERT(y[i] != PETSC_NULL);
+        TBOX_ASSERT(y[i] != static_cast<Vec>(NULL));
     }
 #endif
-    static const bool local_only = true;
     for (PetscInt i = 0; i < nv; ++i)
     {
-        val[i] = PSVR_CAST2(x)->dot(PSVR_CAST2(y[i]), local_only);
+        val[i] = PSVR_CAST2(x)->dot(PSVR_CAST2(y[i]));
     }
-    SAMRAI_MPI::sumReduction(val, nv);
-    IBTK_TIMER_STOP(t_vec_m_dot);
+    t_vec_m_dot->stop();
     PetscFunctionReturn(0);
 }// VecMDot
 
@@ -151,9 +149,9 @@ VecNorm_SAMRAI(
     NormType type,
     PetscScalar* val)
 {
-    IBTK_TIMER_START(t_vec_norm);
+    t_vec_norm->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
 #endif
     if (type == NORM_1)
     {
@@ -169,19 +167,15 @@ VecNorm_SAMRAI(
     }
     else if (type == NORM_1_AND_2)
     {
-        static const bool local_only = true;
-        val[0] = NormOps::L1Norm(PSVR_CAST2(x), local_only);
-        val[1] = NormOps::L2Norm(PSVR_CAST2(x), local_only);
-        val[1] = val[1]*val[1];
-        SAMRAI_MPI::sumReduction(val, 2);
-        val[1] = std::sqrt(val[1]);
+        val[0] = NormOps::L1Norm(PSVR_CAST2(x));
+        val[1] = NormOps::L2Norm(PSVR_CAST2(x));
     }
     else
     {
         TBOX_ERROR("PETScSAMRAIVectorReal::norm()\n" <<
-                   "  vector norm type " << static_cast<int>(type) << " unsupported" << std::endl);
+                   "  vector norm type " << int(type) << " unsupported" << std::endl);
     }
-    IBTK_TIMER_STOP(t_vec_norm);
+    t_vec_norm->stop();
     PetscFunctionReturn(0);
 }// VecNorm
 
@@ -191,13 +185,13 @@ VecTDot_SAMRAI(
     Vec y,
     PetscScalar* val)
 {
-    IBTK_TIMER_START(t_vec_t_dot);
+    t_vec_t_dot->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
-    TBOX_ASSERT(y != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
+    TBOX_ASSERT(y != static_cast<Vec>(NULL));
 #endif
     *val = PSVR_CAST2(x)->dot(PSVR_CAST2(y));
-    IBTK_TIMER_STOP(t_vec_t_dot);
+    t_vec_t_dot->stop();
     PetscFunctionReturn(0);
 }// VecTDot
 
@@ -208,21 +202,19 @@ VecMTDot_SAMRAI(
     const Vec* y,
     PetscScalar* val)
 {
-    IBTK_TIMER_START(t_vec_m_t_dot);
+    t_vec_m_t_dot->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
     for (PetscInt i = 0; i < nv; ++i)
     {
-        TBOX_ASSERT(y[i] != PETSC_NULL);
+        TBOX_ASSERT(y[i] != static_cast<Vec>(NULL));
     }
 #endif
-    static const bool local_only = true;
     for (PetscInt i = 0; i < nv; ++i)
     {
-        val[i] = PSVR_CAST2(x)->dot(PSVR_CAST2(y[i]), local_only);
+        val[i] = PSVR_CAST2(x)->dot(PSVR_CAST2(y[i]));
     }
-    SAMRAI_MPI::sumReduction(val, nv);
-    IBTK_TIMER_STOP(t_vec_m_t_dot);
+    t_vec_m_t_dot->stop();
     PetscFunctionReturn(0);
 }// VecMTDot
 
@@ -231,14 +223,14 @@ VecScale_SAMRAI(
     Vec x,
     PetscScalar alpha)
 {
-    IBTK_TIMER_START(t_vec_scale);
+    t_vec_scale->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
 #endif
     static const bool interior_only = false;
     PSVR_CAST2(x)->scale(alpha,PSVR_CAST2(x), interior_only);
     int ierr = PetscObjectStateIncrease(reinterpret_cast<PetscObject>(x)); IBTK_CHKERRQ(ierr);
-    IBTK_TIMER_STOP(t_vec_scale);
+    t_vec_scale->stop();
     PetscFunctionReturn(0);
 }// VecScale
 
@@ -247,15 +239,15 @@ VecCopy_SAMRAI(
     Vec x,
     Vec y)
 {
-    IBTK_TIMER_START(t_vec_copy);
+    t_vec_copy->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
-    TBOX_ASSERT(y != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
+    TBOX_ASSERT(y != static_cast<Vec>(NULL));
 #endif
     static const bool interior_only = false;
     PSVR_CAST2(y)->copyVector(PSVR_CAST2(x), interior_only);
     int ierr = PetscObjectStateIncrease(reinterpret_cast<PetscObject>(y)); IBTK_CHKERRQ(ierr);
-    IBTK_TIMER_STOP(t_vec_copy);
+    t_vec_copy->stop();
     PetscFunctionReturn(0);
 }// VecCopy
 
@@ -264,14 +256,14 @@ VecSet_SAMRAI(
     Vec x,
     PetscScalar alpha)
 {
-    IBTK_TIMER_START(t_vec_set);
+    t_vec_set->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
 #endif
     static const bool interior_only = false;
     PSVR_CAST2(x)->setToScalar(alpha, interior_only);
     int ierr = PetscObjectStateIncrease(reinterpret_cast<PetscObject>(x)); IBTK_CHKERRQ(ierr);
-    IBTK_TIMER_STOP(t_vec_set);
+    t_vec_set->stop();
     PetscFunctionReturn(0);
 }// VecSet
 
@@ -280,16 +272,16 @@ VecSwap_SAMRAI(
     Vec x,
     Vec y)
 {
-    IBTK_TIMER_START(t_vec_swap);
+    t_vec_swap->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
-    TBOX_ASSERT(y != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
+    TBOX_ASSERT(y != static_cast<Vec>(NULL));
 #endif
     PSVR_CAST2(x)->swapVectors(PSVR_CAST2(y));
     int ierr;
     ierr = PetscObjectStateIncrease(reinterpret_cast<PetscObject>(x)); IBTK_CHKERRQ(ierr);
     ierr = PetscObjectStateIncrease(reinterpret_cast<PetscObject>(y)); IBTK_CHKERRQ(ierr);
-    IBTK_TIMER_STOP(t_vec_swap);
+    t_vec_swap->stop();
     PetscFunctionReturn(0);
 }// VecSwap
 
@@ -299,10 +291,10 @@ VecAXPY_SAMRAI(
     PetscScalar alpha,
     Vec x)
 {
-    IBTK_TIMER_START(t_vec_axpy);
+    t_vec_axpy->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
-    TBOX_ASSERT(y != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
+    TBOX_ASSERT(y != static_cast<Vec>(NULL));
 #endif
     static const bool interior_only = false;
     if (MathUtilities<double>::equalEps(alpha,1.0))
@@ -318,7 +310,7 @@ VecAXPY_SAMRAI(
         PSVR_CAST2(y)->axpy(alpha, PSVR_CAST2(x), PSVR_CAST2(y), interior_only);
     }
     int ierr = PetscObjectStateIncrease(reinterpret_cast<PetscObject>(y)); IBTK_CHKERRQ(ierr);
-    IBTK_TIMER_STOP(t_vec_axpy);
+    t_vec_axpy->stop();
     PetscFunctionReturn(0);
 }// VecAXPY
 
@@ -329,10 +321,10 @@ VecAXPBY_SAMRAI(
     PetscScalar beta,
     Vec x)
 {
-    IBTK_TIMER_START(t_vec_axpby);
+    t_vec_axpby->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
-    TBOX_ASSERT(y != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
+    TBOX_ASSERT(y != static_cast<Vec>(NULL));
 #endif
     static const bool interior_only = false;
     if (MathUtilities<double>::equalEps(alpha,1.0) && MathUtilities<double>::equalEps(beta,1.0))
@@ -352,7 +344,7 @@ VecAXPBY_SAMRAI(
         PSVR_CAST2(y)->linearSum(alpha, PSVR_CAST2(x), beta, PSVR_CAST2(y), interior_only);
     }
     int ierr = PetscObjectStateIncrease(reinterpret_cast<PetscObject>(y)); IBTK_CHKERRQ(ierr);
-    IBTK_TIMER_STOP(t_vec_axpby);
+    t_vec_axpby->stop();
     PetscFunctionReturn(0);
 }// VecAXPBY
 
@@ -363,12 +355,12 @@ VecMAXPY_SAMRAI(
     const PetscScalar* alpha,
     Vec* x)
 {
-    IBTK_TIMER_START(t_vec_maxpy);
+    t_vec_maxpy->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(y != PETSC_NULL);
+    TBOX_ASSERT(y != static_cast<Vec>(NULL));
     for (PetscInt i = 0; i < nv; ++i)
     {
-        TBOX_ASSERT(x[i] != PETSC_NULL);
+        TBOX_ASSERT(x[i] != static_cast<Vec>(NULL));
     }
 #endif
     static const bool interior_only = false;
@@ -388,7 +380,7 @@ VecMAXPY_SAMRAI(
         }
     }
     int ierr = PetscObjectStateIncrease(reinterpret_cast<PetscObject>(y)); IBTK_CHKERRQ(ierr);
-    IBTK_TIMER_STOP(t_vec_maxpy);
+    t_vec_maxpy->stop();
     PetscFunctionReturn(0);
 }// VecMAXPY
 
@@ -398,10 +390,10 @@ VecAYPX_SAMRAI(
     const PetscScalar alpha,
     Vec x)
 {
-    IBTK_TIMER_START(t_vec_aypx);
+    t_vec_aypx->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
-    TBOX_ASSERT(y != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
+    TBOX_ASSERT(y != static_cast<Vec>(NULL));
 #endif
     static const bool interior_only = false;
     if (MathUtilities<double>::equalEps(alpha,1.0))
@@ -417,7 +409,7 @@ VecAYPX_SAMRAI(
         PSVR_CAST2(y)->axpy(alpha, PSVR_CAST2(y), PSVR_CAST2(x), interior_only);
     }
     int ierr = PetscObjectStateIncrease(reinterpret_cast<PetscObject>(y)); IBTK_CHKERRQ(ierr);
-    IBTK_TIMER_STOP(t_vec_aypx);
+    t_vec_aypx->stop();
     PetscFunctionReturn(0);
 }// VecAYPX
 
@@ -428,11 +420,11 @@ VecWAXPY_SAMRAI(
     Vec x,
     Vec y)
 {
-    IBTK_TIMER_START(t_vec_waxpy);
+    t_vec_waxpy->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
-    TBOX_ASSERT(y != PETSC_NULL);
-    TBOX_ASSERT(w != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
+    TBOX_ASSERT(y != static_cast<Vec>(NULL));
+    TBOX_ASSERT(w != static_cast<Vec>(NULL));
 #endif
     static const bool interior_only = false;
     if (MathUtilities<double>::equalEps(alpha,1.0))
@@ -448,7 +440,7 @@ VecWAXPY_SAMRAI(
         PSVR_CAST2(w)->axpy(alpha, PSVR_CAST2(x), PSVR_CAST2(y), interior_only);
     }
     int ierr = PetscObjectStateIncrease(reinterpret_cast<PetscObject>(w)); IBTK_CHKERRQ(ierr);
-    IBTK_TIMER_STOP(t_vec_waxpy);
+    t_vec_waxpy->stop();
     PetscFunctionReturn(0);
 }// VecWAXPY
 
@@ -461,17 +453,17 @@ VecAXPBYPCZ_SAMRAI(
     Vec x,
     Vec y)
 {
-    IBTK_TIMER_START(t_vec_axpbypcz);
+    t_vec_axpbypcz->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
-    TBOX_ASSERT(y != PETSC_NULL);
-    TBOX_ASSERT(z != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
+    TBOX_ASSERT(y != static_cast<Vec>(NULL));
+    TBOX_ASSERT(z != static_cast<Vec>(NULL));
 #endif
     static const bool interior_only = false;
     PSVR_CAST2(z)->linearSum(alpha, PSVR_CAST2(x), gamma, PSVR_CAST2(z), interior_only);
     PSVR_CAST2(z)->axpy(beta, PSVR_CAST2(y), PSVR_CAST2(z), interior_only);
     int ierr = PetscObjectStateIncrease(reinterpret_cast<PetscObject>(z)); IBTK_CHKERRQ(ierr);
-    IBTK_TIMER_STOP(t_vec_axpbypcz);
+    t_vec_axpbypcz->stop();
     PetscFunctionReturn(0);
 }// VecAXPBYPCZ
 
@@ -481,16 +473,16 @@ VecPointwiseMult_SAMRAI(
     Vec x,
     Vec y)
 {
-    IBTK_TIMER_START(t_vec_pointwise_mult);
+    t_vec_pointwise_mult->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
-    TBOX_ASSERT(y != PETSC_NULL);
-    TBOX_ASSERT(w != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
+    TBOX_ASSERT(y != static_cast<Vec>(NULL));
+    TBOX_ASSERT(w != static_cast<Vec>(NULL));
 #endif
     static const bool interior_only = false;
     PSVR_CAST2(w)->multiply(PSVR_CAST2(x), PSVR_CAST2(y), interior_only);
     int ierr = PetscObjectStateIncrease(reinterpret_cast<PetscObject>(w)); IBTK_CHKERRQ(ierr);
-    IBTK_TIMER_STOP(t_vec_pointwise_mult);
+    t_vec_pointwise_mult->stop();
     PetscFunctionReturn(0);
 }// VecPointwiseMult
 
@@ -500,16 +492,16 @@ VecPointwiseDivide_SAMRAI(
     Vec x,
     Vec y)
 {
-    IBTK_TIMER_START(t_vec_pointwise_divide);
+    t_vec_pointwise_divide->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
-    TBOX_ASSERT(y != PETSC_NULL);
-    TBOX_ASSERT(w != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
+    TBOX_ASSERT(y != static_cast<Vec>(NULL));
+    TBOX_ASSERT(w != static_cast<Vec>(NULL));
 #endif
     static const bool interior_only = false;
     PSVR_CAST2(w)->divide(PSVR_CAST2(x), PSVR_CAST2(y), interior_only);
     int ierr = PetscObjectStateIncrease(reinterpret_cast<PetscObject>(w)); IBTK_CHKERRQ(ierr);
-    IBTK_TIMER_STOP(t_vec_pointwise_divide);
+    t_vec_pointwise_divide->stop();
     PetscFunctionReturn(0);
 }// VecPointwiseDivide
 
@@ -518,14 +510,12 @@ VecGetSize_SAMRAI(
     Vec v,
     PetscInt* n)
 {
-    IBTK_TIMER_START(t_vec_get_size);
+    t_vec_get_size->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(v != PETSC_NULL);
-#else
-    NULL_USE(v);
+    TBOX_ASSERT(v != static_cast<Vec>(NULL));
 #endif
     *n = 0;
-    IBTK_TIMER_STOP(t_vec_get_size);
+    t_vec_get_size->stop();
     PetscFunctionReturn(0);
 }// VecGetSize
 
@@ -534,14 +524,12 @@ VecGetLocalSize_SAMRAI(
     Vec v,
     PetscInt* n)
 {
-    IBTK_TIMER_START(t_vec_get_local_size);
+    t_vec_get_local_size->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(v != PETSC_NULL);
-#else
-    NULL_USE(v);
+    TBOX_ASSERT(v != static_cast<Vec>(NULL));
 #endif
     *n = 0;
-    IBTK_TIMER_STOP(t_vec_get_local_size);
+    t_vec_get_local_size->stop();
     PetscFunctionReturn(0);
 }// VecGetLocalSize
 
@@ -551,13 +539,13 @@ VecMax_SAMRAI(
     PetscInt* p,
     PetscScalar* val)
 {
-    IBTK_TIMER_START(t_vec_max);
+    t_vec_max->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
 #endif
     *p = -1;
     *val = PSVR_CAST2(x)->max();
-    IBTK_TIMER_STOP(t_vec_max);
+    t_vec_max->stop();
     PetscFunctionReturn(0);
 }// VecMax
 
@@ -567,13 +555,13 @@ VecMin_SAMRAI(
     PetscInt* p,
     PetscScalar* val)
 {
-    IBTK_TIMER_START(t_vec_min);
+    t_vec_min->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
 #endif
     *p = -1;
     *val = PSVR_CAST2(x)->min();
-    IBTK_TIMER_STOP(t_vec_min);
+    t_vec_min->stop();
     PetscFunctionReturn(0);
 }// VecMin
 
@@ -582,16 +570,16 @@ VecSetRandom_SAMRAI(
     Vec x,
     PetscRandom rctx)
 {
-    IBTK_TIMER_START(t_vec_set_random);
+    t_vec_set_random->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
 #endif
     PetscScalar lo, hi;
     int ierr;
     ierr = PetscRandomGetInterval(rctx, &lo, &hi); IBTK_CHKERRQ(ierr);
     PSVR_CAST2(x)->setRandomValues(hi-lo, lo);
     ierr = PetscObjectStateIncrease(reinterpret_cast<PetscObject>(x)); IBTK_CHKERRQ(ierr);
-    IBTK_TIMER_STOP(t_vec_set_random);
+    t_vec_set_random->stop();
     PetscFunctionReturn(0);
 }// VecSetRandom
 
@@ -601,14 +589,14 @@ VecDot_local_SAMRAI(
     Vec y,
     PetscScalar* val)
 {
-    IBTK_TIMER_START(t_vec_dot_local);
+    t_vec_dot_local->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
-    TBOX_ASSERT(y != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
+    TBOX_ASSERT(y != static_cast<Vec>(NULL));
 #endif
     static const bool local_only = true;
     *val = PSVR_CAST2(x)->dot(PSVR_CAST2(y), local_only);
-    IBTK_TIMER_STOP(t_vec_dot_local);
+    t_vec_dot_local->stop();
     PetscFunctionReturn(0);
 }// VecDot_local
 
@@ -618,14 +606,14 @@ VecTDot_local_SAMRAI(
     Vec y,
     PetscScalar* val)
 {
-    IBTK_TIMER_START(t_vec_t_dot_local);
+    t_vec_t_dot_local->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
-    TBOX_ASSERT(y != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
+    TBOX_ASSERT(y != static_cast<Vec>(NULL));
 #endif
     static const bool local_only = true;
     *val = PSVR_CAST2(x)->dot(PSVR_CAST2(y), local_only);
-    IBTK_TIMER_STOP(t_vec_t_dot_local);
+    t_vec_t_dot_local->stop();
     PetscFunctionReturn(0);
 }// VecTDot_local
 
@@ -635,9 +623,9 @@ VecNorm_local_SAMRAI(
     NormType type,
     PetscScalar* val)
 {
-    IBTK_TIMER_START(t_vec_norm_local);
+    t_vec_norm_local->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
 #endif
     static const bool local_only = true;
     if (type == NORM_1)
@@ -660,9 +648,9 @@ VecNorm_local_SAMRAI(
     else
     {
         TBOX_ERROR("PETScSAMRAIVectorReal::norm()\n" <<
-                   "  vector norm type " << static_cast<int>(type) << " unsupported" << std::endl);
+                   "  vector norm type " << int(type) << " unsupported" << std::endl);
     }
-    IBTK_TIMER_STOP(t_vec_norm_local);
+    t_vec_norm_local->stop();
     PetscFunctionReturn(0);
 }// VecNorm_local
 
@@ -673,12 +661,12 @@ VecMDot_local_SAMRAI(
     const Vec* y,
     PetscScalar* val)
 {
-    IBTK_TIMER_START(t_vec_m_dot_local);
+    t_vec_m_dot_local->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
     for (PetscInt i = 0; i < nv; ++i)
     {
-        TBOX_ASSERT(y[i] != PETSC_NULL);
+        TBOX_ASSERT(y[i] != static_cast<Vec>(NULL));
     }
 #endif
     static const bool local_only = true;
@@ -686,7 +674,7 @@ VecMDot_local_SAMRAI(
     {
         val[i] = PSVR_CAST2(x)->dot(PSVR_CAST2(y[i]), local_only);
     }
-    IBTK_TIMER_STOP(t_vec_m_dot_local);
+    t_vec_m_dot_local->stop();
     PetscFunctionReturn(0);
 }// VecMDot_local
 
@@ -697,12 +685,12 @@ VecMTDot_local_SAMRAI(
     const Vec* y,
     PetscScalar* val)
 {
-    IBTK_TIMER_START(t_vec_m_t_dot_local);
+    t_vec_m_t_dot_local->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
     for (PetscInt i = 0; i < nv; ++i)
     {
-        TBOX_ASSERT(y[i] != PETSC_NULL);
+        TBOX_ASSERT(y[i] != static_cast<Vec>(NULL));
     }
 #endif
     static const bool local_only = true;
@@ -710,7 +698,7 @@ VecMTDot_local_SAMRAI(
     {
         val[i] = PSVR_CAST2(x)->dot(PSVR_CAST2(y[i]), local_only);
     }
-    IBTK_TIMER_STOP(t_vec_m_t_dot_local);
+    t_vec_m_t_dot_local->stop();
     PetscFunctionReturn(0);
 }// VecMTDot_local
 
@@ -720,13 +708,13 @@ VecMaxPointwiseDivide_SAMRAI(
     Vec y,
     PetscScalar* max)
 {
-    IBTK_TIMER_START(t_vec_max_pointwise_divide);
+    t_vec_max_pointwise_divide->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(x != PETSC_NULL);
-    TBOX_ASSERT(y != PETSC_NULL);
+    TBOX_ASSERT(x != static_cast<Vec>(NULL));
+    TBOX_ASSERT(y != static_cast<Vec>(NULL));
 #endif
     *max = PSVR_CAST2(x)->maxPointwiseDivide(PSVR_CAST2(y));
-    IBTK_TIMER_STOP(t_vec_max_pointwise_divide);
+    t_vec_max_pointwise_divide->stop();
     PetscFunctionReturn(0);
 }// VecMaxPointwiseDivide
 
@@ -737,14 +725,14 @@ VecDotNorm2_SAMRAI(
     PetscScalar* dp,
     PetscScalar* nm)
 {
-    IBTK_TIMER_START(t_vec_dot_norm2);
+    t_vec_dot_norm2->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(s != PETSC_NULL);
-    TBOX_ASSERT(t != PETSC_NULL);
+    TBOX_ASSERT(s != static_cast<Vec>(NULL));
+    TBOX_ASSERT(t != static_cast<Vec>(NULL));
 #endif
     *dp = PSVR_CAST2(s)->dot(PSVR_CAST2(t));
     *nm = PSVR_CAST2(t)->dot(PSVR_CAST2(t));
-    IBTK_TIMER_STOP(t_vec_dot_norm2);
+    t_vec_dot_norm2->stop();
     PetscFunctionReturn(0);
 }// VecDotNorm2_SAMRAI
 }
@@ -846,14 +834,17 @@ PETScSAMRAIVectorReal::PETScSAMRAIVectorReal(
     d_petsc_vector->ops->norm_local              = VecNorm_local_SAMRAI;
     d_petsc_vector->ops->mdot_local              = VecMDot_local_SAMRAI;
     d_petsc_vector->ops->mtdot_local             = VecMTDot_local_SAMRAI;
-    d_petsc_vector->ops->load                    = PETSC_NULL;
+    d_petsc_vector->ops->loadintovector          = PETSC_NULL;
+    d_petsc_vector->ops->loadintovectornative    = PETSC_NULL;
     d_petsc_vector->ops->reciprocal              = PETSC_NULL;
+    d_petsc_vector->ops->viewnative              = PETSC_NULL;
     d_petsc_vector->ops->conjugate               = PETSC_NULL;
     d_petsc_vector->ops->setlocaltoglobalmapping = PETSC_NULL;
     d_petsc_vector->ops->setvalueslocal          = PETSC_NULL;
     d_petsc_vector->ops->resetarray              = PETSC_NULL;
     d_petsc_vector->ops->setfromoptions          = PETSC_NULL;
     d_petsc_vector->ops->maxpointwisedivide      = VecMaxPointwiseDivide_SAMRAI;
+    d_petsc_vector->ops->load                    = PETSC_NULL;
     d_petsc_vector->ops->pointwisemax            = PETSC_NULL;
     d_petsc_vector->ops->pointwisemaxabs         = PETSC_NULL;
     d_petsc_vector->ops->pointwisemin            = PETSC_NULL;
@@ -864,11 +855,9 @@ PETScSAMRAIVectorReal::PETScSAMRAIVectorReal(
     d_petsc_vector->ops->log                     = PETSC_NULL;
     d_petsc_vector->ops->shift                   = PETSC_NULL;
     d_petsc_vector->ops->create                  = PETSC_NULL;
-    d_petsc_vector->ops->stridegather            = PETSC_NULL;
-    d_petsc_vector->ops->stridescatter           = PETSC_NULL;
+#if (PETSC_VERSION_MAJOR == 3 && PETSC_VERSION_MINOR == 1)
     d_petsc_vector->ops->dotnorm2                = VecDotNorm2_SAMRAI;
-    d_petsc_vector->ops->getsubvector            = PETSC_NULL;
-    d_petsc_vector->ops->restoresubvector        = PETSC_NULL;
+#endif
 
     ierr = PetscObjectChangeTypeName(reinterpret_cast<PetscObject>(d_petsc_vector),"Vec_SAMRAI");  IBTK_CHKERRQ(ierr);
 
@@ -881,7 +870,7 @@ PETScSAMRAIVectorReal::~PETScSAMRAIVectorReal()
     if (!d_vector_created_via_duplicate)
     {
         d_petsc_vector->ops->destroy = 0;
-        int ierr = VecDestroy(&d_petsc_vector); IBTK_CHKERRQ(ierr);
+        int ierr = VecDestroy(d_petsc_vector); IBTK_CHKERRQ(ierr);
     }
     return;
 }// ~PETScSAMRAIVectorReal
@@ -893,10 +882,10 @@ PETScSAMRAIVectorReal::VecDuplicate_SAMRAI(
     Vec v,
     Vec* newv)
 {
-    IBTK_TIMER_START(t_vec_duplicate);
+    t_vec_duplicate->start();
     PetscErrorCode ierr;
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(v != PETSC_NULL);
+    TBOX_ASSERT(v != static_cast<Vec>(NULL));
 #endif
     Pointer<SAMRAIVectorReal<NDIM,PetscScalar> > samrai_vec = PSVR_CAST2(v)->cloneVector(PSVR_CAST2(v)->getName());
     samrai_vec->allocateVectorData();
@@ -906,7 +895,7 @@ PETScSAMRAIVectorReal::VecDuplicate_SAMRAI(
     PETScSAMRAIVectorReal* new_psv = new PETScSAMRAIVectorReal(samrai_vec, vector_created_via_duplicate, comm);
     *newv = new_psv->d_petsc_vector;
     ierr = PetscObjectStateIncrease(reinterpret_cast<PetscObject>(*newv)); IBTK_CHKERRQ(ierr);
-    IBTK_TIMER_STOP(t_vec_duplicate);
+    t_vec_duplicate->stop();
     PetscFunctionReturn(0);
 }// VecDuplicate
 
@@ -914,9 +903,9 @@ PetscErrorCode
 PETScSAMRAIVectorReal::VecDestroy_SAMRAI(
     Vec v)
 {
-    IBTK_TIMER_START(t_vec_destroy);
+    t_vec_destroy->start();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(v != PETSC_NULL);
+    TBOX_ASSERT(v != static_cast<Vec>(NULL));
 #endif
     if (PSVR_CAST1(v)->d_vector_created_via_duplicate)
     {
@@ -926,12 +915,14 @@ PETScSAMRAIVectorReal::VecDestroy_SAMRAI(
         PSVR_CAST2(v).setNull();
         destroyPETScVector(PSVR_CAST1(v)->d_petsc_vector);
     }
-    IBTK_TIMER_STOP(t_vec_destroy);
+    t_vec_destroy->stop();
     PetscFunctionReturn(0);
 }// VecDestroy
 
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////

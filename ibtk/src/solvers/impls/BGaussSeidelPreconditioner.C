@@ -101,10 +101,11 @@ BGaussSeidelPreconditioner::~BGaussSeidelPreconditioner()
 void
 BGaussSeidelPreconditioner::setComponentPreconditioner(
     Pointer<LinearSolver> preconditioner,
-    const unsigned int component)
+    const int component)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(!preconditioner.isNull());
+    TBOX_ASSERT(component >= 0);
 #endif
     d_pc_map[component] = preconditioner;
     return;
@@ -112,14 +113,15 @@ BGaussSeidelPreconditioner::setComponentPreconditioner(
 
 void
 BGaussSeidelPreconditioner::setComponentOperators(
-    const std::vector<Pointer<LinearOperator> >& linear_ops,
-    const unsigned int component)
+    std::vector<Pointer<LinearOperator> > linear_ops,
+    const int component)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    for (unsigned int k = 0; k < linear_ops.size(); ++k)
+    for (int k = 0; k < int(linear_ops.size()); ++k)
     {
         if (k != component) TBOX_ASSERT(!linear_ops[k].isNull());
     }
+    TBOX_ASSERT(component >= 0);
 #endif
     d_linear_ops_map[component] = linear_ops;
     return;
@@ -316,21 +318,21 @@ BGaussSeidelPreconditioner::deallocateSolverState()
     if (!d_is_initialized) return;
 
     // Deallocate the component preconditioners.
-    for (std::map<unsigned int,Pointer<LinearSolver> >::iterator it = d_pc_map.begin();
+    for (std::map<int,Pointer<LinearSolver> >::iterator it = d_pc_map.begin();
          it != d_pc_map.end(); ++it)
     {
-        it->second->deallocateSolverState();
+        (*it).second->deallocateSolverState();
     }
 
     // Deallocate the component operators.
-    for (std::map<unsigned int,std::vector<Pointer<LinearOperator> > >::iterator it = d_linear_ops_map.begin();
+    for (std::map<int,std::vector<Pointer<LinearOperator> > >::iterator it = d_linear_ops_map.begin();
          it != d_linear_ops_map.end(); ++it)
     {
-        std::vector<Pointer<LinearOperator> >& comp_linear_ops = it->second;
+        std::vector<Pointer<LinearOperator> >& comp_linear_ops = (*it).second;
         for (std::vector<Pointer<LinearOperator> >::iterator comp_it = comp_linear_ops.begin();
              comp_it != comp_linear_ops.end(); ++comp_it)
         {
-            if (!comp_it->isNull()) (*comp_it)->deallocateOperatorState();
+            if (!(*comp_it).isNull()) (*comp_it)->deallocateOperatorState();
         }
     }
 
@@ -372,5 +374,13 @@ BGaussSeidelPreconditioner::getComponentVectors(
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::BGaussSeidelPreconditioner>;
+
+#include <tbox/ConstPointer.C>
+template class ConstPointer<SAMRAIVectorReal<NDIM,double> >;
 
 //////////////////////////////////////////////////////////////////////////////

@@ -45,6 +45,7 @@
 #endif
 
 // IBAMR INCLUDES
+#include <ibamr/IBSpringForceSpecFactory.h>
 #include <ibamr/namespaces.h>
 
 // IBTK INCLUDES
@@ -59,7 +60,8 @@ namespace IBAMR
 {
 /////////////////////////////// STATIC ///////////////////////////////////////
 
-int IBSpringForceSpec::STREAMABLE_CLASS_ID = StreamableManager::getUnregisteredID();
+bool IBSpringForceSpec::s_registered_factory = false;
+int  IBSpringForceSpec::s_class_id = -1;
 
 void
 IBSpringForceSpec::registerWithStreamableManager()
@@ -68,12 +70,14 @@ IBSpringForceSpec::registerWithStreamableManager()
     // register the factory class with the StreamableManager, and to ensure that
     // all processes employ the same class ID for the IBSpringForceSpec object.
     SAMRAI_MPI::barrier();
-    if (!getIsRegisteredWithStreamableManager())
+    if (!s_registered_factory)
     {
 #ifdef DEBUG_CHECK_ASSERTIONS
-        TBOX_ASSERT(STREAMABLE_CLASS_ID == StreamableManager::getUnregisteredID());
+        TBOX_ASSERT(s_class_id == -1);
 #endif
-        STREAMABLE_CLASS_ID = StreamableManager::getManager()->registerFactory(new IBSpringForceSpecFactory());
+        s_class_id = StreamableManager::getManager()->registerFactory(
+            new IBSpringForceSpecFactory());
+        s_registered_factory = true;
     }
     SAMRAI_MPI::barrier();
     return;
@@ -88,5 +92,10 @@ IBSpringForceSpec::registerWithStreamableManager()
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBAMR
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBAMR::IBSpringForceSpec>;
 
 //////////////////////////////////////////////////////////////////////////////

@@ -30,7 +30,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "IBTargetPointForceSpec.h"
+#include "IBTargetPointForceSpecFactory.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
@@ -45,6 +45,7 @@
 #endif
 
 // IBAMR INCLUDES
+#include <ibamr/IBTargetPointForceSpec.h>
 #include <ibamr/namespaces.h>
 
 // IBTK INCLUDES
@@ -54,48 +55,58 @@
 
 namespace IBAMR
 {
+/////////////////////////////// STATIC ///////////////////////////////////////
+
+int IBTargetPointForceSpecFactory::s_class_id = -1;
+
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
-IBTargetPointForceSpec::Factory::Factory()
+IBTargetPointForceSpecFactory::IBTargetPointForceSpecFactory()
 {
     setStreamableClassID(StreamableManager::getUnregisteredID());
     return;
-}// Factory
+}// IBTargetPointForceSpecFactory
 
-IBTargetPointForceSpec::Factory::~Factory()
+IBTargetPointForceSpecFactory::~IBTargetPointForceSpecFactory()
 {
     // intentionally blank
     return;
-}// ~Factory
+}// ~IBTargetPointForceSpecFactory
 
 int
-IBTargetPointForceSpec::Factory::getStreamableClassID() const
+IBTargetPointForceSpecFactory::getStreamableClassID() const
 {
-    return STREAMABLE_CLASS_ID;
+    return s_class_id;
 }// getStreamableClassID
 
 void
-IBTargetPointForceSpec::Factory::setStreamableClassID(
+IBTargetPointForceSpecFactory::setStreamableClassID(
     const int class_id)
 {
-    STREAMABLE_CLASS_ID = class_id;
+    s_class_id = class_id;
     return;
 }// setStreamableClassID
 
 Pointer<Streamable>
-IBTargetPointForceSpec::Factory::unpackStream(
+IBTargetPointForceSpecFactory::unpackStream(
     AbstractStream& stream,
-    const IntVector<NDIM>& /*offset*/)
+    const IntVector<NDIM>& offset)
 {
-    Pointer<IBTargetPointForceSpec> ret_val = new IBTargetPointForceSpec();
-    stream.unpack(&ret_val->d_master_idx,1);
-    stream.unpack(&ret_val->d_kappa_target,1);
-    stream.unpack(&ret_val->d_eta_target,1);
-    stream.unpack(ret_val->d_X_target.data(),NDIM);
+    int mastr_idx;
+    stream.unpack(&mastr_idx,1);
+    double kappa_target;
+    stream.unpack(&kappa_target,1);
+    double eta_target;
+    stream.unpack(&eta_target,1);
+    std::vector<double> X_target(NDIM);
+    stream.unpack(&X_target[0],NDIM);
 #if ENABLE_SUBDOMAIN_INDICES
-    stream.unpack(&ret_val->d_subdomain_idx,1);
+    int subdomain_idx;
+    stream.unpack(&subdomain_idx,1);
+    return new IBTargetPointForceSpec(mastr_idx,kappa_target,eta_target,X_target,subdomain_idx);
+#else
+    return new IBTargetPointForceSpec(mastr_idx,kappa_target,eta_target,X_target);
 #endif
-    return ret_val;
 }// unpackStream
 
 /////////////////////////////// PROTECTED ////////////////////////////////////
@@ -105,5 +116,10 @@ IBTargetPointForceSpec::Factory::unpackStream(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBAMR
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBAMR::IBTargetPointForceSpecFactory>;
 
 //////////////////////////////////////////////////////////////////////////////

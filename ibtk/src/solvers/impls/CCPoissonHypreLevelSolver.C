@@ -45,7 +45,6 @@
 #endif
 
 // IBTK INCLUDES
-#include <ibtk/ExtendedRobinBcCoefStrategy.h>
 #include <ibtk/PhysicalBoundaryUtilities.h>
 #include <ibtk/ibtk_utilities.h>
 #include <ibtk/namespaces.h>
@@ -96,9 +95,9 @@ struct IndexComp
         const Index<NDIM>& rhs) const
         {
             return (lhs(0) < rhs(0)
-#if (NDIM > 1)
+#if (NDIM>1)
                     || (lhs(0) == rhs(0) && lhs(1) < rhs(1))
-#if (NDIM > 2)
+#if (NDIM>2)
                     || (lhs(0) == rhs(0) && lhs(1) == rhs(1) && lhs(2) < rhs(2))
 #endif
 #endif
@@ -198,7 +197,7 @@ CCPoissonHypreLevelSolver::CCPoissonHypreLevelSolver(
 
     // Setup a default boundary condition object that specifies homogeneous
     // Dirichlet boundary conditions.
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         d_default_bc_coef->setBoundaryValue(2*d  ,0.0);
         d_default_bc_coef->setBoundaryValue(2*d+1,0.0);
@@ -250,7 +249,7 @@ CCPoissonHypreLevelSolver::setPoissonSpecifications(
 
 void
 CCPoissonHypreLevelSolver::setPhysicalBcCoef(
-    RobinBcCoefStrategy<NDIM>* bc_coef)
+    const RobinBcCoefStrategy<NDIM>* bc_coef)
 {
     if (bc_coef != NULL)
     {
@@ -293,7 +292,7 @@ CCPoissonHypreLevelSolver::solveSystem(
     SAMRAIVectorReal<NDIM,double>& x,
     SAMRAIVectorReal<NDIM,double>& b)
 {
-    IBTK_TIMER_START(t_solve_system);
+    t_solve_system->start();
 
     if (d_enable_logging) plog << d_object_name << "::solveSystem():" << std::endl;
 
@@ -318,7 +317,7 @@ CCPoissonHypreLevelSolver::solveSystem(
     // Deallocate the solver, when necessary.
     if (deallocate_after_solve) deallocateSolverState();
 
-    IBTK_TIMER_STOP(t_solve_system);
+    t_solve_system->stop();
     return converged;
 }// solveSystem
 
@@ -327,7 +326,7 @@ CCPoissonHypreLevelSolver::initializeSolverState(
     const SAMRAIVectorReal<NDIM,double>& x,
     const SAMRAIVectorReal<NDIM,double>& b)
 {
-    IBTK_TIMER_START(t_initialize_solver_state);
+    t_initialize_solver_state->start();
 
     // Rudimentary error checking.
 #ifdef DEBUG_CHECK_ASSERTIONS
@@ -382,8 +381,6 @@ CCPoissonHypreLevelSolver::initializeSolverState(
         TBOX_ERROR(d_object_name << "::initializeSolverState()\n"
                    << "  coarsest_ln != finest_ln in CCPoissonHypreLevelSolver" << std::endl);
     }
-#else
-    NULL_USE(b);
 #endif
     // Deallocate the solver state if the solver is already initialized.
     if (d_is_initialized) deallocateSolverState();
@@ -407,7 +404,7 @@ CCPoissonHypreLevelSolver::initializeSolverState(
     // Indicate that the solver is initialized.
     d_is_initialized = true;
 
-    IBTK_TIMER_STOP(t_initialize_solver_state);
+    t_initialize_solver_state->stop();
     return;
 }// initializeSolverState
 
@@ -416,7 +413,7 @@ CCPoissonHypreLevelSolver::deallocateSolverState()
 {
     if (!d_is_initialized) return;
 
-    IBTK_TIMER_START(t_deallocate_solver_state);
+    t_deallocate_solver_state->start();
 
     // Deallocate the hypre data structures.
     destroyHypreSolver();
@@ -425,7 +422,7 @@ CCPoissonHypreLevelSolver::deallocateSolverState()
     // Indicate that the solver is NOT initialized.
     d_is_initialized = false;
 
-    IBTK_TIMER_STOP(t_deallocate_solver_state);
+    t_deallocate_solver_state->stop();
     return;
 }// deallocateSolverState
 
@@ -467,7 +464,7 @@ CCPoissonHypreLevelSolver::allocateHypreData()
     }
 
     int hypre_periodic_shift[3];
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         hypre_periodic_shift[d] = periodic_shift(d);
     }
@@ -598,7 +595,7 @@ CCPoissonHypreLevelSolver::setMatrixCoefficients_aligned()
 
         SideData<NDIM,double> off_diagonal(patch_box, 1, no_ghosts);
         off_diagonal.fill(0.0);
-        for (unsigned int axis = 0; axis < NDIM; ++axis)
+        for (int axis = 0; axis < NDIM; ++axis)
         {
             Box<NDIM> side_box = SideGeometry<NDIM>::toSideBox(patch_box, axis);
             array_ops.scale(off_diagonal.getArrayData(axis),
@@ -632,7 +629,7 @@ CCPoissonHypreLevelSolver::setMatrixCoefficients_aligned()
         for (Box<NDIM>::Iterator b(patch_box); b; b++)
         {
             Index<NDIM> i = b();
-            for (unsigned int axis = 0; axis < NDIM; ++axis)
+            for (int axis = 0; axis < NDIM; ++axis)
             {
                 const SideIndex<NDIM> ilower(i, axis, SideIndex<NDIM>::Lower);
                 diagonal(i) -= off_diagonal(ilower);
@@ -658,13 +655,16 @@ CCPoissonHypreLevelSolver::setMatrixCoefficients_aligned()
         // then
         //
         //     u_o = -((a*h - 2*b)/(a*h + 2*b))*u_i
-        const Array<BoundaryBox<NDIM> > physical_codim1_boxes = PhysicalBoundaryUtilities::getPhysicalBoundaryCodim1Boxes(*patch);
+        const Array<BoundaryBox<NDIM> > physical_codim1_boxes =
+            PhysicalBoundaryUtilities::getPhysicalBoundaryCodim1Boxes(*patch);
         const int n_physical_codim1_boxes = physical_codim1_boxes.size();
         for (int n = 0; n < n_physical_codim1_boxes; ++n)
         {
             const BoundaryBox<NDIM>& bdry_box = physical_codim1_boxes[n];
-            const BoundaryBox<NDIM> trimmed_bdry_box = PhysicalBoundaryUtilities::trimBoundaryCodim1Box(bdry_box, *patch);
-            const Box<NDIM> bc_coef_box = PhysicalBoundaryUtilities::makeSideBoundaryCodim1Box(trimmed_bdry_box);
+            const BoundaryBox<NDIM> trimmed_bdry_box =
+                PhysicalBoundaryUtilities::trimBoundaryCodim1Box(bdry_box, *patch);
+            const Box<NDIM> bc_coef_box =
+                PhysicalBoundaryUtilities::makeSideBoundaryCodim1Box(trimmed_bdry_box);
 
             ArrayData<NDIM,double> acoef_data(bc_coef_box, 1);
             ArrayData<NDIM,double> bcoef_data(bc_coef_box, 1);
@@ -673,21 +673,18 @@ CCPoissonHypreLevelSolver::setMatrixCoefficients_aligned()
             Pointer<ArrayData<NDIM,double> > bcoef_data_ptr(&bcoef_data, false);
             Pointer<ArrayData<NDIM,double> > gcoef_data_ptr(NULL);
 
-            ExtendedRobinBcCoefStrategy* extended_bc_coef = dynamic_cast<ExtendedRobinBcCoefStrategy*>(d_bc_coef);
-            if (extended_bc_coef != NULL) extended_bc_coef->setHomogeneousBc(true);
             d_bc_coef->setBcCoefs(
                 acoef_data_ptr, bcoef_data_ptr, gcoef_data_ptr, NULL,
                 *patch, trimmed_bdry_box, d_apply_time);
-            if (extended_bc_coef != NULL) extended_bc_coef->setHomogeneousBc(d_homogeneous_bc);
 
-            const unsigned int location_index = bdry_box.getLocationIndex();
-            const unsigned int bdry_normal_axis =  location_index / 2;
+            const int location_index = bdry_box.getLocationIndex();
+            const int bdry_normal_axis =  location_index / 2;
             const bool bdry_lower_side = (location_index % 2) == 0;
             const bool bdry_upper_side = (location_index % 2) != 0;
 
-            for (Box<NDIM>::Iterator it(bc_coef_box); it; it++)
+            for (Box<NDIM>::Iterator b(bc_coef_box); b; b++)
             {
-                const Index<NDIM>& i_s_bdry = it();
+                const Index<NDIM>& i_s_bdry = b();
                 const double& a = acoef_data(i_s_bdry,0);
                 const double& b = bcoef_data(i_s_bdry,0);
                 const double& h = dx[bdry_normal_axis];
@@ -815,6 +812,10 @@ CCPoissonHypreLevelSolver::setMatrixCoefficients_nonaligned()
             stencil_indices[i] = i;
         }
 
+        static const int x_axis = 0; (void) x_axis;
+        static const int y_axis = 1; (void) y_axis;
+        static const int z_axis = 2; (void) z_axis;
+
         std::map<Index<NDIM>,int,IndexComp> stencil_index_map;
         int stencil_index = 0;
 #if (NDIM == 3)
@@ -856,7 +857,7 @@ CCPoissonHypreLevelSolver::setMatrixCoefficients_nonaligned()
             mat_vals[stencil_center] = (*C_data)(i);
 
             // The grid aligned part of the stencil (normal derivatives).
-            for (unsigned int axis = 0; axis < NDIM; ++axis)
+            for (int axis = 0; axis < NDIM; ++axis)
             {
                 const double& h = dx[axis];
                 {
@@ -882,10 +883,10 @@ CCPoissonHypreLevelSolver::setMatrixCoefficients_nonaligned()
             }
 
             // The non-grid aligned part of the stencil (transverse derivatives).
-            for (unsigned int norm_axis = 0; norm_axis < NDIM; ++norm_axis)
+            for (int norm_axis = 0; norm_axis < NDIM; ++norm_axis)
             {
                 const double& norm_h = dx[norm_axis];
-                for (unsigned int trans_axis = 0; trans_axis < NDIM; ++trans_axis)
+                for (int trans_axis = 0; trans_axis < NDIM; ++trans_axis)
                 {
                     if (norm_axis == trans_axis) break;
                     const double& trans_h = dx[trans_axis];
@@ -1330,17 +1331,18 @@ CCPoissonHypreLevelSolver::solveSystem(
                 D_os_data.fillAll(d_poisson_spec.getDConstant());
             }
 
-            const Array<BoundaryBox<NDIM> > physical_codim1_boxes = PhysicalBoundaryUtilities::getPhysicalBoundaryCodim1Boxes(*patch);
+            const Array<BoundaryBox<NDIM> > physical_codim1_boxes =
+                PhysicalBoundaryUtilities::getPhysicalBoundaryCodim1Boxes(*patch);
 
             if (d_grid_aligned_anisotropy)
             {
                 adjustBoundaryRhsEntries_aligned(
-                    b_data, D_os_data_ptr, patch, physical_codim1_boxes, dx);
+                    b_data, D_os_data_ptr, d_bc_coef, patch, physical_codim1_boxes, dx);
             }
             else
             {
                 adjustBoundaryRhsEntries_nonaligned(
-                    b_data, D_os_data_ptr, patch, physical_codim1_boxes, dx);
+                    b_data, D_os_data_ptr, d_bc_coef, patch, physical_codim1_boxes, dx);
             }
         }
         copyToHypre(d_rhs_vec, b_data, patch_box);
@@ -1351,20 +1353,12 @@ CCPoissonHypreLevelSolver::solveSystem(
     HYPRE_StructVectorAssemble(d_rhs_vec);
 
     // Solve the system.
-    IBTK_TIMER_START(t_solve_system_hypre);
+    t_solve_system_hypre->start();
 
     if (d_solver_type == "PFMG")
     {
         HYPRE_StructPFMGSetMaxIter(d_solver, d_max_iterations);
         HYPRE_StructPFMGSetTol(d_solver, d_rel_residual_tol);
-        if (d_initial_guess_nonzero)
-        {
-            HYPRE_StructPFMGSetNonZeroGuess(d_solver);
-        }
-        else
-        {
-            HYPRE_StructPFMGSetZeroGuess(d_solver);
-        }
         HYPRE_StructPFMGSolve(d_solver, d_matrix, d_rhs_vec, d_sol_vec);
         HYPRE_StructPFMGGetNumIterations(d_solver, &d_current_its);
         HYPRE_StructPFMGGetFinalRelativeResidualNorm(d_solver, &d_current_residual_norm);
@@ -1373,14 +1367,6 @@ CCPoissonHypreLevelSolver::solveSystem(
     {
         HYPRE_StructSMGSetMaxIter(d_solver, d_max_iterations);
         HYPRE_StructSMGSetTol(d_solver, d_rel_residual_tol);
-        if (d_initial_guess_nonzero)
-        {
-            HYPRE_StructSMGSetNonZeroGuess(d_solver);
-        }
-        else
-        {
-            HYPRE_StructSMGSetZeroGuess(d_solver);
-        }
         HYPRE_StructSMGSolve(d_solver, d_matrix, d_rhs_vec, d_sol_vec);
         HYPRE_StructSMGGetNumIterations(d_solver, &d_current_its);
         HYPRE_StructSMGGetFinalRelativeResidualNorm(d_solver, &d_current_residual_norm);
@@ -1431,7 +1417,7 @@ CCPoissonHypreLevelSolver::solveSystem(
         HYPRE_StructBiCGSTABGetFinalRelativeResidualNorm(d_solver, &d_current_residual_norm);
     }
 
-    IBTK_TIMER_STOP(t_solve_system_hypre);
+    t_solve_system_hypre->stop();
 
     // Pull the solution vector out of the hypre structures.
     for (PatchLevel<NDIM>::Iterator p(level); p; p++)
@@ -1447,7 +1433,7 @@ CCPoissonHypreLevelSolver::solveSystem(
 void
 CCPoissonHypreLevelSolver::copyToHypre(
     HYPRE_StructVector vector,
-    const Pointer<CellData<NDIM,double> > src_data,
+    const Pointer<CellData<NDIM,double> >& src_data,
     const Box<NDIM>& box)
 {
     Index<NDIM> lower = box.lower();
@@ -1467,7 +1453,7 @@ CCPoissonHypreLevelSolver::copyToHypre(
 
 void
 CCPoissonHypreLevelSolver::copyFromHypre(
-    Pointer<CellData<NDIM,double> > dst_data,
+    Pointer<CellData<NDIM,double> >& dst_data,
     HYPRE_StructVector vector,
     const Box<NDIM>& box)
 {
@@ -1560,9 +1546,10 @@ CCPoissonHypreLevelSolver::deallocateHypreData()
 
 void
 CCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_aligned(
-    Pointer<CellData<NDIM,double> > rhs_data,
-    const Pointer<OutersideData<NDIM,double> > D_data,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<CellData<NDIM,double> >& rhs_data,
+    const Pointer<OutersideData<NDIM,double> >& D_data,
+    const RobinBcCoefStrategy<NDIM>* bc_strategy,
+    const Pointer<Patch<NDIM> >& patch,
     const Array<BoundaryBox<NDIM> >& codim1_boxes,
     const double* const dx)
 {
@@ -1592,8 +1579,10 @@ CCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_aligned(
     for (int n = 0; n < n_bdry_boxes; ++n)
     {
         const BoundaryBox<NDIM>& bdry_box = codim1_boxes[n];
-        const BoundaryBox<NDIM> trimmed_bdry_box = PhysicalBoundaryUtilities::trimBoundaryCodim1Box(bdry_box, *patch);
-        const Box<NDIM> bc_coef_box = PhysicalBoundaryUtilities::makeSideBoundaryCodim1Box(trimmed_bdry_box);
+        const BoundaryBox<NDIM> trimmed_bdry_box =
+            PhysicalBoundaryUtilities::trimBoundaryCodim1Box(bdry_box, *patch);
+        const Box<NDIM> bc_coef_box =
+            PhysicalBoundaryUtilities::makeSideBoundaryCodim1Box(trimmed_bdry_box);
 
         ArrayData<NDIM,double> acoef_data(bc_coef_box, 1);
         ArrayData<NDIM,double> bcoef_data(bc_coef_box, 1);
@@ -1603,14 +1592,12 @@ CCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_aligned(
         Pointer<ArrayData<NDIM,double> > bcoef_data_ptr(&bcoef_data, false);
         Pointer<ArrayData<NDIM,double> > gcoef_data_ptr(&gcoef_data, false);
 
-        ExtendedRobinBcCoefStrategy* extended_bc_coef = dynamic_cast<ExtendedRobinBcCoefStrategy*>(d_bc_coef);
-        if (extended_bc_coef != NULL) extended_bc_coef->setHomogeneousBc(d_homogeneous_bc);
         d_bc_coef->setBcCoefs(
             acoef_data_ptr, bcoef_data_ptr, gcoef_data_ptr, NULL,
             *patch, trimmed_bdry_box, d_apply_time);
 
-        const unsigned int location_index = bdry_box.getLocationIndex();
-        const unsigned int bdry_normal_axis =  location_index / 2;
+        const int location_index = bdry_box.getLocationIndex();
+        const int bdry_normal_axis =  location_index / 2;
         const bool bdry_upper_side = (location_index % 2) != 0;
         const int bdry_side = (bdry_upper_side ? 1 : 0);
 
@@ -1618,9 +1605,9 @@ CCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_aligned(
         //
         // i_c_intr: cell index located adjacent to physical boundary in the
         // patch interior
-        for (Box<NDIM>::Iterator it(bc_coef_box); it; it++)
+        for (Box<NDIM>::Iterator b(bc_coef_box); b; b++)
         {
-            const Index<NDIM>& i_s_bdry = it();
+            const Index<NDIM>& i_s_bdry = b();
             const double& a = acoef_data(i_s_bdry,0);
             const double& b = bcoef_data(i_s_bdry,0);
             const double& g = gcoef_data(i_s_bdry,0);
@@ -1639,9 +1626,10 @@ CCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_aligned(
 
 void
 CCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_nonaligned(
-    Pointer<CellData<NDIM,double> > rhs_data,
-    const Pointer<OutersideData<NDIM,double> > D_data,
-    const Pointer<Patch<NDIM> > patch,
+    Pointer<CellData<NDIM,double> >& rhs_data,
+    const Pointer<OutersideData<NDIM,double> >& D_data,
+    const RobinBcCoefStrategy<NDIM>* bc_strategy,
+    const Pointer<Patch<NDIM> >& patch,
     const Array<BoundaryBox<NDIM> >& codim1_boxes,
     const double* const dx)
 {
@@ -1671,8 +1659,10 @@ CCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_nonaligned(
     for (int n = 0; n < n_bdry_boxes; ++n)
     {
         const BoundaryBox<NDIM>& bdry_box = codim1_boxes[n];
-        const BoundaryBox<NDIM> trimmed_bdry_box = PhysicalBoundaryUtilities::trimBoundaryCodim1Box(bdry_box, *patch);
-        const Box<NDIM> bc_coef_box = PhysicalBoundaryUtilities::makeSideBoundaryCodim1Box(trimmed_bdry_box);
+        const BoundaryBox<NDIM> trimmed_bdry_box =
+            PhysicalBoundaryUtilities::trimBoundaryCodim1Box(bdry_box, *patch);
+        const Box<NDIM> bc_coef_box =
+            PhysicalBoundaryUtilities::makeSideBoundaryCodim1Box(trimmed_bdry_box);
 
         ArrayData<NDIM,double> acoef_data(bc_coef_box, 1);
         ArrayData<NDIM,double> bcoef_data(bc_coef_box, 1);
@@ -1682,14 +1672,12 @@ CCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_nonaligned(
         Pointer<ArrayData<NDIM,double> > bcoef_data_ptr(&bcoef_data, false);
         Pointer<ArrayData<NDIM,double> > gcoef_data_ptr(&gcoef_data, false);
 
-        ExtendedRobinBcCoefStrategy* extended_bc_coef = dynamic_cast<ExtendedRobinBcCoefStrategy*>(d_bc_coef);
-        if (extended_bc_coef != NULL) extended_bc_coef->setHomogeneousBc(d_homogeneous_bc);
         d_bc_coef->setBcCoefs(
             acoef_data_ptr, bcoef_data_ptr, gcoef_data_ptr, NULL,
             *patch, trimmed_bdry_box, d_apply_time);
 
-        const unsigned int location_index = bdry_box.getLocationIndex();
-        const unsigned int bdry_normal_axis =  location_index / 2;
+        const int location_index = bdry_box.getLocationIndex();
+        const int bdry_normal_axis =  location_index / 2;
         const bool bdry_upper_side = (location_index % 2) != 0;
         const int bdry_side = (bdry_upper_side ? 1 : 0);
 
@@ -1697,9 +1685,9 @@ CCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_nonaligned(
         //
         // i_c_intr: cell index located adjacent to physical boundary in the
         // patch interior
-        for (Box<NDIM>::Iterator it(bc_coef_box); it; it++)
+        for (Box<NDIM>::Iterator b(bc_coef_box); b; b++)
         {
-            const Index<NDIM>& i_s_bdry = it();
+            const Index<NDIM>& i_s_bdry = b();
             const double& a = acoef_data(i_s_bdry,0);
             const double& b = bcoef_data(i_s_bdry,0);
             const double& g = gcoef_data(i_s_bdry,0);
@@ -1719,5 +1707,10 @@ CCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_nonaligned(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::CCPoissonHypreLevelSolver>;
 
 //////////////////////////////////////////////////////////////////////////////

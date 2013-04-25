@@ -72,11 +72,12 @@ public:
         const PC& petsc_pc);
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      *
      * \note The argument \a petsc_pc provided to the class constructor <em>is
      * not</em> deallocated by the class destructor.
      */
+    virtual
     ~PETScPCLSWrapper();
 
     /*!
@@ -118,7 +119,7 @@ public:
      * \return \p true if the solver converged to the specified tolerances, \p
      * false otherwise
      */
-    bool
+    virtual bool
     solveSystem(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -162,7 +163,7 @@ public:
      *
      * \see deallocateSolverState
      */
-    void
+    virtual void
     initializeSolverState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -176,7 +177,7 @@ public:
      *
      * \see initializeSolverState
      */
-    void
+    virtual void
     deallocateSolverState();
 
     //\}
@@ -192,7 +193,7 @@ public:
      * \warning Not supported.  If called, a warning will be printed via
      * SAMRAI::TBOX_WARNING.
      */
-    void
+    virtual void
     setInitialGuessNonzero(
         bool initial_guess_nonzero=true);
 
@@ -202,7 +203,7 @@ public:
      * \warning Not supported.  If called, a warning will be printed via
      * SAMRAI::TBOX_WARNING.
      */
-    bool
+    virtual bool
     getInitialGuessNonzero() const;
 
     /*!
@@ -211,7 +212,7 @@ public:
      * \warning Not supported.  If called, a warning will be printed via
      * SAMRAI::TBOX_WARNING.
      */
-    void
+    virtual void
     setMaxIterations(
         int max_iterations);
 
@@ -221,7 +222,7 @@ public:
      * \warning Not supported.  If called, a warning will be printed via
      * SAMRAI::TBOX_WARNING.
      */
-    int
+    virtual int
     getMaxIterations() const;
 
     /*!
@@ -230,7 +231,7 @@ public:
      * \warning Not supported.  If called, a warning will be printed via
      * SAMRAI::TBOX_WARNING.
      */
-    void
+    virtual void
     setAbsoluteTolerance(
         double abs_residual_tol);
 
@@ -240,7 +241,7 @@ public:
      * \warning Not supported.  If called, a warning will be printed via
      * SAMRAI::TBOX_WARNING.
      */
-    double
+    virtual double
     getAbsoluteTolerance() const;
 
     /*!
@@ -249,7 +250,7 @@ public:
      * \warning Not supported.  If called, a warning will be printed via
      * SAMRAI::TBOX_WARNING.
      */
-    void
+    virtual void
     setRelativeTolerance(
         double rel_residual_tol);
 
@@ -259,7 +260,7 @@ public:
      * \warning Not supported.  If called, a warning will be printed via
      * SAMRAI::TBOX_WARNING.
      */
-    double
+    virtual double
     getRelativeTolerance() const;
 
     //\}
@@ -275,7 +276,7 @@ public:
      * \warning Not supported.  If called, a warning will be printed via
      * SAMRAI::TBOX_WARNING.
      */
-    int
+    virtual int
     getNumIterations() const;
 
     /*!
@@ -284,7 +285,7 @@ public:
      * \warning Not supported.  If called, a warning will be printed via
      * SAMRAI::TBOX_WARNING.
      */
-    double
+    virtual double
     getResidualNorm() const;
 
     //\}
@@ -297,7 +298,7 @@ public:
     /*!
      * \brief Enable or disable logging.
      */
-    void
+    virtual void
     enableLogging(
         bool enabled=true);
 

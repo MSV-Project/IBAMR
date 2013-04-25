@@ -58,6 +58,7 @@ c
      &     flux0,flux1)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c
@@ -116,6 +117,7 @@ c
      &     qval)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c
@@ -171,8 +173,7 @@ c
      &     qval)
 c
       implicit none
-      REAL fourth
-      parameter (fourth=0.25d0)
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c
@@ -239,6 +240,7 @@ c
      &     N)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c
@@ -304,6 +306,7 @@ c
      &     N)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c
@@ -369,6 +372,7 @@ c
      &     N)
 c
       implicit none
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c

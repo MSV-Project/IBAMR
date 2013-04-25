@@ -46,8 +46,8 @@
 #include <SideData.h>
 #include <SideVariable.h>
 
-// BLITZ++ INCLUDES
-#include <blitz/tinyvec.h>
+// C++ STDLIB INCLUDES
+#include <vector>
 
 /////////////////////////////// CLASS DEFINITION /////////////////////////////
 
@@ -74,8 +74,8 @@ public:
     static void
     constructPatchLaplaceOp(
         Mat& mat,
-        double C,
-        double D,
+        const double C,
+        const double D,
         SAMRAI::pdat::CellData<NDIM,double>& src_data,
         SAMRAI::pdat::CellData<NDIM,double>& dst_data,
         SAMRAI::hier::Patch<NDIM>& patch);
@@ -87,9 +87,9 @@ public:
      */
     static void
     constructPatchLaplaceOps(
-        blitz::TinyVector<Mat,NDIM>& mats,
-        double C,
-        double D,
+        std::vector<Mat>& mats,
+        const double C,
+        const double D,
         SAMRAI::pdat::SideData<NDIM,double>& src_data,
         SAMRAI::pdat::SideData<NDIM,double>& dst_data,
         SAMRAI::hier::Patch<NDIM>& patch);
@@ -113,11 +113,11 @@ public:
     static void
     constructPatchLevelLaplaceOp(
         Mat& mat,
-        double C,
-        double D,
-        int data_idx,
+        const double C,
+        const double D,
+        const int data_idx,
         SAMRAI::tbox::Pointer<SAMRAI::pdat::CellVariable<NDIM,double> > data_var,
-        int dof_index_idx,
+        const int dof_index_idx,
         SAMRAI::tbox::Pointer<SAMRAI::pdat::CellVariable<NDIM,int> > dof_index_var,
         SAMRAI::tbox::Pointer<SAMRAI::hier::PatchLevel<NDIM> > patch_level,
         SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineSchedule<NDIM> > dof_index_fill=NULL);
@@ -133,11 +133,11 @@ public:
     static void
     constructPatchLevelLaplaceOp(
         Mat& mat,
-        double C,
-        double D,
-        int data_idx,
+        const double C,
+        const double D,
+        const int data_idx,
         SAMRAI::tbox::Pointer<SAMRAI::pdat::SideVariable<NDIM,double> > data_var,
-        int dof_index_idx,
+        const int dof_index_idx,
         SAMRAI::tbox::Pointer<SAMRAI::pdat::SideVariable<NDIM,int> > dof_index_var,
         SAMRAI::tbox::Pointer<SAMRAI::hier::PatchLevel<NDIM> > patch_level,
         SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineSchedule<NDIM> > dof_index_fill=NULL);
@@ -154,9 +154,9 @@ public:
     constructPatchLevelInterpOp(
         Mat& mat,
         Vec& X_vec,
-        int data_idx,
+        const int data_idx,
         SAMRAI::tbox::Pointer<SAMRAI::pdat::SideVariable<NDIM,double> > data_var,
-        int dof_index_idx,
+        const int dof_index_idx,
         SAMRAI::tbox::Pointer<SAMRAI::pdat::SideVariable<NDIM,int> > dof_index_var,
         SAMRAI::tbox::Pointer<SAMRAI::hier::PatchLevel<NDIM> > patch_level,
         SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineSchedule<NDIM> > dof_index_fill=NULL);
@@ -203,13 +203,13 @@ private:
     static void
     constructBoxLaplaceOp(
         Mat& mat,
-        double C,
-        double D,
+        const double C,
+        const double D,
         const SAMRAI::hier::Box<NDIM>& src_ghost_box,
         const SAMRAI::hier::Box<NDIM>& dst_ghost_box,
         const SAMRAI::hier::Box<NDIM>& interior_box,
-        int data_depth,
-        const double* dx);
+        const int data_depth,
+        const double* const dx);
 };
 }// namespace IBTK
 

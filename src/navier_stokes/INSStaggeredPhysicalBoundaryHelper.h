@@ -41,9 +41,6 @@
 #include <Variable.h>
 #include <tbox/Pointer.h>
 
-// BLITZ++ INCLUDES
-#include <blitz/tinyvec.h>
-
 // C++ STDLIB INCLUDES
 #include <map>
 #include <vector>
@@ -81,9 +78,9 @@ public:
      */
     void
     zeroValuesAtDirichletBoundaries(
-        int patch_data_idx,
-        int coarsest_level_number=-1,
-        int finest_ln=-1) const;
+        const int patch_data_idx,
+        const int coarsest_level_number=-1,
+        const int finest_ln=-1) const;
 
     /*!
      * \brief Reset boundary values located on the physical boundary to zero on
@@ -95,21 +92,21 @@ public:
      */
     void
     resetValuesAtDirichletBoundaries(
-        int patch_data_idx,
-        int coarsest_level_number=-1,
-        int finest_ln=-1) const;
+        const int patch_data_idx,
+        const int coarsest_level_number=-1,
+        const int finest_ln=-1) const;
 
     /*!
      * \brief Cache boundary coefficient data.
      */
     void
     cacheBcCoefData(
-        int u_idx,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::Variable<NDIM> > u_var,
-        blitz::TinyVector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*,NDIM>& u_bc_coefs,
-        double fill_time,
+        const int u_idx,
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::Variable<NDIM> >& u_var,
+        std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& u_bc_coefs,
+        const double fill_time,
         const SAMRAI::hier::IntVector<NDIM>& gcw_to_fill,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy);
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> >& hierarchy);
 
     /*!
      * \brief Clear cached boundary coefficient data.

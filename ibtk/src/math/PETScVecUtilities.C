@@ -45,7 +45,6 @@
 
 // C++ STDLIB INCLUDES
 #include <numeric>
-#include <vector>
 
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
@@ -61,34 +60,32 @@ PETScVecUtilities::constructPatchVecWrapper(
     CellData<NDIM,double>& data)
 {
     int ierr;
-    if (vec != PETSC_NULL)
+    if (vec != static_cast<Vec>(NULL))
     {
-        ierr = VecDestroy(&vec); IBTK_CHKERRQ(ierr);
+        ierr = VecDestroy(vec); IBTK_CHKERRQ(ierr);
     }
     const int nvals = data.getDepth()*CellGeometry<NDIM>::toCellBox(data.getGhostBox()).size();
     double* data_ptr = data.getPointer();
-    // NOTE: rortiz: fixed missing block size parameter required in petsc 3.3
-    ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, 1, nvals, data_ptr, &vec); IBTK_CHKERRQ(ierr);
+    ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, nvals, data_ptr, &vec); IBTK_CHKERRQ(ierr);
     return;
 }// constructPatchVecWrapper
 
 void
 PETScVecUtilities::constructPatchVecWrappers(
-    blitz::TinyVector<Vec,NDIM>& vecs,
+    std::vector<Vec>& vecs,
     SideData<NDIM,double>& data)
 {
     int ierr;
-    for (unsigned int component_axis = 0; component_axis < NDIM; ++component_axis)
+    vecs.resize(NDIM);
+    for (int component_axis = 0; component_axis < NDIM; ++component_axis)
     {
-        if (vecs[component_axis] != PETSC_NULL)
+        if (vecs[component_axis] != static_cast<Vec>(NULL))
         {
-            ierr = VecDestroy(&vecs[component_axis]); IBTK_CHKERRQ(ierr);
+            ierr = VecDestroy(vecs[component_axis]); IBTK_CHKERRQ(ierr);
         }
         const int nvals = data.getDepth()*SideGeometry<NDIM>::toSideBox(data.getGhostBox(),component_axis).size();
         double* data_ptr = data.getPointer(component_axis);
-	
-	// NOTE: fixed missing block size parameter required in petsc 3.3
-        ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, 1, nvals, data_ptr, &vecs[component_axis]); IBTK_CHKERRQ(ierr);
+        ierr = VecCreateSeqWithArray(PETSC_COMM_SELF, nvals, data_ptr, &vecs[component_axis]); IBTK_CHKERRQ(ierr);
     }
     return;
 }// constructPatchVecWrappers
@@ -118,19 +115,19 @@ PETScVecUtilities::constructPatchDOFIndices(
     return counter;
 }// constructPatchDOFIndices
 
-blitz::TinyVector<int,NDIM>
+std::vector<int>
 PETScVecUtilities::constructPatchDOFIndices(
     SideData<NDIM,int>& dof_index,
     SideData<NDIM,double>& data)
 {
-    blitz::TinyVector<int,NDIM> axis_counter(0);
+    std::vector<int> axis_counter(NDIM,0);
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(dof_index.getBox() == data.getBox());
     TBOX_ASSERT(dof_index.getGhostBox().contains(data.getGhostBox()));
     TBOX_ASSERT(dof_index.getDepth() == data.getDepth());
 #endif
     dof_index.fillAll(-1);
-    for (unsigned int component_axis = 0; component_axis < NDIM; ++component_axis)
+    for (int component_axis = 0; component_axis < NDIM; ++component_axis)
     {
         const Box<NDIM>& data_box = SideGeometry<NDIM>::toSideBox(data.getGhostBox(), component_axis);
         const int depth = data.getDepth();
@@ -150,13 +147,13 @@ void
 PETScVecUtilities::constructPatchLevelVec(
     Vec& vec,
     const int data_idx,
-    Pointer<CellVariable<NDIM,double> > /*data_var*/,
+    Pointer<CellVariable<NDIM,double> > data_var,
     Pointer<PatchLevel<NDIM> > patch_level)
 {
     int ierr;
-    if (vec != PETSC_NULL)
+    if (vec != static_cast<Vec>(NULL))
     {
-        ierr = VecDestroy(&vec); IBTK_CHKERRQ(ierr);
+        ierr = VecDestroy(vec); IBTK_CHKERRQ(ierr);
     }
 
     int nvals_local = 0;
@@ -177,13 +174,13 @@ void
 PETScVecUtilities::constructPatchLevelVec(
     Vec& vec,
     const int data_idx,
-    Pointer<SideVariable<NDIM,double> > /*data_var*/,
+    Pointer<SideVariable<NDIM,double> > data_var,
     Pointer<PatchLevel<NDIM> > patch_level)
 {
     int ierr;
-    if (vec != PETSC_NULL)
+    if (vec != static_cast<Vec>(NULL))
     {
-        ierr = VecDestroy(&vec); IBTK_CHKERRQ(ierr);
+        ierr = VecDestroy(vec); IBTK_CHKERRQ(ierr);
     }
 
     int nvals_local = 0;
@@ -194,7 +191,7 @@ PETScVecUtilities::constructPatchLevelVec(
 #ifdef DEBUG_CHECK_ASSERTIONS
         TBOX_ASSERT(!data.isNull());
 #endif
-        for (unsigned int component_axis = 0; component_axis < NDIM; ++component_axis)
+        for (int component_axis = 0; component_axis < NDIM; ++component_axis)
         {
             nvals_local += data->getDepth()*SideGeometry<NDIM>::toSideBox(data->getGhostBox(),component_axis).size();
         }
@@ -207,7 +204,7 @@ void
 PETScVecUtilities::copyToPatchLevelVec(
     Vec& vec,
     const int data_idx,
-    Pointer<CellVariable<NDIM,double> > /*data_var*/,
+    Pointer<CellVariable<NDIM,double> > data_var,
     Pointer<PatchLevel<NDIM> > patch_level)
 {
     int ierr;
@@ -239,7 +236,7 @@ void
 PETScVecUtilities::copyFromPatchLevelVec(
     Vec& vec,
     const int data_idx,
-    Pointer<CellVariable<NDIM,double> > /*data_var*/,
+    Pointer<CellVariable<NDIM,double> > data_var,
     Pointer<PatchLevel<NDIM> > patch_level)
 {
     int ierr;
@@ -269,7 +266,7 @@ void
 PETScVecUtilities::copyToPatchLevelVec(
     Vec& vec,
     const int data_idx,
-    Pointer<SideVariable<NDIM,double> > /*data_var*/,
+    Pointer<SideVariable<NDIM,double> > data_var,
     Pointer<PatchLevel<NDIM> > patch_level)
 {
     int ierr;
@@ -283,7 +280,7 @@ PETScVecUtilities::copyToPatchLevelVec(
 #ifdef DEBUG_CHECK_ASSERTIONS
         TBOX_ASSERT(!data.isNull());
 #endif
-        for (unsigned int component_axis = 0; component_axis < NDIM; ++component_axis)
+        for (int component_axis = 0; component_axis < NDIM; ++component_axis)
         {
             const int nvals_patch = data->getDepth()*SideGeometry<NDIM>::toSideBox(data->getGhostBox(),component_axis).size();
             std::vector<int> idxs(nvals_patch);
@@ -304,7 +301,7 @@ void
 PETScVecUtilities::copyFromPatchLevelVec(
     Vec& vec,
     const int data_idx,
-    Pointer<SideVariable<NDIM,double> > /*data_var*/,
+    Pointer<SideVariable<NDIM,double> > data_var,
     Pointer<PatchLevel<NDIM> > patch_level)
 {
     int ierr;
@@ -318,7 +315,7 @@ PETScVecUtilities::copyFromPatchLevelVec(
 #ifdef DEBUG_CHECK_ASSERTIONS
         TBOX_ASSERT(!data.isNull());
 #endif
-        for (unsigned int component_axis = 0; component_axis < NDIM; ++component_axis)
+        for (int component_axis = 0; component_axis < NDIM; ++component_axis)
         {
             const int nvals_patch = data->getDepth()*SideGeometry<NDIM>::toSideBox(data->getGhostBox(),component_axis).size();
             std::vector<int> idxs(nvals_patch);
@@ -336,9 +333,9 @@ PETScVecUtilities::copyFromPatchLevelVec(
 void
 PETScVecUtilities::constructPatchLevelDOFIndices(
     const int dof_index_idx,
-    Pointer<CellVariable<NDIM,int> > /*dof_index_var*/,
+    Pointer<CellVariable<NDIM,int> > dof_index_var,
     const int data_idx,
-    Pointer<CellVariable<NDIM,double> > /*data_var*/,
+    Pointer<CellVariable<NDIM,double> > data_var,
     Pointer<PatchLevel<NDIM> > patch_level)
 {
     ArrayDataBasicOps<NDIM,int> patch_ops;
@@ -382,9 +379,9 @@ PETScVecUtilities::constructPatchLevelDOFIndices(
 void
 PETScVecUtilities::constructPatchLevelDOFIndices(
     const int dof_index_idx,
-    Pointer<SideVariable<NDIM,int> > /*dof_index_var*/,
+    Pointer<SideVariable<NDIM,int> > dof_index_var,
     const int data_idx,
-    Pointer<SideVariable<NDIM,double> > /*data_var*/,
+    Pointer<SideVariable<NDIM,double> > data_var,
     Pointer<PatchLevel<NDIM> > patch_level)
 {
     ArrayDataBasicOps<NDIM,int> patch_ops;
@@ -396,8 +393,8 @@ PETScVecUtilities::constructPatchLevelDOFIndices(
         Pointer<Patch<NDIM> > patch = patch_level->getPatch(p());
         Pointer<SideData<NDIM,int> > dof_index = patch->getPatchData(dof_index_idx);
         Pointer<SideData<NDIM,double> > data = patch->getPatchData(data_idx);
-        const blitz::TinyVector<int,NDIM> patch_dof_counts = constructPatchDOFIndices(*dof_index, *data);
-        for (unsigned int component_axis = 0; component_axis < NDIM; ++component_axis)
+        const std::vector<int> patch_dof_counts = constructPatchDOFIndices(*dof_index, *data);
+        for (int component_axis = 0; component_axis < NDIM; ++component_axis)
         {
             patch_ops.addScalar(dof_index->getArrayData(component_axis),
                                 dof_index->getArrayData(component_axis),
@@ -420,7 +417,7 @@ PETScVecUtilities::constructPatchLevelDOFIndices(
         Pointer<Patch<NDIM> > patch = patch_level->getPatch(p());
         Pointer<SideData<NDIM,int> > dof_index = patch->getPatchData(dof_index_idx);
         Pointer<SideData<NDIM,double> > data = patch->getPatchData(data_idx);
-        for (unsigned int component_axis = 0; component_axis < NDIM; ++component_axis)
+        for (int component_axis = 0; component_axis < NDIM; ++component_axis)
         {
             patch_ops.addScalar(dof_index->getArrayData(component_axis),
                                 dof_index->getArrayData(component_axis),
@@ -547,7 +544,7 @@ PETScVecUtilities::constrainPatchLevelVec(
         Pointer<Patch<NDIM> > patch = patch_level->getPatch(p());
         Pointer<SideData<NDIM,int> > dof_index = patch->getPatchData(dof_index_idx);
         Pointer<SideData<NDIM,int> > dof_master_index = patch->getPatchData(dof_master_index_idx);
-        for (unsigned int component_axis = 0; component_axis < NDIM; ++component_axis)
+        for (int component_axis = 0; component_axis < NDIM; ++component_axis)
         {
             const Box<NDIM>& patch_box = SideGeometry<NDIM>::toSideBox(patch->getBox(),component_axis);
             const Box<NDIM>& ghost_box = SideGeometry<NDIM>::toSideBox(dof_index->getGhostBox(),component_axis);
@@ -590,5 +587,7 @@ PETScVecUtilities::constrainPatchLevelVec(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
 
 //////////////////////////////////////////////////////////////////////////////

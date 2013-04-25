@@ -82,7 +82,7 @@ public:
      * \param ghosts default ghost cell width for concrete classes created from
      *        the factory.
      */
-    SAMRAI::tbox::Pointer<SAMRAI::hier::PatchDataFactory<NDIM> >
+    virtual SAMRAI::tbox::Pointer<SAMRAI::hier::PatchDataFactory<NDIM> >
     cloneFactory(
         const SAMRAI::hier::IntVector<NDIM>& ghosts);
 
@@ -92,7 +92,7 @@ public:
      * from the factory.  If no memory pool is provided, then the allocation
      * routine assumes some default memory pool.
      */
-    SAMRAI::tbox::Pointer<SAMRAI::hier::PatchData<NDIM> >
+    virtual SAMRAI::tbox::Pointer<SAMRAI::hier::PatchData<NDIM> >
     allocate(
         const SAMRAI::hier::Box<NDIM>& box,
         SAMRAI::tbox::Pointer<SAMRAI::tbox::Arena> pool=SAMRAI::tbox::Pointer<SAMRAI::tbox::Arena>(NULL)) const;
@@ -101,7 +101,7 @@ public:
      * Virtual factory function to allocate a concrete cell data object.  Same
      * as above function, except passes in a patch instead of a box.
      */
-    SAMRAI::tbox::Pointer<SAMRAI::hier::PatchData<NDIM> >
+    virtual SAMRAI::tbox::Pointer<SAMRAI::hier::PatchData<NDIM> >
     allocate(
         const SAMRAI::hier::Patch<NDIM>& patch,
         SAMRAI::tbox::Pointer<SAMRAI::tbox::Arena> pool=SAMRAI::tbox::Pointer<SAMRAI::tbox::Arena>(NULL)) const;
@@ -111,7 +111,7 @@ public:
      * information will be used in the computation of intersections and data
      * dependencies between objects.
      */
-    SAMRAI::tbox::Pointer<SAMRAI::hier::BoxGeometry<NDIM> >
+    virtual SAMRAI::tbox::Pointer<SAMRAI::hier::BoxGeometry<NDIM> >
     getBoxGeometry(
         const SAMRAI::hier::Box<NDIM>& box) const;
 
@@ -128,13 +128,13 @@ public:
      */
     void
     setDefaultDepth(
-        int depth);
+        const int depth);
 
     /*!
      * Calculate the amount of memory needed to store the cell data object,
      * including object data and dynamically allocated data.
      */
-    size_t
+    virtual size_t
     getSizeOfMemory(
         const SAMRAI::hier::Box<NDIM>& box) const;
 
@@ -144,7 +144,7 @@ public:
      * interfaces.  See the VecCellVariable class header file for more
      * information.
      */
-    bool
+    virtual bool
     fineBoundaryRepresentsVariable() const;
 
     /*!
@@ -152,7 +152,7 @@ public:
      * index space for AMR patches.  Thus, cell data does not live on patch
      * borders.
      */
-    bool
+    virtual bool
     dataLivesOnPatchBorder() const;
 
     /*!
@@ -160,14 +160,14 @@ public:
      * supplied destination patch data factory.  It will return true if dst_pdf
      * is a VecCellDataFactory, false otherwise.
      */
-    bool
+    virtual bool
     validCopyTo(
         const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchDataFactory<NDIM> >& dst_pdf) const;
 
     /*!
      * Return pointer to a multiblock data translator
      */
-    SAMRAI::hier::MultiblockDataTranslator<NDIM>*
+    virtual SAMRAI::hier::MultiblockDataTranslator<NDIM>*
     getMultiblockDataTranslator();
 
 private:

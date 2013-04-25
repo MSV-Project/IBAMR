@@ -57,7 +57,8 @@ namespace IBTK
  *
  * This solver class uses the \em hypre library to solve linear equations of the
  * form \f$ \mbox{$-\nabla^{\mathrm cc} \cdot \nabla^{\mathrm cc} u$} = f \f$,
- * as necessary to implement an \em exact cell-centered projection method.
+ * as necessary to implement a so-called \em exact cell-centered projection
+ * method.
  *
  * \note This solver class \em only supports \em periodic boundary conditions.
  * Support for physical boundary conditions is not currently planned for this
@@ -112,8 +113,9 @@ public:
         SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db=NULL);
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~CCDivGradHypreLevelSolver();
 
     /*!
@@ -158,7 +160,7 @@ public:
      * \return \p true if the solver converged to the specified tolerances, \p
      * false otherwise
      */
-    bool
+    virtual bool
     solveSystem(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -200,7 +202,7 @@ public:
      *
      * \see deallocateSolverState
      */
-    void
+    virtual void
     initializeSolverState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -214,7 +216,7 @@ public:
      *
      * \see initializeSolverState
      */
-    void
+    virtual void
     deallocateSolverState();
 
     //\}
@@ -227,53 +229,53 @@ public:
     /*!
      * \brief Set whether the initial guess is non-zero.
      */
-    void
+    virtual void
     setInitialGuessNonzero(
         bool initial_guess_nonzero=true);
 
     /*!
      * \brief Get whether the initial guess is non-zero.
      */
-    bool
+    virtual bool
     getInitialGuessNonzero() const;
 
     /*!
      * \brief Set the maximum number of iterations to use per solve.
      */
-    void
+    virtual void
     setMaxIterations(
         int max_iterations);
 
     /*!
      * \brief Get the maximum number of iterations to use per solve.
      */
-    int
+    virtual int
     getMaxIterations() const;
 
     /*!
      * \brief Set the absolute residual tolerance for convergence.
      */
-    void
+    virtual void
     setAbsoluteTolerance(
         double abs_residual_tol);
 
     /*!
      * \brief Get the absolute residual tolerance for convergence.
      */
-    double
+    virtual double
     getAbsoluteTolerance() const;
 
     /*!
      * \brief Set the relative residual tolerance for convergence.
      */
-    void
+    virtual void
     setRelativeTolerance(
         double rel_residual_tol);
 
     /*!
      * \brief Get the relative residual tolerance for convergence.
      */
-    double
+    virtual double
     getRelativeTolerance() const;
 
     //\}
@@ -286,13 +288,13 @@ public:
     /*!
      * \brief Return the iteration count from the most recent linear solve.
      */
-    int
+    virtual int
     getNumIterations() const;
 
     /*!
      * \brief Return the residual norm from the most recent iteration.
      */
-    double
+    virtual double
     getResidualNorm() const;
 
     //\}
@@ -305,7 +307,7 @@ public:
     /*!
      * \brief Enable or disable logging.
      */
-    void
+    virtual void
     enableLogging(
         bool enabled=true);
 
@@ -354,18 +356,18 @@ private:
     setupHypreSolver();
     bool
     solveSystem(
-        int x_idx,
-        int b_idx,
+        const int x_idx,
+        const int b_idx,
         const SAMRAI::hier::IntVector<NDIM>& chkbrd_mode_id);
     void
     copyToHypre(
         HYPRE_StructVector vector,
-        SAMRAI::tbox::Pointer<SAMRAI::pdat::CellData<NDIM,double> > src_data,
+        const SAMRAI::tbox::Pointer<SAMRAI::pdat::CellData<NDIM,double> >& src_data,
         const SAMRAI::hier::Box<NDIM>& box,
         const SAMRAI::hier::IntVector<NDIM>& chkbrd_mode_id);
     void
     copyFromHypre(
-        SAMRAI::tbox::Pointer<SAMRAI::pdat::CellData<NDIM,double> > dst_data,
+        SAMRAI::tbox::Pointer<SAMRAI::pdat::CellData<NDIM,double> >& dst_data,
         HYPRE_StructVector vector,
         const SAMRAI::hier::Box<NDIM>& box,
         const SAMRAI::hier::IntVector<NDIM>& chkbrd_mode_id);

@@ -60,15 +60,16 @@ public:
         SAMRAI::tbox::Pointer<SAMRAI::xfer::CoarsenOperator<NDIM> > cell_coarsen_op);
 
     /*!
-     * Destructor.
+     * Uninteresting virtual destructor.
      */
+    virtual
     ~VecCellCoarsenAdapter();
 
     /*!
      * Return true if the variable and name string match their expected values;
      * otherwise, return false.
      */
-    bool
+    virtual bool
     findCoarsenOperator(
         const SAMRAI::tbox::Pointer<SAMRAI::hier::Variable<NDIM> >& var,
         const std::string& op_name) const;
@@ -76,21 +77,21 @@ public:
     /*!
      * Return name string identifier of this coarsening operation.
      */
-    const std::string&
+    virtual const std::string&
     getOperatorName() const;
 
     /*!
      * The priority of the operator is the same as the cell-centered coarsen
      * operator encapsulated by this object.
      */
-    int
+    virtual int
     getOperatorPriority() const;
 
     /*!
      * The stencil width of the operator is the same as the cell-centered
      * coarsen operator encapsulated by this object.
      */
-    SAMRAI::hier::IntVector<NDIM>
+    virtual SAMRAI::hier::IntVector<NDIM>
     getStencilWidth() const;
 
     /*!
@@ -101,12 +102,12 @@ public:
      * contains sufficient data for the stencil width of the coarsening
      * operator.
      */
-    void
+    virtual void
     coarsen(
         SAMRAI::hier::Patch<NDIM>& coarse,
         const SAMRAI::hier::Patch<NDIM>& fine,
-        int dst_component,
-        int src_component,
+        const int dst_component,
+        const int src_component,
         const SAMRAI::hier::Box<NDIM>& coarse_box,
         const SAMRAI::hier::IntVector<NDIM>& ratio) const;
 

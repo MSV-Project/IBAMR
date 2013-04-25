@@ -41,7 +41,6 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/ax_blas.m4 \
 	$(top_srcdir)/m4/ax_cxx_have_stl.m4 \
 	$(top_srcdir)/m4/ax_cxx_namespaces.m4 \
 	$(top_srcdir)/m4/ax_lapack.m4 $(top_srcdir)/m4/ax_mpi.m4 \
-	$(top_srcdir)/m4/ax_prefix_config_h.m4 \
 	$(top_srcdir)/m4/blitz.m4 $(top_srcdir)/m4/hdf5.m4 \
 	$(top_srcdir)/m4/hypre.m4 $(top_srcdir)/m4/lib-ld.m4 \
 	$(top_srcdir)/m4/lib-link.m4 $(top_srcdir)/m4/lib-prefix.m4 \
@@ -421,7 +420,7 @@ IBAMR2d_LIBS = ${top_builddir}/lib/libIBAMR2d.a ${top_builddir}/ibtk/lib/libIBTK
 IBAMR3d_LIBS = ${top_builddir}/lib/libIBAMR3d.a ${top_builddir}/ibtk/lib/libIBTK3d.a
 pkg_includedir = $(includedir)/@PACKAGE@
 SUFFIXES = .f.m4
-SUBDIRS = IB IBFE adv_diff advect navier_stokes
+SUBDIRS = IB IBFE adv_diff advect navier_stokes vc_navier_stokes
 all: all-recursive
 
 .SUFFIXES:
@@ -772,6 +771,7 @@ examples:
 	@(cd adv_diff         && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1;
 	@(cd advect           && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1;
 	@(cd navier_stokes    && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1;
+	@(cd vc_navier_stokes && $(MAKE) $(AM_MAKEFLAGS) $@) || exit 1;
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

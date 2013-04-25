@@ -45,13 +45,23 @@
 #include <functional>
 #include <vector>
 
-// BLITZ++ INCLUDES
-#include <blitz/tinyvec.h>
-
 /////////////////////////////// CLASS DEFINITION /////////////////////////////
 
 namespace IBTK
 {
+
+struct LNodeIndexLessThan
+    : std::binary_function<SAMRAI::tbox::Pointer<LNodeIndex>,SAMRAI::tbox::Pointer<LNodeIndex>,bool>
+{
+    inline bool
+    operator()(
+        const SAMRAI::tbox::Pointer<LNodeIndex>& lhs,
+        const SAMRAI::tbox::Pointer<LNodeIndex>& rhs) const
+        {
+            return *lhs < *rhs;
+        }
+};
+
 struct CellIndexFortranOrder
     : std::binary_function<SAMRAI::pdat::CellIndex<NDIM>,SAMRAI::pdat::CellIndex<NDIM>,bool>
 {
@@ -61,9 +71,9 @@ struct CellIndexFortranOrder
         const SAMRAI::pdat::CellIndex<NDIM>& rhs) const
         {
             return (lhs(0) < rhs(0)
-#if (NDIM > 1)
+#if (NDIM>1)
                     || (lhs(0) == rhs(0) && lhs(1) < rhs(1))
-#if (NDIM > 2)
+#if (NDIM>2)
                     || (lhs(0) == rhs(0) && lhs(1) == rhs(1) && lhs(2) < rhs(2))
 #endif
 #endif
@@ -79,22 +89,6 @@ struct CellIndexFortranOrder
 class IndexUtilities
 {
 public:
-    /*
-     * \return The coarsened version of a cell-centered index.
-     */
-    static SAMRAI::hier::Index<NDIM>
-    coarsen(
-        const SAMRAI::hier::Index<NDIM>& i_fine,
-        const SAMRAI::hier::Index<NDIM>& ratio);
-
-    /*
-     * \return The refined version of a cell-centered index.
-     */
-    static SAMRAI::hier::Index<NDIM>
-    refine(
-        const SAMRAI::hier::Index<NDIM>& i_coarsen,
-        const SAMRAI::hier::Index<NDIM>& ratio);
-
     /*!
      * \return The cell index corresponding to location \p X relative
      * to \p XLower and \p XUpper for the specified Cartesian grid
@@ -104,10 +98,10 @@ public:
      */
     static SAMRAI::hier::Index<NDIM>
     getCellIndex(
-        const double* X,
-        const double* XLower,
-        const double* XUpper,
-        const double* dx,
+        const double* const X,
+        const double* const XLower,
+        const double* const XUpper,
+        const double* const dx,
         const SAMRAI::hier::Index<NDIM>& ilower,
         const SAMRAI::hier::Index<NDIM>& iupper);
 
@@ -121,25 +115,9 @@ public:
     static SAMRAI::hier::Index<NDIM>
     getCellIndex(
         const std::vector<double>& X,
-        const double* XLower,
-        const double* XUpper,
-        const double* dx,
-        const SAMRAI::hier::Index<NDIM>& ilower,
-        const SAMRAI::hier::Index<NDIM>& iupper);
-
-    /*!
-     * \return The cell index corresponding to location \p X relative
-     * to \p XLower and \p XUpper for the specified Cartesian grid
-     * spacings \p dx and box extents \p ilower and \p iupper.
-     *
-     * \see SAMRAI::geom::CartesianPatchGeometry
-     */
-    static SAMRAI::hier::Index<NDIM>
-    getCellIndex(
-        const blitz::TinyVector<double,NDIM>& X,
-        const double* XLower,
-        const double* XUpper,
-        const double* dx,
+        const double* const XLower,
+        const double* const XUpper,
+        const double* const dx,
         const SAMRAI::hier::Index<NDIM>& ilower,
         const SAMRAI::hier::Index<NDIM>& iupper);
 

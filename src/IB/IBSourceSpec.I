@@ -32,9 +32,6 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
-// IBTK INCLUDES
-#include <ibtk/StreamableManager.h>
-
 // SAMRAI INCLUDES
 #include <tbox/PIO.h>
 #include <tbox/Utilities.h>
@@ -48,8 +45,29 @@ namespace IBAMR
 inline bool
 IBSourceSpec::getIsRegisteredWithStreamableManager()
 {
-    return (STREAMABLE_CLASS_ID != IBTK::StreamableManager::getUnregisteredID());
+    return s_registered_factory;
 }// getIsRegisteredWithStreamableManager
+
+inline int
+IBSourceSpec::getNumSources(
+    const int ln)
+{
+    return s_num_sources[ln];
+}// getNumSources
+
+inline const std::vector<std::string>&
+IBSourceSpec::getSourceNames(
+    const int ln)
+{
+    return s_source_names[ln];
+}// getSourceNames
+
+inline const std::vector<double>&
+IBSourceSpec::getSourceRadii(
+    const int ln)
+{
+    return s_source_radii[ln];
+}// getSourceRadii
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
@@ -60,14 +78,12 @@ IBSourceSpec::IBSourceSpec(
     : d_master_idx(master_idx),
       d_source_idx(source_idx)
 {
-#ifdef DEBUG_CHECK_ASSERTIONS
-    if (!getIsRegisteredWithStreamableManager())
+    if (!s_registered_factory)
     {
         TBOX_ERROR("IBSourceSpec::IBSourceSpec():\n"
                    << "  must call IBSourceSpec::registerWithStreamableManager() before\n"
                    << "  creating any IBSourceSpec objects.\n");
     }
-#endif
     return;
 }// IBSourceSpec
 
@@ -105,7 +121,7 @@ IBSourceSpec::getSourceIndex()
 inline int
 IBSourceSpec::getStreamableClassID() const
 {
-    return STREAMABLE_CLASS_ID;
+    return s_class_id;
 }// getStreamableClassID
 
 inline size_t

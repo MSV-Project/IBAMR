@@ -47,11 +47,9 @@
 #include <RobinBcCoefStrategy.h>
 #include <tbox/DescribedClass.h>
 
-// BLITZ++ INCLUDES
-#include <blitz/tinyvec.h>
-
 // C++ STDLIB INCLUDES
 #include <set>
+#include <vector>
 
 /////////////////////////////// CLASS DEFINITION /////////////////////////////
 
@@ -100,9 +98,9 @@ public:
      * \param homogeneous_bc    Whether to employ the homogeneous form of the boundary conditions.
      */
     CartSideRobinPhysBdryOp(
-        int patch_data_index,
-        const blitz::TinyVector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs,
-        bool homogeneous_bc=false);
+        const int patch_data_index,
+        const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& bc_coefs,
+        const bool homogeneous_bc=false);
 
     /*!
      * \brief Constructor to fill boundary conditions for vector-valued
@@ -115,8 +113,8 @@ public:
      */
     CartSideRobinPhysBdryOp(
         const std::set<int>& patch_data_indices,
-        const blitz::TinyVector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs,
-        bool homogeneous_bc=false);
+        const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& bc_coefs,
+        const bool homogeneous_bc=false);
 
     /*!
      * \brief Constructor to fill boundary conditions for vector-valued
@@ -129,12 +127,13 @@ public:
      */
     CartSideRobinPhysBdryOp(
         const SAMRAI::hier::ComponentSelector& patch_data_indices,
-        const blitz::TinyVector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs,
-        bool homogeneous_bc=false);
+        const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& bc_coefs,
+        const bool homogeneous_bc=false);
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~CartSideRobinPhysBdryOp();
 
     /*!
@@ -142,7 +141,7 @@ public:
      */
     void
     setPatchDataIndex(
-        int patch_data_index);
+        const int patch_data_index);
 
     /*!
      * \brief Reset the patch data indices operated upon by this class.
@@ -167,7 +166,7 @@ public:
      */
     void
     setPhysicalBcCoefs(
-        const blitz::TinyVector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs);
+        const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& bc_coefs);
 
     /*!
      * \brief Set whether boundary filling should employ homogeneous boundary
@@ -195,10 +194,10 @@ public:
      * \param fill_time            Double simulation time for boundary filling.
      * \param ghost_width_to_fill  Integer vector describing maximum ghost width to fill over all registered scratch components.
      */
-    void
+    virtual void
     setPhysicalBoundaryConditions(
         SAMRAI::hier::Patch<NDIM>& patch,
-        double fill_time,
+        const double fill_time,
         const SAMRAI::hier::IntVector<NDIM>& ghost_width_to_fill);
 
     /*!
@@ -208,7 +207,7 @@ public:
      *
      * Presently, the refine operator stencil width is zero.
      */
-    SAMRAI::hier::IntVector<NDIM>
+    virtual SAMRAI::hier::IntVector<NDIM>
     getRefineOpStencilWidth() const;
 
     /*!
@@ -228,7 +227,7 @@ public:
      * \param fine_box  Box region on fine patch into which data is refined.
      * \param ratio     Integer vector containing ratio relating index space between coarse and fine patches.
      */
-    void
+    virtual void
     preprocessRefine(
         SAMRAI::hier::Patch<NDIM>& fine,
         const SAMRAI::hier::Patch<NDIM>& coarse,
@@ -252,7 +251,7 @@ public:
      * \param fine_box  Box region on fine patch into which data is refined.
      * \param ratio     Integer vector containing ratio relating index space between coarse and fine patches.
      */
-    void
+    virtual void
     postprocessRefine(
         SAMRAI::hier::Patch<NDIM>& fine,
         const SAMRAI::hier::Patch<NDIM>& coarse,
@@ -292,9 +291,9 @@ private:
      */
     void
     setCodimension1BdryValues(
-        int patch_data_idx,
+        const int patch_data_idx,
         const SAMRAI::tbox::Array<SAMRAI::hier::BoundaryBox<NDIM> >& physical_codim1_boxes,
-        double fill_time,
+        const double fill_time,
         const SAMRAI::hier::IntVector<NDIM>& ghost_width_to_fill,
         SAMRAI::hier::Patch<NDIM>& patch);
 
@@ -304,7 +303,7 @@ private:
      */
     void
     setCodimension2BdryValues(
-        int patch_data_idx,
+        const int patch_data_idx,
         const SAMRAI::tbox::Array<SAMRAI::hier::BoundaryBox<NDIM> >& physical_codim2_boxes,
         const SAMRAI::hier::IntVector<NDIM>& ghost_width_to_fill,
         const SAMRAI::hier::Patch<NDIM>& patch);
@@ -314,7 +313,7 @@ private:
      */
     void
     setCodimension3BdryValues(
-        int patch_data_idx,
+        const int patch_data_idx,
         const SAMRAI::tbox::Array<SAMRAI::hier::BoundaryBox<NDIM> >& physical_codim3_boxes,
         const SAMRAI::hier::IntVector<NDIM>& ghost_width_to_fill,
         const SAMRAI::hier::Patch<NDIM>& patch);
@@ -333,7 +332,7 @@ private:
      * The boolean value indicates whether homogeneous boundary conditions
      * should be used.
      */
-    blitz::TinyVector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*,NDIM> d_bc_coefs;
+    std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*> d_bc_coefs;
     bool d_homogeneous_bc;
 };
 }// namespace IBTK

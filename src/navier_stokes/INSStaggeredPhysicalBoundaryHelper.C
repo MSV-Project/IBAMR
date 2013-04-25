@@ -105,12 +105,12 @@ INSStaggeredPhysicalBoundaryHelper::zeroValuesAtDirichletBoundaries(
             const int n_physical_codim1_boxes = physical_codim1_boxes.size();
 
             // Compute the locations of the Dirichlet boundary.
-            const std::vector<Pointer<ArrayData<NDIM,bool> > >& dirichlet_bdry_locs = d_dirichlet_bdry_locs[ln].find(patch_num)->second;
+            const std::vector<Pointer<ArrayData<NDIM,bool> > >& dirichlet_bdry_locs = (*d_dirichlet_bdry_locs[ln].find(patch_num)).second;
             for (int n = 0; n < n_physical_codim1_boxes; ++n)
             {
                 const BoundaryBox<NDIM>& bdry_box = physical_codim1_boxes[n];
-                const unsigned int location_index   = bdry_box.getLocationIndex();
-                const unsigned int bdry_normal_axis = location_index / 2;
+                const int location_index   = bdry_box.getLocationIndex();
+                const int bdry_normal_axis = location_index / 2;
                 const Box<NDIM>& bc_coef_box = dirichlet_bdry_locs[n]->getBox();
                 ArrayData<NDIM,bool>& bdry_locs_data = *dirichlet_bdry_locs[n];
                 for (Box<NDIM>::Iterator it(bc_coef_box); it; it++)
@@ -153,13 +153,13 @@ INSStaggeredPhysicalBoundaryHelper::resetValuesAtDirichletBoundaries(
             const int n_physical_codim1_boxes = physical_codim1_boxes.size();
 
             // Compute the locations of the Dirichlet boundary.
-            const std::vector<Pointer<ArrayData<NDIM,bool> > >& dirichlet_bdry_locs = d_dirichlet_bdry_locs[ln].find(patch_num)->second;
-            const std::vector<Pointer<ArrayData<NDIM,double> > >& dirichlet_bdry_vals = d_dirichlet_bdry_vals[ln].find(patch_num)->second;
+            const std::vector<Pointer<ArrayData<NDIM,bool> > >& dirichlet_bdry_locs = (*d_dirichlet_bdry_locs[ln].find(patch_num)).second;
+            const std::vector<Pointer<ArrayData<NDIM,double> > >& dirichlet_bdry_vals = (*d_dirichlet_bdry_vals[ln].find(patch_num)).second;
             for (int n = 0; n < n_physical_codim1_boxes; ++n)
             {
                 const BoundaryBox<NDIM>& bdry_box = physical_codim1_boxes[n];
-                const unsigned int location_index   = bdry_box.getLocationIndex();
-                const unsigned int bdry_normal_axis = location_index / 2;
+                const int location_index   = bdry_box.getLocationIndex();
+                const int bdry_normal_axis = location_index / 2;
                 const Box<NDIM>& bc_coef_box = dirichlet_bdry_locs[n]->getBox();
                 ArrayData<NDIM,bool>& bdry_locs_data = *dirichlet_bdry_locs[n];
                 ArrayData<NDIM,double>& bdry_vals_data = *dirichlet_bdry_vals[n];
@@ -181,11 +181,11 @@ INSStaggeredPhysicalBoundaryHelper::resetValuesAtDirichletBoundaries(
 void
 INSStaggeredPhysicalBoundaryHelper::cacheBcCoefData(
     const int u_idx,
-    const Pointer<Variable<NDIM> > u_var,
-    blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>& u_bc_coefs,
+    const Pointer<Variable<NDIM> >& u_var,
+    std::vector<RobinBcCoefStrategy<NDIM>*>& u_bc_coefs,
     const double fill_time,
     const IntVector<NDIM>& gcw_to_fill,
-    const Pointer<PatchHierarchy<NDIM> > hierarchy)
+    const Pointer<PatchHierarchy<NDIM> >& hierarchy)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(!hierarchy.isNull());
@@ -193,7 +193,7 @@ INSStaggeredPhysicalBoundaryHelper::cacheBcCoefData(
     // Indicate whether we are employing homogeneous or inhomogeneous boundary
     // conditions for all extended Robin BC coef strategy objects employed by
     // this object.
-    for (blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>::iterator it = u_bc_coefs.begin();
+    for (std::vector<RobinBcCoefStrategy<NDIM>*>::iterator it = u_bc_coefs.begin();
          it != u_bc_coefs.end(); ++it)
     {
         ExtendedRobinBcCoefStrategy* extended_bc_coef = dynamic_cast<ExtendedRobinBcCoefStrategy*>(*it);
@@ -233,8 +233,8 @@ INSStaggeredPhysicalBoundaryHelper::cacheBcCoefData(
                 const BoundaryBox<NDIM>& bdry_box = physical_codim1_boxes[n];
                 const Box<NDIM> bc_fill_box = pgeom->getBoundaryFillBox(bdry_box, patch_box, gcw_to_fill);
                 const BoundaryBox<NDIM> trimmed_bdry_box(bdry_box.getBox()*bc_fill_box, bdry_box.getBoundaryType(), bdry_box.getLocationIndex());
-                const unsigned int location_index   = bdry_box.getLocationIndex();
-                const unsigned int bdry_normal_axis = location_index / 2;
+                const int location_index   = bdry_box.getLocationIndex();
+                const int bdry_normal_axis = location_index / 2;
 
                 const Box<NDIM> bc_coef_box = PhysicalBoundaryUtilities::makeSideBoundaryCodim1Box(trimmed_bdry_box);
                 ArrayData<NDIM,double> acoef_data(bc_coef_box, 1);
@@ -284,5 +284,10 @@ INSStaggeredPhysicalBoundaryHelper::clearBcCoefData()
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBAMR
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBAMR::INSStaggeredPhysicalBoundaryHelper>;
 
 //////////////////////////////////////////////////////////////////////////////

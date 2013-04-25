@@ -45,7 +45,6 @@
 #endif
 
 // IBTK INCLUDES
-#include <ibtk/ExtendedRobinBcCoefStrategy.h>
 #include <ibtk/PhysicalBoundaryUtilities.h>
 #include <ibtk/ibtk_utilities.h>
 #include <ibtk/namespaces.h>
@@ -91,9 +90,9 @@ struct IndexComp
         const Index<NDIM>& rhs) const
         {
             return (lhs(0) < rhs(0)
-#if (NDIM > 1)
+#if (NDIM>1)
                     || (lhs(0) == rhs(0) && lhs(1) < rhs(1))
-#if (NDIM > 2)
+#if (NDIM>2)
                     || (lhs(0) == rhs(0) && lhs(1) == rhs(1) && lhs(2) < rhs(2))
 #endif
 #endif
@@ -197,7 +196,7 @@ SCPoissonHypreLevelSolver::SCPoissonHypreLevelSolver(
 
     // Setup a default boundary condition object that specifies homogeneous
     // Dirichlet boundary conditions.
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         d_default_bc_coef->setBoundaryValue(2*d  ,0.0);
         d_default_bc_coef->setBoundaryValue(2*d+1,0.0);
@@ -205,7 +204,7 @@ SCPoissonHypreLevelSolver::SCPoissonHypreLevelSolver(
 
     // Initialize the boundary conditions objects.
     setHomogeneousBc(d_homogeneous_bc);
-    setPhysicalBcCoefs(blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>(static_cast<RobinBcCoefStrategy<NDIM>*>(NULL)));
+    setPhysicalBcCoefs(std::vector<RobinBcCoefStrategy<NDIM>*>(NDIM,static_cast<RobinBcCoefStrategy<NDIM>*>(NULL)));
 
     // Setup Timers.
     IBTK_DO_ONCE(
@@ -242,17 +241,26 @@ SCPoissonHypreLevelSolver::setPoissonSpecifications(
 
 void
 SCPoissonHypreLevelSolver::setPhysicalBcCoefs(
-    const blitz::TinyVector<RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs)
+    const std::vector<RobinBcCoefStrategy<NDIM>*>& bc_coefs)
 {
-    for (unsigned int d = 0; d < NDIM; ++d)
+#ifdef DEBUG_CHECK_ASSERTIONS
+    if (bc_coefs.size() != NDIM)
     {
-        if (bc_coefs[d] != NULL)
+        TBOX_ERROR(d_object_name << "setPhysicalBcCoefs::()\n"
+                   << "  " << NDIM << " boundary condition objects required (one for each component of the side-centered vector field)" << std::endl);
+    }
+#endif
+
+    d_bc_coefs.resize(bc_coefs.size());
+    for (unsigned l = 0; l < bc_coefs.size(); ++l)
+    {
+        if (bc_coefs[l] != NULL)
         {
-            d_bc_coefs[d] = bc_coefs[d];
+            d_bc_coefs[l] = bc_coefs[l];
         }
         else
         {
-            d_bc_coefs[d] = d_default_bc_coef;
+            d_bc_coefs[l] = d_default_bc_coef;
         }
     }
     return;
@@ -279,7 +287,7 @@ SCPoissonHypreLevelSolver::solveSystem(
     SAMRAIVectorReal<NDIM,double>& x,
     SAMRAIVectorReal<NDIM,double>& b)
 {
-    IBTK_TIMER_START(t_solve_system);
+    t_solve_system->start();
 
     if (d_enable_logging) plog << d_object_name << "::solveSystem():" << std::endl;
 
@@ -304,7 +312,7 @@ SCPoissonHypreLevelSolver::solveSystem(
     // Deallocate the solver, when necessary.
     if (deallocate_after_solve) deallocateSolverState();
 
-    IBTK_TIMER_STOP(t_solve_system);
+    t_solve_system->stop();
     return converged;
 }// solveSystem
 
@@ -313,7 +321,7 @@ SCPoissonHypreLevelSolver::initializeSolverState(
     const SAMRAIVectorReal<NDIM,double>& x,
     const SAMRAIVectorReal<NDIM,double>& b)
 {
-    IBTK_TIMER_START(t_initialize_solver_state);
+    t_initialize_solver_state->start();
 
     // Rudimentary error checking.
 #ifdef DEBUG_CHECK_ASSERTIONS
@@ -368,8 +376,6 @@ SCPoissonHypreLevelSolver::initializeSolverState(
         TBOX_ERROR(d_object_name << "::initializeSolverState()\n"
                    << "  coarsest_ln != finest_ln in SCPoissonHypreLevelSolver" << std::endl);
     }
-#else
-    NULL_USE(b);
 #endif
     // Deallocate the solver state if the solver is already initialized.
     if (d_is_initialized) deallocateSolverState();
@@ -394,7 +400,7 @@ SCPoissonHypreLevelSolver::initializeSolverState(
     // Indicate that the solver is initialized.
     d_is_initialized = true;
 
-    IBTK_TIMER_STOP(t_initialize_solver_state);
+    t_initialize_solver_state->stop();
     return;
 }// initializeSolverState
 
@@ -403,7 +409,7 @@ SCPoissonHypreLevelSolver::deallocateSolverState()
 {
     if (!d_is_initialized) return;
 
-    IBTK_TIMER_START(t_deallocate_solver_state);
+    t_deallocate_solver_state->start();
 
     // Deallocate the hypre data structures.
     destroyHypreSolver();
@@ -412,7 +418,7 @@ SCPoissonHypreLevelSolver::deallocateSolverState()
     // Indicate that the solver is NOT initialized.
     d_is_initialized = false;
 
-    IBTK_TIMER_STOP(t_deallocate_solver_state);
+    t_deallocate_solver_state->stop();
     return;
 }// deallocateSolverState
 
@@ -454,7 +460,7 @@ SCPoissonHypreLevelSolver::allocateHypreData()
     }
 
     int hypre_periodic_shift[3];
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         hypre_periodic_shift[d] = periodic_shift(d);
     }
@@ -553,7 +559,7 @@ SCPoissonHypreLevelSolver::setMatrixCoefficients_constant_coefficients()
         const double* const patch_x_upper = pgeom->getXUpper();
         const IntVector<NDIM>& ratio_to_level_zero = pgeom->getRatio();
         Array<Array<bool> > touches_regular_bdry(NDIM), touches_periodic_bdry(NDIM);
-        for (unsigned int axis = 0; axis < NDIM; ++axis)
+        for (int axis = 0; axis < NDIM; ++axis)
         {
             touches_regular_bdry [axis].resizeArray(2);
             touches_periodic_bdry[axis].resizeArray(2);
@@ -565,7 +571,7 @@ SCPoissonHypreLevelSolver::setMatrixCoefficients_constant_coefficients()
         }
         for (int var = 0; var < NVARS; ++var)
         {
-            const unsigned int axis = var;
+            const int axis = var;
             Box<NDIM> side_box = SideGeometry<NDIM>::toSideBox(patch_box, axis);
 
             // Compute all matrix coefficients, including those that touch the
@@ -576,7 +582,7 @@ SCPoissonHypreLevelSolver::setMatrixCoefficients_constant_coefficients()
             SideData<NDIM,double> mat_vals_data(patch_box, stencil_sz, no_ghosts, directions);
 
             std::vector<double> mat_vals(stencil_sz,0.0);
-            for (unsigned int d = 0; d < NDIM; ++d)
+            for (int d = 0; d < NDIM; ++d)
             {
                 const double dx_sq = dx[d]*dx[d];
                 mat_vals[     d] += D/dx_sq;          // lower off-diagonal
@@ -602,8 +608,8 @@ SCPoissonHypreLevelSolver::setMatrixCoefficients_constant_coefficients()
             for (int n = 0; n < n_physical_codim1_boxes; ++n)
             {
                 const BoundaryBox<NDIM>& bdry_box = physical_codim1_boxes[n];
-                const unsigned int location_index   = bdry_box.getLocationIndex();
-                const unsigned int bdry_normal_axis = location_index/2;
+                const int location_index   = bdry_box.getLocationIndex();
+                const int bdry_normal_axis = location_index/2;
                 const bool is_lower        = location_index%2 == 0;
                 if (bdry_normal_axis != axis)
                 {
@@ -620,8 +626,8 @@ SCPoissonHypreLevelSolver::setMatrixCoefficients_constant_coefficients()
                     // Temporarily reset the patch geometry object associated
                     // with the patch so that boundary conditions are set at the
                     // correct spatial locations.
-                    blitz::TinyVector<double,NDIM> shifted_patch_x_lower, shifted_patch_x_upper;
-                    for (unsigned int d = 0; d < NDIM; ++d)
+                    double shifted_patch_x_lower[NDIM], shifted_patch_x_upper[NDIM];
+                    for (int d = 0; d < NDIM; ++d)
                     {
                         shifted_patch_x_lower[d] = patch_x_lower[d];
                         shifted_patch_x_upper[d] = patch_x_upper[d];
@@ -631,20 +637,17 @@ SCPoissonHypreLevelSolver::setMatrixCoefficients_constant_coefficients()
                     patch->setPatchGeometry(
                         new CartesianPatchGeometry<NDIM>(
                             ratio_to_level_zero, touches_regular_bdry, touches_periodic_bdry,
-                            dx, shifted_patch_x_lower.data(), shifted_patch_x_upper.data()));
+                            dx, shifted_patch_x_lower, shifted_patch_x_upper));
 
                     // Set the boundary condition coefficients.
-                    ExtendedRobinBcCoefStrategy* extended_bc_coef = dynamic_cast<ExtendedRobinBcCoefStrategy*>(d_bc_coefs[axis]);
-                    if (extended_bc_coef != NULL) extended_bc_coef->setHomogeneousBc(true);
                     d_bc_coefs[axis]->setBcCoefs(
                         acoef_data_ptr, bcoef_data_ptr, gcoef_data_ptr, NULL,
                         *patch, trimmed_bdry_box, d_apply_time);
-                    if (extended_bc_coef != NULL) extended_bc_coef->setHomogeneousBc(d_homogeneous_bc);
 
                     // Restore the original patch geometry object.
                     patch->setPatchGeometry(pgeom);
 
-                    for (Box<NDIM>::Iterator it(bc_coef_box); it; it++)
+                    for (Box<NDIM>::Iterator b(bc_coef_box); b; b++)
                     {
                         // Modify the diagonal and off-diagonal entries to
                         // account for homogeneous boundary conditions.
@@ -665,7 +668,7 @@ SCPoissonHypreLevelSolver::setMatrixCoefficients_constant_coefficients()
                         // then
                         //
                         //     u_o = -((a*h - 2*b)/(a*h + 2*b))*u_i
-                        const Index<NDIM>& i = it();
+                        const Index<NDIM>& i = b();
                         const double& a = acoef_data(i,0);
                         const double& b = bcoef_data(i,0);
                         const double& h = dx[bdry_normal_axis];
@@ -705,8 +708,8 @@ SCPoissonHypreLevelSolver::setMatrixCoefficients_constant_coefficients()
             for (int n = 0; n < n_physical_codim1_boxes; ++n)
             {
                 const BoundaryBox<NDIM>& bdry_box = physical_codim1_boxes[n];
-                const unsigned int location_index   = bdry_box.getLocationIndex();
-                const unsigned int bdry_normal_axis = location_index/2;
+                const int location_index   = bdry_box.getLocationIndex();
+                const int bdry_normal_axis = location_index/2;
                 const bool is_lower        = location_index%2 == 0;
                 if (bdry_normal_axis == axis)
                 {
@@ -721,16 +724,13 @@ SCPoissonHypreLevelSolver::setMatrixCoefficients_constant_coefficients()
                     Pointer<ArrayData<NDIM,double> > gcoef_data_ptr(NULL       ,false);
 
                     // Set the boundary condition coefficients.
-                    ExtendedRobinBcCoefStrategy* extended_bc_coef = dynamic_cast<ExtendedRobinBcCoefStrategy*>(d_bc_coefs[axis]);
-                    if (extended_bc_coef != NULL) extended_bc_coef->setHomogeneousBc(true);
                     d_bc_coefs[axis]->setBcCoefs(
                         acoef_data_ptr, bcoef_data_ptr, gcoef_data_ptr, NULL,
                         *patch, trimmed_bdry_box, d_apply_time);
-                    if (extended_bc_coef != NULL) extended_bc_coef->setHomogeneousBc(d_homogeneous_bc);
 
-                    for (Box<NDIM>::Iterator it(bc_coef_box); it; it++)
+                    for (Box<NDIM>::Iterator b(bc_coef_box); b; b++)
                     {
-                        const Index<NDIM>& i = it();
+                        const Index<NDIM>& i = b();
                         const double& a = acoef_data(i,0);
                         const double& b = bcoef_data(i,0);
                         const bool dirichlet_bc = MathUtilities<double>::equalEps(a,1.0);
@@ -1088,6 +1088,7 @@ SCPoissonHypreLevelSolver::solveSystem(
         Pointer<Patch<NDIM> > patch = level->getPatch(p());
         const Box<NDIM>& patch_box = patch->getBox();
         Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
+        const double* const dx = pgeom->getDx();
 
         // Copy the solution data into the hypre vector, including ghost cell
         // values
@@ -1110,7 +1111,9 @@ SCPoissonHypreLevelSolver::solveSystem(
 
             if (d_constant_coefficients)
             {
-                adjustBoundaryRhsEntries_constant_coefficients(b_data, patch, physical_codim1_boxes);
+                const double D = d_poisson_spec.getDConstant();
+                adjustBoundaryRhsEntries_constant_coefficients(
+                    b_data, D, d_bc_coefs, patch, physical_codim1_boxes, dx);
             }
             else
             {
@@ -1126,20 +1129,12 @@ SCPoissonHypreLevelSolver::solveSystem(
     HYPRE_SStructVectorAssemble(d_rhs_vec);
 
     // Solve the system.
-    IBTK_TIMER_START(t_solve_system_hypre);
+    t_solve_system_hypre->start();
 
     if (d_solver_type == "SysPFMG")
     {
         HYPRE_SStructSysPFMGSetMaxIter(d_solver, d_max_iterations);
         HYPRE_SStructSysPFMGSetTol(d_solver, d_rel_residual_tol);
-        if (d_initial_guess_nonzero)
-        {
-            HYPRE_SStructSysPFMGSetNonZeroGuess(d_solver);
-        }
-        else
-        {
-            HYPRE_SStructSysPFMGSetZeroGuess(d_solver);
-        }
         HYPRE_SStructSysPFMGSolve(d_solver, d_matrix, d_rhs_vec, d_sol_vec);
         HYPRE_SStructSysPFMGGetNumIterations(d_solver, &d_current_its);
         HYPRE_SStructSysPFMGGetFinalRelativeResidualNorm(d_solver, &d_current_residual_norm);
@@ -1148,14 +1143,6 @@ SCPoissonHypreLevelSolver::solveSystem(
     {
         HYPRE_SStructSplitSetMaxIter(d_solver, d_max_iterations);
         HYPRE_SStructSplitSetTol(d_solver, d_rel_residual_tol);
-        if (d_initial_guess_nonzero)
-        {
-            HYPRE_SStructSplitSetNonZeroGuess(d_solver);
-        }
-        else
-        {
-            HYPRE_SStructSplitSetZeroGuess(d_solver);
-        }
         HYPRE_SStructSplitSolve(d_solver, d_matrix, d_rhs_vec, d_sol_vec);
         HYPRE_SStructSplitGetNumIterations(d_solver, &d_current_its);
         HYPRE_SStructSplitGetFinalRelativeResidualNorm(d_solver, &d_current_residual_norm);
@@ -1206,7 +1193,7 @@ SCPoissonHypreLevelSolver::solveSystem(
         HYPRE_SStructBiCGSTABGetFinalRelativeResidualNorm(d_solver, &d_current_residual_norm);
     }
 
-    IBTK_TIMER_STOP(t_solve_system_hypre);
+    t_solve_system_hypre->stop();
 
     // Pull the solution vector out of the hypre structures.
     HYPRE_SStructVectorGather(d_sol_vec);
@@ -1223,7 +1210,7 @@ SCPoissonHypreLevelSolver::solveSystem(
 void
 SCPoissonHypreLevelSolver::copyToHypre(
     HYPRE_SStructVector vector,
-    const Pointer<SideData<NDIM,double> > src_data,
+    const Pointer<SideData<NDIM,double> >& src_data,
     const Box<NDIM>& box)
 {
     const bool copy_data = src_data->getGhostBox() != box;
@@ -1234,7 +1221,7 @@ SCPoissonHypreLevelSolver::copyToHypre(
 
     for (int var = 0; var < NVARS; ++var)
     {
-        const unsigned int axis = var;
+        const int axis = var;
         Index<NDIM> lower = box.lower();
         lower(axis) -= 1;
         Index<NDIM> upper = box.upper();
@@ -1245,7 +1232,7 @@ SCPoissonHypreLevelSolver::copyToHypre(
 
 void
 SCPoissonHypreLevelSolver::copyFromHypre(
-    Pointer<SideData<NDIM,double> > dst_data,
+    Pointer<SideData<NDIM,double> >& dst_data,
     HYPRE_SStructVector vector,
     const Box<NDIM>& box)
 {
@@ -1255,7 +1242,7 @@ SCPoissonHypreLevelSolver::copyFromHypre(
 
     for (int var = 0; var < NVARS; ++var)
     {
-        const unsigned int axis = var;
+        const int axis = var;
         Index<NDIM> lower = box.lower();
         lower(axis) -= 1;
         Index<NDIM> upper = box.upper();
@@ -1342,9 +1329,12 @@ SCPoissonHypreLevelSolver::deallocateHypreData()
 
 void
 SCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_constant_coefficients(
-    Pointer<SideData<NDIM,double> > rhs_data,
-    const Pointer<Patch<NDIM> > patch,
-    const Array<BoundaryBox<NDIM> >& physical_codim1_boxes)
+    Pointer<SideData<NDIM,double> >& rhs_data,
+    const double D,
+    const std::vector<RobinBcCoefStrategy<NDIM>*>& bc_coefs,
+    const Pointer<Patch<NDIM> >& patch,
+    const Array<BoundaryBox<NDIM> >& physical_codim1_boxes,
+    const double* const dx)
 {
     static const IntVector<NDIM> gcw_to_fill = 1;
     Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
@@ -1359,12 +1349,12 @@ SCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_constant_coefficients(
     for (int n = 0; n < n_physical_codim1_boxes; ++n)
     {
         const BoundaryBox<NDIM>& bdry_box = physical_codim1_boxes[n];
-        const unsigned int location_index   = bdry_box.getLocationIndex();
-        const unsigned int bdry_normal_axis = location_index/2;
+        const int location_index   = bdry_box.getLocationIndex();
+        const int bdry_normal_axis = location_index/2;
 //      const bool is_lower        = location_index%2 == 0;
         for (int var = 0; var < NVARS; ++var)
         {
-            const unsigned int axis = var;
+            const int axis = var;
             if (bdry_normal_axis == axis)
             {
                 const Box<NDIM> bc_fill_box = pgeom->getBoundaryFillBox(bdry_box, patch_box, gcw_to_fill);
@@ -1378,15 +1368,13 @@ SCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_constant_coefficients(
                 Pointer<ArrayData<NDIM,double> > gcoef_data_ptr(NULL       ,false);
 
                 // Set the boundary condition coefficients.
-                ExtendedRobinBcCoefStrategy* extended_bc_coef = dynamic_cast<ExtendedRobinBcCoefStrategy*>(d_bc_coefs[axis]);
-                if (extended_bc_coef != NULL) extended_bc_coef->setHomogeneousBc(d_homogeneous_bc);
                 d_bc_coefs[axis]->setBcCoefs(
                     acoef_data_ptr, bcoef_data_ptr, gcoef_data_ptr, NULL,
                     *patch, trimmed_bdry_box, d_apply_time);
 
-                for (Box<NDIM>::Iterator it(bc_coef_box); it; it++)
+                for (Box<NDIM>::Iterator b(bc_coef_box); b; b++)
                 {
-                    const Index<NDIM>& i = it();
+                    const Index<NDIM>& i = b();
                     const SideIndex<NDIM> i_s_bdry(i, bdry_normal_axis, SideIndex<NDIM>::Lower);
                     const double& a = acoef_data(i,0);
                     const double& b = bcoef_data(i,0);
@@ -1421,5 +1409,10 @@ SCPoissonHypreLevelSolver::adjustBoundaryRhsEntries_constant_coefficients(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::SCPoissonHypreLevelSolver>;
 
 //////////////////////////////////////////////////////////////////////////////

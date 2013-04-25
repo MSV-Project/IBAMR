@@ -61,7 +61,7 @@ namespace IBTK
  * \see FACPreconditioner
  */
 class FACPreconditionerStrategy
-    : public SAMRAI::tbox::DescribedClass
+    : public virtual SAMRAI::tbox::DescribedClass
 {
 public:
     /*!
@@ -84,16 +84,6 @@ public:
     virtual void
     setFACPreconditioner(
         SAMRAI::tbox::ConstPointer<FACPreconditioner> preconditioner);
-
-    /*!
-     * \brief Set the current time interval (for a time-dependent solver).
-     *
-     * \note An empty default implementation is provided.
-     */
-    virtual void
-    setTimeInterval(
-        double current_time,
-        double new_time);
 
     /*!
      * \brief Restrict the residual from the source vector to the destination
@@ -161,16 +151,15 @@ public:
         int coarsest_level_num) = 0;
 
     /*!
-     * \brief Compute the composite-grid residual on the specified range of
-     * levels of the patch hierarchy.
+     * \brief Compute the composite-grid residual on the specified level of the
+     * patch hierarchy.
      */
     virtual void
     computeResidual(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& residual,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& solution,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& rhs,
-        int coarsest_level_num,
-        int finest_level_num) = 0;
+        int level_num) = 0;
 
     /*!
      * \brief Initialize any hierarchy-dependent data.

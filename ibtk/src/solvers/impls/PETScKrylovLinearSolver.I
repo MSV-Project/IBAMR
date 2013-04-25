@@ -59,15 +59,6 @@ PETScKrylovLinearSolver::getPETScKSP() const
 }// getPETScKSP
 
 inline void
-PETScKrylovLinearSolver::setTimeInterval(
-    const double current_time,
-    const double new_time)
-{
-    if (!d_pc_solver.isNull()) d_pc_solver->setTimeInterval(current_time, new_time);
-    return;
-}// setTimeInterval
-
-inline void
 PETScKrylovLinearSolver::setOperator(
     SAMRAI::tbox::Pointer<LinearOperator> A)
 {
@@ -135,7 +126,7 @@ PETScKrylovLinearSolver::setNullspace(
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(contains_constant_vector || !nullspace_basis_vecs.empty());
-    for (unsigned int k = 0; k < nullspace_basis_vecs.size(); ++k)
+    for (unsigned k = 0; k < nullspace_basis_vecs.size(); ++k)
     {
         TBOX_ASSERT(!nullspace_basis_vecs[k].isNull());
     }

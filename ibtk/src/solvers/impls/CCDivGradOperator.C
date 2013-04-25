@@ -133,7 +133,7 @@ CCDivGradOperator::setHierarchyMathOps(
 
 void
 CCDivGradOperator::modifyRhsForInhomogeneousBc(
-    SAMRAIVectorReal<NDIM,double>& /*y*/)
+    SAMRAIVectorReal<NDIM,double>& y)
 {
     // intentionally blank
     return;
@@ -144,31 +144,36 @@ CCDivGradOperator::apply(
     SAMRAIVectorReal<NDIM,double>& x,
     SAMRAIVectorReal<NDIM,double>& y)
 {
-    IBTK_TIMER_START(t_apply);
+    t_apply->start();
 
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(d_is_initialized);
-    TBOX_ASSERT(x.getNumberOfComponents() == 1);
-    TBOX_ASSERT(y.getNumberOfComponents() == 1);
 #endif
 
     static const int comp = 0;
 
-    Pointer<CellVariable<NDIM,double> > x_cc_var = x.getComponentVariable(comp);
-    Pointer<CellVariable<NDIM,double> > y_cc_var = y.getComponentVariable(comp);
+    const Pointer<Variable<NDIM> >& x_var = x.getComponentVariable(comp);
+    const Pointer<Variable<NDIM> >& y_var = y.getComponentVariable(comp);
+
+    Pointer<CellVariable<NDIM,double> > x_cc_var = x_var;
+    Pointer<CellVariable<NDIM,double> > y_cc_var = y_var;
+
+    if (x_cc_var.isNull() || y_cc_var.isNull())
+    {
+        TBOX_ERROR(d_object_name << "::apply()\n"
+                   << "  encountered non-cell centered vector components" << std::endl);
+    }
 
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!x_cc_var.isNull());
-    TBOX_ASSERT(!y_cc_var.isNull());
-
     Pointer<CellDataFactory<NDIM,double> > x_factory = x_cc_var->getPatchDataFactory();
-    TBOX_ASSERT(!x_factory.isNull());
-
     Pointer<CellDataFactory<NDIM,double> > y_factory = y_cc_var->getPatchDataFactory();
+
+    TBOX_ASSERT(!x_factory.isNull());
     TBOX_ASSERT(!y_factory.isNull());
 
-    const unsigned int x_depth = x_factory->getDefaultDepth();
-    const unsigned int y_depth = y_factory->getDefaultDepth();
+    const unsigned x_depth = x_factory->getDefaultDepth();
+    const unsigned y_depth = y_factory->getDefaultDepth();
+
     TBOX_ASSERT(x_depth == 1);
     TBOX_ASSERT(y_depth == 1);
 #endif
@@ -191,7 +196,7 @@ CCDivGradOperator::apply(
         0.0, -1, Pointer<CellVariable<NDIM,double> >(NULL),
         0, 0);
 
-    IBTK_TIMER_STOP(t_apply);
+    t_apply->stop();
     return;
 }// apply
 
@@ -200,7 +205,7 @@ CCDivGradOperator::initializeOperatorState(
     const SAMRAIVectorReal<NDIM,double>& in,
     const SAMRAIVectorReal<NDIM,double>& out)
 {
-    IBTK_TIMER_START(t_initialize_operator_state);
+    t_initialize_operator_state->start();
 
     static const int comp = 0;
 
@@ -216,8 +221,6 @@ CCDivGradOperator::initializeOperatorState(
     TBOX_ASSERT(d_hierarchy == out.getPatchHierarchy());
     TBOX_ASSERT(d_coarsest_ln == out.getCoarsestLevelNumber());
     TBOX_ASSERT(d_finest_ln == out.getFinestLevelNumber());
-#else
-    NULL_USE(out);
 #endif
 
     HierarchyDataOpsManager<NDIM>* hier_ops_manager = HierarchyDataOpsManager<NDIM>::getManager();
@@ -276,7 +279,7 @@ CCDivGradOperator::initializeOperatorState(
     }
 
     // Setup the interpolation transaction information.
-    Pointer<VariableFillPattern<NDIM> > fill_pattern = new CellNoCornersFillPattern(CELLG, false, false, true);
+    Pointer<VariableFillPattern<NDIM> > fill_pattern = new CellNoCornersFillPattern(CELLG, false, true);
 
     typedef HierarchyGhostCellInterpolation::InterpolationTransactionComponent InterpolationTransactionComponent;
 
@@ -298,7 +301,7 @@ CCDivGradOperator::initializeOperatorState(
     // Indicate the operator is initialized.
     d_is_initialized = true;
 
-    IBTK_TIMER_STOP(t_initialize_operator_state);
+    t_initialize_operator_state->stop();
     return;
 }// initializeOperatorState
 
@@ -307,7 +310,7 @@ CCDivGradOperator::deallocateOperatorState()
 {
     if (!d_is_initialized) return;
 
-    IBTK_TIMER_START(t_deallocate_operator_state);
+    t_deallocate_operator_state->start();
 
     // Deallocate the interpolation operators.
     d_scalar_hier_bdry_fill->deallocateOperatorState();
@@ -335,13 +338,13 @@ CCDivGradOperator::deallocateOperatorState()
     // Indicate that the operator is NOT initialized.
     d_is_initialized = false;
 
-    IBTK_TIMER_STOP(t_deallocate_operator_state);
+    t_deallocate_operator_state->stop();
     return;
 }// deallocateOperatorState
 
 void
 CCDivGradOperator::enableLogging(
-    bool /*enabled*/)
+    bool enabled)
 {
     TBOX_WARNING("CCDivGradOperator::enableLogging() not supported" << std::endl);
     return;
@@ -352,5 +355,10 @@ CCDivGradOperator::enableLogging(
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::CCDivGradOperator>;
 
 //////////////////////////////////////////////////////////////////////////////

@@ -67,10 +67,8 @@ c
 c     Constants.
 c
       INTEGER MAX_RATIO
-      parameter (MAX_RATIO=16)  ! max refinement ratio = 16
-      REAL fourth,eighth
-      parameter (fourth=0.25d0)
-      parameter (eighth=0.125d0)
+      PARAMETER(MAX_RATIO = 16) ! max refinement ratio = 16
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c
@@ -224,7 +222,8 @@ c
 c     Constants.
 c
       INTEGER MAX_GCW
-      parameter (MAX_GCW=8)     ! max ghost cell width = 8
+      PARAMETER(MAX_GCW = 8)    ! max ghost cell width = 8
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c
@@ -359,12 +358,8 @@ c
 c     Constants.
 c
       INTEGER MAX_RATIO
-      parameter (MAX_RATIO=16)  ! max refinement ratio = 16
-      REAL half,fourth,sixth,eighth
-      parameter (half=0.5d0)
-      parameter (fourth=0.25d0)
-      parameter (sixth=0.16666666666667d0)
-      parameter (eighth=0.125d0)
+      PARAMETER(MAX_RATIO = 16) ! max refinement ratio = 16
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c
@@ -672,7 +667,8 @@ c
 c     Constants.
 c
       INTEGER MAX_GCW
-      parameter (MAX_GCW=8)     ! max ghost cell width = 8
+      PARAMETER(MAX_GCW = 8)    ! max ghost cell width = 8
+include(TOP_SRCDIR/src/fortran/const.i)dnl
 c
 c     Input.
 c

@@ -84,8 +84,6 @@ muParserRobinBcCoefs::muParserRobinBcCoefs(
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(!object_name.empty());
     TBOX_ASSERT(!input_db.isNull());
-#else
-    NULL_USE(object_name);
 #endif
     // Read in user-provided constants.
     Array<std::string> db_key_names = input_db->getAllKeys();
@@ -173,7 +171,7 @@ muParserRobinBcCoefs::muParserRobinBcCoefs(
         (*cit)->DefineConst("PI", pi);
 
         // The extents of the domain.
-        for (unsigned int d = 0; d < NDIM; ++d)
+        for (int d = 0; d < NDIM; ++d)
         {
             std::ostringstream stream;
             stream << d;
@@ -235,13 +233,13 @@ muParserRobinBcCoefs::muParserRobinBcCoefs(
         // User-provided constants.
         for (std::map<std::string,double>::const_iterator map_cit = d_constants.begin(); map_cit != d_constants.end(); ++map_cit)
         {
-            (*cit)->DefineConst(map_cit->first, map_cit->second);
+            (*cit)->DefineConst((*map_cit).first, (*map_cit).second);
         }
 
         // Variables.
         (*cit)->DefineVar("T", d_parser_time);
         (*cit)->DefineVar("t", d_parser_time);
-        for (unsigned int d = 0; d < NDIM; ++d)
+        for (int d = 0; d < NDIM; ++d)
         {
             std::ostringstream stream;
             stream << d;
@@ -267,7 +265,7 @@ muParserRobinBcCoefs::setBcCoefs(
     Pointer<ArrayData<NDIM,double> >& acoef_data,
     Pointer<ArrayData<NDIM,double> >& bcoef_data,
     Pointer<ArrayData<NDIM,double> >& gcoef_data,
-    const Pointer<Variable<NDIM> >& /*variable*/,
+    const Pointer<Variable<NDIM> >& variable,
     const Patch<NDIM>& patch,
     const BoundaryBox<NDIM>& bdry_box,
     double fill_time) const
@@ -284,8 +282,8 @@ muParserRobinBcCoefs::setBcCoefs(
     const bool fill_bcoef_data = !bcoef_data.isNull();
     const bool fill_gcoef_data = !gcoef_data.isNull();
 
-    const unsigned int location_index = bdry_box.getLocationIndex();
-    const unsigned int bdry_normal_axis =  location_index / 2;
+    const int location_index = bdry_box.getLocationIndex();
+    const int bdry_normal_axis =  location_index / 2;
     const Box<NDIM>& bc_coef_box =
         (fill_acoef_data ? acoef_data->getBox() :
          fill_bcoef_data ? bcoef_data->getBox() :
@@ -304,15 +302,15 @@ muParserRobinBcCoefs::setBcCoefs(
     for (Box<NDIM>::Iterator b(bc_coef_box); b; b++)
     {
         const Index<NDIM>& i = b();
-        for (unsigned int d = 0; d < NDIM; ++d)
+        for (int d = 0; d < NDIM; ++d)
         {
             if (d != bdry_normal_axis)
             {
-                d_parser_posn[d] = XLower[d] + dx[d]*(static_cast<double>(i(d)-patch_lower(d))+0.5);
+                d_parser_posn[d] = XLower[d] + dx[d]*(double(i(d)-patch_lower(d))+0.5);
             }
             else
             {
-                d_parser_posn[d] = XLower[d] + dx[d]*(static_cast<double>(i(d)-patch_lower(d)));
+                d_parser_posn[d] = XLower[d] + dx[d]*(double(i(d)-patch_lower(d)));
             }
         }
         if (fill_acoef_data) (*acoef_data)(i,0) = acoef_parser.Eval();
@@ -335,5 +333,7 @@ muParserRobinBcCoefs::numberOfExtensionsFillable() const
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
 
 //////////////////////////////////////////////////////////////////////////////

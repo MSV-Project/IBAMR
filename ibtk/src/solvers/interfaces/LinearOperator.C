@@ -77,11 +77,28 @@ LinearOperator::isSymmetric() const
 
 void
 LinearOperator::modifyRhsForInhomogeneousBc(
-    SAMRAIVectorReal<NDIM,double>& /*y*/)
+    SAMRAIVectorReal<NDIM,double>& y)
 {
     TBOX_WARNING("LinearOperator::modifyRhsForInhomogeneousBc() not implemented for this operator" << std::endl);
     return;
 }// modifyRhsForInhomogeneousBc
+
+void
+LinearOperator::applyAdd(
+    SAMRAIVectorReal<NDIM,double>& x,
+    SAMRAIVectorReal<NDIM,double>& y,
+    SAMRAIVectorReal<NDIM,double>& z)
+{
+    // Guard against the case that y == z.
+    Pointer<SAMRAIVectorReal<NDIM,double> > zz = z.cloneVector(z.getName());
+    zz->allocateVectorData();
+    zz->copyVector(Pointer<SAMRAIVectorReal<NDIM,double> >(&z,false));
+    apply(x,*zz);
+    z.add(Pointer<SAMRAIVectorReal<NDIM,double> >(&y,false),zz);
+    zz->freeVectorComponents();
+    zz.setNull();
+    return;
+}// applyAdd
 
 void
 LinearOperator::applyAdjoint(
@@ -117,10 +134,33 @@ LinearOperator::applyAdjointAdd(
     return;
 }// applyAdjointAdd
 
+void
+LinearOperator::initializeOperatorState(
+    const SAMRAIVectorReal<NDIM,double>& in,
+    const SAMRAIVectorReal<NDIM,double>& out)
+{
+    (void) in;
+    (void) out;
+    // intentionally blank
+    return;
+}// initializeOperatorState
+
+void
+LinearOperator::deallocateOperatorState()
+{
+    // intentionally blank
+    return;
+}// deallocateOperatorState
+
 /////////////////////////////// PRIVATE //////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::LinearOperator>;
 
 //////////////////////////////////////////////////////////////////////////////

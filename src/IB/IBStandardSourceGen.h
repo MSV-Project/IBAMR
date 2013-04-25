@@ -47,8 +47,7 @@ namespace IBAMR
  * fluid sources/sinks.
  */
 class IBStandardSourceGen
-    : public IBLagrangianSourceStrategy,
-      public SAMRAI::tbox::Serializable
+    : public virtual IBLagrangianSourceStrategy
 {
 public:
     /*!
@@ -57,67 +56,10 @@ public:
     IBStandardSourceGen();
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~IBStandardSourceGen();
-
-    /*!
-     * \brief Returns a boolean indicating whether the class has been registered
-     * with the singleton IBTK::StreamableManager object.
-     */
-    static bool
-    getIsRegisteredWithStreamableManager();
-
-    /*!
-     * \brief Set the number of internal sources and sinks on the specified
-     * level of the patch hierarchy.
-     */
-    static void
-    setNumSources(
-        int ln,
-        unsigned int num_sources);
-
-    /*!
-     * \brief Get the number of internal sources and sinks on the specified
-     * level of the patch hierarchy.
-     */
-    static unsigned int
-    getNumSources(
-        int ln);
-
-    /*!
-     * \brief Set the names of the internal sources and sinks on the specified
-     * level of the patch hierarchy.
-     */
-    static void
-    setSourceNames(
-        int ln,
-        const std::vector<std::string>& names);
-
-    /*!
-     * \brief Get the names of the internal sources and sinks on the specified
-     * level of the patch hierarchy.
-     */
-    static const std::vector<std::string>&
-    getSourceNames(
-        int ln);
-
-    /*!
-     * \brief Set the sizes of the internal sources and sinks on the specified
-     * level of the patch hierarchy.
-     */
-    static void
-    setSourceRadii(
-        int ln,
-        const std::vector<double>& radii);
-
-    /*!
-     * \brief Get the sizes of the internal sources and sinks on the specified
-     * level of the patch hierarchy.
-     */
-    static const std::vector<double>&
-    getSourceRadii(
-        int ln);
 
     /*!
      * \brief Return a reference to the vector of source strengths.
@@ -126,21 +68,60 @@ public:
      */
     std::vector<double>&
     getSourceStrengths(
-        int ln);
+        const int ln);
 
     /*!
      * \brief Return a const reference to the vector of source strengths.
      */
     const std::vector<double>&
     getSourceStrengths(
-        int ln) const;
+        const int ln) const;
 
     /*!
      * \brief Return a const reference to the vector of source pressures.
      */
     const std::vector<double>&
     getSourcePressures(
-        int ln) const;
+        const int ln) const;
+
+    /*!
+     * \brief Return the number of sources/sinks.
+     */
+    int
+    getNumSources(
+        const int ln) const;
+
+    /*!
+     * \brief Return a reference to the vector of source names.
+     *
+     * \note Users \em must \em not change the size of this vector.
+     */
+    std::vector<std::string>&
+    getSourceNames(
+        const int ln);
+
+    /*!
+     * \brief Return a const reference to the vector of source names.
+     */
+    const std::vector<std::string>&
+    getSourceNames(
+        const int ln) const;
+
+    /*!
+     * \brief Return a reference to the vector of source radii.
+     *
+     * \note Users \em must \em not change the size of this vector.
+     */
+    std::vector<double>&
+    getSourceRadii(
+        const int ln);
+
+    /*!
+     * \brief Return a const reference to the vector of source radii.
+     */
+    const std::vector<double>&
+    getSourceRadii(
+        const int ln) const;
 
     /*!
      * \brief Setup the data needed to compute source/sink data on the specified
@@ -148,13 +129,13 @@ public:
      *
      * \note A default empty implementation is provided.
      */
-    void
+    virtual void
     initializeLevelData(
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        int level_number,
-        double init_data_time,
-        bool initial_time,
-        IBTK::LDataManager* l_data_manager);
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        const int level_number,
+        const double init_data_time,
+        const bool initial_time,
+        IBTK::LDataManager* const lag_manager);
 
     /*!
      * \brief Specify the number of distributed internal sources or sinks.
@@ -163,12 +144,12 @@ public:
      * sources/sinks in the \em entire computational domain.  This implies that
      * the return value must be \em identical on each MPI process.
      */
-    unsigned int
+    virtual int
     getNumSources(
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        int level_number,
-        double data_time,
-        IBTK::LDataManager* l_data_manager);
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        const int level_number,
+        const double data_time,
+        IBTK::LDataManager* const lag_manager);
 
     /*!
      * \brief Compute the source locations for each of the distributed internal
@@ -178,26 +159,26 @@ public:
      * \a X_src on \em each MPI process.  That is to say, \a X_src must provide
      * the location of all of the distributed sources/sinks.
      */
-    void
+    virtual void
     getSourceLocations(
-        std::vector<blitz::TinyVector<double,NDIM> >& X_src,
+        std::vector<std::vector<double> >& X_src,
         std::vector<double>& r_src,
-        SAMRAI::tbox::Pointer<IBTK::LData> X_data,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        int level_number,
-        double data_time,
-        IBTK::LDataManager* l_data_manager);
+        SAMRAI::tbox::Pointer<IBTK::LNodeLevelData> X_data,
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        const int level_number,
+        const double data_time,
+        IBTK::LDataManager* const lag_manager);
 
     /*!
      * \brief Set the normalized pressures at the sources.
      */
-    void
+    virtual void
     setSourcePressures(
         const std::vector<double>& P_src,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        int level_number,
-        double data_time,
-        IBTK::LDataManager* l_data_manager);
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        const int level_number,
+        const double data_time,
+        IBTK::LDataManager* const lag_manager);
 
     /*!
      * \brief Compute the source strengths for each of the distributed internal
@@ -207,22 +188,13 @@ public:
      * \a Q_src on \em each MPI process.  That is to say, \a Q_src must provide
      * the strengths of all of the distributed sources/sinks.
      */
-    void
+    virtual void
     computeSourceStrengths(
         std::vector<double>& Q_src,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        int level_number,
-        double data_time,
-        IBTK::LDataManager* l_data_manager);
-
-    /*!
-     * Write out object state to the given database.
-     *
-     * When assertion checking is active, database pointer must be non-null.
-     */
-    void
-    putToDatabase(
-        SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> db);
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        const int level_number,
+        const double data_time,
+        IBTK::LDataManager* const lag_manager);
 
 private:
     /*!
@@ -247,28 +219,6 @@ private:
     IBStandardSourceGen&
     operator=(
         const IBStandardSourceGen& that);
-
-    /*!
-     * Read object state from the restart file and initialize class data
-     * members.
-     */
-    void
-    getFromRestart();
-
-    /*!
-     * The numbers of sources/sinks on each level of the patch hierarchy.
-     */
-    static std::vector<int> s_num_sources;
-
-    /*!
-     * The names of the sources and sinks.
-     */
-    static std::vector<std::vector<std::string> > s_source_names;
-
-    /*!
-     * The sizes of the sources and sinks.
-     */
-    static std::vector<std::vector<double> > s_source_radii;
 
     /*
      * Source/sink data.

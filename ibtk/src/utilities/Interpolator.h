@@ -87,7 +87,7 @@ public:
      */
     double
     operator()(
-        double x) const;
+        const double& x) const;
 
 private:
     /*!

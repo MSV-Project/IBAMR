@@ -51,8 +51,8 @@ PETScPCLSWrapper::PETScPCLSWrapper(
       d_petsc_pc(petsc_pc),
       d_x(NULL),
       d_b(NULL),
-      d_petsc_x(PETSC_NULL),
-      d_petsc_b(PETSC_NULL)
+      d_petsc_x(static_cast<Vec>(NULL)),
+      d_petsc_b(static_cast<Vec>(NULL))
 {
     // intentionally blank
     return;
@@ -73,7 +73,7 @@ PETScPCLSWrapper::getPETScPC() const
 
 inline void
 PETScPCLSWrapper::setInitialGuessNonzero(
-    bool /*initial_guess_nonzero*/)
+    bool initial_guess_nonzero)
 {
     TBOX_WARNING("PETScPCLSWrapper::setInitialGuessNonzero() not supported" << std::endl);
     return;
@@ -88,7 +88,7 @@ PETScPCLSWrapper::getInitialGuessNonzero() const
 
 inline void
 PETScPCLSWrapper::setMaxIterations(
-    int /*max_iterations*/)
+    int max_iterations)
 {
     TBOX_WARNING("PETScPCLSWrapper::setMaxIterations() not supported" << std::endl);
     return;
@@ -103,7 +103,7 @@ PETScPCLSWrapper::getMaxIterations() const
 
 inline void
 PETScPCLSWrapper::setAbsoluteTolerance(
-    double /*abs_residual_tol*/)
+    double abs_residual_tol)
 {
     TBOX_WARNING("PETScPCLSWrapper::setAbsoluteTolerance() not supported" << std::endl);
     return;
@@ -118,7 +118,7 @@ PETScPCLSWrapper::getAbsoluteTolerance() const
 
 inline void
 PETScPCLSWrapper::setRelativeTolerance(
-    double /*rel_residual_tol*/)
+    double rel_residual_tol)
 {
     TBOX_WARNING("PETScPCLSWrapper::setRelativeTolerance() not supported" << std::endl);
     return;

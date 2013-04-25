@@ -74,8 +74,9 @@ public:
         const Mat& petsc_mat);
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~PETScMatLOWrapper();
 
     /*!
@@ -99,7 +100,7 @@ public:
     /*!
      * \brief Indicates whether the linear operator is symmetric.
      */
-    bool
+    virtual bool
     isSymmetric() const;
 
     /*!
@@ -124,7 +125,7 @@ public:
      * \param x input
      * \param y output: y=Ax
      */
-    void
+    virtual void
     apply(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
@@ -152,7 +153,7 @@ public:
      * \param y input
      * \param z output: z=Ax+y
      */
-    void
+    virtual void
     applyAdd(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y,
@@ -180,7 +181,7 @@ public:
      * \param x input
      * \param y output: y=A'x
      */
-    void
+    virtual void
     applyAdjoint(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
@@ -208,7 +209,7 @@ public:
      * \param y input
      * \param z output: z=A'x+y
      */
-    void
+    virtual void
     applyAdjointAdd(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y,
@@ -244,7 +245,7 @@ public:
      * \param in input vector
      * \param out output vector
      */
-    void
+    virtual void
     initializeOperatorState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& in,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& out);
@@ -259,7 +260,7 @@ public:
      *
      * \see initializeOperatorState
      */
-    void
+    virtual void
     deallocateOperatorState();
 
     //\}
@@ -274,7 +275,7 @@ public:
      *
      * \param enabled logging state: true=on, false=off
      */
-    void
+    virtual void
     enableLogging(
         bool enabled=true);
 

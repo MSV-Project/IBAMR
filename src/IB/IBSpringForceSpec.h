@@ -35,14 +35,8 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
-#ifndef included_IBAMR_prefix_config
-// #include <IBAMR_prefix_config.h>
-#define included_IBAMR_prefix_config
-#endif
-
 // IBTK INCLUDES
 #include <ibtk/Streamable.h>
-#include <ibtk/StreamableFactory.h>
 
 // SAMRAI INCLUDES
 #include <tbox/AbstractStream.h>
@@ -102,40 +96,37 @@ public:
     getIsRegisteredWithStreamableManager();
 
     /*!
-     * The unique class ID for this object type assigned by the
-     * IBTK::StreamableManager.
-     */
-    static int STREAMABLE_CLASS_ID;
-
-    /*!
      * \brief Default constructor.
+     *
+     * \note Different spring force functions may be specified for each link in
+     * the mesh.  This data is specified as \a force_fcn_idxs in the class
+     * constructor.  By default, function default_linear_spring_force() is
+     * associated with \a force_fcn_idx 0.  Users may override this default
+     * value with any function that implements the interface required by
+     * IBSpringForceGen::registerSpringForceFunction().
+     *
+     * \note The subdomain indices are ignored unless IBAMR is configured to
+     * enable support for subdomain indices.  Subdomain indices are not enabled
+     * by default.
      */
     IBSpringForceSpec(
-        unsigned int num_springs=0);
+        const int master_idx=-1,
+        const std::vector<int>& slave_idxs=std::vector<int>(),
+        const std::vector<int>& force_fcn_idxs=std::vector<int>(),
+        const std::vector<double>& stiffnesses=std::vector<double>(),
+        const std::vector<double>& rest_lengths=std::vector<double>(),
+        const std::vector<int>& subdomain_idxs=std::vector<int>());
 
     /*!
-     * \brief Alternative constructor.
+     * \brief Virtual destructor.
      */
-    IBSpringForceSpec(
-        int master_idx,
-        const std::vector<int>& slave_idxs,
-        const std::vector<int>& force_fcn_idxs,
-        const std::vector<double>& stiffnesses,
-        const std::vector<double>& rest_lengths
-#if ENABLE_SUBDOMAIN_INDICES
-        ,const std::vector<int>& subdomain_idxs
-#endif
-                      );
-
-    /*!
-     * \brief Destructor.
-     */
+    virtual
     ~IBSpringForceSpec();
 
     /*!
      * \return The number of springs attached to the master node.
      */
-    unsigned int
+    unsigned
     getNumberOfSprings() const;
 
     /*!
@@ -206,10 +197,12 @@ public:
     std::vector<double>&
     getRestingLengths();
 
-#if ENABLE_SUBDOMAIN_INDICES
     /*!
      * \return A const reference to the subdomain indices associated with this
      * force spec object.
+     *
+     * \note IBAMR must be specifically configured to enable support for
+     * subdomain indices.  Subdomain indices are not enabled by default.
      */
     const std::vector<int>&
     getSubdomainIndices() const;
@@ -217,30 +210,32 @@ public:
     /*!
      * \return A non-const reference to the subdomain indices associated with
      * this force spec object.
+     *
+     * \note IBAMR must be specifically configured to enable support for
+     * subdomain indices.  Subdomain indices are not enabled by default.
      */
     std::vector<int>&
     getSubdomainIndices();
-#endif
 
     /*!
      * \brief Return the unique identifier used to specify the
      * IBTK::StreamableFactory object used by the IBTK::StreamableManager to
      * extract Streamable objects from data streams.
      */
-    int
+    virtual int
     getStreamableClassID() const;
 
     /*!
      * \brief Return an upper bound on the amount of space required to pack the
      * object to a buffer.
      */
-    size_t
+    virtual size_t
     getDataStreamSize() const;
 
     /*!
      * \brief Pack data into the output stream.
      */
-    void
+    virtual void
     packStream(
         SAMRAI::tbox::AbstractStream& stream);
 
@@ -269,6 +264,18 @@ private:
         const IBSpringForceSpec& that);
 
     /*!
+     * Indicates whether the factory has been registered with the
+     * IBTK::StreamableManager.
+     */
+    static bool s_registered_factory;
+
+    /*!
+     * The class ID for this object type assigned by the
+     * IBTK::StreamableManager.
+     */
+    static int s_class_id;
+
+    /*!
      * Data required to define the spring forces.
      */
     int d_master_idx;
@@ -281,78 +288,6 @@ private:
      */
     std::vector<int> d_subdomain_idxs;
 #endif
-
-    /*!
-     * \brief A factory class to rebuild IBSpringForceSpec objects from
-     * SAMRAI::tbox::AbstractStream data streams.
-     */
-    class Factory
-        : public IBTK::StreamableFactory
-    {
-    public:
-        /*!
-         * \brief Destructor.
-         */
-        ~Factory();
-
-        /*!
-         * \brief Return the unique identifier used to specify the
-         * IBTK::StreamableFactory object used by the IBTK::StreamableManager to
-         * extract IBSpringForceSpec objects from data streams.
-         */
-        int
-        getStreamableClassID() const;
-
-        /*!
-         * \brief Set the unique identifier used to specify the
-         * IBTK::StreamableFactory object used by the IBTK::StreamableManager to
-         * extract IBSpringForceSpec objects from data streams.
-         */
-        void
-        setStreamableClassID(
-            int class_id);
-
-        /*!
-         * \brief Build an IBSpringForceSpec object by unpacking data from the
-         * data stream.
-         */
-        SAMRAI::tbox::Pointer<IBTK::Streamable>
-        unpackStream(
-            SAMRAI::tbox::AbstractStream& stream,
-            const SAMRAI::hier::IntVector<NDIM>& offset);
-
-    private:
-        /*!
-         * \brief Default constructor.
-         */
-        Factory();
-
-        /*!
-         * \brief Copy constructor.
-         *
-         * \note This constructor is not implemented and should not be used.
-         *
-         * \param from The value to copy to this object.
-         */
-        Factory(
-            const Factory& from);
-
-        /*!
-         * \brief Assignment operator.
-         *
-         * \note This operator is not implemented and should not be used.
-         *
-         * \param that The value to assign to this object.
-         *
-         * \return A reference to this object.
-         */
-        Factory&
-        operator=(
-            const Factory& that);
-
-        friend class IBSpringForceSpec;
-    };
-    typedef IBSpringForceSpec::Factory IBSpringForceSpecFactory;
 };
 }// namespace IBAMR
 

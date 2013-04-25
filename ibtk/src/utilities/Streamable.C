@@ -69,8 +69,8 @@ Streamable::~Streamable()
 
 void
 Streamable::registerPeriodicShift(
-    const IntVector<NDIM>& /*offset*/,
-    const blitz::TinyVector<double,NDIM>& /*displacement*/)
+    const IntVector<NDIM>& offset,
+    const std::vector<double>& displacement)
 {
     // intentionally blank
     return;
@@ -83,5 +83,10 @@ Streamable::registerPeriodicShift(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBTK
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::Streamable>;
 
 //////////////////////////////////////////////////////////////////////////////

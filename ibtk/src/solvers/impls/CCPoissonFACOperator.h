@@ -52,9 +52,6 @@
 #include <RefineAlgorithm.h>
 #include <tbox/ConstPointer.h>
 
-// BLITZ++ INCLUDES
-#include <blitz/tinyvec.h>
-
 // C++ STDLIB INCLUDES
 #include <map>
 
@@ -107,7 +104,7 @@ namespace IBTK
  \endverbatim
 */
 class CCPoissonFACOperator
-    : public FACPreconditionerStrategy
+    : public virtual FACPreconditionerStrategy
 {
 public:
     /*!
@@ -115,11 +112,12 @@ public:
      */
     CCPoissonFACOperator(
         const std::string& object_name,
-        SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db=NULL);
+        const SAMRAI::tbox::Pointer<SAMRAI::tbox::Database>& input_db=NULL);
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~CCPoissonFACOperator();
 
     /*!
@@ -146,7 +144,7 @@ public:
      */
     void
     setPhysicalBcCoef(
-        SAMRAI::solv::RobinBcCoefStrategy<NDIM>* bc_coef);
+        SAMRAI::solv::RobinBcCoefStrategy<NDIM>* const bc_coef);
 
     /*!
      * \brief Set the SAMRAI::solv::RobinBcCoefStrategy objects used to specify
@@ -163,26 +161,12 @@ public:
         const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& bc_coefs);
 
     /*!
-     * \brief Set the SAMRAI::solv::RobinBcCoefStrategy objects used to specify
-     * physical boundary conditions.
-     *
-     * \note Any of the elements of \a bc_coefs may be NULL.  In this case,
-     * homogeneous Dirichlet boundary conditions are employed for that data
-     * depth.
-     *
-     * \param bc_coefs  Vector of pointers to objects that can set the Robin boundary condition coefficients
-     */
-    void
-    setPhysicalBcCoefs(
-        const blitz::TinyVector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*,NDIM>& bc_coefs);
-
-    /*!
      * \brief Set the hierarchy time, for use with the refinement schedules and
      * boundary condition routines employed by the object.
      */
     void
     setTime(
-        double time);
+        const double time);
 
     //\}
 
@@ -213,8 +197,8 @@ public:
      */
     void
     setResetLevels(
-        int coarsest_ln,
-        int finest_ln);
+        const int coarsest_ln,
+        const int finest_ln);
 
     /*!
      * \brief Specify the ghost cell width for \em both the solution and the
@@ -314,7 +298,7 @@ public:
      *
      * \param preconditioner  Pointer to the FAC preconditioner that is using this concrete FAC strategy
      */
-    void
+    virtual void
     setFACPreconditioner(
         SAMRAI::tbox::ConstPointer<FACPreconditioner> preconditioner);
 
@@ -326,7 +310,7 @@ public:
      * \param dst destination residual
      * \param dst_ln destination level number
      */
-    void
+    virtual void
     restrictResidual(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& src,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& dst,
@@ -340,7 +324,7 @@ public:
      * \param dst destination error vector
      * \param dst_ln destination level number of data transfer
      */
-    void
+    virtual void
     prolongError(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& src,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& dst,
@@ -354,7 +338,7 @@ public:
      * \param dst destination error vector
      * \param dst_ln destination level number of data transfer
      */
-    void
+    virtual void
     prolongErrorAndCorrect(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& src,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& dst,
@@ -370,7 +354,7 @@ public:
      * \param performing_pre_sweeps boolean value that is true when pre-smoothing sweeps are being performed
      * \param performing_post_sweeps boolean value that is true when post-smoothing sweeps are being performed
      */
-    void
+    virtual void
     smoothError(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& error,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& residual,
@@ -387,28 +371,26 @@ public:
      * \param residual residual vector
      * \param coarsest_ln coarsest level number
      */
-    bool
+    virtual bool
     solveCoarsestLevel(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& error,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& residual,
         int coarsest_ln);
 
     /*!
-     * \brief Compute composite grid residual on a range of levels.
+     * \brief Compute composite grid residual on a single level.
      *
      * \param residual residual vector
      * \param solution solution vector
      * \param rhs source (right hand side) vector
-     * \param coarsest_level_num coarsest level number
-     * \param finest_level_num finest level number
+     * \param level_num level number
      */
-    void
+    virtual void
     computeResidual(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& residual,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& solution,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& rhs,
-        int coarsest_level_num,
-        int finest_level_num);
+        int level_num);
 
     /*!
      * \brief Compute hierarchy-dependent data.
@@ -424,7 +406,7 @@ public:
      * \param solution solution vector u
      * \param rhs right hand side vector f
      */
-    void
+    virtual void
     initializeOperatorState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& solution,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& rhs);
@@ -436,7 +418,7 @@ public:
      *
      * \see initializeOperatorState
      */
-    void
+    virtual void
     deallocateOperatorState();
 
     //\}
@@ -481,9 +463,9 @@ private:
      */
     void
     xeqScheduleProlongation(
-        int dst_idx,
-        int src_idx,
-        int dst_ln);
+        const int dst_idx,
+        const int src_idx,
+        const int dst_ln);
 
     /*!
      * \brief Execute schedule for restricting solution or residual to the
@@ -491,9 +473,9 @@ private:
      */
     void
     xeqScheduleRestriction(
-        int dst_idx,
-        int src_idx,
-        int dst_ln);
+        const int dst_idx,
+        const int src_idx,
+        const int dst_ln);
 
     /*!
      * \brief Execute schedule for filling ghosts on the specified level.  This
@@ -501,8 +483,8 @@ private:
      */
     void
     xeqScheduleGhostFillNoCoarse(
-        int dst_idx,
-        int dst_ln);
+        const int dst_idx,
+        const int dst_ln);
 
     //\}
 
@@ -526,7 +508,7 @@ private:
     buildPatchLaplaceOperator(
         Mat& A,
         const SAMRAI::solv::PoissonSpecifications& poisson_spec,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> >& patch,
         const SAMRAI::hier::IntVector<NDIM>& ghost_cell_width);
 
     /*!
@@ -536,9 +518,9 @@ private:
     static void
     buildPatchLaplaceOperator_aligned(
         Mat& A,
-        SAMRAI::tbox::Pointer<SAMRAI::pdat::CellData<NDIM,double> > C_data,
-        SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> > D_data,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+        const SAMRAI::tbox::Pointer<SAMRAI::pdat::CellData<NDIM,double> > C_data,
+        const SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> > D_data,
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> >& patch,
         const SAMRAI::hier::IntVector<NDIM>& ghost_cell_width);
 
     /*!
@@ -548,9 +530,9 @@ private:
     static void
     buildPatchLaplaceOperator_nonaligned(
         Mat& A,
-        SAMRAI::tbox::Pointer<SAMRAI::pdat::CellData<NDIM,double> > C_data,
-        SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> > D_data,
-        SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+        const SAMRAI::tbox::Pointer<SAMRAI::pdat::CellData<NDIM,double> > C_data,
+        const SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> > D_data,
+        const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> >& patch,
         const SAMRAI::hier::IntVector<NDIM>& ghost_cell_width);
 
     /*!

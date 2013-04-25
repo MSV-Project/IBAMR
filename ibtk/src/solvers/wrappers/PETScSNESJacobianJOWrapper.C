@@ -72,7 +72,7 @@ PETScSNESJacobianJOWrapper::formJacobian(
 
     // Destroy the PETSc Vec wrappers.
     PETScSAMRAIVectorReal::destroyPETScVector(petsc_x);
-    petsc_x = PETSC_NULL;
+    petsc_x = static_cast<Vec>(NULL);
     return;
 }// formJacobian
 
@@ -198,5 +198,10 @@ PETScSNESJacobianJOWrapper::enableLogging(
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::PETScSNESJacobianJOWrapper>;
 
 //////////////////////////////////////////////////////////////////////////////

@@ -69,9 +69,11 @@ NewtonKrylovSolver::~NewtonKrylovSolver()
 
 void
 NewtonKrylovSolver::initializeSolverState(
-    const SAMRAIVectorReal<NDIM,double>& /*u*/,
-    const SAMRAIVectorReal<NDIM,double>& /*r*/)
+    const SAMRAIVectorReal<NDIM,double>& u,
+    const SAMRAIVectorReal<NDIM,double>& r)
 {
+    (void) u;
+    (void) r;
     // intentionally blank
     return;
 }// initializeSolverState
@@ -83,19 +85,15 @@ NewtonKrylovSolver::deallocateSolverState()
     return;
 }// deallocateSolverState
 
-void
-NewtonKrylovSolver::setTimeInterval(
-        double,
-        double)
-{
-    // intentionally blank
-    return;  
-}// setTimeInterval
-
 /////////////////////////////// PRIVATE //////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::NewtonKrylovSolver>;
 
 //////////////////////////////////////////////////////////////////////////////

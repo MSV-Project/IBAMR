@@ -85,10 +85,10 @@ public:
      * \param fill_time            Double simulation time for boundary filling.
      * \param ghost_width_to_fill  Integer vector describing maximum ghost width to fill over all registered scratch components.
      */
-    void
+    virtual void
     setPhysicalBoundaryConditions(
         SAMRAI::hier::Patch<NDIM>& patch,
-        double fill_time,
+        const double fill_time,
         const SAMRAI::hier::IntVector<NDIM>& ghost_width_to_fill) = 0;
 
     /*!
@@ -96,7 +96,7 @@ public:
      * interpolation operations.  This is needed to determine the correct
      * interpolation data dependencies.
      */
-    SAMRAI::hier::IntVector<NDIM>
+    virtual SAMRAI::hier::IntVector<NDIM>
     getRefineOpStencilWidth() const = 0;
 
     /*!
@@ -114,7 +114,7 @@ public:
      * \param fine_box  Box region on fine patch into which data is refined.
      * \param ratio     Integer vector containing ratio relating index space between coarse and fine patches.
      */
-    void
+    virtual void
     preprocessRefine(
         SAMRAI::hier::Patch<NDIM>& fine,
         const SAMRAI::hier::Patch<NDIM>& coarse,
@@ -136,7 +136,7 @@ public:
      * \param fine_box  Box region on fine patch into which data is refined.
      * \param ratio     Integer vector containing ratio relating index space between coarse and fine patches.
      */
-    void
+    virtual void
     postprocessRefine(
         SAMRAI::hier::Patch<NDIM>& fine,
         const SAMRAI::hier::Patch<NDIM>& coarse,
@@ -160,14 +160,14 @@ public:
      */
     virtual void
     setConsistentInterpolationScheme(
-        bool consistent_type_2_bdry) = 0;
+        const bool consistent_type_2_bdry) = 0;
 
     /*!
      * \brief Reset the patch data index operated upon by this class.
      */
     virtual void
     setPatchDataIndex(
-        int patch_data_index) = 0;
+        const int patch_data_index) = 0;
 
     /*!
      * \brief Reset the patch data indices operated upon by this class.

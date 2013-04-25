@@ -61,7 +61,7 @@ public:
     CoarsenPatchStrategySet(
         InputIterator first,
         InputIterator last,
-        bool managed=true)
+        const bool managed=true)
         : d_strategy_set(first,last),
           d_managed(managed)
         {
@@ -72,6 +72,7 @@ public:
     /*!
      * \brief Destructor.
      */
+    virtual
     ~CoarsenPatchStrategySet();
 
     /*!
@@ -79,7 +80,7 @@ public:
      * operations.  This is needed to determine the correct coarsening data
      * dependencies.
      */
-    SAMRAI::hier::IntVector<NDIM>
+    virtual SAMRAI::hier::IntVector<NDIM>
     getCoarsenOpStencilWidth() const;
 
     /*!
@@ -97,7 +98,7 @@ public:
      * \param coarse_box  Box region on coarse patch into which data is coarsened.
      * \param ratio       Integer vector containing ratio relating index space between coarse and fine patches.
      */
-    void
+    virtual void
     preprocessCoarsen(
         SAMRAI::hier::Patch<NDIM>& coarse,
         const SAMRAI::hier::Patch<NDIM>& fine,
@@ -119,7 +120,7 @@ public:
      * \param coarse_box  Box region on coarse patch into which data is copied.
      * \param ratio       Integer vector containing ratio
      */
-    void
+    virtual void
     postprocessCoarsen(
         SAMRAI::hier::Patch<NDIM>& coarse,
         const SAMRAI::hier::Patch<NDIM>& fine,

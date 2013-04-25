@@ -970,15 +970,20 @@ LIBS
 FCLIBS
 CC
 CFLAGS
+LDFLAGS
+LIBS
 CPPFLAGS
 CXX
 CXXFLAGS
+LIBS
 CCC
 CXXCPP
 FC
 FCFLAGS
+LIBS
 F77
 FFLAGS
+LIBS
 MPICC
 MPICXX
 PETSC_DIR
@@ -2754,9 +2759,6 @@ ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
 
 
 ac_config_headers="$ac_config_headers config/IBAMR_config.h"
-
-
-ac_config_commands="$ac_config_commands config/IBAMR_prefix_config.h"
 
 am__api_version='1.11'
 
@@ -7144,14 +7146,7 @@ int
 main ()
 {
 
-    if (__builtin_expect(true,1))
-    {
-        return 0;
-    }
-    else
-    {
-        return -1;
-    }
+if (__builtin_expect(true,1)) return 0;
 
   ;
   return 0;
@@ -7172,48 +7167,6 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 
 cat >>confdefs.h <<_ACEOF
 #define HAVE_BUILTIN_EXPECT $have_builtin_expect
-_ACEOF
-
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports __builtin_prefetch keyword" >&5
-$as_echo_n "checking whether compiler supports __builtin_prefetch keyword... " >&6; }
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-#ifdef FC_DUMMY_MAIN
-#ifndef FC_DUMMY_MAIN_EQ_F77
-#  ifdef __cplusplus
-     extern "C"
-#  endif
-   int FC_DUMMY_MAIN() { return 1; }
-#endif
-#endif
-int
-main ()
-{
-
-    __builtin_prefetch(0,0,0);
-    return 0;
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_compile "$LINENO"; then :
-
-have_builtin_prefetch=1
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-else
-
-have_builtin_prefetch=0
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-
-cat >>confdefs.h <<_ACEOF
-#define HAVE_BUILTIN_PREFETCH $have_builtin_prefetch
 _ACEOF
 
 
@@ -18011,29 +17964,29 @@ LIBMESH_CONTRIBDIR=${LIBMESH_DIR}/contrib
 LIBMESH_CONTRIB_LIBDIR=${LIBMESH_DIR}/contrib/lib/${LIBMESH_HOSTTYPE}_${LIBMESH_COMPILE_MODE}
 
 if test "${LIBMESH_COMPILE_MODE}" == "opt" ; then
-  CPPFLAGS="${CPPFLAGS} `grep -A3 opt-mode $LIBMESH_DIR/Make.common | grep libmesh_CPPFLAGS | sed -e 's/.*libmesh_CPPFLAGS +=//' | sed -e 's/.*libmesh_CPPFLAGS :=//' | sed -e 's/$(libmesh_CPPFLAGS)//'`"
-  CXXFLAGS="${CXXFLAGS} `grep -A3 opt-mode $LIBMESH_DIR/Make.common | grep libmesh_CXXFLAGS | sed -e 's/.*libmesh_CXXFLAGS +=//' | sed -e 's/.*libmesh_CXXFLAGS :=//' | sed -e 's/$(libmesh_CXXFLAGS)//'`"
-  CFLAGS="${CFLAGS}     `grep -A3 opt-mode $LIBMESH_DIR/Make.common | grep libmesh_CFLAGS   | sed -e 's/.*libmesh_CFLAGS   +=//' | sed -e 's/.*libmesh_CFLAGS   :=//' | sed -e 's/$(libmesh_CFLAGS)//'  `"
+  CPPFLAGS="${CPPFLAGS} `grep -A3 opt-mode $LIBMESH_DIR/Make.common | grep libmesh_CPPFLAGS | sed -e 's/.*libmesh_CPPFLAGS +=//'`"
+  CXXFLAGS="${CXXFLAGS} `grep -A3 opt-mode $LIBMESH_DIR/Make.common | grep libmesh_CXXFLAGS | sed -e 's/.*libmesh_CXXFLAGS +=//'`"
+  CFLAGS="${CFLAGS} `grep -A3 opt-mode $LIBMESH_DIR/Make.common | grep libmesh_CFLAGS | sed -e 's/.*libmesh_CFLAGS   +=//'`"
 fi
 if test "${LIBMESH_COMPILE_MODE}" == "devel" ; then
-  CPPFLAGS="${CPPFLAGS} `grep -A3 devel-mode $LIBMESH_DIR/Make.common | grep libmesh_CPPFLAGS | sed -e 's/.*libmesh_CPPFLAGS +=//' | sed -e 's/.*libmesh_CPPFLAGS :=//' | sed -e 's/$(libmesh_CPPFLAGS)//'`"
-  CXXFLAGS="${CXXFLAGS} `grep -A3 devel-mode $LIBMESH_DIR/Make.common | grep libmesh_CXXFLAGS | sed -e 's/.*libmesh_CXXFLAGS +=//' | sed -e 's/.*libmesh_CXXFLAGS :=//' | sed -e 's/$(libmesh_CXXFLAGS)//'`"
-  CFLAGS="${CFLAGS}     `grep -A3 devel-mode $LIBMESH_DIR/Make.common | grep libmesh_CFLAGS   | sed -e 's/.*libmesh_CFLAGS   +=//' | sed -e 's/.*libmesh_CFLAGS   :=//' | sed -e 's/$(libmesh_CFLAGS)//'  `"
+  CPPFLAGS="${CPPFLAGS} `grep -A3 devel-mode $LIBMESH_DIR/Make.common | grep libmesh_CPPFLAGS | sed -e 's/.*libmesh_CPPFLAGS +=//'`"
+  CXXFLAGS="${CXXFLAGS} `grep -A3 devel-mode $LIBMESH_DIR/Make.common | grep libmesh_CXXFLAGS | sed -e 's/.*libmesh_CXXFLAGS +=//'`"
+  CFLAGS="${CFLAGS} `grep -A3 devel-mode $LIBMESH_DIR/Make.common | grep libmesh_CFLAGS | sed -e 's/.*libmesh_CFLAGS   +=//'`"
 fi
 if test "${LIBMESH_COMPILE_MODE}" == "dbg" ; then
-  CPPFLAGS="${CPPFLAGS} `grep -A3 debug-mode $LIBMESH_DIR/Make.common | grep libmesh_CPPFLAGS | sed -e 's/.*libmesh_CPPFLAGS +=//' | sed -e 's/.*libmesh_CPPFLAGS :=//' | sed -e 's/$(libmesh_CPPFLAGS)//'`"
-  CXXFLAGS="${CXXFLAGS} `grep -A3 debug-mode $LIBMESH_DIR/Make.common | grep libmesh_CXXFLAGS | sed -e 's/.*libmesh_CXXFLAGS +=//' | sed -e 's/.*libmesh_CXXFLAGS :=//' | sed -e 's/$(libmesh_CXXFLAGS)//'`"
-  CFLAGS="${CFLAGS}     `grep -A3 debug-mode $LIBMESH_DIR/Make.common | grep libmesh_CFLAGS   | sed -e 's/.*libmesh_CFLAGS   +=//' | sed -e 's/.*libmesh_CFLAGS   :=//' | sed -e 's/$(libmesh_CFLAGS)//'  `"
+  CPPFLAGS="${CPPFLAGS} `grep -A3 debug-mode $LIBMESH_DIR/Make.common | grep libmesh_CPPFLAGS | sed -e 's/.*libmesh_CPPFLAGS +=//'`"
+  CXXFLAGS="${CXXFLAGS} `grep -A3 debug-mode $LIBMESH_DIR/Make.common | grep libmesh_CXXFLAGS | sed -e 's/.*libmesh_CXXFLAGS +=//'`"
+  CFLAGS="${CFLAGS} `grep -A3 debug-mode $LIBMESH_DIR/Make.common | grep libmesh_CFLAGS | sed -e 's/.*libmesh_CFLAGS   +=//'`"
 fi
 if test "${LIBMESH_COMPILE_MODE}" == "prof" ; then
-  CPPFLAGS="${CPPFLAGS} `grep -A3 prof-mode $LIBMESH_DIR/Make.common | grep libmesh_CPPFLAGS | sed -e 's/.*libmesh_CPPFLAGS +=//' | sed -e 's/.*libmesh_CPPFLAGS :=//' | sed -e 's/$(libmesh_CPPFLAGS)//'`"
-  CXXFLAGS="${CXXFLAGS} `grep -A3 prof-mode $LIBMESH_DIR/Make.common | grep libmesh_CXXFLAGS | sed -e 's/.*libmesh_CXXFLAGS +=//' | sed -e 's/.*libmesh_CXXFLAGS :=//' | sed -e 's/$(libmesh_CXXFLAGS)//'`"
-  CFLAGS="${CFLAGS}     `grep -A3 prof-mode $LIBMESH_DIR/Make.common | grep libmesh_CFLAGS   | sed -e 's/.*libmesh_CFLAGS   +=//' | sed -e 's/.*libmesh_CFLAGS   :=//' | sed -e 's/$(libmesh_CFLAGS)//'  `"
+  CPPFLAGS="${CPPFLAGS} `grep -A3 prof-mode $LIBMESH_DIR/Make.common | grep libmesh_CPPFLAGS | sed -e 's/.*libmesh_CPPFLAGS +=//'`"
+  CXXFLAGS="${CXXFLAGS} `grep -A3 prof-mode $LIBMESH_DIR/Make.common | grep libmesh_CXXFLAGS | sed -e 's/.*libmesh_CXXFLAGS +=//'`"
+  CFLAGS="${CFLAGS} `grep -A3 prof-mode $LIBMESH_DIR/Make.common | grep libmesh_CFLAGS | sed -e 's/.*libmesh_CFLAGS   +=//'`"
 fi
 if test "${LIBMESH_COMPILE_MODE}" == "oprof" ; then
-  CPPFLAGS="${CPPFLAGS} `grep -A3 oprof-mode $LIBMESH_DIR/Make.common | grep libmesh_CPPFLAGS | sed -e 's/.*libmesh_CPPFLAGS +=//' | sed -e 's/.*libmesh_CPPFLAGS :=//' | sed -e 's/$(libmesh_CPPFLAGS)//'`"
-  CXXFLAGS="${CXXFLAGS} `grep -A3 oprof-mode $LIBMESH_DIR/Make.common | grep libmesh_CXXFLAGS | sed -e 's/.*libmesh_CXXFLAGS +=//' | sed -e 's/.*libmesh_CXXFLAGS :=//' | sed -e 's/$(libmesh_CXXFLAGS)//'`"
-  CFLAGS="${CFLAGS}     `grep -A3 oprof-mode $LIBMESH_DIR/Make.common | grep libmesh_CFLAGS   | sed -e 's/.*libmesh_CFLAGS   +=//' | sed -e 's/.*libmesh_CFLAGS   :=//' | sed -e 's/$(libmesh_CFLAGS)//'  `"
+  CPPFLAGS="${CPPFLAGS} `grep -A3 oprof-mode $LIBMESH_DIR/Make.common | grep libmesh_CPPFLAGS | sed -e 's/.*libmesh_CPPFLAGS +=//'`"
+  CXXFLAGS="${CXXFLAGS} `grep -A3 oprof-mode $LIBMESH_DIR/Make.common | grep libmesh_CXXFLAGS | sed -e 's/.*libmesh_CXXFLAGS +=//'`"
+  CFLAGS="${CFLAGS} `grep -A3 oprof-mode $LIBMESH_DIR/Make.common | grep libmesh_CFLAGS | sed -e 's/.*libmesh_CFLAGS   +=//'`"
 fi
 
 LIBMESH_TECPLOT_LIBS=`grep "libmesh_LIBS" $LIBMESH_DIR/Make.common | grep "tecplot" | sed -e 's/.*=//' | sed -e 's/ *//' | sed -e 's/\t*//'`
@@ -36768,7 +36721,7 @@ echo
 echo "================"
 echo "Outputting files"
 echo "================"
-ac_config_files="$ac_config_files Makefile bin/Makefile config/make.inc doc/Doxyfile doc/Makefile doc/online_Doxyfile examples/Makefile examples/IB/Makefile examples/IB/explicit/Makefile examples/IB/explicit/ex0/Makefile examples/IB/explicit/ex1/Makefile examples/IB/explicit/ex2/Makefile examples/IB/explicit/ex3/Makefile examples/IB/explicit/ex4/Makefile examples/IBFE/Makefile examples/IBFE/explicit/Makefile examples/IBFE/explicit/ex0/Makefile examples/IBFE/explicit/ex1/Makefile examples/IBFE/explicit/ex2/Makefile examples/IBFE/explicit/ex3/Makefile examples/IBFE/explicit/ex4/Makefile examples/IBFE/explicit/ex5/Makefile examples/IBFE/explicit/ex6/Makefile examples/IBFE/explicit/ex7/Makefile examples/adv_diff/Makefile examples/advect/Makefile examples/navier_stokes/Makefile examples/navier_stokes/ex0/Makefile examples/navier_stokes/ex1/Makefile examples/navier_stokes/ex2/Makefile examples/navier_stokes/ex3/Makefile lib/Makefile src/Makefile src/fortran/Makefile src/IB/Makefile src/adv_diff/Makefile src/adv_diff/fortran/Makefile src/advect/Makefile src/advect/fortran/Makefile src/navier_stokes/Makefile src/navier_stokes/fortran/Makefile src/solid_mechanics/Makefile src/utilities/Makefile src/tools/Makefile"
+ac_config_files="$ac_config_files Makefile bin/Makefile config/make.inc doc/Doxyfile doc/Makefile doc/online_Doxyfile examples/Makefile examples/IB/Makefile examples/IB/cell_centered/Makefile examples/IB/cell_centered/ex0/Makefile examples/IB/cell_centered/ex1/Makefile examples/IB/cell_centered/ex2/Makefile examples/IB/staggered_grid/Makefile examples/IB/staggered_grid/explicit/Makefile examples/IB/staggered_grid/explicit/ex0/Makefile examples/IB/staggered_grid/explicit/ex1/Makefile examples/IB/staggered_grid/explicit/ex2/Makefile examples/IB/staggered_grid/explicit/ex3/Makefile examples/IB/staggered_grid/explicit/ex4/Makefile examples/IB/staggered_grid/implicit/Makefile examples/IB/staggered_grid/implicit/ex0/Makefile examples/IB/staggered_grid/implicit/ex1/Makefile examples/IBFE/Makefile examples/IBFE/explicit/Makefile examples/IBFE/explicit/ex0/Makefile examples/IBFE/explicit/ex1/Makefile examples/IBFE/explicit/ex2/Makefile examples/IBFE/explicit/ex3/Makefile examples/IBFE/explicit/ex4/Makefile examples/IBFE/explicit/ex5/Makefile examples/IBFE/explicit/ex6/Makefile examples/IBFE/explicit/ex7/Makefile examples/adv_diff/Makefile examples/advect/Makefile examples/navier_stokes/Makefile examples/navier_stokes/cell_centered/Makefile examples/navier_stokes/cell_centered/approx_projection/Makefile examples/navier_stokes/cell_centered/approx_projection/ex0/Makefile examples/navier_stokes/cell_centered/approx_projection/ex1/Makefile examples/navier_stokes/cell_centered/approx_projection/ex2/Makefile examples/navier_stokes/cell_centered/exact_projection/Makefile examples/navier_stokes/cell_centered/exact_projection/ex0/Makefile examples/navier_stokes/cell_centered/exact_projection/ex1/Makefile examples/navier_stokes/staggered_grid/Makefile examples/navier_stokes/staggered_grid/ex0/Makefile examples/navier_stokes/staggered_grid/ex1/Makefile examples/navier_stokes/staggered_grid/ex2/Makefile examples/navier_stokes/staggered_grid/ex3/Makefile examples/vc_navier_stokes/Makefile examples/vc_navier_stokes/operator_test/Makefile examples/vc_navier_stokes/solver_test/Makefile lib/Makefile src/Makefile src/fortran/Makefile src/IB/Makefile src/adv_diff/Makefile src/adv_diff/fortran/Makefile src/advect/Makefile src/advect/fortran/Makefile src/navier_stokes/Makefile src/navier_stokes/fortran/Makefile src/utilities/Makefile src/tools/Makefile"
 
 
 
@@ -37521,7 +37474,6 @@ cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
 #
 # INIT-COMMANDS
 #
-PACKAGE="$PACKAGE"
 AMDEP_TRUE="$AMDEP_TRUE" ac_aux_dir="$ac_aux_dir"
 
 _ACEOF
@@ -37533,7 +37485,6 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "config/IBAMR_config.h") CONFIG_HEADERS="$CONFIG_HEADERS config/IBAMR_config.h" ;;
-    "config/IBAMR_prefix_config.h") CONFIG_COMMANDS="$CONFIG_COMMANDS config/IBAMR_prefix_config.h" ;;
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "bin/Makefile") CONFIG_FILES="$CONFIG_FILES bin/Makefile" ;;
@@ -37543,12 +37494,20 @@ do
     "doc/online_Doxyfile") CONFIG_FILES="$CONFIG_FILES doc/online_Doxyfile" ;;
     "examples/Makefile") CONFIG_FILES="$CONFIG_FILES examples/Makefile" ;;
     "examples/IB/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/Makefile" ;;
-    "examples/IB/explicit/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/explicit/Makefile" ;;
-    "examples/IB/explicit/ex0/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/explicit/ex0/Makefile" ;;
-    "examples/IB/explicit/ex1/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/explicit/ex1/Makefile" ;;
-    "examples/IB/explicit/ex2/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/explicit/ex2/Makefile" ;;
-    "examples/IB/explicit/ex3/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/explicit/ex3/Makefile" ;;
-    "examples/IB/explicit/ex4/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/explicit/ex4/Makefile" ;;
+    "examples/IB/cell_centered/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/cell_centered/Makefile" ;;
+    "examples/IB/cell_centered/ex0/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/cell_centered/ex0/Makefile" ;;
+    "examples/IB/cell_centered/ex1/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/cell_centered/ex1/Makefile" ;;
+    "examples/IB/cell_centered/ex2/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/cell_centered/ex2/Makefile" ;;
+    "examples/IB/staggered_grid/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/staggered_grid/Makefile" ;;
+    "examples/IB/staggered_grid/explicit/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/staggered_grid/explicit/Makefile" ;;
+    "examples/IB/staggered_grid/explicit/ex0/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/staggered_grid/explicit/ex0/Makefile" ;;
+    "examples/IB/staggered_grid/explicit/ex1/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/staggered_grid/explicit/ex1/Makefile" ;;
+    "examples/IB/staggered_grid/explicit/ex2/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/staggered_grid/explicit/ex2/Makefile" ;;
+    "examples/IB/staggered_grid/explicit/ex3/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/staggered_grid/explicit/ex3/Makefile" ;;
+    "examples/IB/staggered_grid/explicit/ex4/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/staggered_grid/explicit/ex4/Makefile" ;;
+    "examples/IB/staggered_grid/implicit/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/staggered_grid/implicit/Makefile" ;;
+    "examples/IB/staggered_grid/implicit/ex0/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/staggered_grid/implicit/ex0/Makefile" ;;
+    "examples/IB/staggered_grid/implicit/ex1/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IB/staggered_grid/implicit/ex1/Makefile" ;;
     "examples/IBFE/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IBFE/Makefile" ;;
     "examples/IBFE/explicit/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IBFE/explicit/Makefile" ;;
     "examples/IBFE/explicit/ex0/Makefile") CONFIG_FILES="$CONFIG_FILES examples/IBFE/explicit/ex0/Makefile" ;;
@@ -37562,10 +37521,22 @@ do
     "examples/adv_diff/Makefile") CONFIG_FILES="$CONFIG_FILES examples/adv_diff/Makefile" ;;
     "examples/advect/Makefile") CONFIG_FILES="$CONFIG_FILES examples/advect/Makefile" ;;
     "examples/navier_stokes/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/Makefile" ;;
-    "examples/navier_stokes/ex0/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/ex0/Makefile" ;;
-    "examples/navier_stokes/ex1/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/ex1/Makefile" ;;
-    "examples/navier_stokes/ex2/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/ex2/Makefile" ;;
-    "examples/navier_stokes/ex3/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/ex3/Makefile" ;;
+    "examples/navier_stokes/cell_centered/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/cell_centered/Makefile" ;;
+    "examples/navier_stokes/cell_centered/approx_projection/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/cell_centered/approx_projection/Makefile" ;;
+    "examples/navier_stokes/cell_centered/approx_projection/ex0/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/cell_centered/approx_projection/ex0/Makefile" ;;
+    "examples/navier_stokes/cell_centered/approx_projection/ex1/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/cell_centered/approx_projection/ex1/Makefile" ;;
+    "examples/navier_stokes/cell_centered/approx_projection/ex2/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/cell_centered/approx_projection/ex2/Makefile" ;;
+    "examples/navier_stokes/cell_centered/exact_projection/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/cell_centered/exact_projection/Makefile" ;;
+    "examples/navier_stokes/cell_centered/exact_projection/ex0/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/cell_centered/exact_projection/ex0/Makefile" ;;
+    "examples/navier_stokes/cell_centered/exact_projection/ex1/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/cell_centered/exact_projection/ex1/Makefile" ;;
+    "examples/navier_stokes/staggered_grid/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/staggered_grid/Makefile" ;;
+    "examples/navier_stokes/staggered_grid/ex0/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/staggered_grid/ex0/Makefile" ;;
+    "examples/navier_stokes/staggered_grid/ex1/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/staggered_grid/ex1/Makefile" ;;
+    "examples/navier_stokes/staggered_grid/ex2/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/staggered_grid/ex2/Makefile" ;;
+    "examples/navier_stokes/staggered_grid/ex3/Makefile") CONFIG_FILES="$CONFIG_FILES examples/navier_stokes/staggered_grid/ex3/Makefile" ;;
+    "examples/vc_navier_stokes/Makefile") CONFIG_FILES="$CONFIG_FILES examples/vc_navier_stokes/Makefile" ;;
+    "examples/vc_navier_stokes/operator_test/Makefile") CONFIG_FILES="$CONFIG_FILES examples/vc_navier_stokes/operator_test/Makefile" ;;
+    "examples/vc_navier_stokes/solver_test/Makefile") CONFIG_FILES="$CONFIG_FILES examples/vc_navier_stokes/solver_test/Makefile" ;;
     "lib/Makefile") CONFIG_FILES="$CONFIG_FILES lib/Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "src/fortran/Makefile") CONFIG_FILES="$CONFIG_FILES src/fortran/Makefile" ;;
@@ -37576,7 +37547,6 @@ do
     "src/advect/fortran/Makefile") CONFIG_FILES="$CONFIG_FILES src/advect/fortran/Makefile" ;;
     "src/navier_stokes/Makefile") CONFIG_FILES="$CONFIG_FILES src/navier_stokes/Makefile" ;;
     "src/navier_stokes/fortran/Makefile") CONFIG_FILES="$CONFIG_FILES src/navier_stokes/fortran/Makefile" ;;
-    "src/solid_mechanics/Makefile") CONFIG_FILES="$CONFIG_FILES src/solid_mechanics/Makefile" ;;
     "src/utilities/Makefile") CONFIG_FILES="$CONFIG_FILES src/utilities/Makefile" ;;
     "src/tools/Makefile") CONFIG_FILES="$CONFIG_FILES src/tools/Makefile" ;;
 
@@ -38174,96 +38144,6 @@ $as_echo "$as_me: executing $ac_file commands" >&6;}
 
 
   case $ac_file$ac_mode in
-    "config/IBAMR_prefix_config.h":C) ac_prefix_conf_OUT=`echo config/IBAMR_prefix_config.h`
-ac_prefix_conf_DEF=`echo _$ac_prefix_conf_OUT | sed -e "y:abcdefghijklmnopqrstuvwxyz:ABCDEFGHIJKLMNOPQRSTUVWXYZ:" -e "s/[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ]/_/g"`
-ac_prefix_conf_PKG=`echo $PACKAGE`
-ac_prefix_conf_LOW=`echo _$ac_prefix_conf_PKG | sed -e "y:ABCDEFGHIJKLMNOPQRSTUVWXYZ-:abcdefghijklmnopqrstuvwxyz_:"`
-ac_prefix_conf_UPP=`echo $ac_prefix_conf_PKG | sed -e "y:abcdefghijklmnopqrstuvwxyz-:ABCDEFGHIJKLMNOPQRSTUVWXYZ_:"  -e "/^[0123456789]/s/^/_/"`
-ac_prefix_conf_INP=`echo "" | sed -e 's/ *//'`
-if test ".$ac_prefix_conf_INP" = "."; then
-   for ac_file in : $CONFIG_HEADERS; do test "_$ac_file" = _: && continue
-     case "$ac_file" in
-        *.h) ac_prefix_conf_INP=$ac_file ;;
-        *)
-     esac
-     test ".$ac_prefix_conf_INP" != "." && break
-   done
-fi
-if test ".$ac_prefix_conf_INP" = "."; then
-   case "$ac_prefix_conf_OUT" in
-      */*) ac_prefix_conf_INP=`basename "$ac_prefix_conf_OUT"`
-      ;;
-      *-*) ac_prefix_conf_INP=`echo "$ac_prefix_conf_OUT" | sed -e "s/[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*-//"`
-      ;;
-      *) ac_prefix_conf_INP=config.h
-      ;;
-   esac
-fi
-if test -z "$ac_prefix_conf_PKG" ; then
-   as_fn_error $? "no prefix for _PREFIX_PKG_CONFIG_H" "$LINENO" 5
-else
-  if test ! -f "$ac_prefix_conf_INP" ; then if test -f "$srcdir/$ac_prefix_conf_INP" ; then
-     ac_prefix_conf_INP="$srcdir/$ac_prefix_conf_INP"
-  fi fi
-  { $as_echo "$as_me:${as_lineno-$LINENO}: creating $ac_prefix_conf_OUT - prefix $ac_prefix_conf_UPP for $ac_prefix_conf_INP defines" >&5
-$as_echo "$as_me: creating $ac_prefix_conf_OUT - prefix $ac_prefix_conf_UPP for $ac_prefix_conf_INP defines" >&6;}
-  if test -f $ac_prefix_conf_INP ; then
-    $as_echo "s/^#undef  *\\([ABCDEFGHIJKLMNOPQRSTUVWXYZ_]\\)/#undef $ac_prefix_conf_UPP""_\\1/" > conftest.prefix
-    $as_echo "s/^#undef  *\\([abcdefghijklmnopqrstuvwxyz]\\)/#undef $ac_prefix_conf_LOW""_\\1/" >> conftest.prefix
-    $as_echo "s/^#define  *\\([ABCDEFGHIJKLMNOPQRSTUVWXYZ_][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*\\)\\(.*\\)/#ifndef $ac_prefix_conf_UPP""_\\1\\" >> conftest.prefix
-    $as_echo "#define $ac_prefix_conf_UPP""_\\1\\2\\" >> conftest.prefix
-    $as_echo "#endif/" >> conftest.prefix
-    $as_echo "s/^#define  *\\([abcdefghijklmnopqrstuvwxyz][abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_]*\\)\\(.*\\)/#ifndef $ac_prefix_conf_LOW""_\\1\\" >> conftest.prefix
-    $as_echo "#define $ac_prefix_conf_LOW""_\\1\\2\\" >> conftest.prefix
-    $as_echo "#endif/" >> conftest.prefix
-    # now executing _script on _DEF input to create _OUT output file
-    echo "#ifndef $ac_prefix_conf_DEF"      >$tmp/pconfig.h
-    echo "#define $ac_prefix_conf_DEF 1" >>$tmp/pconfig.h
-    echo ' ' >>$tmp/pconfig.h
-    echo /'*' $ac_prefix_conf_OUT. Generated automatically at end of configure. '*'/ >>$tmp/pconfig.h
-
-    sed -f conftest.prefix $ac_prefix_conf_INP >>$tmp/pconfig.h
-    echo ' ' >>$tmp/pconfig.h
-    echo '/* once:' $ac_prefix_conf_DEF '*/' >>$tmp/pconfig.h
-    echo "#endif" >>$tmp/pconfig.h
-    if cmp -s $ac_prefix_conf_OUT $tmp/pconfig.h 2>/dev/null; then
-      { $as_echo "$as_me:${as_lineno-$LINENO}: $ac_prefix_conf_OUT is unchanged" >&5
-$as_echo "$as_me: $ac_prefix_conf_OUT is unchanged" >&6;}
-    else
-      ac_dir=`$as_dirname -- "$ac_prefix_conf_OUT" ||
-$as_expr X"$ac_prefix_conf_OUT" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
-	 X"$ac_prefix_conf_OUT" : 'X\(//\)[^/]' \| \
-	 X"$ac_prefix_conf_OUT" : 'X\(//\)$' \| \
-	 X"$ac_prefix_conf_OUT" : 'X\(/\)' \| . 2>/dev/null ||
-$as_echo X"$ac_prefix_conf_OUT" |
-    sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{
-	    s//\1/
-	    q
-	  }
-	  /^X\(\/\/\)[^/].*/{
-	    s//\1/
-	    q
-	  }
-	  /^X\(\/\/\)$/{
-	    s//\1/
-	    q
-	  }
-	  /^X\(\/\).*/{
-	    s//\1/
-	    q
-	  }
-	  s/.*/./; q'`
-      as_dir="$ac_dir"; as_fn_mkdir_p
-      rm -f "$ac_prefix_conf_OUT"
-      mv $tmp/pconfig.h "$ac_prefix_conf_OUT"
-    fi
-    cp conftest.prefix _configs.sed
-  else
-    as_fn_error $? "input file $ac_prefix_conf_INP does not exist - skip generating $ac_prefix_conf_OUT" "$LINENO" 5
-  fi
-  rm -f conftest.*
-fi
- ;;
     "depfiles":C) test x"$AMDEP_TRUE" != x"" || {
   # Autoconf 2.62 quotes --file arguments for eval, but not when files
   # are listed without --file.  Let's play safe and only enable the eval

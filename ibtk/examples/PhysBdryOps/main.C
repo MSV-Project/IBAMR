@@ -28,177 +28,272 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 // Config files
-// #include <IBTK_prefix_config.h>
+#include <IBTK_config.h>
 #include <SAMRAI_config.h>
 
 // Headers for basic PETSc objects
-#include <petscsys.h>
+#include <petsc.h>
 
-// Headers for major SAMRAI objects
+// Headers for basic SAMRAI objects
+#include <PatchLevel.h>
+#include <VariableDatabase.h>
+#include <tbox/Database.h>
+#include <tbox/InputDatabase.h>
+#include <tbox/InputManager.h>
+#include <tbox/MathUtilities.h>
+#include <tbox/PIO.h>
+#include <tbox/Pointer.h>
+#include <tbox/RestartManager.h>
+#include <tbox/SAMRAIManager.h>
+#include <tbox/SAMRAI_MPI.h>
+#include <tbox/TimerManager.h>
+#include <tbox/Utilities.h>
+
+// Headers for major algorithm/data structure objects
 #include <BergerRigoutsos.h>
 #include <CartesianGridGeometry.h>
 #include <GriddingAlgorithm.h>
 #include <LoadBalancer.h>
+#include <PatchHierarchy.h>
 #include <StandardTagAndInitialize.h>
+#include <VisItDataWriter.h>
 
 // Headers for application-specific algorithm/data structure objects
-#include <ibtk/AppInitializer.h>
-#include <ibtk/CartCellRobinPhysBdryOp.h>
-#include <ibtk/CartExtrapPhysBdryOp.h>
-#include <ibtk/app_namespaces.h>
+#include <CartesianPatchGeometry.h>
+#include <CellData.h>
+#include <CellVariable.h>
 #include <LocationIndexRobinBcCoefs.h>
 
-/*******************************************************************************
- * For each run, the input filename must be given on the command line.  In all *
- * cases, the command line is:                                                 *
- *                                                                             *
- *    executable <input file name>                                             *
- *                                                                             *
- *******************************************************************************/
+#include <ibtk/CartCellRobinPhysBdryOp.h>
+#include <ibtk/CartExtrapPhysBdryOp.h>
+
+using namespace SAMRAI;
+using namespace IBTK;
+using namespace std;
+
+/************************************************************************
+ *                                                                      *
+ * For each run, the input filename must be given on the command line.  *
+ * In all cases, the command line is:                                   *
+ *                                                                      *
+ *    executable <input file name> <PETSc options>                      *
+ *                                                                      *
+ ************************************************************************
+ */
+
 int
 main(
     int argc,
     char *argv[])
 {
-    // Initialize PETSc, MPI, and SAMRAI.
+    /*
+     * Initialize PETSc, MPI, and SAMRAI.
+     */
     PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
-    SAMRAI_MPI::setCommunicator(PETSC_COMM_WORLD);
-    SAMRAI_MPI::setCallAbortInSerialInsteadOfExit();
-    SAMRAIManager::startup();
+    tbox::SAMRAI_MPI::setCommunicator(PETSC_COMM_WORLD);
+    tbox::SAMRAI_MPI::setCallAbortInSerialInsteadOfExit();
+    tbox::SAMRAIManager::startup();
 
-    {// cleanup dynamically allocated objects prior to shutdown
+    {// ensure all smart Pointers are properly deleted
+        string input_filename;
+        input_filename = argv[1];
 
-        // Parse command line options, set some standard options from the input
-        // file, and enable file logging.
-        Pointer<AppInitializer> app_initializer = new AppInitializer(argc, argv, "cc_poisson.log");
-        Pointer<Database> input_db = app_initializer->getInputDatabase();
+        tbox::plog << "input_filename = " << input_filename << endl;
 
-        // Create major algorithm and data objects that comprise the
-        // application.  These objects are configured from the input database.
-        Pointer<CartesianGridGeometry<NDIM> > grid_geometry = new CartesianGridGeometry<NDIM>(
-            "CartesianGeometry", app_initializer->getComponentDatabase("CartesianGeometry"));
-        Pointer<PatchHierarchy<NDIM> > patch_hierarchy = new PatchHierarchy<NDIM>(
-            "PatchHierarchy",grid_geometry);
-        Pointer<StandardTagAndInitialize<NDIM> > error_detector = new StandardTagAndInitialize<NDIM>(
-            "StandardTagAndInitialize", NULL, app_initializer->getComponentDatabase("StandardTagAndInitialize"));
-        Pointer<BergerRigoutsos<NDIM> > box_generator = new BergerRigoutsos<NDIM>();
-        Pointer<LoadBalancer<NDIM> > load_balancer = new LoadBalancer<NDIM>(
-            "LoadBalancer", app_initializer->getComponentDatabase("LoadBalancer"));
-        Pointer<GriddingAlgorithm<NDIM> > gridding_algorithm = new GriddingAlgorithm<NDIM>(
-            "GriddingAlgorithm", app_initializer->getComponentDatabase("GriddingAlgorithm"), error_detector, box_generator, load_balancer);
+        /*
+         * Create input database and parse all data in input file.
+         */
+        tbox::Pointer<tbox::Database> input_db = new tbox::InputDatabase("input_db");
+        tbox::InputManager::getManager()->parseInputFile(input_filename, input_db);
 
-        // Initialize the AMR patch hierarchy.
+        /*
+         * Retrieve "Main" section of the input database.
+         */
+        tbox::Pointer<tbox::Database> main_db = input_db->getDatabase("Main");
+
+        string log_file_name = "phys_bdry_test.log";
+        if (main_db->keyExists("log_file_name"))
+        {
+            log_file_name = main_db->getString("log_file_name");
+        }
+        bool log_all_nodes = false;
+        if (main_db->keyExists("log_all_nodes"))
+        {
+            log_all_nodes = main_db->getBool("log_all_nodes");
+        }
+        if (log_all_nodes)
+        {
+            tbox::PIO::logAllNodes(log_file_name);
+        }
+        else
+        {
+            tbox::PIO::logOnlyNodeZero(log_file_name);
+        }
+
+        /*
+         * Create major algorithm and data objects which comprise application.
+         * Each object will be initialized either from input data or restart
+         * files, or a combination of both.  Refer to each class constructor for
+         * details.  For more information on the composition of objects for this
+         * application, see comments at top of file.
+         */
+        tbox::Pointer<geom::CartesianGridGeometry<NDIM> > grid_geometry =
+            new geom::CartesianGridGeometry<NDIM>(
+                "CartesianGeometry",
+                input_db->getDatabase("CartesianGeometry"));
+
+        tbox::Pointer<hier::PatchHierarchy<NDIM> > patch_hierarchy =
+            new hier::PatchHierarchy<NDIM>(
+                "PatchHierarchy",
+                grid_geometry);
+
+        tbox::Pointer<mesh::StandardTagAndInitialize<NDIM> > error_detector =
+            new mesh::StandardTagAndInitialize<NDIM>(
+                "StandardTagAndInitialize",
+                NULL,
+                input_db->getDatabase("StandardTagAndInitialize"));
+
+        tbox::Pointer<mesh::BergerRigoutsos<NDIM> > box_generator =
+            new mesh::BergerRigoutsos<NDIM>();
+
+        tbox::Pointer<mesh::LoadBalancer<NDIM> > load_balancer =
+            new mesh::LoadBalancer<NDIM>(
+                "LoadBalancer",
+                input_db->getDatabase("LoadBalancer"));
+
+        tbox::Pointer<mesh::GriddingAlgorithm<NDIM> > gridding_algorithm =
+            new mesh::GriddingAlgorithm<NDIM>(
+                "GriddingAlgorithm",
+                input_db->getDatabase("GriddingAlgorithm"),
+                error_detector,
+                box_generator,
+                load_balancer);
+
+        /*
+         * Initialize hierarchy configuration and data on all patches.
+         */
         gridding_algorithm->makeCoarsestLevel(patch_hierarchy, 0.0);
+
         int tag_buffer = 1;
         int level_number = 0;
         bool done = false;
-        while (!done && (gridding_algorithm->levelCanBeRefined(level_number)))
+        while (!done &&
+               (gridding_algorithm->levelCanBeRefined(level_number)))
         {
-            gridding_algorithm->makeFinerLevel(patch_hierarchy, 0.0, 0.0, tag_buffer);
+            gridding_algorithm->
+                makeFinerLevel(patch_hierarchy, 0.0, 0.0, tag_buffer);
+
             done = !patch_hierarchy->finerLevelExists(level_number);
             ++level_number;
         }
 
-        // Create cell-centered data and extrapolate that data at physical
-        // boundaries to obtain ghost cell values.
-        VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
-        Pointer<VariableContext> context = var_db->getContext("CONTEXT");
-        Pointer<CellVariable<NDIM,double> > var = new CellVariable<NDIM,double>("v");
+        /*
+         * Create cell-centered data and extrapolate that data at physical
+         * boundaries to obtain ghost cell values.
+         */
+        hier::VariableDatabase<NDIM>* var_db =
+            hier::VariableDatabase<NDIM>::getDatabase();
+
         const int gcw = 4;
+        tbox::Pointer<hier::VariableContext> context = var_db->getContext("CONTEXT");
+        tbox::Pointer<pdat::CellVariable<NDIM,double> > var = new pdat::CellVariable<NDIM,double>("v");
         const int idx = var_db->registerVariableAndContext(var, context, gcw);
+
         for (int ln = 0; ln <= patch_hierarchy->getFinestLevelNumber(); ++ln)
         {
-            Pointer<PatchLevel<NDIM> > level = patch_hierarchy->getPatchLevel(ln);
+            tbox::Pointer<hier::PatchLevel<NDIM> > level = patch_hierarchy->getPatchLevel(ln);
             level->allocatePatchData(idx);
-            for (PatchLevel<NDIM>::Iterator p(level); p; p++)
+
+            for (hier::PatchLevel<NDIM>::Iterator p(level); p; p++)
             {
-                Pointer<Patch<NDIM> > patch = level->getPatch(p());
-                const Box<NDIM>& patch_box = patch->getBox();
-                const Index<NDIM>& patch_lower = patch_box.lower();
-                Pointer<CellData<NDIM,double> > data = patch->getPatchData(idx);
-                for (Box<NDIM>::Iterator b(patch_box); b; b++)
+                tbox::Pointer<hier::Patch<NDIM> > patch = level->getPatch(p());
+                const hier::Box<NDIM>& patch_box = patch->getBox();
+                const hier::Index<NDIM>& patch_lower = patch_box.lower();
+                tbox::Pointer<pdat::CellData<NDIM,double> > data = patch->getPatchData(idx);
+                for (hier::Box<NDIM>::Iterator b(patch_box); b; b++)
                 {
-                    const Index<NDIM>& i = b();
+                    const hier::Index<NDIM>& i = b();
                     (*data)(i) = 0;
-                    for (unsigned int d = 0; d < NDIM; ++d)
+                    for (int d = 0; d < NDIM; ++d)
                     {
                         (*data)(i) += 4*(d+1)*(d+1)*i(d);
                     }
                 }
 
-                pout << "level number = " << ln << "\n";
-                pout << "patch_box = " << patch_box << "\n";
-                pout << "\n";
+                tbox::pout << "level number = " << ln << "\n";
+                tbox::pout << "patch_box = " << patch_box << "\n";
+                tbox::pout << "\n";
 
-                plog << "interior data:\n";
+                tbox::plog << "interior data:\n";
                 data->print(data->getBox());
-                plog << "\n";
+                tbox::plog << "\n";
 
                 CartExtrapPhysBdryOp constant_fill_op(idx, "CONSTANT");
                 constant_fill_op.setPhysicalBoundaryConditions(
                     *patch, 0.0, data->getGhostCellWidth());
-                plog << "constant extrapolated ghost data:\n";
+                tbox::plog << "constant extrapolated ghost data:\n";
                 data->print(data->getGhostBox());
-                plog << "\n";
+                tbox::plog << "\n";
 
                 CartExtrapPhysBdryOp linear_fill_op(idx, "LINEAR");
                 linear_fill_op.setPhysicalBoundaryConditions(
                     *patch, 0.0, data->getGhostCellWidth());
-                plog << "linear extrapolated ghost data:\n";
+                tbox::plog << "linear extrapolated ghost data:\n";
                 data->print(data->getGhostBox());
-                plog << "\n";
+                tbox::plog << "\n";
 
                 bool warning = false;
-                for (Box<NDIM>::Iterator b(data->getGhostBox()); b; b++)
+                for (hier::Box<NDIM>::Iterator b(data->getGhostBox()); b; b++)
                 {
-                    const Index<NDIM>& i = b();
+                    const hier::Index<NDIM>& i = b();
                     double val = 0;
                     for (int d = 0; d < NDIM; ++d)
                     {
                         val += 4*(d+1)*(d+1)*i(d);
                     }
 
-                    if (!MathUtilities<double>::equalEps(val,(*data)(i)))
+                    if (!tbox::MathUtilities<double>::equalEps(val,(*data)(i)))
                     {
                         warning = true;
-                        pout << "warning: value at location " << i << " is not correct\n";
-                        pout << "  expected value = " << val << "   computed value = " << (*data)(i) << "\n";
+                        tbox::pout << "warning: value at location " << i << " is not correct\n";
+                        tbox::pout << "  expected value = " << val << "   computed value = " << (*data)(i) << "\n";
                     }
                 }
 
                 if (!warning)
                 {
-                    pout << "linearly extrapolated boundary data appears to be correct.\n";
+                    tbox::pout << "linearly extrapolated boundary data appears to be correct.\n";
                 }
                 else
                 {
-                    pout << "possible errors encountered in linearly extrapolated boundary data.\n";
+                    tbox::pout << "possible errors encountered in linearly extrapolated boundary data.\n";
                 }
 
-                pout << "checking robin bc handling . . .\n";
+                tbox::pout << "checking robin bc handling . . .\n";
 
-                Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
+                tbox::Pointer<geom::CartesianPatchGeometry<NDIM> > pgeom =
+                    patch->getPatchGeometry();
                 const double* const xLower = pgeom->getXLower();
                 const double* const ref_xUpper = grid_geometry->getXUpper();
                 const double* const dx = pgeom->getDx();
                 const double shift = 3.14159;
-                for (Box<NDIM>::Iterator b(patch_box); b; b++)
+                for (hier::Box<NDIM>::Iterator b(patch_box); b; b++)
                 {
-                    const Index<NDIM>& i = b();
-                    TinyVector<double,NDIM> X;
-                    for (unsigned int d = 0; d < NDIM; ++d)
+                    const hier::Index<NDIM>& i = b();
+                    double X[NDIM];
+                    for (int d = 0; d < NDIM; ++d)
                     {
-                        X[d] = xLower[d] + dx[d]*(static_cast<double>(i(d)-patch_lower(d))+0.5);
+                        X[d] = xLower[d] + dx[d]*(double(i(d)-patch_lower(d))+0.5);
                     }
                     (*data)(i) = 2.0*X[NDIM-1] + shift;
                 }
 
-                plog << "interior data:\n";
+                tbox::plog << "interior data:\n";
                 data->print(data->getBox());
-                plog << "\n";
+                tbox::plog << "\n";
 
-                LocationIndexRobinBcCoefs<NDIM> dirichlet_bc_coef("dirichlet_bc_coef", NULL);
-                for (unsigned int d = 0; d < NDIM-1; ++d)
+                solv::LocationIndexRobinBcCoefs<NDIM> dirichlet_bc_coef("dirichlet_bc_coef", NULL);
+                for (int d = 0; d < NDIM-1; ++d)
                 {
                     dirichlet_bc_coef.setBoundarySlope(2*d  ,0.0);
                     dirichlet_bc_coef.setBoundarySlope(2*d+1,0.0);
@@ -209,40 +304,40 @@ main(
                 CartCellRobinPhysBdryOp dirichlet_bc_fill_op(idx, &dirichlet_bc_coef);
                 dirichlet_bc_fill_op.setPhysicalBoundaryConditions(
                     *patch, 0.0, data->getGhostCellWidth());
-                plog << "extrapolated ghost data:\n";
+                tbox::plog << "extrapolated ghost data:\n";
                 data->print(data->getGhostBox());
-                plog << "\n";
+                tbox::plog << "\n";
 
                 warning = false;
-                for (Box<NDIM>::Iterator b(data->getGhostBox()); b; b++)
+                for (hier::Box<NDIM>::Iterator b(data->getGhostBox()); b; b++)
                 {
-                    const Index<NDIM>& i = b();
-                    TinyVector<double,NDIM> X;
-                    for (unsigned int d = 0; d < NDIM; ++d)
+                    const hier::Index<NDIM>& i = b();
+                    double X[NDIM];
+                    for (int d = 0; d < NDIM; ++d)
                     {
-                        X[d] = xLower[d] + dx[d]*(static_cast<double>(i(d)-patch_lower(d))+0.5);
+                        X[d] = xLower[d] + dx[d]*(double(i(d)-patch_lower(d))+0.5);
                     }
                     double val = 2.0*X[NDIM-1] + shift;
 
-                    if (!MathUtilities<double>::equalEps(val,(*data)(i)))
+                    if (!tbox::MathUtilities<double>::equalEps(val,(*data)(i)))
                     {
                         warning = true;
-                        pout << "warning: value at location " << i << " is not correct\n";
-                        pout << "  expected value = " << val << "   computed value = " << (*data)(i) << "\n";
+                        tbox::pout << "warning: value at location " << i << " is not correct\n";
+                        tbox::pout << "  expected value = " << val << "   computed value = " << (*data)(i) << "\n";
                     }
                 }
 
                 if (!warning)
                 {
-                    pout << "dirichlet boundary data appears to be correct.\n";
+                    tbox::pout << "dirichlet boundary data appears to be correct.\n";
                 }
                 else
                 {
-                    pout << "possible errors encountered in extrapolated dirichlet boundary data.\n";
+                    tbox::pout << "possible errors encountered in extrapolated dirichlet boundary data.\n";
                 }
 
-                LocationIndexRobinBcCoefs<NDIM> neumann_bc_coef("neumann_bc_coef", NULL);
-                for (unsigned int d = 0; d < NDIM-1; ++d)
+                solv::LocationIndexRobinBcCoefs<NDIM> neumann_bc_coef("neumann_bc_coef", NULL);
+                for (int d = 0; d < NDIM-1; ++d)
                 {
                     neumann_bc_coef.setBoundarySlope(2*d  ,0.0);
                     neumann_bc_coef.setBoundarySlope(2*d+1,0.0);
@@ -253,43 +348,44 @@ main(
                 CartCellRobinPhysBdryOp neumann_bc_fill_op(idx, &neumann_bc_coef);
                 neumann_bc_fill_op.setPhysicalBoundaryConditions(
                     *patch, 0.0, data->getGhostCellWidth());
-                plog << "extrapolated ghost data:\n";
+                tbox::plog << "extrapolated ghost data:\n";
                 data->print(data->getGhostBox());
-                plog << "\n";
+                tbox::plog << "\n";
 
                 warning = false;
-                for (Box<NDIM>::Iterator b(data->getGhostBox()); b; b++)
+                for (hier::Box<NDIM>::Iterator b(data->getGhostBox()); b; b++)
                 {
-                    const Index<NDIM>& i = b();
-                    TinyVector<double,NDIM> X;
-                    for (unsigned int d = 0; d < NDIM; ++d)
+                    const hier::Index<NDIM>& i = b();
+                    double X[NDIM];
+                    for (int d = 0; d < NDIM; ++d)
                     {
-                        X[d] = xLower[d] + dx[d]*(static_cast<double>(i(d)-patch_lower(d))+0.5);
+                        X[d] = xLower[d] + dx[d]*(double(i(d)-patch_lower(d))+0.5);
                     }
                     double val = 2.0*X[NDIM-1] + shift;
 
-                    if (!MathUtilities<double>::equalEps(val,(*data)(i)))
+                    if (!tbox::MathUtilities<double>::equalEps(val,(*data)(i)))
                     {
                         warning = true;
-                        pout << "warning: value at location " << i << " is not correct\n";
-                        pout << "  expected value = " << val << "   computed value = " << (*data)(i) << "\n";
+                        tbox::pout << "warning: value at location " << i << " is not correct\n";
+                        tbox::pout << "  expected value = " << val << "   computed value = " << (*data)(i) << "\n";
                     }
                 }
 
                 if (!warning)
                 {
-                    pout << "neumann boundary data appears to be correct.\n";
+                    tbox::pout << "neumann boundary data appears to be correct.\n";
                 }
                 else
                 {
-                    pout << "possible errors encountered in extrapolated neumann boundary data.\n";
+                    tbox::pout << "possible errors encountered in extrapolated neumann boundary data.\n";
                 }
             }
         }
 
-    }// cleanup dynamically allocated objects prior to shutdown
+    }// ensure all smart Pointers are properly deleted
 
-    SAMRAIManager::shutdown();
+    tbox::SAMRAIManager::shutdown();
     PetscFinalize();
+
     return 0;
 }// main

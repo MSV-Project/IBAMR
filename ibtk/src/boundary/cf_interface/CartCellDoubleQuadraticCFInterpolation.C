@@ -34,7 +34,6 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
-
 #ifndef included_IBTK_config
 #include <IBTK_config.h>
 #define included_IBTK_config
@@ -53,20 +52,17 @@
 #include <CartesianPatchGeometry.h>
 #include <CellData.h>
 
-// BLITZ++ INCLUDES
-#include <blitz/tinyvec.h>
-
 // C++ STDLIB INCLUDES
 #include <vector>
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
-#define CC_QUAD_TANGENTIAL_INTERPOLATION_FC FC_GLOBAL(ccquadtangentialinterpolation2d,CCQUADTANGENTIALINTERPOLATION2D)
-#define CC_QUAD_NORMAL_INTERPOLATION_FC FC_GLOBAL(ccquadnormalinterpolation2d,CCQUADNORMALINTERPOLATION2D)
+#define CC_QUAD_TANGENTIAL_INTERPOLATION_FC FC_FUNC(ccquadtangentialinterpolation2d,CCQUADTANGENTIALINTERPOLATION2D)
+#define CC_QUAD_NORMAL_INTERPOLATION_FC FC_FUNC(ccquadnormalinterpolation2d,CCQUADNORMALINTERPOLATION2D)
 #endif
 #if (NDIM == 3)
-#define CC_QUAD_TANGENTIAL_INTERPOLATION_FC FC_GLOBAL(ccquadtangentialinterpolation3d,CCQUADTANGENTIALINTERPOLATION3D)
-#define CC_QUAD_NORMAL_INTERPOLATION_FC FC_GLOBAL(ccquadnormalinterpolation3d,CCQUADNORMALINTERPOLATION3D)
+#define CC_QUAD_TANGENTIAL_INTERPOLATION_FC FC_FUNC(ccquadtangentialinterpolation3d,CCQUADTANGENTIALINTERPOLATION3D)
+#define CC_QUAD_NORMAL_INTERPOLATION_FC FC_FUNC(ccquadnormalinterpolation3d,CCQUADNORMALINTERPOLATION3D)
 #endif
 
 // Function interfaces
@@ -139,7 +135,7 @@ coarsen(
     const IntVector<NDIM>& ratio)
 {
     Index<NDIM> coarse_index;
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         coarse_index(d) = coarsen(index(d),ratio(d));
     }
@@ -163,7 +159,7 @@ bdry_boxes_contain_index(
 inline bool
 is_corner_point(
     const Index<NDIM>& i,
-    const unsigned int bdry_normal_axis,
+    const int bdry_normal_axis,
     const bool is_lower,
     const Box<NDIM>& patch_box,
     const std::vector<const BoundaryBox<NDIM>*>& patch_cf_bdry_boxes,
@@ -184,7 +180,7 @@ is_corner_point(
     // Check to see if the adjacent points in the tangential directions are
     // contained in the coarse-fine interface.  If not, the point is a corner
     // point.
-    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    for (int axis = 0; axis < NDIM; ++axis)
     {
         if (axis != bdry_normal_axis)
         {
@@ -227,9 +223,9 @@ CartCellDoubleQuadraticCFInterpolation::~CartCellDoubleQuadraticCFInterpolation(
 
 void
 CartCellDoubleQuadraticCFInterpolation::setPhysicalBoundaryConditions(
-    Patch<NDIM>& /*patch*/,
-    const double /*fill_time*/,
-    const IntVector<NDIM>& /*ghost_width_to_fill*/)
+    Patch<NDIM>& patch,
+    const double fill_time,
+    const IntVector<NDIM>& ghost_width_to_fill)
 {
     // intentionally blank
     return;
@@ -246,10 +242,10 @@ CartCellDoubleQuadraticCFInterpolation::getRefineOpStencilWidth() const
 
 void
 CartCellDoubleQuadraticCFInterpolation::preprocessRefine(
-    Patch<NDIM>& /*fine*/,
-    const Patch<NDIM>& /*coarse*/,
-    const Box<NDIM>& /*fine_box*/,
-    const IntVector<NDIM>& /*ratio*/)
+    Patch<NDIM>& fine,
+    const Patch<NDIM>& coarse,
+    const Box<NDIM>& fine_box,
+    const IntVector<NDIM>& ratio)
 {
     // intentionally blank
     return;
@@ -293,11 +289,11 @@ CartCellDoubleQuadraticCFInterpolation::postprocessRefine(
     // Use the appropriate version of the coarse-fine interpolation code.
     if (USING_EXPENSIVE_CF_INTERPOLATION)
     {
-        postprocessRefine_expensive(fine, coarse, ratio);
+        postprocessRefine_expensive(fine, coarse, fine_box, ratio);
     }
     else
     {
-        postprocessRefine_optimized(fine, coarse, ratio);
+        postprocessRefine_optimized(fine, coarse, fine_box, ratio);
     }
     return;
 }// postprocessRefine
@@ -435,7 +431,7 @@ CartCellDoubleQuadraticCFInterpolation::computeNormalExtension(
     }
     else
     {
-        computeNormalExtension_optimized(patch, ratio);
+        computeNormalExtension_optimized(patch, ratio, ghost_width_to_fill);
     }
     return;
 }// computeNormalExtension
@@ -448,6 +444,7 @@ void
 CartCellDoubleQuadraticCFInterpolation::postprocessRefine_expensive(
     Patch<NDIM>& fine,
     const Patch<NDIM>& coarse,
+    const Box<NDIM>& fine_box,
     const IntVector<NDIM>& ratio)
 {
     // Get the cf boundary boxes.
@@ -531,8 +528,8 @@ CartCellDoubleQuadraticCFInterpolation::postprocessRefine_expensive(
 
             // NOTE: The following values are only used for co-dimension 1
             // boundary boxes.
-            const unsigned int location_index   = bdry_box.getLocationIndex();
-            const unsigned int bdry_normal_axis = location_index/2;
+            const int location_index   = bdry_box.getLocationIndex();
+            const int bdry_normal_axis = location_index/2;
             const bool is_lower        = location_index%2 == 0;
 
             for (Box<NDIM>::Iterator b(bc_fill_box); b; b++)
@@ -552,21 +549,21 @@ CartCellDoubleQuadraticCFInterpolation::postprocessRefine_expensive(
                 }
 
                 // Determine the interpolation degrees and weights.
-                blitz::TinyVector<int,NDIM> interp_degree;
-                for (unsigned int axis = 0; axis < NDIM; ++axis)
+                std::vector<int> interp_degree(NDIM);
+                for (int axis = 0; axis < NDIM; ++axis)
                 {
                     interp_degree[axis] = stencil_box_crse.upper()(axis) - stencil_box_crse.lower()(axis);
                 }
-                blitz::TinyVector<std::vector<double>,NDIM> wgts;
-                for (unsigned int axis = 0; axis < NDIM; ++axis)
+                std::vector<std::vector<double> > wgts(NDIM);
+                for (int axis = 0; axis < NDIM; ++axis)
                 {
                     const int& degree = interp_degree[axis];
-                    const double X = XLower_fine[axis] + dx_fine[axis]*(static_cast<double>(i_fine(axis)-patch_lower_fine(axis))+0.5);
+                    const double X = XLower_fine[axis] + dx_fine[axis]*(double(i_fine(axis)-patch_lower_fine(axis))+0.5);
                     std::vector<double> X_crse(degree+1,0.0);
                     for (int i_crse = stencil_box_crse.lower()(axis), k = 0;
                          i_crse <= stencil_box_crse.upper()(axis); ++i_crse, ++k)
                     {
-                        X_crse[k] = XLower_crse[axis] + dx_crse[axis]*(static_cast<double>(i_crse-patch_lower_crse(axis))+0.5);
+                        X_crse[k] = XLower_crse[axis] + dx_crse[axis]*(double(i_crse-patch_lower_crse(axis))+0.5);
                     }
                     wgts[axis].resize(degree+1,0.0);
                     switch (degree)
@@ -631,6 +628,7 @@ void
 CartCellDoubleQuadraticCFInterpolation::postprocessRefine_optimized(
     Patch<NDIM>& fine,
     const Patch<NDIM>& coarse,
+    const Box<NDIM>& fine_box,
     const IntVector<NDIM>& ratio)
 {
     // Get the co-dimension 1 cf boundary boxes.
@@ -674,7 +672,7 @@ CartCellDoubleQuadraticCFInterpolation::postprocessRefine_optimized(
         {
             const BoundaryBox<NDIM>& bdry_box = cf_bdry_codim1_boxes[k];
             const Box<NDIM> bc_fill_box = pgeom_fine->getBoundaryFillBox(bdry_box, patch_box_fine, ghost_width_to_fill);
-            const unsigned int location_index = bdry_box.getLocationIndex();
+            const int location_index = bdry_box.getLocationIndex();
             for (int depth = 0; depth < data_depth; ++depth)
             {
                 double* const U_fine = fdata->getPointer(depth);
@@ -769,8 +767,8 @@ CartCellDoubleQuadraticCFInterpolation::computeNormalExtension_expensive(
         {
             const BoundaryBox<NDIM>& bdry_box = cf_bdry_codim1_boxes[k];
             const Box<NDIM> bc_fill_box = pgeom->getBoundaryFillBox(bdry_box, patch_box, ghost_width_to_fill);
-            const unsigned int location_index   = bdry_box.getLocationIndex();
-            const unsigned int bdry_normal_axis = location_index/2;
+            const int location_index   = bdry_box.getLocationIndex();
+            const int bdry_normal_axis = location_index/2;
             const bool is_lower        = location_index%2 == 0;
             for (Box<NDIM>::Iterator b(bc_fill_box); b; b++)
             {
@@ -789,12 +787,12 @@ CartCellDoubleQuadraticCFInterpolation::computeNormalExtension_expensive(
                         i_intr1(bdry_normal_axis) = patch_upper(bdry_normal_axis)-1;
                     }
 
-                    const double r = static_cast<double>(ratio(bdry_normal_axis));
+                    const double r = double(ratio(bdry_normal_axis));
                     const int i = (is_lower
                                    ? i_bdry(bdry_normal_axis) - patch_lower(bdry_normal_axis)
                                    : i_bdry(bdry_normal_axis) - patch_upper(bdry_normal_axis));
 
-                    const double X  = (is_lower ? static_cast<double>(i)+0.5 : static_cast<double>(i)-0.5);  // the position of the c-f boundary    cell
+                    const double X  = (is_lower ? double(i)+0.5 : double(i)-0.5);  // the position of the c-f boundary    cell
                     const double X0 = (is_lower ? +0.5          : -0.5         );  // the position of the first  interior cell
                     const double X1 = (is_lower ? +1.5          : -1.5         );  // the position of the second interior cell
                     const double X2 = (is_lower ? -0.5*r        : +0.5*r       );  // the position of the coarse-grid     cell
@@ -817,7 +815,8 @@ CartCellDoubleQuadraticCFInterpolation::computeNormalExtension_expensive(
 void
 CartCellDoubleQuadraticCFInterpolation::computeNormalExtension_optimized(
     Patch<NDIM>& patch,
-    const IntVector<NDIM>& ratio)
+    const IntVector<NDIM>& ratio,
+    const IntVector<NDIM>& ghost_width_to_fill)
 {
     // Get the co-dimension 1 cf boundary boxes.
     const int patch_num = patch.getPatchNumber();
@@ -854,7 +853,7 @@ CartCellDoubleQuadraticCFInterpolation::computeNormalExtension_optimized(
         {
             const BoundaryBox<NDIM>& bdry_box = cf_bdry_codim1_boxes[k];
             const Box<NDIM> bc_fill_box = pgeom->getBoundaryFillBox(bdry_box, patch_box, ghost_width_to_fill);
-            const unsigned int location_index = bdry_box.getLocationIndex();
+            const int location_index = bdry_box.getLocationIndex();
             for (int depth = 0; depth < data_depth; ++depth)
             {
                 double* const U = data->getPointer(depth);
@@ -876,5 +875,10 @@ CartCellDoubleQuadraticCFInterpolation::computeNormalExtension_optimized(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <tbox/Pointer.C>
+template class Pointer<IBTK::CartCellDoubleQuadraticCFInterpolation>;
 
 //////////////////////////////////////////////////////////////////////////////

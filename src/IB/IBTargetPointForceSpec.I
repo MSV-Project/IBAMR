@@ -32,9 +32,6 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
-// IBTK INCLUDES
-#include <ibtk/StreamableManager.h>
-
 // SAMRAI INCLUDES
 #include <tbox/PIO.h>
 #include <tbox/Utilities.h>
@@ -48,7 +45,7 @@ namespace IBAMR
 inline bool
 IBTargetPointForceSpec::getIsRegisteredWithStreamableManager()
 {
-    return (STREAMABLE_CLASS_ID != IBTK::StreamableManager::getUnregisteredID());
+    return s_registered_factory;
 }// getIsRegisteredWithStreamableManager
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
@@ -56,13 +53,10 @@ IBTargetPointForceSpec::getIsRegisteredWithStreamableManager()
 inline
 IBTargetPointForceSpec::IBTargetPointForceSpec(
     const int master_idx,
-    const double kappa_target,
-    const double eta_target,
-    const blitz::TinyVector<double,NDIM>& X_target
-#if ENABLE_SUBDOMAIN_INDICES
-    ,const int subdomain_idx
-#endif
-                                               )
+    const double& kappa_target,
+    const double& eta_target,
+    const std::vector<double>& X_target,
+    const int subdomain_idx)
     : d_master_idx(master_idx),
       d_kappa_target(kappa_target),
       d_eta_target(eta_target),
@@ -72,13 +66,14 @@ IBTargetPointForceSpec::IBTargetPointForceSpec(
 #endif
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    if (!getIsRegisteredWithStreamableManager())
+    TBOX_ASSERT(NDIM == int(d_X_target.size()));
+#endif
+    if (!s_registered_factory)
     {
         TBOX_ERROR("IBTargetPointForceSpec::IBTargetPointForceSpec():\n"
                    << "  must call IBTargetPointForceSpec::registerWithStreamableManager() before\n"
                    << "  creating any IBTargetPointForceSpec objects.\n");
     }
-#endif
     return;
 }// IBTargetPointForceSpec
 
@@ -125,36 +120,44 @@ IBTargetPointForceSpec::getDamping()
     return d_eta_target;
 }// getDamping
 
-inline const blitz::TinyVector<double,NDIM>&
+inline const std::vector<double>&
 IBTargetPointForceSpec::getTargetPointPosition() const
 {
     return d_X_target;
 }// getTargetPointPosition
 
-inline blitz::TinyVector<double,NDIM>&
+inline std::vector<double>&
 IBTargetPointForceSpec::getTargetPointPosition()
 {
     return d_X_target;
 }// getTargetPointPosition
 
-#if ENABLE_SUBDOMAIN_INDICES
 inline const int&
 IBTargetPointForceSpec::getSubdomainIndex() const
 {
+#if ENABLE_SUBDOMAIN_INDICES
     return d_subdomain_idx;
+#else
+    static int dummy_idx = -1;
+    return dummy_idx;
+#endif
 }// getSubdomainIndex
 
 inline int&
 IBTargetPointForceSpec::getSubdomainIndex()
 {
+#if ENABLE_SUBDOMAIN_INDICES
     return d_subdomain_idx;
-}// getSubdomainIndex
+#else
+    static int dummy_idx = -1;
+    return dummy_idx;
 #endif
+}// getSubdomainIndex
 
 inline int
 IBTargetPointForceSpec::getStreamableClassID() const
 {
-    return STREAMABLE_CLASS_ID;
+    return s_class_id;
 }// getStreamableClassID
 
 inline size_t
@@ -172,10 +175,13 @@ inline void
 IBTargetPointForceSpec::packStream(
     SAMRAI::tbox::AbstractStream& stream)
 {
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(NDIM == int(d_X_target.size()));
+#endif
     stream.pack(&d_master_idx,1);
     stream.pack(&d_kappa_target,1);
     stream.pack(&d_eta_target,1);
-    stream.pack(d_X_target.data(),NDIM);
+    stream.pack(&d_X_target[0],NDIM);
 #if ENABLE_SUBDOMAIN_INDICES
     stream.pack(&d_subdomain_idx,1);
 #endif

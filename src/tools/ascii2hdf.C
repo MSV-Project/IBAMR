@@ -51,8 +51,6 @@
 #include <hdf5_hl.h>
 #endif
 
-#include <blitz/array.h>
-
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 using namespace std;
@@ -224,7 +222,7 @@ initializeVertexData(
     {
         if (k%10 == 0 || k == num_vertex-1)
         {
-            cout << "\r" << setw(3) << static_cast<int>(100.0*static_cast<double>(k)/static_cast<double>(num_vertex-1)) << "% complete";
+            cout << "\r" << setw(3) << int(100.0*double(k)/double(num_vertex-1)) << "% complete";
             cout.flush();
         }
 
@@ -238,7 +236,7 @@ initializeVertexData(
         {
             line_string = discard_comments(line_string);
             istringstream line_stream(line_string);
-            for (unsigned int d = 0; d < NDIM; ++d)
+            for (int d = 0; d < NDIM; ++d)
             {
                 if (!(line_stream >> posn_buf[(NDIM*(k%BUFFER_SIZE)+d)]))
                 {
@@ -384,7 +382,7 @@ initializeSpringData(
     {
         if (k%10 == 0 || k == num_spring-1)
         {
-            cout << "\r" << setw(3) << static_cast<int>(100.0*static_cast<double>(k)/static_cast<double>(num_spring-1)) << "% complete";
+            cout << "\r" << setw(3) << int(100.0*double(k)/double(num_spring-1)) << "% complete";
             cout.flush();
         }
 
@@ -594,7 +592,7 @@ initializeBeamData(
     hid_t bend_rigidity_dataset = H5Dcreate1(file_id, beam_bend_rigidity_dset_name.c_str(), H5T_NATIVE_DOUBLE, filespace, plist);
 
     hid_t rest_curvature_dataset[NDIM];
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         ostringstream os;
         os << "_" << d;
@@ -612,13 +610,13 @@ initializeBeamData(
     {
         if (k%10 == 0 || k == num_beam-1)
         {
-            cout << "\r" << setw(3) << static_cast<int>(100.0*static_cast<double>(k)/static_cast<double>(num_beam-1)) << "% complete";
+            cout << "\r" << setw(3) << int(100.0*double(k)/double(num_beam-1)) << "% complete";
             cout.flush();
         }
 
         int node1_idx, node2_idx, node3_idx;
         double bend_rigidity;
-        blitz::TinyVector<double,NDIM> rest_curvature;
+        double rest_curvature[NDIM];
         if (!getline(file_stream, line_string))
         {
             cerr << "error: premature end to input file encountered before line " << k+2 << " of file " << beam_filename << "\n";
@@ -676,7 +674,7 @@ initializeBeamData(
                 abort();
             }
 
-            for (unsigned int d = 0; d < NDIM; ++d)
+            for (int d = 0; d < NDIM; ++d)
             {
                 if (!(line_stream >> rest_curvature[d]))
                 {
@@ -687,7 +685,7 @@ initializeBeamData(
                     }
                     else
                     {
-                        for (unsigned int d = 0; d < NDIM; ++d)
+                        for (int d = 0; d < NDIM; ++d)
                         {
                             rest_curvature[d] = 0.0;
                         }
@@ -701,7 +699,7 @@ initializeBeamData(
             node2_idx_buf    [k%BUFFER_SIZE] = node2_idx;
             node3_idx_buf    [k%BUFFER_SIZE] = node3_idx;
             bend_rigidity_buf[k%BUFFER_SIZE] = bend_rigidity;
-            for (unsigned int d = 0; d < NDIM; ++d)
+            for (int d = 0; d < NDIM; ++d)
             {
                 rest_curvature_buf[d][k%BUFFER_SIZE] = rest_curvature[d];
             }
@@ -737,7 +735,7 @@ initializeBeamData(
                 H5Dwrite(node2_idx_dataset    , H5T_NATIVE_INT   , memspace, filespace, H5P_DEFAULT, &node2_idx_buf    [0]);
                 H5Dwrite(node3_idx_dataset    , H5T_NATIVE_INT   , memspace, filespace, H5P_DEFAULT, &node3_idx_buf    [0]);
                 H5Dwrite(bend_rigidity_dataset, H5T_NATIVE_DOUBLE, memspace, filespace, H5P_DEFAULT, &bend_rigidity_buf[0]);
-                for (unsigned int d = 0; d < NDIM; ++d)
+                for (int d = 0; d < NDIM; ++d)
                 {
                     H5Dwrite(rest_curvature_dataset[d], H5T_NATIVE_DOUBLE, memspace, filespace, H5P_DEFAULT, &rest_curvature_buf[d][0]);
                 }
@@ -759,7 +757,7 @@ initializeBeamData(
     H5Dclose(node2_idx_dataset);
     H5Dclose(node3_idx_dataset);
     H5Dclose(bend_rigidity_dataset);
-    for (unsigned int d = 0; d < NDIM; ++d)
+    for (int d = 0; d < NDIM; ++d)
     {
         H5Dclose(rest_curvature_dataset[d]);
     }
@@ -852,7 +850,7 @@ initializeTargetPointData(
     {
         if (k%10 == 0 || k == num_target_point-1)
         {
-            cout << "\r" << setw(3) << static_cast<int>(100.0*static_cast<double>(k)/static_cast<double>(num_target_point-1)) << "% complete";
+            cout << "\r" << setw(3) << int(100.0*double(k)/double(num_target_point-1)) << "% complete";
             cout.flush();
         }
 
@@ -1043,7 +1041,7 @@ initializeMassData(
     {
         if (k%10 == 0 || k == num_mass_point-1)
         {
-            cout << "\r" << setw(3) << static_cast<int>(100.0*static_cast<double>(k)/static_cast<double>(num_mass_point-1)) << "% complete";
+            cout << "\r" << setw(3) << int(100.0*double(k)/double(num_mass_point-1)) << "% complete";
             cout.flush();
         }
 
@@ -1297,7 +1295,7 @@ initializeInstrumentationData(
     {
         if (k%10 == 0 || k == num_inst_point-1)
         {
-            cout << "\r" << setw(3) << static_cast<int>(100.0*static_cast<double>(k)/static_cast<double>(num_inst_point-1)) << "% complete";
+            cout << "\r" << setw(3) << int(100.0*double(k)/double(num_inst_point-1)) << "% complete";
             cout.flush();
         }
 
@@ -1335,7 +1333,7 @@ initializeInstrumentationData(
                 abort();
             }
 
-            if (meter_idx >= static_cast<int>(encountered_instrument_idx.size()))
+            if (meter_idx >= int(encountered_instrument_idx.size()))
             {
                 encountered_instrument_idx.resize(meter_idx+1,false);
             }
@@ -1353,7 +1351,7 @@ initializeInstrumentationData(
                 abort();
             }
 
-            if (meter_node_idx >= static_cast<int>(encountered_node_idx[meter_idx].size()))
+            if (meter_node_idx >= int(encountered_node_idx[meter_idx].size()))
             {
                 encountered_node_idx[meter_idx].resize(meter_node_idx+1,false);
             }
@@ -1426,7 +1424,7 @@ initializeInstrumentationData(
         }
     }
 
-    if (static_cast<int>(encountered_instrument_idx.size()) != num_inst)
+    if (int(encountered_instrument_idx.size()) != num_inst)
     {
         cerr << "error: not all anticipated instrument indices were found in input file " << inst_filename
              << "       expected to find " << num_inst << " distinct meter indices in input file\n";
@@ -1456,5 +1454,7 @@ initializeInstrumentationData(
 /////////////////////////////// PRIVATE //////////////////////////////////////
 
 /////////////////////////////// NAMESPACE ////////////////////////////////////
+
+/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
 
 //////////////////////////////////////////////////////////////////////////////

@@ -53,7 +53,7 @@ namespace IBTK
  * "synchronize" face-centered values defined at patch boundaries.
  */
 class FaceDataSynchronization
-    : public SAMRAI::tbox::DescribedClass
+    : public virtual SAMRAI::tbox::DescribedClass
 {
 public:
     /*!
@@ -71,7 +71,7 @@ public:
          */
         inline
         SynchronizationTransactionComponent(
-            int data_idx=-1,
+            const int data_idx=-1,
             const std::string& coarsen_op_name="NONE")
             : d_data_idx(data_idx),
               d_coarsen_op_name(coarsen_op_name)
@@ -138,6 +138,7 @@ public:
     /*!
      * \brief Destructor.
      */
+    virtual
     ~FaceDataSynchronization();
 
     /*!
@@ -184,7 +185,7 @@ public:
      */
     void
     synchronizeData(
-        double fill_time);
+        const double& fill_time);
 
 protected:
 

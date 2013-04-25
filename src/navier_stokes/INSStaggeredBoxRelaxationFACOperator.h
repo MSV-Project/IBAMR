@@ -39,7 +39,7 @@
 #include <petscksp.h>
 
 // IBAMR INCLUDES
-#include <ibamr/INSProblemCoefs.h>
+#include <ibamr/INSCoefs.h>
 
 // IBTK INCLUDES
 #include <ibtk/CartCellRobinPhysBdryOp.h>
@@ -86,7 +86,7 @@ namespace IBAMR
  \endverbatim
 */
 class INSStaggeredBoxRelaxationFACOperator
-    : public IBTK::FACPreconditionerStrategy
+    : public virtual IBTK::FACPreconditionerStrategy
 {
 public:
     /*!
@@ -94,11 +94,12 @@ public:
      */
     INSStaggeredBoxRelaxationFACOperator(
         const std::string& object_name,
-        SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db=NULL);
+        const SAMRAI::tbox::Pointer<SAMRAI::tbox::Database>& input_db=NULL);
 
     /*!
-     * \brief Destructor.
+     * \brief Virtual destructor.
      */
+    virtual
     ~INSStaggeredBoxRelaxationFACOperator();
 
     /*!
@@ -107,12 +108,13 @@ public:
     //\{
 
     /*!
-     * \brief Set the INSProblemCoefs object and timestep size used to specify
-     * the coefficients for the time-dependent incompressible Stokes operator.
+     * \brief Set the INSCoefs object and timestep size used to specify the
+     * coefficients for the time-dependent incompressible Stokes operator.
      */
     void
     setProblemCoefficients(
-        const INSProblemCoefs& problem_coefs);
+        const INSCoefs& problem_coefs,
+        const double dt);
 
     /*!
      * \brief Set the SAMRAI::solv::RobinBcCoefStrategy objects used to specify
@@ -128,7 +130,7 @@ public:
      */
     void
     setPhysicalBcCoefs(
-        const blitz::TinyVector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*,NDIM>& U_bc_coefs,
+        const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& U_bc_coefs,
         SAMRAI::solv::RobinBcCoefStrategy<NDIM>* P_bc_coef);
 
     /*!
@@ -137,8 +139,8 @@ public:
      */
     void
     setTimeInterval(
-        double current_time,
-        double new_time);
+        const double current_time,
+        const double new_time);
 
     //\}
 
@@ -169,8 +171,8 @@ public:
      */
     void
     setResetLevels(
-        int coarsest_ln,
-        int finest_ln);
+        const int coarsest_ln,
+        const int finest_ln);
 
     /*!
      * \brief Specify the ghost cell width for \em both the solution and the
@@ -270,7 +272,7 @@ public:
      *
      * \param preconditioner  Pointer to the FAC preconditioner that is using this concrete FAC strategy
      */
-    void
+    virtual void
     setFACPreconditioner(
         SAMRAI::tbox::ConstPointer<IBTK::FACPreconditioner> preconditioner);
 
@@ -282,7 +284,7 @@ public:
      * \param dst destination residual
      * \param dst_ln destination level number
      */
-    void
+    virtual void
     restrictResidual(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& src,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& dst,
@@ -296,7 +298,7 @@ public:
      * \param dst destination error vector
      * \param dst_ln destination level number of data transfer
      */
-    void
+    virtual void
     prolongError(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& src,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& dst,
@@ -310,7 +312,7 @@ public:
      * \param dst destination error vector
      * \param dst_ln destination level number of data transfer
      */
-    void
+    virtual void
     prolongErrorAndCorrect(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& src,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& dst,
@@ -326,7 +328,7 @@ public:
      * \param performing_pre_sweeps boolean value that is true when pre-smoothing sweeps are being performed
      * \param performing_post_sweeps boolean value that is true when post-smoothing sweeps are being performed
      */
-    void
+    virtual void
     smoothError(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& error,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& residual,
@@ -343,23 +345,27 @@ public:
      * \param residual residual vector
      * \param coarsest_ln coarsest level number
      */
-    bool
+    virtual bool
     solveCoarsestLevel(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& error,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& residual,
         int coarsest_ln);
 
     /*!
-     * \brief Compute the composite-grid residual on the specified range of
-     * levels of the patch hierarchy.
+     * \brief Compute composite grid residual on a single level.
+     *
+     * \param residual residual vector
+     * \param solution solution vector
+     * \param rhs source (right hand side) vector
+     * \param level_num level number
+     * \param error_equation_indicator flag stating whether u is an error vector or a solution vector
      */
-    void
+    virtual void
     computeResidual(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& residual,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& solution,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& rhs,
-        int coarsest_level_num,
-        int finest_level_num);
+        int level_num);
 
     /*!
      * \brief Compute hierarchy-dependent data.
@@ -375,7 +381,7 @@ public:
      * \param solution solution vector u
      * \param rhs right hand side vector f
      */
-    void
+    virtual void
     initializeOperatorState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& solution,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& rhs);
@@ -387,7 +393,7 @@ public:
      *
      * \see initializeOperatorState
      */
-    void
+    virtual void
     deallocateOperatorState();
 
     //\}
@@ -434,7 +440,7 @@ private:
     xeqScheduleProlongation(
         const std::pair<int,int>& dst_idxs,
         const std::pair<int,int>& src_idxs,
-        int dst_ln);
+        const int dst_ln);
 
     /*!
      * \brief Execute schedule for restricting solution or residual to the
@@ -444,7 +450,7 @@ private:
     xeqScheduleRestriction(
         const std::pair<int,int>& dst_idxs,
         const std::pair<int,int>& src_idxs,
-        int dst_ln);
+        const int dst_ln);
 
     /*!
      * \brief Execute schedule for filling ghosts on the specified level.
@@ -452,15 +458,15 @@ private:
     void
     xeqScheduleGhostFillNoCoarse(
         const std::pair<int,int>& dst_idxs,
-        int dst_ln);
+        const int dst_ln);
 
     /*!
      * \brief Execute schedule for synchronizing data on the specified level.
      */
     void
     xeqScheduleSideDataSynch(
-        int dst_idx,
-        int dst_ln);
+        const int dst_idx,
+        const int dst_ln);
 
     //\}
 
@@ -503,9 +509,9 @@ private:
     /*
      * Mappings from patch indices to patch operators.
      */
-    std::vector<std::vector<blitz::TinyVector<SAMRAI::hier::BoxList<NDIM>,NDIM> > > d_patch_side_bc_box_overlap;
+    std::vector<std::vector<std::vector<SAMRAI::hier::BoxList<NDIM> > > > d_patch_side_bc_box_overlap;
     std::vector<std::vector<SAMRAI::hier::BoxList<NDIM> > > d_patch_cell_bc_box_overlap;
-    std::vector<std::vector<blitz::TinyVector<std::map<int,SAMRAI::hier::Box<NDIM> >,NDIM> > > d_patch_side_smoother_bc_boxes;
+    std::vector<std::vector<std::vector<std::map<int,SAMRAI::hier::Box<NDIM> > > > > d_patch_side_smoother_bc_boxes;
     std::vector<std::vector<std::map<int,SAMRAI::hier::Box<NDIM> > > > d_patch_cell_smoother_bc_boxes;
 
     /*
@@ -541,7 +547,7 @@ private:
     /*
      * Problem coefficient specifications.
      */
-    INSProblemCoefs d_problem_coefs;
+    INSCoefs d_problem_coefs;
     double d_dt;
 
     /*
@@ -599,7 +605,7 @@ private:
 
     SAMRAI::tbox::Pointer<IBTK::CartSideRobinPhysBdryOp> d_U_bc_op;
     SAMRAI::solv::LocationIndexRobinBcCoefs<NDIM>* const d_default_U_bc_coef;
-    blitz::TinyVector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*,NDIM> d_U_bc_coefs;
+    std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*> d_U_bc_coefs;
 
     SAMRAI::tbox::Pointer<IBTK::CartCellRobinPhysBdryOp> d_P_bc_op;
     SAMRAI::solv::LocationIndexRobinBcCoefs<NDIM>* const d_default_P_bc_coef;

@@ -55,7 +55,7 @@ namespace IBTK
  * form \f$ F[x]=b \f$.
  */
 class NewtonKrylovSolver
-    : public SAMRAI::tbox::DescribedClass
+    : public virtual SAMRAI::tbox::DescribedClass
 {
 public:
     /*!
@@ -73,16 +73,6 @@ public:
      * \name Newton-Krylov solver functionality.
      */
     //\{
-
-    /*!
-     * \brief Set the current time interval (for a time-dependent solver).
-     *
-     * \note An empty default implementation is provided.
-     */
-    virtual void
-    setTimeInterval(
-        double current_time,
-        double new_time);
 
     /*!
      * \brief Set the nonlinear operator \f$F[x]\f$ used by the solver.
