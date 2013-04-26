@@ -1,7 +1,7 @@
 // Filename: PETScSAMRAIVectorReal.h
 // Created on 10 Nov 2004 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@ namespace IBTK
 /*!
  * \brief Class PETScSAMRAIVectorReal is a class for wrapping
  * SAMRAI::solv::SAMRAIVectorReal objects so that they may be used with the <A
- * HREF="http://www-unix.mcs.anl.gov/petsc">PETSc</A> solver package.
+ * HREF="http://www.mcs.anl.gov/petsc">PETSc</A> solver package.
  *
  * Class PETScSAMRAIVectorReal wraps a real-valued SAMRAI vector (see
  * SAMRAI::solv::SAMRAIVectorReal class) object so that it may be used with the

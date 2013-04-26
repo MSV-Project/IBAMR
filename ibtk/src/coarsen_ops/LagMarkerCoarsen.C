@@ -1,7 +1,7 @@
-// Filename: LagMarkerCoarsen.C
+// Filename: LMarkerCoarsen.C
 // Created on 30 Sep 2006 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "LagMarkerCoarsen.h"
+#include "LMarkerCoarsen.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
@@ -45,14 +45,14 @@
 #endif
 
 // IBTK INCLUDES
-#include <ibtk/LagMarker.h>
+#include <ibtk/LMarkerSet.h>
+#include <ibtk/LMarkerSetData.h>
+#include <ibtk/LMarkerSetVariable.h>
 #include <ibtk/namespaces.h>
 
 // SAMRAI INCLUDES
 #include <CartesianPatchGeometry.h>
 #include <CellGeometry.h>
-#include <IndexData.h>
-#include <IndexVariable.h>
 
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
@@ -60,7 +60,7 @@ namespace IBTK
 {
 /////////////////////////////// STATIC ///////////////////////////////////////
 
-const std::string LagMarkerCoarsen::s_op_name = "LAG_MARKER_COARSEN";
+const std::string LMarkerCoarsen::s_op_name = "LMARKER_COARSEN";
 
 namespace
 {
@@ -81,7 +81,7 @@ coarsen_index(
     const IntVector<NDIM>& ratio)
 {
     Index<NDIM> coarse_i;
-    for (int d = 0; d < NDIM; ++d)
+    for (unsigned int d = 0; d < NDIM; ++d)
     {
         coarse_i(d) = coarsen(i(d), ratio(d));
     }
@@ -91,47 +91,47 @@ coarsen_index(
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
-LagMarkerCoarsen::LagMarkerCoarsen()
+LMarkerCoarsen::LMarkerCoarsen()
 {
     // intentionally blank
     return;
-}// LagMarkerCoarsen
+}// LMarkerCoarsen
 
-LagMarkerCoarsen::~LagMarkerCoarsen()
+LMarkerCoarsen::~LMarkerCoarsen()
 {
     // intentionally blank
     return;
-}// ~LagMarkerCoarsen
+}// ~LMarkerCoarsen
 
 bool
-LagMarkerCoarsen::findCoarsenOperator(
+LMarkerCoarsen::findCoarsenOperator(
     const Pointer<Variable<NDIM> >& var,
     const std::string &op_name) const
 {
-    Pointer<IndexVariable<NDIM,LagMarker,CellGeometry<NDIM> > > mark_var = var;
-    return (!mark_var.isNull() && op_name == s_op_name);
+    Pointer<LMarkerSetVariable> mark_var = var;
+    return (mark_var && op_name == s_op_name);
 }// findCoarsenOperator
 
 const std::string&
-LagMarkerCoarsen::getOperatorName() const
+LMarkerCoarsen::getOperatorName() const
 {
     return s_op_name;
 }// getOperatorName
 
 int
-LagMarkerCoarsen::getOperatorPriority() const
+LMarkerCoarsen::getOperatorPriority() const
 {
     return COARSEN_OP_PRIORITY;
 }// getOperatorPriority
 
 IntVector<NDIM>
-LagMarkerCoarsen::getStencilWidth() const
+LMarkerCoarsen::getStencilWidth() const
 {
     return COARSEN_OP_STENCIL_WIDTH;
 }// getStencilWidth
 
 void
-LagMarkerCoarsen::coarsen(
+LMarkerCoarsen::coarsen(
     Patch<NDIM>& coarse,
     const Patch<NDIM>& fine,
     const int dst_component,
@@ -139,23 +139,23 @@ LagMarkerCoarsen::coarsen(
     const Box<NDIM>& coarse_box,
     const IntVector<NDIM>& ratio) const
 {
-    Pointer<IndexData<NDIM,LagMarker,CellGeometry<NDIM> > > dst_mark_data = coarse.getPatchData(dst_component);
-    Pointer<IndexData<NDIM,LagMarker,CellGeometry<NDIM> > > src_mark_data = fine  .getPatchData(src_component);
+    Pointer<LMarkerSetData> dst_mark_data = coarse.getPatchData(dst_component);
+    Pointer<LMarkerSetData> src_mark_data = fine  .getPatchData(src_component);
 
     const Box<NDIM> fine_box = Box<NDIM>::refine(coarse_box,ratio);
-    for (IndexData<NDIM,LagMarker,CellGeometry<NDIM> >::Iterator it(*src_mark_data); it; it++)
+    for (LMarkerSetData::SetIterator it(*src_mark_data); it; it++)
     {
         const Index<NDIM>& fine_i = it.getIndex();
         const Index<NDIM> coarse_i = coarsen_index(fine_i,ratio);
         if (fine_box.contains(fine_i) && coarse_box.contains(coarse_i))
         {
+            const LMarkerSet& fine_mark_set = it();
             if (!dst_mark_data->isElement(coarse_i))
             {
-                dst_mark_data->appendItem(coarse_i, LagMarker());
+                dst_mark_data->appendItemPointer(coarse_i, new LMarkerSet());
             }
-            LagMarker& coarse_mark = *(dst_mark_data->getItem(coarse_i));
-            const LagMarker& fine_mark = it();
-            coarse_mark.addMarker(fine_mark);
+            LMarkerSet& coarse_mark_set = *(dst_mark_data->getItem(coarse_i));
+            coarse_mark_set.insert(coarse_mark_set.end(), fine_mark_set.begin(), fine_mark_set.end());
         }
     }
     return;
@@ -168,10 +168,5 @@ LagMarkerCoarsen::coarsen(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBTK::LagMarkerCoarsen>;
 
 //////////////////////////////////////////////////////////////////////////////

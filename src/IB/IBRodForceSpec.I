@@ -1,7 +1,7 @@
 // Filename: IBRodForceSpec.I
 // Created on 23 Jun 2010 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,9 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
+// IBTK INCLUDES
+#include <ibtk/StreamableManager.h>
+
 // SAMRAI INCLUDES
 #include <tbox/PIO.h>
 #include <tbox/Utilities.h>
@@ -45,37 +48,48 @@ namespace IBAMR
 inline bool
 IBRodForceSpec::getIsRegisteredWithStreamableManager()
 {
-    return s_registered_factory;
+    return (STREAMABLE_CLASS_ID != IBTK::StreamableManager::getUnregisteredID());
 }// getIsRegisteredWithStreamableManager
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
 inline
 IBRodForceSpec::IBRodForceSpec(
-    const int master_idx,
-    const std::vector<int>& next_idxs,
-    const std::vector<std::vector<double> >& material_params,
-    const std::vector<int>& subdomain_idxs)
-    : d_master_idx(master_idx),
-      d_next_idxs(next_idxs),
-      d_material_params(material_params)
-#if ENABLE_SUBDOMAIN_INDICES
-    , d_subdomain_idxs(subdomain_idxs)
-#endif
+    const unsigned int num_rods)
+    : d_master_idx(-1),
+      d_next_idxs(num_rods),
+      d_material_params(num_rods)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    const int num_rods = d_next_idxs.size();
-    TBOX_ASSERT(num_rods == int(d_material_params.size()));
-#if ENABLE_SUBDOMAIN_INDICES
-    TBOX_ASSERT(num_rods == int(d_subdomain_idxs.size()));
-#endif
-#endif
-    if (!s_registered_factory)
+    if (!getIsRegisteredWithStreamableManager())
     {
         TBOX_ERROR("IBRodForceSpec::IBRodForceSpec():\n"
                    << "  must call IBRodForceSpec::registerWithStreamableManager() before\n"
                    << "  creating any IBRodForceSpec objects.\n");
     }
+#endif
+    return;
+}// IBRodForceSpec
+
+inline
+IBRodForceSpec::IBRodForceSpec(
+    const int master_idx,
+    const std::vector<int>& next_idxs,
+    const std::vector<blitz::TinyVector<double,IBRodForceSpec::NUM_MATERIAL_PARAMS> >& material_params)
+    : d_master_idx(master_idx),
+      d_next_idxs(next_idxs),
+      d_material_params(material_params)
+{
+#ifdef DEBUG_CHECK_ASSERTIONS
+    const unsigned int num_rods = d_next_idxs.size();
+    TBOX_ASSERT(num_rods == d_material_params.size());
+    if (!getIsRegisteredWithStreamableManager())
+    {
+        TBOX_ERROR("IBRodForceSpec::IBRodForceSpec():\n"
+                   << "  must call IBRodForceSpec::registerWithStreamableManager() before\n"
+                   << "  creating any IBRodForceSpec objects.\n");
+    }
+#endif
     return;
 }// IBRodForceSpec
 
@@ -86,12 +100,12 @@ IBRodForceSpec::~IBRodForceSpec()
     return;
 }// ~IBRodForceSpec
 
-inline unsigned
+inline unsigned int
 IBRodForceSpec::getNumberOfRods() const
 {
-    const int num_rods = d_next_idxs.size();
+    const unsigned int num_rods = d_next_idxs.size();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(num_rods == int(d_material_params.size()));
+    TBOX_ASSERT(num_rods == d_material_params.size());
 #endif
     return num_rods;
 }// getNumberOfRods
@@ -120,79 +134,50 @@ IBRodForceSpec::getNextNodeIndices()
     return d_next_idxs;
 }// getNextNodeIndices
 
-inline const std::vector<std::vector<double> >&
+inline const std::vector<blitz::TinyVector<double,IBRodForceSpec::NUM_MATERIAL_PARAMS> >&
 IBRodForceSpec::getMaterialParams() const
 {
     return d_material_params;
 }// getMaterialParams
 
-inline std::vector<std::vector<double> >&
+inline std::vector<blitz::TinyVector<double,IBRodForceSpec::NUM_MATERIAL_PARAMS> >&
 IBRodForceSpec::getMaterialParams()
 {
     return d_material_params;
 }// getMaterialParams
 
-inline const std::vector<int>&
-IBRodForceSpec::getSubdomainIndices() const
-{
-#if ENABLE_SUBDOMAIN_INDICES
-    return d_subdomain_idxs;
-#else
-    static std::vector<int> dummy_idxs;
-    return dummy_idxs;
-#endif
-}// getSubdomainIndices
-
-inline std::vector<int>&
-IBRodForceSpec::getSubdomainIndices()
-{
-#if ENABLE_SUBDOMAIN_INDICES
-    return d_subdomain_idxs;
-#else
-    static std::vector<int> dummy_idxs;
-    return dummy_idxs;
-#endif
-}// getSubdomainIndices
-
 inline int
 IBRodForceSpec::getStreamableClassID() const
 {
-    return s_class_id;
+    return STREAMABLE_CLASS_ID;
 }// getStreamableClassID
 
 inline size_t
 IBRodForceSpec::getDataStreamSize() const
 {
-    const int num_rods = d_next_idxs.size();
+    const unsigned int num_rods = d_next_idxs.size();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(num_rods == int(d_material_params.size()));
+    TBOX_ASSERT(num_rods == d_material_params.size());
 #endif
-    return (( 2+num_rods)*SAMRAI::tbox::AbstractStream::sizeofInt() +
-            (10*num_rods)*SAMRAI::tbox::AbstractStream::sizeofDouble())
-#if ENABLE_SUBDOMAIN_INDICES
-        + num_rods*SAMRAI::tbox::AbstractStream::sizeofInt()
-#endif
-        ;
+    return ((                  2+num_rods)*SAMRAI::tbox::AbstractStream::sizeofInt() +
+            (NUM_MATERIAL_PARAMS*num_rods)*SAMRAI::tbox::AbstractStream::sizeofDouble());
 }// getDataStreamSize
 
 inline void
 IBRodForceSpec::packStream(
     SAMRAI::tbox::AbstractStream& stream)
 {
-    const int num_rods = d_next_idxs.size();
+    const unsigned int num_rods = d_next_idxs.size();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(num_rods == int(d_material_params.size()));
+    TBOX_ASSERT(num_rods == d_material_params.size());
 #endif
-    stream.pack(&num_rods,1);
+    stream << static_cast<int>(num_rods);
     stream.pack(&d_master_idx,1);
     stream.pack(&d_next_idxs[0],num_rods);
-    for (int n = 0; n < num_rods; ++n)
+    for (unsigned int n = 0; n < num_rods; ++n)
     {
-        stream.pack(&d_material_params[n][0],10);
+        stream.pack(d_material_params[n].data(),NUM_MATERIAL_PARAMS);
     }
-#if ENABLE_SUBDOMAIN_INDICES
-    stream.pack(&d_subdomain_idxs[0],num_rods);
-#endif
     return;
 }// packStream
 

@@ -1,7 +1,7 @@
 // Filename: IBLagrangianForceStrategy.C
 // Created on 03 May 2005 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -69,8 +69,8 @@ IBLagrangianForceStrategy::~IBLagrangianForceStrategy()
 
 void
 IBLagrangianForceStrategy::setTimeInterval(
-    const double current_time,
-    const double new_time)
+    const double /*current_time*/,
+    const double /*new_time*/)
 {
     // intentionally blank
     return;
@@ -78,42 +78,25 @@ IBLagrangianForceStrategy::setTimeInterval(
 
 void
 IBLagrangianForceStrategy::initializeLevelData(
-    const Pointer<PatchHierarchy<NDIM> > hierarchy,
-    const int level_number,
-    const double init_data_time,
-    const bool initial_time,
-    LDataManager* const lag_manager)
+    const Pointer<PatchHierarchy<NDIM> > /*hierarchy*/,
+    const int /*level_number*/,
+    const double /*init_data_time*/,
+    const bool /*initial_time*/,
+    LDataManager* const /*l_data_manager*/)
 {
     // intentionally blank
     return;
 }// initializeLevelData
 
 void
-IBLagrangianForceStrategy::computeLagrangianForceAndTorque(
-    Pointer<LNodeLevelData> F_data,
-    Pointer<LNodeLevelData> N_data,
-    Pointer<LNodeLevelData> X_data,
-    Pointer<LNodeLevelData> D_data,
-    Pointer<LNodeLevelData> U_data,
-    const Pointer<PatchHierarchy<NDIM> > hierarchy,
-    const int level_number,
-    const double data_time,
-    LDataManager* const lag_manager)
-{
-    TBOX_ERROR("IBLagrangianForceStrategy::computeLagrangianForceAndTorque():\n"
-               << "  not implemented for this IBLagrangianForceStrategy." << std::endl);
-    return;
-}// computeLagrangianForceAndTorque
-
-void
 IBLagrangianForceStrategy::computeLagrangianForce(
-    Pointer<LNodeLevelData> F_data,
-    Pointer<LNodeLevelData> X_data,
-    Pointer<LNodeLevelData> U_data,
-    const Pointer<PatchHierarchy<NDIM> > hierarchy,
-    const int level_number,
-    const double data_time,
-    LDataManager* const lag_manager)
+    Pointer<LData> /*F_data*/,
+    Pointer<LData> /*X_data*/,
+    Pointer<LData> /*U_data*/,
+    const Pointer<PatchHierarchy<NDIM> > /*hierarchy*/,
+    const int /*level_number*/,
+    const double /*data_time*/,
+    LDataManager* const /*l_data_manager*/)
 {
     TBOX_ERROR("IBLagrangianForceStrategy::computeLagrangianForce():\n"
                << "  not implemented for this IBLagrangianForceStrategy." << std::endl);
@@ -122,12 +105,11 @@ IBLagrangianForceStrategy::computeLagrangianForce(
 
 void
 IBLagrangianForceStrategy::computeLagrangianForceJacobianNonzeroStructure(
-    std::vector<int>& d_nnz,
-    std::vector<int>& o_nnz,
-    const Pointer<PatchHierarchy<NDIM> > hierarchy,
-    const int level_number,
-    const double data_time,
-    LDataManager* const lag_manager)
+    std::vector<int>& /*d_nnz*/,
+    std::vector<int>& /*o_nnz*/,
+    const Pointer<PatchHierarchy<NDIM> > /*hierarchy*/,
+    const int /*level_number*/,
+    LDataManager* const /*l_data_manager*/)
 {
     TBOX_ERROR("IBLagrangianForceStrategy::computeLagrangianForceJacobianNonzeroStructure():\n"
                << "  Jacobian functionality not implemented for this IBLagrangianForceStrategy." << std::endl);
@@ -136,16 +118,16 @@ IBLagrangianForceStrategy::computeLagrangianForceJacobianNonzeroStructure(
 
 void
 IBLagrangianForceStrategy::computeLagrangianForceJacobian(
-    Mat& J_mat,
-    MatAssemblyType assembly_type,
-    const double X_coef,
-    Pointer<LNodeLevelData> X_data,
-    const double U_coef,
-    Pointer<LNodeLevelData> U_data,
-    const Pointer<PatchHierarchy<NDIM> > hierarchy,
-    const int level_number,
-    const double data_time,
-    LDataManager* const lag_manager)
+    Mat& /*J_mat*/,
+    MatAssemblyType /*assembly_type*/,
+    const double /*X_coef*/,
+    Pointer<LData> /*X_data*/,
+    const double /*U_coef*/,
+    Pointer<LData> /*U_data*/,
+    const Pointer<PatchHierarchy<NDIM> > /*hierarchy*/,
+    const int /*level_number*/,
+    const double /*data_time*/,
+    LDataManager* const /*l_data_manager*/)
 {
     TBOX_ERROR("IBLagrangianForceStrategy::computeLagrangianForceJacobian():\n"
                << "  Jacobian functionality not implemented for this IBLagrangianForceStrategy." << std::endl);
@@ -154,12 +136,12 @@ IBLagrangianForceStrategy::computeLagrangianForceJacobian(
 
 double
 IBLagrangianForceStrategy::computeLagrangianEnergy(
-    Pointer<LNodeLevelData> X_data,
-    Pointer<LNodeLevelData> U_data,
-    const Pointer<PatchHierarchy<NDIM> > hierarchy,
-    const int level_number,
-    const double data_time,
-    LDataManager* const lag_manager)
+    Pointer<LData> /*X_data*/,
+    Pointer<LData> /*U_data*/,
+    const Pointer<PatchHierarchy<NDIM> > /*hierarchy*/,
+    const int /*level_number*/,
+    const double /*data_time*/,
+    LDataManager* const /*l_data_manager*/)
 {
     TBOX_ERROR("IBLagrangianForceStrategy::computeLagrangianEnergy():\n"
                << "  potential energy functionality not implemented for this IBLagrangianForceStrategy." << std::endl);
@@ -173,10 +155,5 @@ IBLagrangianForceStrategy::computeLagrangianEnergy(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBAMR
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBAMR::IBLagrangianForceStrategy>;
 
 //////////////////////////////////////////////////////////////////////////////

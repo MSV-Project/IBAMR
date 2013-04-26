@@ -1,7 +1,7 @@
-// Filename: LagMarker.h
+// Filename: LMarker.h
 // Created on 12 Sep 2007 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,61 +30,61 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef included_LagMarker
-#define included_LagMarker
+#ifndef included_LMarker
+#define included_LMarker
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 // SAMRAI INCLUDES
 #include <Index.h>
-#include <IntVector.h>
 #include <tbox/AbstractStream.h>
-#include <tbox/Database.h>
 #include <tbox/DescribedClass.h>
 #include <tbox/Pointer.h>
 
-// C++ STDLIB INCLUDES
-#include <vector>
-
-/////////////////////////////// FORWARD DECLARATIONS /////////////////////////
-
-namespace IBTK
-{
-class LDataManager;
-}// namespace IBTK
+// BLITZ++ INCLUDES
+#include <blitz/tinyvec2.h>
 
 /////////////////////////////// CLASS DEFINITION /////////////////////////////
 
 namespace IBTK
 {
 /*!
- * \brief Class LagMarker provides inter-processor communications and database
- * access functionality to a collection of Lagrangian markers.
- *
- * \note This class meets the required specification for use with the templated
- * class SAMRAI::pdat::IndexData.
+ * \brief Class LMarker provides inter-processor communications functionality
+ * for a Lagrangian marker.
  */
-class LagMarker
+class LMarker
     : public SAMRAI::tbox::DescribedClass
 {
 public:
     /*!
      * \brief Default constructor.
      */
-    LagMarker();
+    LMarker(
+        int idx=-1,
+        const blitz::TinyVector<double,NDIM>& X=0.0,
+        const blitz::TinyVector<double,NDIM>& U=0.0,
+        const SAMRAI::hier::IntVector<NDIM>& periodic_offset=SAMRAI::hier::IntVector<NDIM>(0));
 
     /*!
      * \brief Copy constructor.
      *
      * \param from The value to copy to this object.
      */
-    LagMarker(
-        const LagMarker& from);
+    LMarker(
+        const LMarker& from);
+
+    /*!
+     * \brief Constructor that unpacks data from an input stream.
+     */
+    LMarker(
+        SAMRAI::tbox::AbstractStream& stream,
+        const SAMRAI::hier::IntVector<NDIM>& offset);
+
 
     /*!
      * \brief Destructor.
      */
-    ~LagMarker();
+    ~LMarker();
 
     /*!
      * \brief Assignment operator.
@@ -93,84 +93,71 @@ public:
      *
      * \return A reference to this object.
      */
-    LagMarker&
+    LMarker&
     operator=(
-        const LagMarker& that);
+        const LMarker& that);
 
     /*!
-     * \return The number of discrete markers associated with this object.
+     * \return A const reference to the marker index.
      */
-    int
-    getNumberOfMarkers() const;
+    const int&
+    getIndex() const;
 
     /*!
-     * \return A const reference to the marker positions.
+     * \return A non-const reference to the marker index.
      */
-    const std::vector<double>&
-    getPositions() const;
+    int&
+    getIndex();
 
     /*!
-     * \return A non-const reference to the marker positions.
-     */
-    std::vector<double>&
-    getPositions();
-
-    /*!
-     * \brief Set the marker positions.
+     * \brief Set the marker index.
      */
     void
-    setPositions(
-        const std::vector<double>& X);
+    setIndex(
+        int idx);
 
     /*!
-     * \return A const reference to the marker velocities.
+     * \return A const reference to the marker position.
      */
-    const std::vector<double>&
-    getVelocities() const;
+    const blitz::TinyVector<double,NDIM>&
+    getPosition() const;
 
     /*!
-     * \return A non-const reference to the marker velocities.
+     * \return A non-const reference to the marker position.
      */
-    std::vector<double>&
-    getVelocities();
+    blitz::TinyVector<double,NDIM>&
+    getPosition();
 
     /*!
-     * \brief Set the marker velocities.
-     */
-    void
-    setVelocities(
-        const std::vector<double>& U);
-
-    /*!
-     * \return A const reference to the marker indices.
-     */
-    const std::vector<int>&
-    getIndices() const;
-
-    /*!
-     * \return A non-const reference to the marker indices.
-     */
-    std::vector<int>&
-    getIndices();
-
-    /*!
-     * \brief Set the marker indices.
+     * \brief Set the marker position.
      */
     void
-    setIndices(
-        const std::vector<int>& idxs);
+    setPosition(
+        const blitz::TinyVector<double,NDIM>& X);
 
     /*!
-     * \brief Add the provided marker data to this marker.
+     * \return A const reference to the marker velocity.
+     */
+    const blitz::TinyVector<double,NDIM>&
+    getVelocity() const;
+
+    /*!
+     * \return A non-const reference to the marker velocity.
+     */
+    blitz::TinyVector<double,NDIM>&
+    getVelocity();
+
+    /*!
+     * \brief Set the marker velocity.
      */
     void
-    addMarker(
-        const LagMarker& that);
+    setVelocity(
+        const blitz::TinyVector<double,NDIM>& U);
 
     /*!
      * \return A const reference to the periodic offset.
      *
-     * \note If the LagMarker lives in cell i, the index of the source object is
+     * \note If the LMarker lives in cell i, the index of the source object is
      * src_index = i - offset.
      */
     const SAMRAI::hier::IntVector<NDIM>&
@@ -179,7 +166,7 @@ public:
     /*!
      * \brief Set the value of the periodic offset.
      *
-     * \note If the LagMarker lives in cell i, the index of the source object is
+     * \note If the LMarker lives in cell i, the index of the source object is
      * src_index = i - offset.
      */
     void
@@ -195,7 +182,7 @@ public:
     copySourceItem(
         const SAMRAI::hier::Index<NDIM>& src_index,
         const SAMRAI::hier::IntVector<NDIM>& src_offset,
-        const LagMarker& src_item);
+        const LMarker& src_item);
 
     /*!
      * \brief Return an upper bound on the amount of space required to pack the
@@ -209,40 +196,26 @@ public:
      */
     void
     packStream(
-        SAMRAI::tbox::AbstractStream& stream) const;
+        SAMRAI::tbox::AbstractStream& stream);
 
     /*!
      * \brief Unpack data from the input stream.
      */
-    void
+    virtual void
     unpackStream(
         SAMRAI::tbox::AbstractStream& stream,
         const SAMRAI::hier::IntVector<NDIM>& offset);
 
-    /*!
-     * \brief Pack data into a database.
-     */
-    void
-    putToDatabase(
-        SAMRAI::tbox::Pointer<SAMRAI::tbox::Database>& database) const;
-
-    /*!
-     * \brief Unpack data from a database.
-     */
-    void
-    getFromDatabase(
-        SAMRAI::tbox::Pointer<SAMRAI::tbox::Database>& database);
-
 private:
     /*!
-     * \brief The marker positions and velocities.
+     * \brief The marker index.
      */
-    std::vector<double> d_X, d_U;
+    int d_idx;
 
     /*!
-     * \brief The marker indices.
+     * \brief The marker position and velocity.
      */
-    std::vector<int> d_idx;
+    blitz::TinyVector<double,NDIM> d_X, d_U;
 
     /*!
      * \brief The periodic offset.
@@ -253,8 +226,8 @@ private:
 
 /////////////////////////////// INLINE ///////////////////////////////////////
 
-#include <ibtk/LagMarker.I>
+#include <ibtk/LMarker.I>
 
 //////////////////////////////////////////////////////////////////////////////
 
-#endif //#ifndef included_LagMarker
+#endif //#ifndef included_LMarker

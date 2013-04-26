@@ -1,7 +1,7 @@
-// Filename: IBImplicitModHelmholtzOperator.h
-// Created on 30 Aug 2010 by Boyce Griffith
+// Filename: INSCollocatedPPMConvectiveOperator.h
+// Created on 24 Aug 2011 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,82 +30,86 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef included_IBImplicitModHelmholtzOperator
-#define included_IBImplicitModHelmholtzOperator
+#ifndef included_INSCollocatedPPMConvectiveOperator
+#define included_INSCollocatedPPMConvectiveOperator
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
-// PETSc INCLUDES
-#include <petsc.h>
+// IBAMR INCLUDES
+#include <ibamr/ConvectiveOperator.h>
 
-// IBTK INCLUDES
-#include <ibtk/SCLaplaceOperator.h>
+// SAMRAI INCLUDES
+#include <CellVariable.h>
+#include <CoarsenAlgorithm.h>
+#include <FaceVariable.h>
+#include <RefineAlgorithm.h>
+
+// C++ STDLIB INCLUDES
+#include <vector>
 
 /////////////////////////////// CLASS DEFINITION /////////////////////////////
 
 namespace IBAMR
 {
 /*!
- * \brief Class IBImplicitModHelmholtzOperator is a concrete
- * IBTK::GeneralOperator which implements a linear operator arrising from an
- * implicit staggered-grid (MAC) discretization of the IB method.
+ * \brief Class INSCollocatedPPMConvectiveOperator is a concrete
+ * ConvectiveOperator that implements a upwind convective differencing operator
+ * based on the piecewise parabolic method (PPM).
  *
- * This class is intended to be used with an iterative Newton-Krylov solver.
+ * Class INSCollocatedPPMConvectiveOperator computes the convective derivative of
+ * a cell-centered velocity field using the xsPPM7 method of Rider, Greenough,
+ * and Kamm.
  *
- * \see IBImplicitHierarchyIntegrator
+ * \see INSCollocatedHierarchyIntegrator
  */
-class IBImplicitModHelmholtzOperator
-    : public IBTK::LinearOperator
+class INSCollocatedPPMConvectiveOperator
+    : public ConvectiveOperator
 {
 public:
     /*!
      * \brief Class constructor.
      */
-    IBImplicitModHelmholtzOperator(
-        SAMRAI::tbox::Pointer<IBTK::SCLaplaceOperator> helmholtz_op,
-        SAMRAI::tbox::Pointer<IBTK::LinearOperator> ib_SJSstar_op);
+    INSCollocatedPPMConvectiveOperator(
+        const std::string& object_name,
+        SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db,
+        ConvectiveDifferencingType difference_form,
+        const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& bc_coefs);
 
     /*!
-     * \brief Virtual destructor.
+     * \brief Destructor.
      */
-    virtual
-    ~IBImplicitModHelmholtzOperator();
+    ~INSCollocatedPPMConvectiveOperator();
 
     /*!
-     * \name Linear operator functionality.
+     * \brief Static function to construct an
+     * INSCollocatedPPMConvectiveOperator.
+     */
+    static SAMRAI::tbox::Pointer<ConvectiveOperator>
+    allocate_operator(
+        const std::string& object_name,
+        SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db,
+        ConvectiveDifferencingType difference_form,
+        const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& bc_coefs)
+        {
+            return new INSCollocatedPPMConvectiveOperator(object_name, input_db, difference_form, bc_coefs);
+        }// allocate_operator
+
+    /*!
+     * \brief Compute the action of the convective operator.
+     */
+    void
+    applyConvectiveOperator(
+        int U_idx,
+        int N_idx);
+
+    /*!
+     * \name General operator functionality.
      */
     //\{
 
     /*!
-     * \brief Compute y=Ax.
-     *
-     * Before calling this function, the form of the vectors x and y should be
-     * set properly by the user on all patch interiors on the range of levels
-     * covered by the operator.  All data in these vectors should be allocated.
-     * The user is responsible for managing the storage for the vectors.
-     *
-     * Conditions on arguments:
-     * - vectors must have same hierarchy
-     * - vectors must have same variables (except that x \em must have enough
-     *   ghost cells for computation of Ax).
-     *
-     * In general, the vectors x and y \em cannot be the same.
-     *
-     * \note The operator MUST be initialized prior to calling apply.
-     *
-     * \see initializeOperatorState
-     *
-     * \param x input
-     * \param y output: y=Ax
-     */
-    virtual void
-    apply(
-        SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
-        SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
-
-    /*!
-     * \brief Compute hierarchy dependent data required for computing y=Ax and
-     * z=Ax+y.
+     * \brief Compute hierarchy dependent data required for computing y=F[x] and
+     * z=F[x]+y.
      *
      * The vector arguments for apply(), applyAdjoint(), etc, need not match
      * those for initializeOperatorState().  However, there must be a certain
@@ -132,10 +136,8 @@ public:
      *
      * \param in input vector
      * \param out output vector
-     *
-     * \note The default implementation is empty.
      */
-    virtual void
+    void
     initializeOperatorState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& in,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& out);
@@ -144,32 +146,13 @@ public:
      * \brief Remove all hierarchy dependent data allocated by
      * initializeOperatorState().
      *
-     * Remove all hierarchy dependent data set by initializeOperatorState().  It
-     * is safe to call deallocateOperatorState() when the operator state is
-     * already deallocated.
+     * \note It is safe to call deallocateOperatorState() when the operator
+     * state is already deallocated.
      *
      * \see initializeOperatorState
-     *
-     * \note The default implementation is empty.
      */
-    virtual void
+    void
     deallocateOperatorState();
-
-    //\}
-
-    /*!
-     * \name Logging functions.
-     */
-    //\{
-
-    /*!
-     * \brief Enable or disable logging.
-     *
-     * \param enabled logging state: true=on, false=off
-     */
-    virtual void
-    enableLogging(
-        bool enabled=true);
 
     //\}
 
@@ -179,7 +162,7 @@ private:
      *
      * \note This constructor is not implemented and should not be used.
      */
-    IBImplicitModHelmholtzOperator();
+    INSCollocatedPPMConvectiveOperator();
 
     /*!
      * \brief Copy constructor.
@@ -188,8 +171,8 @@ private:
      *
      * \param from The value to copy to this object.
      */
-    IBImplicitModHelmholtzOperator(
-        const IBImplicitModHelmholtzOperator& from);
+    INSCollocatedPPMConvectiveOperator(
+        const INSCollocatedPPMConvectiveOperator& from);
 
     /*!
      * \brief Assignment operator.
@@ -200,25 +183,34 @@ private:
      *
      * \return A reference to this object.
      */
-    IBImplicitModHelmholtzOperator&
+    INSCollocatedPPMConvectiveOperator&
     operator=(
-        const IBImplicitModHelmholtzOperator& that);
+        const INSCollocatedPPMConvectiveOperator& that);
 
-    // Whether the operator is initialized.
-    bool d_is_initialized;
+    // Data communication algorithms, operators, and schedules.
+    SAMRAI::tbox::Pointer<SAMRAI::xfer::CoarsenAlgorithm<NDIM> > d_coarsen_alg;
+    std::vector<SAMRAI::tbox::Pointer<SAMRAI::xfer::CoarsenSchedule<NDIM> > > d_coarsen_scheds;
+    SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineAlgorithm<NDIM> > d_ghostfill_alg;
+    SAMRAI::tbox::Pointer<SAMRAI::xfer::RefinePatchStrategy<NDIM> > d_ghostfill_strategy;
+    std::vector<SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineSchedule<NDIM> > > d_ghostfill_scheds;
+    std::string d_bdry_extrap_type;
 
-    // The Stokes operator.
-    SAMRAI::tbox::Pointer<IBTK::SCLaplaceOperator> d_helmholtz_op;
+    // Hierarchy configuration.
+    SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > d_hierarchy;
+    int d_coarsest_ln, d_finest_ln;
 
-    // The IB force operator.
-    SAMRAI::tbox::Pointer<IBTK::LinearOperator> d_ib_SJSstar_op;
+    // Scratch data.
+    SAMRAI::tbox::Pointer<SAMRAI::pdat::CellVariable<NDIM,double> > d_U_var;
+    int d_U_scratch_idx;
+    SAMRAI::tbox::Pointer<SAMRAI::pdat::FaceVariable<NDIM,double> > d_u_extrap_var, d_u_flux_var;
+    int d_u_extrap_idx, d_u_flux_idx;
 };
 }// namespace IBAMR
 
 /////////////////////////////// INLINE ///////////////////////////////////////
 
-//#include <ibamr/IBImplicitModHelmholtzOperator.I>
+//#include <ibamr/INSCollocatedPPMConvectiveOperator.I>
 
 //////////////////////////////////////////////////////////////////////////////
 
-#endif //#ifndef included_IBImplicitModHelmholtzOperator
+#endif //#ifndef included_INSCollocatedPPMConvectiveOperator

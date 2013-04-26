@@ -1,7 +1,7 @@
 // Filename: CartCellDoubleCubicCoarsen.C
 // Created on 14 Aug 2009 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -117,7 +117,7 @@ CartCellDoubleCubicCoarsen::findCoarsenOperator(
     const std::string &op_name) const
 {
     Pointer<CellVariable<NDIM,double> > cc_var = var;
-    return (!cc_var.isNull() && op_name == s_op_name);
+    return (cc_var && op_name == s_op_name);
 }// findCoarsenOperator
 
 const std::string&

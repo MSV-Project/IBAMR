@@ -1,7 +1,7 @@
-// Filename: IBImplicitJacobian.h
-// Created on 30 Aug 2010 by Boyce Griffith
+// Filename: INSCollocatedCenteredConvectiveOperator.h
+// Created on 24 Aug 2011 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,108 +30,82 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef included_IBImplicitJacobian
-#define included_IBImplicitJacobian
+#ifndef included_INSCollocatedCenteredConvectiveOperator
+#define included_INSCollocatedCenteredConvectiveOperator
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
-// PETSc INCLUDES
-#include <petscvec.h>
-
 // IBAMR INCLUDES
-#include <ibamr/IBImplicitModHelmholtzPETScLevelSolver.h>
-#include <ibamr/INSStaggeredStokesOperator.h>
+#include <ibamr/ConvectiveOperator.h>
 
-// IBTK INCLUDES
-#include <ibtk/JacobianOperator.h>
+// SAMRAI INCLUDES
+#include <CellVariable.h>
+#include <CoarsenAlgorithm.h>
+#include <FaceVariable.h>
+#include <RefineAlgorithm.h>
+
+// C++ STDLIB INCLUDES
+#include <vector>
 
 /////////////////////////////// CLASS DEFINITION /////////////////////////////
 
 namespace IBAMR
 {
 /*!
- * \brief Class IBImplicitJacobian provides a method for computing
- * Jacobian-vector products, i.e., \f$ F'[x]v \f$, via a matrix-free
- * finite-difference approach.
+ * \brief Class INSCollocatedCenteredConvectiveOperator is a concrete
+ * ConvectiveOperator which implements a centered convective differencing
+ * operator.
+ *
+ * \see INSCollocatedHierarchyIntegrator
  */
-class IBImplicitJacobian
-    : public virtual IBTK::JacobianOperator
+class INSCollocatedCenteredConvectiveOperator
+    : public ConvectiveOperator
 {
 public:
     /*!
-     * \brief Default constructor.
+     * \brief Class constructor.
      */
-    IBImplicitJacobian(
-        SAMRAI::tbox::Pointer<INSStaggeredStokesOperator> stokes_op,
-        SAMRAI::tbox::Pointer<JacobianOperator> ib_SJR_op,
-        SAMRAI::tbox::Pointer<IBImplicitModHelmholtzPETScLevelSolver> mod_helmholtz_solver);
+    INSCollocatedCenteredConvectiveOperator(
+        const std::string& object_name,
+        SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db,
+        ConvectiveDifferencingType difference_form,
+        const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& bc_coefs);
 
     /*!
-     * \brief Virtual empty destructor.
+     * \brief Destructor.
      */
-    virtual
-    ~IBImplicitJacobian();
+    ~INSCollocatedCenteredConvectiveOperator();
 
     /*!
-     * \name General Jacobian functionality.
+     * \brief Static function to construct an
+     * INSCollocatedCenteredConvectiveOperator.
      */
-    //\{
+    static SAMRAI::tbox::Pointer<ConvectiveOperator>
+    allocate_operator(
+        const std::string& object_name,
+        SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db,
+        ConvectiveDifferencingType difference_form,
+        const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& bc_coefs)
+        {
+            return new INSCollocatedCenteredConvectiveOperator(object_name, input_db, difference_form, bc_coefs);
+        }// allocate_operator
 
     /*!
-     * \brief Compute hierarchy dependent data required for evaluating F'[x].
-     *
-     * \param x value where the Jacobian is to be evaluated
+     * \brief Compute the action of the convective operator.
      */
-    virtual void
-    formJacobian(
-        SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x);
+    void
+    applyConvectiveOperator(
+        int U_idx,
+        int N_idx);
 
     /*!
-     * \brief Return the vector where the Jacobian is evaluated.
-     *
-     * \note This member function returns a NULL pointer if the operator is not
-     * initialized, or if formJacobian() has not been called.
-     */
-    virtual SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> >
-    getBaseVector() const;
-
-    //\}
-
-    /*!
-     * \name Linear operator functionality.
+     * \name General operator functionality.
      */
     //\{
 
     /*!
-     * \brief Compute y=Ax.
-     *
-     * Before calling this function, the form of the vectors x and y should be
-     * set properly by the user on all patch interiors on the range of levels
-     * covered by the operator.  All data in these vectors should be allocated.
-     * The user is responsible for managing the storage for the vectors.
-     *
-     * Conditions on arguments:
-     * - vectors must have same hierarchy
-     * - vectors must have same variables (except that x \em must have enough
-     *   ghost cells for computation of Ax).
-     *
-     * In general, the vectors x and y \em cannot be the same.
-     *
-     * \note The operator MUST be initialized prior to calling apply.
-     *
-     * \see initializeOperatorState
-     *
-     * \param x input
-     * \param y output: y=Ax
-     */
-    virtual void
-    apply(
-        SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
-        SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
-
-    /*!
-     * \brief Compute hierarchy dependent data required for computing y=Ax and
-     * z=Ax+y.
+     * \brief Compute hierarchy dependent data required for computing y=F[x] and
+     * z=F[x]+y.
      *
      * The vector arguments for apply(), applyAdjoint(), etc, need not match
      * those for initializeOperatorState().  However, there must be a certain
@@ -158,10 +132,8 @@ public:
      *
      * \param in input vector
      * \param out output vector
-     *
-     * \note The default implementation is empty.
      */
-    virtual void
+    void
     initializeOperatorState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& in,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& out);
@@ -170,36 +142,24 @@ public:
      * \brief Remove all hierarchy dependent data allocated by
      * initializeOperatorState().
      *
-     * Remove all hierarchy dependent data set by initializeOperatorState().  It
-     * is safe to call deallocateOperatorState() when the operator state is
-     * already deallocated.
+     * \note It is safe to call deallocateOperatorState() when the operator
+     * state is already deallocated.
      *
      * \see initializeOperatorState
-     *
-     * \note The default implementation is empty.
      */
-    virtual void
+    void
     deallocateOperatorState();
 
     //\}
 
-    /*!
-     * \name Logging functions.
-     */
-    //\{
-
-    /*!
-     * \brief Enable or disable logging.
-     *
-     * \param enabled logging state: true=on, false=off
-     */
-    virtual void
-    enableLogging(
-        bool enabled=true);
-
-    //\}
-
 private:
+    /*!
+     * \brief Default constructor.
+     *
+     * \note This constructor is not implemented and should not be used.
+     */
+    INSCollocatedCenteredConvectiveOperator();
+
     /*!
      * \brief Copy constructor.
      *
@@ -207,8 +167,8 @@ private:
      *
      * \param from The value to copy to this object.
      */
-    IBImplicitJacobian(
-        const IBImplicitJacobian& from);
+    INSCollocatedCenteredConvectiveOperator(
+        const INSCollocatedCenteredConvectiveOperator& from);
 
     /*!
      * \brief Assignment operator.
@@ -219,34 +179,34 @@ private:
      *
      * \return A reference to this object.
      */
-    IBImplicitJacobian&
+    INSCollocatedCenteredConvectiveOperator&
     operator=(
-        const IBImplicitJacobian& that);
+        const INSCollocatedCenteredConvectiveOperator& that);
 
-    static PetscErrorCode
-    FormFunction_SAMRAI(
-        void* p_ctx,
-        Vec x,
-        Vec f);
+    // Data communication algorithms, operators, and schedules.
+    SAMRAI::tbox::Pointer<SAMRAI::xfer::CoarsenAlgorithm<NDIM> > d_coarsen_alg;
+    std::vector<SAMRAI::tbox::Pointer<SAMRAI::xfer::CoarsenSchedule<NDIM> > > d_coarsen_scheds;
+    SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineAlgorithm<NDIM> > d_ghostfill_alg;
+    SAMRAI::tbox::Pointer<SAMRAI::xfer::RefinePatchStrategy<NDIM> > d_ghostfill_strategy;
+    std::vector<SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineSchedule<NDIM> > > d_ghostfill_scheds;
+    std::string d_bdry_extrap_type;
 
-    // Whether the operator is initialized.
-    bool d_is_initialized;
+    // Hierarchy configuration.
+    SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > d_hierarchy;
+    int d_coarsest_ln, d_finest_ln;
 
-    // The Stokes operator.
-    SAMRAI::tbox::Pointer<INSStaggeredStokesOperator> d_stokes_op;
-
-    // The IB force Jacobian operator.
-    SAMRAI::tbox::Pointer<IBTK::JacobianOperator> d_ib_SJR_op;
-
-    // A preconditioner that makes use of the SJR operator.
-    SAMRAI::tbox::Pointer<IBImplicitModHelmholtzPETScLevelSolver> d_mod_helmholtz_solver;
+    // Scratch data.
+    SAMRAI::tbox::Pointer<SAMRAI::pdat::CellVariable<NDIM,double> > d_U_var;
+    int d_U_scratch_idx;
+    SAMRAI::tbox::Pointer<SAMRAI::pdat::FaceVariable<NDIM,double> > d_u_extrap_var, d_u_flux_var;
+    int d_u_extrap_idx, d_u_flux_idx;
 };
 }// namespace IBAMR
 
 /////////////////////////////// INLINE ///////////////////////////////////////
 
-//#include <ibtk/IBImplicitJacobian.I>
+//#include <ibamr/INSCollocatedCenteredConvectiveOperator.I>
 
 //////////////////////////////////////////////////////////////////////////////
 
-#endif //#ifndef included_IBImplicitJacobian
+#endif //#ifndef included_INSCollocatedCenteredConvectiveOperator

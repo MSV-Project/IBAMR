@@ -1,7 +1,7 @@
 // Filename: LDataManager.I
 // Created on 10 Dec 2009 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -55,8 +55,7 @@ LDataManager::getLagrangianStructureNames(
                 d_finest_ln   >= level_number);
 #endif
     std::vector<std::string> ret_val;
-    for (std::map<int,std::string>::const_iterator cit(d_strct_id_to_strct_name_map[level_number].begin());
-         cit != d_strct_id_to_strct_name_map[level_number].end(); ++cit)
+    for (std::map<int,std::string>::const_iterator cit(d_strct_id_to_strct_name_map[level_number].begin()); cit != d_strct_id_to_strct_name_map[level_number].end(); ++cit)
     {
         ret_val.push_back((*cit).second);
     }
@@ -72,8 +71,7 @@ LDataManager::getLagrangianStructureIDs(
                 d_finest_ln   >= level_number);
 #endif
     std::vector<int> ret_val;
-    for (std::map<std::string,int>::const_iterator cit(d_strct_name_to_strct_id_map[level_number].begin());
-         cit != d_strct_name_to_strct_id_map[level_number].end(); ++cit)
+    for (std::map<std::string,int>::const_iterator cit(d_strct_name_to_strct_id_map[level_number].begin()); cit != d_strct_name_to_strct_id_map[level_number].end(); ++cit)
     {
         ret_val.push_back((*cit).second);
     }

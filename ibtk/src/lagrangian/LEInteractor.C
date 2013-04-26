@@ -1,7 +1,7 @@
 // Filename: LEInteractor.C
 // Created on 14 Jul 2004 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,7 @@
 #include <ibtk/LNodeIndex.h>
 #include <ibtk/LNodeIndexSet.h>
 #include <ibtk/ibtk_utilities.h>
+#include <ibtk/compiler_hints.h>
 #include <ibtk/namespaces.h>
 
 // BLITZ++ INCLUDES
@@ -58,8 +59,6 @@
 #include <CartesianPatchGeometry.h>
 #include <Index.h>
 #include <IntVector.h>
-#include <tbox/Timer.h>
-#include <tbox/TimerManager.h>
 #include <tbox/Utilities.h>
 
 // C++ STDLIB INCLUDES
@@ -75,31 +74,32 @@
 #define LAGRANGIAN_PIECEWISE_LINEAR_INTERP_FC FC_FUNC_(lagrangian_piecewise_linear_interp2d, LAGRANGIAN_PIECEWISE_LINEAR_INTERP2D)
 #define LAGRANGIAN_PIECEWISE_LINEAR_SPREAD_FC FC_FUNC_(lagrangian_piecewise_linear_spread2d, LAGRANGIAN_PIECEWISE_LINEAR_SPREAD2D)
 
-#define LAGRANGIAN_WIDE_PIECEWISE_LINEAR_INTERP_FC FC_FUNC_(lagrangian_wide_piecewise_linear_interp2d, LAGRANGIAN_WIDE_PIECEWISE_LINEAR_INTERP2D)
-#define LAGRANGIAN_WIDE_PIECEWISE_LINEAR_SPREAD_FC FC_FUNC_(lagrangian_wide_piecewise_linear_spread2d, LAGRANGIAN_WIDE_PIECEWISE_LINEAR_SPREAD2D)
+#define LAGRANGIAN_WIDE4_PIECEWISE_LINEAR_INTERP_FC FC_FUNC_(lagrangian_wide4_piecewise_linear_interp2d, LAGRANGIAN_WIDE4_PIECEWISE_LINEAR_INTERP2D)
+#define LAGRANGIAN_WIDE4_PIECEWISE_LINEAR_SPREAD_FC FC_FUNC_(lagrangian_wide4_piecewise_linear_spread2d, LAGRANGIAN_WIDE4_PIECEWISE_LINEAR_SPREAD2D)
 
 #define LAGRANGIAN_PIECEWISE_CUBIC_INTERP_FC FC_FUNC_(lagrangian_piecewise_cubic_interp2d, LAGRANGIAN_PIECEWISE_CUBIC_INTERP2D)
 #define LAGRANGIAN_PIECEWISE_CUBIC_SPREAD_FC FC_FUNC_(lagrangian_piecewise_cubic_spread2d, LAGRANGIAN_PIECEWISE_CUBIC_SPREAD2D)
 
-#define LAGRANGIAN_WIDE_PIECEWISE_CUBIC_INTERP_FC FC_FUNC_(lagrangian_wide_piecewise_cubic_interp2d, LAGRANGIAN_WIDE_PIECEWISE_CUBIC_INTERP2D)
-#define LAGRANGIAN_WIDE_PIECEWISE_CUBIC_SPREAD_FC FC_FUNC_(lagrangian_wide_piecewise_cubic_spread2d, LAGRANGIAN_WIDE_PIECEWISE_CUBIC_SPREAD2D)
+#define LAGRANGIAN_WIDE8_PIECEWISE_CUBIC_INTERP_FC FC_FUNC_(lagrangian_wide8_piecewise_cubic_interp2d, LAGRANGIAN_WIDE8_PIECEWISE_CUBIC_INTERP2D)
+#define LAGRANGIAN_WIDE8_PIECEWISE_CUBIC_SPREAD_FC FC_FUNC_(lagrangian_wide8_piecewise_cubic_spread2d, LAGRANGIAN_WIDE8_PIECEWISE_CUBIC_SPREAD2D)
 
 #define LAGRANGIAN_IB_3_INTERP_FC FC_FUNC_(lagrangian_ib_3_interp2d, LAGRANGIAN_IB_3_INTERP2D)
 #define LAGRANGIAN_IB_3_SPREAD_FC FC_FUNC_(lagrangian_ib_3_spread2d, LAGRANGIAN_IB_3_SPREAD2D)
 
-#define LAGRANGIAN_WIDE_IB_3_INTERP_FC FC_FUNC_(lagrangian_wide_ib_3_interp2d, LAGRANGIAN_WIDE_IB_3_INTERP2D)
-#define LAGRANGIAN_WIDE_IB_3_SPREAD_FC FC_FUNC_(lagrangian_wide_ib_3_spread2d, LAGRANGIAN_WIDE_IB_3_SPREAD2D)
+#define LAGRANGIAN_WIDE6_IB_3_INTERP_FC FC_FUNC_(lagrangian_wide6_ib_3_interp2d, LAGRANGIAN_WIDE6_IB_3_INTERP2D)
+#define LAGRANGIAN_WIDE6_IB_3_SPREAD_FC FC_FUNC_(lagrangian_wide6_ib_3_spread2d, LAGRANGIAN_WIDE6_IB_3_SPREAD2D)
 
 #define LAGRANGIAN_IB_4_INTERP_FC FC_FUNC_(lagrangian_ib_4_interp2d, LAGRANGIAN_IB_4_INTERP2D)
 #define LAGRANGIAN_IB_4_SPREAD_FC FC_FUNC_(lagrangian_ib_4_spread2d, LAGRANGIAN_IB_4_SPREAD2D)
-#define LAGRANGIAN_IB_4_SPREAD_XP_FC FC_FUNC_(lagrangian_ib_4_spread_xp2d, LAGRANGIAN_IB_4_SPREAD_XP2D)
 
-#define LAGRANGIAN_WIDE_IB_4_INTERP_FC FC_FUNC_(lagrangian_wide_ib_4_interp2d, LAGRANGIAN_WIDE_IB_4_INTERP2D)
-#define LAGRANGIAN_WIDE_IB_4_SPREAD_FC FC_FUNC_(lagrangian_wide_ib_4_spread2d, LAGRANGIAN_WIDE_IB_4_SPREAD2D)
+#define LAGRANGIAN_WIDE8_IB_4_INTERP_FC FC_FUNC_(lagrangian_wide8_ib_4_interp2d, LAGRANGIAN_WIDE8_IB_4_INTERP2D)
+#define LAGRANGIAN_WIDE8_IB_4_SPREAD_FC FC_FUNC_(lagrangian_wide8_ib_4_spread2d, LAGRANGIAN_WIDE8_IB_4_SPREAD2D)
+
+#define LAGRANGIAN_WIDE16_IB_4_INTERP_FC FC_FUNC_(lagrangian_wide16_ib_4_interp2d, LAGRANGIAN_WIDE16_IB_4_INTERP2D)
+#define LAGRANGIAN_WIDE16_IB_4_SPREAD_FC FC_FUNC_(lagrangian_wide16_ib_4_spread2d, LAGRANGIAN_WIDE16_IB_4_SPREAD2D)
 
 #define LAGRANGIAN_IB_6_INTERP_FC FC_FUNC_(lagrangian_ib_6_interp2d, LAGRANGIAN_IB_6_INTERP2D)
 #define LAGRANGIAN_IB_6_SPREAD_FC FC_FUNC_(lagrangian_ib_6_spread2d, LAGRANGIAN_IB_6_SPREAD2D)
-#define LAGRANGIAN_IB_6_SPREAD_XP_FC FC_FUNC_(lagrangian_ib_6_spread_xp2d, LAGRANGIAN_IB_6_SPREAD_XP2D)
 #endif
 
 #if (NDIM == 3)
@@ -111,11 +111,15 @@
 
 #define LAGRANGIAN_IB_4_INTERP_FC FC_FUNC_(lagrangian_ib_4_interp3d, LAGRANGIAN_IB_4_INTERP3D)
 #define LAGRANGIAN_IB_4_SPREAD_FC FC_FUNC_(lagrangian_ib_4_spread3d, LAGRANGIAN_IB_4_SPREAD3D)
-#define LAGRANGIAN_IB_4_SPREAD_XP_FC FC_FUNC_(lagrangian_ib_4_spread_xp3d, LAGRANGIAN_IB_4_SPREAD_XP3D)
+
+#define LAGRANGIAN_WIDE8_IB_4_INTERP_FC FC_FUNC_(lagrangian_wide8_ib_4_interp3d, LAGRANGIAN_WIDE8_IB_4_INTERP3D)
+#define LAGRANGIAN_WIDE8_IB_4_SPREAD_FC FC_FUNC_(lagrangian_wide8_ib_4_spread3d, LAGRANGIAN_WIDE8_IB_4_SPREAD3D)
+
+#define LAGRANGIAN_WIDE16_IB_4_INTERP_FC FC_FUNC_(lagrangian_wide16_ib_4_interp3d, LAGRANGIAN_WIDE16_IB_4_INTERP3D)
+#define LAGRANGIAN_WIDE16_IB_4_SPREAD_FC FC_FUNC_(lagrangian_wide16_ib_4_spread3d, LAGRANGIAN_WIDE16_IB_4_SPREAD3D)
 
 #define LAGRANGIAN_IB_6_INTERP_FC FC_FUNC_(lagrangian_ib_6_interp3d, LAGRANGIAN_IB_6_INTERP3D)
 #define LAGRANGIAN_IB_6_SPREAD_FC FC_FUNC_(lagrangian_ib_6_spread3d, LAGRANGIAN_IB_6_SPREAD3D)
-#define LAGRANGIAN_IB_6_SPREAD_XP_FC FC_FUNC_(lagrangian_ib_6_spread_xp3d, LAGRANGIAN_IB_6_SPREAD_XP3D)
 #endif
 
 extern "C"
@@ -134,7 +138,7 @@ extern "C"
         const double* ,
         const int* , const double* , const int& ,
         const double* , double*
-                                               );
+                                            );
 
     void
     LAGRANGIAN_PIECEWISE_CONSTANT_SPREAD_FC(
@@ -150,7 +154,7 @@ extern "C"
         const int& , const int& , const int& ,
 #endif
         double*
-                                          );
+                                            );
 
 #if (NDIM == 2)
     void
@@ -158,12 +162,10 @@ extern "C"
         const double* , const double* , const double* , const int& ,
 #if (NDIM == 2)
         const int& , const int& , const int& , const int& ,
-        const int* , const int* ,
         const int& , const int& ,
 #endif
 #if (NDIM == 3)
         const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* ,
         const int& , const int& , const int& ,
 #endif
         const double* ,
@@ -178,63 +180,55 @@ extern "C"
         const double* , const double* ,
 #if (NDIM == 2)
         const int& , const int& , const int& , const int& ,
-        const int* , const int* ,
         const int& , const int& ,
 #endif
 #if (NDIM == 3)
         const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* ,
         const int& , const int& , const int& ,
 #endif
         double*
                                           );
 
     void
-    LAGRANGIAN_WIDE_PIECEWISE_LINEAR_INTERP_FC(
+    LAGRANGIAN_WIDE4_PIECEWISE_LINEAR_INTERP_FC(
         const double* , const double* , const double* , const int& ,
 #if (NDIM == 2)
         const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& ,
 #endif
 #if (NDIM == 3)
         const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& , const int& ,
 #endif
         const double* ,
         const int* , const double* , const int& ,
         const double* , double*
-                                               );
+                                                );
 
     void
-    LAGRANGIAN_WIDE_PIECEWISE_LINEAR_SPREAD_FC(
+    LAGRANGIAN_WIDE4_PIECEWISE_LINEAR_SPREAD_FC(
         const double* , const double* , const double* , const int& ,
         const int* , const double* , const int& ,
         const double* , const double* ,
 #if (NDIM == 2)
         const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& ,
 #endif
 #if (NDIM == 3)
         const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& , const int& ,
 #endif
         double*
-                                               );
+                                                );
     void
     LAGRANGIAN_PIECEWISE_CUBIC_INTERP_FC(
         const double* , const double* , const double* , const int& ,
 #if (NDIM == 2)
         const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& ,
 #endif
 #if (NDIM == 3)
         const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& , const int& ,
 #endif
         const double* ,
@@ -249,64 +243,56 @@ extern "C"
         const double* , const double* ,
 #if (NDIM == 2)
         const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& ,
 #endif
 #if (NDIM == 3)
         const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& , const int& ,
 #endif
         double*
                                          );
 
     void
-    LAGRANGIAN_WIDE_PIECEWISE_CUBIC_INTERP_FC(
+    LAGRANGIAN_WIDE8_PIECEWISE_CUBIC_INTERP_FC(
         const double* , const double* , const double* , const int& ,
 #if (NDIM == 2)
         const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& ,
 #endif
 #if (NDIM == 3)
         const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& , const int& ,
 #endif
         const double* ,
         const int* , const double* , const int& ,
         const double* , double*
-                                              );
+                                               );
 
     void
-    LAGRANGIAN_WIDE_PIECEWISE_CUBIC_SPREAD_FC(
+    LAGRANGIAN_WIDE8_PIECEWISE_CUBIC_SPREAD_FC(
         const double* , const double* , const double* , const int& ,
         const int* , const double* , const int& ,
         const double* , const double* ,
 #if (NDIM == 2)
         const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& ,
 #endif
 #if (NDIM == 3)
         const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& , const int& ,
 #endif
         double*
-                                              );
+                                               );
 #endif
     void
     LAGRANGIAN_IB_3_INTERP_FC(
         const double* , const double* , const double* , const int& ,
 #if (NDIM == 2)
         const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& ,
 #endif
 #if (NDIM == 3)
         const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& , const int& ,
 #endif
         const double* ,
@@ -321,64 +307,58 @@ extern "C"
         const double* , const double* ,
 #if (NDIM == 2)
         const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& ,
 #endif
 #if (NDIM == 3)
         const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& , const int& ,
 #endif
         double*
                               );
 #if (NDIM == 2)
     void
-    LAGRANGIAN_WIDE_IB_3_INTERP_FC(
+    LAGRANGIAN_WIDE6_IB_3_INTERP_FC(
         const double* , const double* , const double* , const int& ,
 #if (NDIM == 2)
         const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& ,
 #endif
 #if (NDIM == 3)
         const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& , const int& ,
 #endif
         const double* ,
         const int* , const double* , const int& ,
         const double* , double*
-                                   );
+                                    );
 
     void
-    LAGRANGIAN_WIDE_IB_3_SPREAD_FC(
+    LAGRANGIAN_WIDE6_IB_3_SPREAD_FC(
         const double* , const double* , const double* , const int& ,
         const int* , const double* , const int& ,
         const double* , const double* ,
 #if (NDIM == 2)
         const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& ,
 #endif
 #if (NDIM == 3)
         const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& , const int& ,
 #endif
         double*
-                                   );
+                                    );
 #endif
     void
     LAGRANGIAN_IB_4_INTERP_FC(
         const double* , const double* , const double* , const int& ,
 #if (NDIM == 2)
         const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
+        const int* , const int* ,
         const int& , const int& ,
 #endif
 #if (NDIM == 3)
         const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
+        const int* , const int* ,
         const int& , const int& , const int& ,
 #endif
         const double* ,
@@ -393,71 +373,81 @@ extern "C"
         const double* , const double* ,
 #if (NDIM == 2)
         const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
+        const int* , const int* ,
         const int& , const int& ,
 #endif
 #if (NDIM == 3)
         const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
+        const int* , const int* ,
         const int& , const int& , const int& ,
 #endif
         double*
                               );
 
     void
-    LAGRANGIAN_IB_4_SPREAD_XP_FC(
+    LAGRANGIAN_WIDE8_IB_4_INTERP_FC(
         const double* , const double* , const double* , const int& ,
-        const int* , const double* , const int& ,
-        const double* , const double* ,
 #if (NDIM == 2)
         const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& ,
 #endif
 #if (NDIM == 3)
         const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
-        const int& , const int& , const int& ,
-#endif
-        double*
-                                 );
-#if (NDIM == 2)
-    void
-    LAGRANGIAN_WIDE_IB_4_INTERP_FC(
-        const double* , const double* , const double* , const int& ,
-#if (NDIM == 2)
-        const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
-        const int& , const int& ,
-#endif
-#if (NDIM == 3)
-        const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& , const int& ,
 #endif
         const double* ,
         const int* , const double* , const int& ,
         const double* , double*
-                                   );
+                                    );
 
     void
-    LAGRANGIAN_WIDE_IB_4_SPREAD_FC(
+    LAGRANGIAN_WIDE8_IB_4_SPREAD_FC(
         const double* , const double* , const double* , const int& ,
         const int* , const double* , const int& ,
         const double* , const double* ,
 #if (NDIM == 2)
         const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& ,
 #endif
 #if (NDIM == 3)
         const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* , const int* ,
         const int& , const int& , const int& ,
 #endif
         double*
-                                   );
+                                    );
+
+    void
+    LAGRANGIAN_WIDE16_IB_4_INTERP_FC(
+        const double* , const double* , const double* , const int& ,
+#if (NDIM == 2)
+        const int& , const int& , const int& , const int& ,
+        const int& , const int& ,
 #endif
+#if (NDIM == 3)
+        const int& , const int& , const int& , const int& , const int& , const int& ,
+        const int& , const int& , const int& ,
+#endif
+        const double* ,
+        const int* , const double* , const int& ,
+        const double* , double*
+                                     );
+
+    void
+    LAGRANGIAN_WIDE16_IB_4_SPREAD_FC(
+        const double* , const double* , const double* , const int& ,
+        const int* , const double* , const int& ,
+        const double* , const double* ,
+#if (NDIM == 2)
+        const int& , const int& , const int& , const int& ,
+        const int& , const int& ,
+#endif
+#if (NDIM == 3)
+        const int& , const int& , const int& , const int& , const int& , const int& ,
+        const int& , const int& , const int& ,
+#endif
+        double*
+                                     );
+
     void
     LAGRANGIAN_IB_6_INTERP_FC(
         const double* , const double* , const double* , const int& ,
@@ -493,24 +483,6 @@ extern "C"
 #endif
         double*
                               );
-
-    void
-    LAGRANGIAN_IB_6_SPREAD_XP_FC(
-        const double* , const double* , const double* , const int& ,
-        const int* , const double* , const int& ,
-        const double* , const double* ,
-#if (NDIM == 2)
-        const int& , const int& , const int& , const int& ,
-        const int* , const int* ,
-        const int& , const int& ,
-#endif
-#if (NDIM == 3)
-        const int& , const int& , const int& , const int& , const int& , const int& ,
-        const int* , const int* ,
-        const int& , const int& , const int& ,
-#endif
-        double*
-                                 );
 }
 
 /////////////////////////////// NAMESPACE ////////////////////////////////////
@@ -521,12 +493,6 @@ namespace IBTK
 
 namespace
 {
-// Timers.
-static Timer* t_interpolate;
-static Timer* t_interpolate_f77;
-static Timer* t_spread;
-static Timer* t_spread_f77;
-
 inline double
 ib4_delta_fcn(
     double r)
@@ -550,24 +516,13 @@ ib4_delta_fcn(
     }
 }// ib4_delta_fcn
 
-struct GetLocalPETScIndex
-    : std::unary_function<Pointer<LNodeIndex>,int>
-{
-    inline int
-    operator()(
-        const Pointer<LNodeIndex>& index) const
-        {
-            return index->getLocalPETScIndex();
-        }
-};
-
 struct SortModeComp
-    : std::binary_function<std::pair<Pointer<LNodeIndex>,std::vector<double> >,std::pair<Pointer<LNodeIndex>,std::vector<double> >,bool>
+    : std::binary_function<std::pair<const LNodeIndex*,blitz::TinyVector<double,NDIM> >,std::pair<const LNodeIndex*,blitz::TinyVector<double,NDIM> >,bool>
 {
     inline bool
     operator()(
-        const std::pair<Pointer<LNodeIndex>,std::vector<double> >& lhs,
-        const std::pair<Pointer<LNodeIndex>,std::vector<double> >& rhs) const
+        const std::pair<const LNodeIndex*,blitz::TinyVector<double,NDIM> >& lhs,
+        const std::pair<const LNodeIndex*,blitz::TinyVector<double,NDIM> >& rhs) const
         {
             if (LEInteractor::s_sort_mode == LEInteractor::SORT_INCREASING_LAG_IDX) return lhs.first->getLagrangianIndex() < rhs.first->getLagrangianIndex();
             if (LEInteractor::s_sort_mode == LEInteractor::SORT_DECREASING_LAG_IDX) return lhs.first->getLagrangianIndex() > rhs.first->getLagrangianIndex();
@@ -580,16 +535,15 @@ double (*LEInteractor::s_delta_fcn)(double r) = &ib4_delta_fcn;
 int LEInteractor::s_delta_fcn_stencil_size = 4;
 double LEInteractor::s_delta_fcn_C = 3.0/8.0;
 LEInteractor::SortMode LEInteractor::s_sort_mode = NO_SORT;
-LEInteractor::PrecisionMode LEInteractor::s_precision_mode  = DOUBLE;
 
 void
 LEInteractor::setFromDatabase(
     Pointer<Database> db)
 {
-    if (db.isNull()) return;
-    const std::string debug_sort_mode_str = db->getStringWithDefault("debug_sort_mode", "NO_SORT");
-    const std::string precision_mode_str = db->getStringWithDefault("precision_mode", "DOUBLE");
+    if (!db) return;
 
+    std::string debug_sort_mode_str = "NO_SORT";
+    if (db->keyExists("debug_sort_mode")) debug_sort_mode_str = db->getString("debug_sort_mode");
     if (debug_sort_mode_str == "NO_SORT")
     {
         s_sort_mode = NO_SORT;
@@ -607,21 +561,6 @@ LEInteractor::setFromDatabase(
         TBOX_ERROR("LEInteractor::setFromDatabase():\n"
                    << ":  invalid debug_sort_mode: " << debug_sort_mode_str << ".\n"
                    << "   Choices are: NO_SORT, SORT_INCREASING_LAG_IDX, SORT_DECREASING_LAG_IDX.\n");
-    }
-
-    if (precision_mode_str == "DOUBLE")
-    {
-        s_precision_mode = DOUBLE;
-    }
-    else if (precision_mode_str == "DOUBLE_DOUBLE")
-    {
-        s_precision_mode = DOUBLE_DOUBLE;
-    }
-    else
-    {
-        TBOX_ERROR("LEInteractor::setFromDatabase():\n"
-                   << ":  invalid precision_mode: " << precision_mode_str << ".\n"
-                   << "   Choices are: DOUBLE, DOUBLE_DOUBLE.\n");
     }
     return;
 }// setFromDatabase
@@ -649,37 +588,10 @@ LEInteractor::printClassData(
         os << "UNKNOWN";
     }
     os << "\n";
-    os << "  s_precision_mode = ";
-    if (s_precision_mode == DOUBLE)
-    {
-        os << "DOUBLE";
-    }
-    else if (s_precision_mode == DOUBLE_DOUBLE)
-    {
-        os << "DOUBLE_DOUBLE";
-    }
-    else
-    {
-        os << "UNKNOWN";
-    }
-    os << "\n";
     return;
 }// printClassData
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
-
-void
-LEInteractor::initializeTimers()
-{
-    // Setup Timers.
-    IBTK_DO_ONCE(
-        t_interpolate     = TimerManager::getManager()->getTimer("IBTK::LEInteractor::interpolate()");
-        t_interpolate_f77 = TimerManager::getManager()->getTimer("IBTK::LEInteractor::interpolate()[fortran]");
-        t_spread          = TimerManager::getManager()->getTimer("IBTK::LEInteractor::spread()");
-        t_spread_f77      = TimerManager::getManager()->getTimer("IBTK::LEInteractor::spread()[fortran]");
-                 );
-    return;
-}// initializeTimers
 
 int
 LEInteractor::getStencilSize(
@@ -688,18 +600,17 @@ LEInteractor::getStencilSize(
     if (weighting_fcn == "PIECEWISE_CONSTANT") return 1;
 #if (NDIM == 2)
     if (weighting_fcn == "PIECEWISE_LINEAR") return 2;
-    if (weighting_fcn == "WIDE_PIECEWISE_LINEAR") return 4;
+    if (weighting_fcn == "WIDE4_PIECEWISE_LINEAR") return 4;
     if (weighting_fcn == "PIECEWISE_CUBIC") return 4;
-    if (weighting_fcn == "WIDE_PIECEWISE_CUBIC") return 8;
+    if (weighting_fcn == "WIDE8_PIECEWISE_CUBIC") return 8;
 #endif
     if (weighting_fcn == "IB_3") return 4;
 #if (NDIM == 2)
-    if (weighting_fcn == "WIDE_IB_3") return 6;
+    if (weighting_fcn == "WIDE6_IB_3") return 6;
 #endif
     if (weighting_fcn == "IB_4") return 4;
-#if (NDIM == 2)
-    if (weighting_fcn == "WIDE_IB_4") return 8;
-#endif
+    if (weighting_fcn == "WIDE8_IB_4") return 8;
+    if (weighting_fcn == "WIDE16_IB_4") return 16;
     if (weighting_fcn == "IB_6") return 6;
     if (weighting_fcn == "USER_DEFINED") return s_delta_fcn_stencil_size;
     TBOX_ERROR("LEInteractor::getStencilSize()\n"
@@ -715,9 +626,9 @@ LEInteractor::getC(
     if (weighting_fcn == "PIECEWISE_CONSTANT") return 1.0;
 #if (NDIM == 2)
     if (weighting_fcn == "PIECEWISE_LINEAR" ||
-        weighting_fcn == "WIDE_PIECEWISE_LINEAR" ||
+        weighting_fcn == "WIDE4_PIECEWISE_LINEAR" ||
         weighting_fcn == "PIECEWISE_CUBIC" ||
-        weighting_fcn == "WIDE_PIECEWISE_CUBIC")
+        weighting_fcn == "WIDE8_PIECEWISE_CUBIC")
     {
         TBOX_ERROR("LEInteractor::getC()\n"
                    << "  Weighting function " << weighting_fcn << " does not satisfy the quadratic (sum-of-squares) condition.\n"
@@ -726,12 +637,11 @@ LEInteractor::getC(
 #endif
     if (weighting_fcn == "IB_3") return 0.5;
 #if (NDIM == 2)
-    if (weighting_fcn == "WIDE_IB_3") return 0.25*getC("IB_3");
+    if (weighting_fcn == "WIDE6_IB_3") return 0.25*getC("IB_3");
 #endif
     if (weighting_fcn == "IB_4") return 3.0/8.0;
-#if (NDIM == 2)
-    if (weighting_fcn == "WIDE_IB_4") return 0.25*getC("IB_4");
-#endif
+    if (weighting_fcn == "WIDE8_IB_4") return 0.25*getC("IB_4");
+    if (weighting_fcn == "WIDE16_IB_4") return 0.0625*getC("IB_4");
     if (weighting_fcn == "IB_6") return 67.0/128.0;
     if (weighting_fcn == "USER_DEFINED") return s_delta_fcn_C;
     TBOX_ERROR("LEInteractor::getC()\n"
@@ -740,42 +650,76 @@ LEInteractor::getC(
     return -1;
 }// getC
 
+template<class T>
 void
 LEInteractor::interpolate(
-    Pointer<LNodeLevelData>& Q_data,
-    const Pointer<LNodeLevelData>& X_data,
-    const Pointer<LNodeIndexData>& idx_data,
+    Pointer<LData> Q_data,
+    const Pointer<LData> X_data,
+    const Pointer<LIndexSetData<T> > idx_data,
     const Pointer<CellData<NDIM,double> > q_data,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<Patch<NDIM> > patch,
     const Box<NDIM>& interp_box,
     const IntVector<NDIM>& periodic_shift,
     const std::string& interp_fcn)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!Q_data.isNull());
-    TBOX_ASSERT(!q_data.isNull());
-    TBOX_ASSERT(!X_data.isNull());
-    TBOX_ASSERT(!idx_data.isNull());
-    TBOX_ASSERT(!patch.isNull());
-    TBOX_ASSERT(Q_data->getDepth() == q_data->getDepth());
+    TBOX_ASSERT(Q_data);
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(X_data);
+    TBOX_ASSERT(idx_data);
+    TBOX_ASSERT(patch);
+    TBOX_ASSERT(Q_data->getDepth() == static_cast<unsigned int>(q_data->getDepth()));
     TBOX_ASSERT(X_data->getDepth() == NDIM);
 #endif
-    if (Q_data->getLocalNodeCount() == 0) return;
-    interpolate(&(*Q_data)(0), Q_data->getDepth(),
-                &(*X_data)(0), X_data->getDepth(),
+    interpolate(Q_data->getGhostedLocalFormVecArray()->data(), Q_data->getDepth(),
+                X_data->getGhostedLocalFormVecArray()->data(), X_data->getDepth(),
                 idx_data,
                 q_data,
                 patch, interp_box, periodic_shift, interp_fcn);
+    Q_data->restoreArrays();
+    X_data->restoreArrays();
     return;
 }// interpolate
 
+template<class T>
 void
 LEInteractor::interpolate(
-    Pointer<LNodeLevelData>& Q_data,
-    const Pointer<LNodeLevelData>& X_data,
-    const Pointer<LNodeIndexData>& idx_data,
+    Pointer<LData> Q_data,
+    const Pointer<LData> X_data,
+    const Pointer<LIndexSetData<T> > idx_data,
+    const Pointer<NodeData<NDIM,double> > q_data,
+    const Pointer<Patch<NDIM> > patch,
+    const Box<NDIM>& interp_box,
+    const IntVector<NDIM>& periodic_shift,
+    const std::string& interp_fcn)
+{
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(Q_data);
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(X_data);
+    TBOX_ASSERT(idx_data);
+    TBOX_ASSERT(patch);
+    TBOX_ASSERT(Q_data->getDepth() == static_cast<unsigned int>(q_data->getDepth()));
+    TBOX_ASSERT(X_data->getDepth() == NDIM);
+#endif
+    interpolate(Q_data->getGhostedLocalFormVecArray()->data(), Q_data->getDepth(),
+                X_data->getGhostedLocalFormVecArray()->data(), X_data->getDepth(),
+                idx_data,
+                q_data,
+                patch, interp_box, periodic_shift, interp_fcn);
+    Q_data->restoreArrays();
+    X_data->restoreArrays();
+    return;
+}// interpolate
+
+template<class T>
+void
+LEInteractor::interpolate(
+    Pointer<LData> Q_data,
+    const Pointer<LData> X_data,
+    const Pointer<LIndexSetData<T> > idx_data,
     const Pointer<SideData<NDIM,double> > q_data,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<Patch<NDIM> > patch,
     const Box<NDIM>& interp_box,
     const IntVector<NDIM>& periodic_shift,
     const std::string& interp_fcn)
@@ -786,55 +730,56 @@ LEInteractor::interpolate(
                    << "  side-centered interpolation requires vector-valued data.\n");
     }
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!Q_data.isNull());
-    TBOX_ASSERT(!q_data.isNull());
-    TBOX_ASSERT(!X_data.isNull());
-    TBOX_ASSERT(!idx_data.isNull());
-    TBOX_ASSERT(!patch.isNull());
+    TBOX_ASSERT(Q_data);
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(X_data);
+    TBOX_ASSERT(idx_data);
+    TBOX_ASSERT(patch);
     TBOX_ASSERT(Q_data->getDepth() == NDIM);
     TBOX_ASSERT(X_data->getDepth() == NDIM);
     TBOX_ASSERT(q_data->getDepth() == 1);
 #endif
-    if (Q_data->getLocalNodeCount() == 0) return;
-    interpolate(&(*Q_data)(0), Q_data->getDepth(),
-                &(*X_data)(0), X_data->getDepth(),
+    interpolate(Q_data->getGhostedLocalFormVecArray()->data(), Q_data->getDepth(),
+                X_data->getGhostedLocalFormVecArray()->data(), X_data->getDepth(),
                 idx_data,
                 q_data,
                 patch, interp_box, periodic_shift, interp_fcn);
+    Q_data->restoreArrays();
+    X_data->restoreArrays();
     return;
 }// interpolate
 
+template<class T>
 void
 LEInteractor::interpolate(
     double* const Q_data,
     const int Q_depth,
     const double* const X_data,
     const int X_depth,
-    const Pointer<LNodeIndexData>& idx_data,
+    const Pointer<LIndexSetData<T> > idx_data,
     const Pointer<CellData<NDIM,double> > q_data,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<Patch<NDIM> > patch,
     const Box<NDIM>& interp_box,
     const IntVector<NDIM>& periodic_shift,
     const std::string& interp_fcn)
 {
-    t_interpolate->start();
-
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!q_data.isNull());
-    TBOX_ASSERT(!idx_data.isNull());
-    TBOX_ASSERT(!patch.isNull());
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(idx_data);
+    TBOX_ASSERT(patch);
     TBOX_ASSERT(Q_depth == q_data->getDepth());
     TBOX_ASSERT(X_depth == NDIM);
+#else
+    NULL_USE(X_depth);
 #endif
     // Determine the patch geometry.
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
     const double* const x_lower = pgeom->getXLower();
     const double* const x_upper = pgeom->getXUpper();
     const double* const dx = pgeom->getDx();
-    std::vector<int> patch_touches_lower_physical_bdry(NDIM,0);
-    std::vector<int> patch_touches_upper_physical_bdry(NDIM,0);
-    std::vector<int> use_alt_one_sided_delta(NDIM,0);
-    for (int axis = 0; axis < NDIM; ++axis)
+    blitz::TinyVector<int,NDIM> patch_touches_lower_physical_bdry(0);
+    blitz::TinyVector<int,NDIM> patch_touches_upper_physical_bdry(0);
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
     {
         static const int lower = 0;
         patch_touches_lower_physical_bdry[axis] = pgeom->getTouchesRegularBoundary(axis,lower);
@@ -846,58 +791,120 @@ LEInteractor::interpolate(
     std::vector<int> local_indices;
     std::vector<double> periodic_offsets;
     buildLocalIndices(local_indices, periodic_offsets, interp_box, patch, periodic_shift, idx_data);
-    if (local_indices.empty()) return;
 
     // Interpolate.
-    interpolate(Q_data, Q_depth, X_data, X_depth,
-                q_data->getPointer(), q_data->getBox(), q_data->getGhostCellWidth(), q_data->getDepth(),
-                x_lower, x_upper, dx,
-                patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
-                use_alt_one_sided_delta,
-                local_indices, periodic_offsets,
-                interp_fcn);
-
-    t_interpolate->stop();
+    if (!local_indices.empty())
+    {
+        interpolate(Q_data, Q_depth, X_data,
+                    q_data->getPointer(), q_data->getBox(), q_data->getGhostCellWidth(), q_data->getDepth(),
+                    x_lower, x_upper, dx,
+                    patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
+                    local_indices, periodic_offsets,
+                    interp_fcn);
+    }
     return;
 }// interpolate
 
+template<class T>
 void
 LEInteractor::interpolate(
     double* const Q_data,
     const int Q_depth,
     const double* const X_data,
     const int X_depth,
-    const Pointer<LNodeIndexData>& idx_data,
-    const Pointer<SideData<NDIM,double> > q_data,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<LIndexSetData<T> > idx_data,
+    const Pointer<NodeData<NDIM,double> > q_data,
+    const Pointer<Patch<NDIM> > patch,
     const Box<NDIM>& interp_box,
     const IntVector<NDIM>& periodic_shift,
     const std::string& interp_fcn)
 {
-    t_interpolate->start();
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(idx_data);
+    TBOX_ASSERT(patch);
+    TBOX_ASSERT(Q_depth == q_data->getDepth());
+    TBOX_ASSERT(X_depth == NDIM);
+#else
+    NULL_USE(X_depth);
+#endif
+    // Determine the patch geometry.
+    const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
+    const double* const x_lower = pgeom->getXLower();
+    const double* const x_upper = pgeom->getXUpper();
+    const double* const dx = pgeom->getDx();
+    blitz::TinyVector<int,NDIM> patch_touches_lower_physical_bdry(0);
+    blitz::TinyVector<int,NDIM> patch_touches_upper_physical_bdry(0);
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    {
+        static const int lower = 0;
+        patch_touches_lower_physical_bdry[axis] = pgeom->getTouchesRegularBoundary(axis,lower);
+        static const int upper = 1;
+        patch_touches_upper_physical_bdry[axis] = pgeom->getTouchesRegularBoundary(axis,upper);
+    }
 
+    // Generate a list of local indices which lie in the specified box.
+    std::vector<int> local_indices;
+    std::vector<double> periodic_offsets;
+    buildLocalIndices(local_indices, periodic_offsets, interp_box, patch, periodic_shift, idx_data);
+
+    // Interpolate.
+    if (!local_indices.empty())
+    {
+        blitz::TinyVector<double,NDIM> x_lower_node, x_upper_node;
+        for (unsigned int d = 0; d < NDIM; ++d)
+        {
+            x_lower_node[d] = x_lower[d]-0.5*dx[d];
+            x_upper_node[d] = x_upper[d]+0.5*dx[d];
+        }
+        interpolate(Q_data, Q_depth, X_data,
+                    q_data->getPointer(), NodeGeometry<NDIM>::toNodeBox(q_data->getBox()), q_data->getGhostCellWidth(), q_data->getDepth(),
+                    x_lower_node.data(), x_upper_node.data(), dx,
+                    patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
+                    local_indices, periodic_offsets,
+                    interp_fcn);
+    }
+    return;
+}// interpolate
+
+template<class T>
+void
+LEInteractor::interpolate(
+    double* const Q_data,
+    const int Q_depth,
+    const double* const X_data,
+    const int X_depth,
+    const Pointer<LIndexSetData<T> > idx_data,
+    const Pointer<SideData<NDIM,double> > q_data,
+    const Pointer<Patch<NDIM> > patch,
+    const Box<NDIM>& interp_box,
+    const IntVector<NDIM>& periodic_shift,
+    const std::string& interp_fcn)
+{
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(idx_data);
+    TBOX_ASSERT(patch);
+    TBOX_ASSERT(Q_depth == NDIM);
+    TBOX_ASSERT(X_depth == NDIM);
+    TBOX_ASSERT(q_data->getDepth() == 1);
+#else
+    NULL_USE(X_depth);
+#endif
     if (Q_depth != NDIM || q_data->getDepth() != 1)
     {
         TBOX_ERROR("LEInteractor::interpolate():\n"
                    << "  side-centered interpolation requires vector-valued data.\n");
     }
 
-#ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!q_data.isNull());
-    TBOX_ASSERT(!idx_data.isNull());
-    TBOX_ASSERT(!patch.isNull());
-    TBOX_ASSERT(Q_depth == NDIM);
-    TBOX_ASSERT(X_depth == NDIM);
-    TBOX_ASSERT(q_data->getDepth() == 1);
-#endif
     // Determine the patch geometry.
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
     const double* const x_lower = pgeom->getXLower();
     const double* const x_upper = pgeom->getXUpper();
     const double* const dx = pgeom->getDx();
-    std::vector<int> patch_touches_lower_physical_bdry(NDIM,0);
-    std::vector<int> patch_touches_upper_physical_bdry(NDIM,0);
-    for (int axis = 0; axis < NDIM; ++axis)
+    blitz::TinyVector<int,NDIM> patch_touches_lower_physical_bdry(0);
+    blitz::TinyVector<int,NDIM> patch_touches_upper_physical_bdry(0);
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
     {
         static const int lower = 0;
         patch_touches_lower_physical_bdry[axis] = pgeom->getTouchesRegularBoundary(axis,lower);
@@ -909,41 +916,34 @@ LEInteractor::interpolate(
     std::vector<int> local_indices;
     std::vector<double> periodic_offsets;
     buildLocalIndices(local_indices, periodic_offsets, interp_box, patch, periodic_shift, idx_data);
-    if (local_indices.empty()) return;
-    const int local_sz = (*std::max_element(local_indices.begin(),local_indices.end()))+1;
 
     // Interpolate.
-    double x_lower_axis[NDIM], x_upper_axis[NDIM];
-    std::vector<double> Q_data_axis(local_sz);
-    for (int axis = 0; axis < NDIM; ++axis)
+    if (!local_indices.empty())
     {
-        std::vector<int> use_alt_one_sided_delta(NDIM,0);
-        //use_alt_one_sided_delta[axis] = 1;
-        // NOTE: When the previous line is not commented, a shifted one-sided
-        // delta function is used for the normal component at physical
-        // boundaries, avoiding interpolating data from the exact physical
-        // boundary.
-        for (int d = 0; d < NDIM; ++d)
+        blitz::TinyVector<double,NDIM> x_lower_axis, x_upper_axis;
+        const int local_sz = (*std::max_element(local_indices.begin(),local_indices.end()))+1;
+        std::vector<double> Q_data_axis(local_sz);
+        for (unsigned int axis = 0; axis < NDIM; ++axis)
         {
-            x_lower_axis[d] = x_lower[d];
-            x_upper_axis[d] = x_upper[d];
-        }
-        x_lower_axis[axis] -= 0.5*dx[axis];
-        x_upper_axis[axis] += 0.5*dx[axis];
-        interpolate(&Q_data_axis[0], 1, X_data, X_depth,
-                    q_data->getPointer(axis), SideGeometry<NDIM>::toSideBox(q_data->getBox(), axis), q_data->getGhostCellWidth(), 1,
-                    x_lower_axis, x_upper_axis, dx,
-                    patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
-                    use_alt_one_sided_delta,
-                    local_indices, periodic_offsets,
-                    interp_fcn);
-        for (unsigned k = 0; k < local_indices.size(); ++k)
-        {
-            Q_data[NDIM*local_indices[k]+axis] = Q_data_axis[local_indices[k]];
+            for (unsigned int d = 0; d < NDIM; ++d)
+            {
+                x_lower_axis[d] = x_lower[d];
+                x_upper_axis[d] = x_upper[d];
+            }
+            x_lower_axis[axis] -= 0.5*dx[axis];
+            x_upper_axis[axis] += 0.5*dx[axis];
+            interpolate(&Q_data_axis[0], 1, X_data,
+                        q_data->getPointer(axis), SideGeometry<NDIM>::toSideBox(q_data->getBox(), axis), q_data->getGhostCellWidth(), 1,
+                        x_lower_axis.data(), x_upper_axis.data(), dx,
+                        patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
+                        local_indices, periodic_offsets,
+                        interp_fcn);
+            for (unsigned int k = 0; k < local_indices.size(); ++k)
+            {
+                Q_data[NDIM*local_indices[k]+axis] = Q_data_axis[local_indices[k]];
+            }
         }
     }
-
-    t_interpolate->stop();
     return;
 }// interpolate
 
@@ -954,7 +954,41 @@ LEInteractor::interpolate(
     const std::vector<double>& X_data,
     const int X_depth,
     const Pointer<CellData<NDIM,double> > q_data,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<Patch<NDIM> > patch,
+    const Box<NDIM>& interp_box,
+    const std::string& interp_fcn)
+{
+    if (Q_data.size() == 0) return;
+    interpolate(&Q_data[0], Q_data.size(), Q_depth,
+                &X_data[0], X_data.size(), X_depth,
+                q_data, patch, interp_box, interp_fcn);
+}// interpolate
+
+void
+LEInteractor::interpolate(
+    std::vector<double>& Q_data,
+    const int Q_depth,
+    const std::vector<double>& X_data,
+    const int X_depth,
+    const Pointer<NodeData<NDIM,double> > q_data,
+    const Pointer<Patch<NDIM> > patch,
+    const Box<NDIM>& interp_box,
+    const std::string& interp_fcn)
+{
+    if (Q_data.size() == 0) return;
+    interpolate(&Q_data[0], Q_data.size(), Q_depth,
+                &X_data[0], X_data.size(), X_depth,
+                q_data, patch, interp_box, interp_fcn);
+}// interpolate
+
+void
+LEInteractor::interpolate(
+    std::vector<double>& Q_data,
+    const int Q_depth,
+    const std::vector<double>& X_data,
+    const int X_depth,
+    const Pointer<SideData<NDIM,double> > q_data,
+    const Pointer<Patch<NDIM> > patch,
     const Box<NDIM>& interp_box,
     const std::string& interp_fcn)
 {
@@ -973,28 +1007,27 @@ LEInteractor::interpolate(
     const int X_size,
     const int X_depth,
     const Pointer<CellData<NDIM,double> > q_data,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<Patch<NDIM> > patch,
     const Box<NDIM>& interp_box,
     const std::string& interp_fcn)
 {
-    t_interpolate->start();
-
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!q_data.isNull());
-    TBOX_ASSERT(!patch.isNull());
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(patch);
     TBOX_ASSERT(Q_depth == q_data->getDepth());
     TBOX_ASSERT(X_depth == NDIM);
     TBOX_ASSERT(Q_size/Q_depth == X_size/X_depth);
+#else
+    NULL_USE(Q_size);
 #endif
     // Determine the patch geometry.
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
     const double* const x_lower = pgeom->getXLower();
     const double* const x_upper = pgeom->getXUpper();
     const double* const dx = pgeom->getDx();
-    std::vector<int> patch_touches_lower_physical_bdry(NDIM,0);
-    std::vector<int> patch_touches_upper_physical_bdry(NDIM,0);
-    std::vector<int> use_alt_one_sided_delta(NDIM,0);
-    for (int axis = 0; axis < NDIM; ++axis)
+    blitz::TinyVector<int,NDIM> patch_touches_lower_physical_bdry(0);
+    blitz::TinyVector<int,NDIM> patch_touches_upper_physical_bdry(0);
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
     {
         static const int lower = 0;
         patch_touches_lower_physical_bdry[axis] = pgeom->getTouchesRegularBoundary(axis,lower);
@@ -1006,37 +1039,81 @@ LEInteractor::interpolate(
     // all periodic offsets to zero.
     std::vector<int> local_indices;
     buildLocalIndices(local_indices, interp_box, patch, X_data, X_size, X_depth);
-    std::vector<double> periodic_offsets(NDIM*local_indices.size(),0.0);
-    if (local_indices.empty()) return;
+    std::vector<double> periodic_offsets(NDIM*local_indices.size());
 
     // Interpolate.
-    interpolate(Q_data, Q_depth, X_data, X_depth,
-                q_data->getPointer(), q_data->getBox(), q_data->getGhostCellWidth(), q_data->getDepth(),
-                x_lower, x_upper, dx,
-                patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
-                use_alt_one_sided_delta,
-                local_indices, periodic_offsets,
-                interp_fcn);
-
-    t_interpolate->stop();
+    if (!local_indices.empty())
+    {
+        interpolate(Q_data, Q_depth, X_data,
+                    q_data->getPointer(), q_data->getBox(), q_data->getGhostCellWidth(), q_data->getDepth(),
+                    x_lower, x_upper, dx,
+                    patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
+                    local_indices, periodic_offsets,
+                    interp_fcn);
+    }
     return;
 }// interpolate
 
 void
 LEInteractor::interpolate(
-    std::vector<double>& Q_data,
+    double* const Q_data,
+    const int Q_size,
     const int Q_depth,
-    const std::vector<double>& X_data,
+    const double* const X_data,
+    const int X_size,
     const int X_depth,
-    const Pointer<SideData<NDIM,double> > q_data,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<NodeData<NDIM,double> > q_data,
+    const Pointer<Patch<NDIM> > patch,
     const Box<NDIM>& interp_box,
     const std::string& interp_fcn)
 {
-    if (Q_data.size() == 0) return;
-    interpolate(&Q_data[0], Q_data.size(), Q_depth,
-                &X_data[0], X_data.size(), X_depth,
-                q_data, patch, interp_box, interp_fcn);
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(patch);
+    TBOX_ASSERT(Q_depth == q_data->getDepth());
+    TBOX_ASSERT(X_depth == NDIM);
+    TBOX_ASSERT(Q_size/Q_depth == X_size/X_depth);
+#else
+    NULL_USE(Q_size);
+#endif
+    // Determine the patch geometry.
+    const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
+    const double* const x_lower = pgeom->getXLower();
+    const double* const x_upper = pgeom->getXUpper();
+    const double* const dx = pgeom->getDx();
+    blitz::TinyVector<int,NDIM> patch_touches_lower_physical_bdry(0);
+    blitz::TinyVector<int,NDIM> patch_touches_upper_physical_bdry(0);
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    {
+        static const int lower = 0;
+        patch_touches_lower_physical_bdry[axis] = pgeom->getTouchesRegularBoundary(axis,lower);
+        static const int upper = 1;
+        patch_touches_upper_physical_bdry[axis] = pgeom->getTouchesRegularBoundary(axis,upper);
+    }
+
+    // Generate a list of local indices which lie in the specified box and set
+    // all periodic offsets to zero.
+    std::vector<int> local_indices;
+    buildLocalIndices(local_indices, interp_box, patch, X_data, X_size, X_depth);
+    std::vector<double> periodic_offsets(NDIM*local_indices.size());
+
+    // Interpolate.
+    if (!local_indices.empty())
+    {
+        blitz::TinyVector<double,NDIM> x_lower_node, x_upper_node;
+        for (unsigned int d = 0; d < NDIM; ++d)
+        {
+            x_lower_node[d] = x_lower[d]-0.5*dx[d];
+            x_upper_node[d] = x_upper[d]+0.5*dx[d];
+        }
+        interpolate(Q_data, Q_depth, X_data,
+                    q_data->getPointer(), NodeGeometry<NDIM>::toNodeBox(q_data->getBox()), q_data->getGhostCellWidth(), q_data->getDepth(),
+                    x_lower_node.data(), x_upper_node.data(), dx,
+                    patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
+                    local_indices, periodic_offsets,
+                    interp_fcn);
+    }
+    return;
 }// interpolate
 
 void
@@ -1048,34 +1125,34 @@ LEInteractor::interpolate(
     const int X_size,
     const int X_depth,
     const Pointer<SideData<NDIM,double> > q_data,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<Patch<NDIM> > patch,
     const Box<NDIM>& interp_box,
     const std::string& interp_fcn)
 {
-    t_interpolate->start();
-
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(patch);
+    TBOX_ASSERT(Q_depth == NDIM);
+    TBOX_ASSERT(X_depth == NDIM);
+    TBOX_ASSERT(Q_size/Q_depth == X_size/X_depth);
+    TBOX_ASSERT(q_data->getDepth() == 1);
+#else
+    NULL_USE(Q_size);
+#endif
     if (Q_depth != NDIM || q_data->getDepth() != 1)
     {
         TBOX_ERROR("LEInteractor::interpolate():\n"
                    << "  side-centered interpolation requires vector-valued data.\n");
     }
 
-#ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!q_data.isNull());
-    TBOX_ASSERT(!patch.isNull());
-    TBOX_ASSERT(Q_depth == NDIM);
-    TBOX_ASSERT(X_depth == NDIM);
-    TBOX_ASSERT(Q_size/Q_depth == X_size/X_depth);
-    TBOX_ASSERT(q_data->getDepth() == 1);
-#endif
     // Determine the patch geometry.
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
     const double* const x_lower = pgeom->getXLower();
     const double* const x_upper = pgeom->getXUpper();
     const double* const dx = pgeom->getDx();
-    std::vector<int> patch_touches_lower_physical_bdry(NDIM,0);
-    std::vector<int> patch_touches_upper_physical_bdry(NDIM,0);
-    for (int axis = 0; axis < NDIM; ++axis)
+    blitz::TinyVector<int,NDIM> patch_touches_lower_physical_bdry(0);
+    blitz::TinyVector<int,NDIM> patch_touches_upper_physical_bdry(0);
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
     {
         static const int lower = 0;
         patch_touches_lower_physical_bdry[axis] = pgeom->getTouchesRegularBoundary(axis,lower);
@@ -1087,81 +1164,108 @@ LEInteractor::interpolate(
     // all periodic offsets to zero.
     std::vector<int> local_indices;
     buildLocalIndices(local_indices, interp_box, patch, X_data, X_size, X_depth);
-    std::vector<double> periodic_offsets(NDIM*local_indices.size(),0.0);
-    if (local_indices.empty()) return;
-    const int local_sz = (*std::max_element(local_indices.begin(),local_indices.end()))+1;
+    std::vector<double> periodic_offsets(NDIM*local_indices.size());
 
     // Interpolate.
-    double x_lower_axis[NDIM], x_upper_axis[NDIM];
-    std::vector<double> Q_data_axis(local_sz);
-    for (int axis = 0; axis < NDIM; ++axis)
+    if (!local_indices.empty())
     {
-        std::vector<int> use_alt_one_sided_delta(NDIM,0);
-        //use_alt_one_sided_delta[axis] = 1;
-        // NOTE: When the previous line is not commented, a shifted one-sided
-        // delta function is used for the normal component at physical
-        // boundaries, avoiding interpolating data from the exact physical
-        // boundary.
-        for (int d = 0; d < NDIM; ++d)
+        blitz::TinyVector<double,NDIM> x_lower_axis, x_upper_axis;
+        const int local_sz = (*std::max_element(local_indices.begin(),local_indices.end()))+1;
+        std::vector<double> Q_data_axis(local_sz);
+        for (unsigned int axis = 0; axis < NDIM; ++axis)
         {
-            x_lower_axis[d] = x_lower[d];
-            x_upper_axis[d] = x_upper[d];
-        }
-        x_lower_axis[axis] -= 0.5*dx[axis];
-        x_upper_axis[axis] += 0.5*dx[axis];
-        interpolate(&Q_data_axis[0], 1, X_data, X_depth,
-                    q_data->getPointer(axis), SideGeometry<NDIM>::toSideBox(q_data->getBox(), axis), q_data->getGhostCellWidth(), 1,
-                    x_lower_axis, x_upper_axis, dx,
-                    patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
-                    use_alt_one_sided_delta,
-                    local_indices, periodic_offsets,
-                    interp_fcn);
-        for (unsigned k = 0; k < local_indices.size(); ++k)
-        {
-            Q_data[NDIM*local_indices[k]+axis] = Q_data_axis[local_indices[k]];
+            for (unsigned int d = 0; d < NDIM; ++d)
+            {
+                x_lower_axis[d] = x_lower[d];
+                x_upper_axis[d] = x_upper[d];
+            }
+            x_lower_axis[axis] -= 0.5*dx[axis];
+            x_upper_axis[axis] += 0.5*dx[axis];
+            interpolate(&Q_data_axis[0], 1, X_data,
+                        q_data->getPointer(axis), SideGeometry<NDIM>::toSideBox(q_data->getBox(), axis), q_data->getGhostCellWidth(), 1,
+                        x_lower_axis.data(), x_upper_axis.data(), dx,
+                        patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
+                        local_indices, periodic_offsets,
+                        interp_fcn);
+            for (unsigned int k = 0; k < local_indices.size(); ++k)
+            {
+                Q_data[NDIM*local_indices[k]+axis] = Q_data_axis[local_indices[k]];
+            }
         }
     }
-
-    t_interpolate->stop();
     return;
 }// interpolate
 
+template<class T>
 void
 LEInteractor::spread(
     Pointer<CellData<NDIM,double> > q_data,
-    const Pointer<LNodeLevelData>& Q_data,
-    const Pointer<LNodeLevelData>& X_data,
-    const Pointer<LNodeIndexData>& idx_data,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<LData> Q_data,
+    const Pointer<LData> X_data,
+    const Pointer<LIndexSetData<T> > idx_data,
+    const Pointer<Patch<NDIM> > patch,
     const Box<NDIM>& spread_box,
     const IntVector<NDIM>& periodic_shift,
     const std::string& spread_fcn)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!Q_data.isNull());
-    TBOX_ASSERT(!q_data.isNull());
-    TBOX_ASSERT(!X_data.isNull());
-    TBOX_ASSERT(!idx_data.isNull());
-    TBOX_ASSERT(!patch.isNull());
-    TBOX_ASSERT(Q_data->getDepth() == q_data->getDepth());
+    TBOX_ASSERT(Q_data);
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(X_data);
+    TBOX_ASSERT(idx_data);
+    TBOX_ASSERT(patch);
+    TBOX_ASSERT(Q_data->getDepth() == static_cast<unsigned int>(q_data->getDepth()));
     TBOX_ASSERT(X_data->getDepth() == NDIM);
 #endif
-    if (Q_data->getLocalNodeCount() == 0 && Q_data->getLocalGhostNodeCount() == 0) return;
     spread(q_data,
-           &(*Q_data)(0), Q_data->getDepth(),
-           &(*X_data)(0), X_data->getDepth(),
+           Q_data->getGhostedLocalFormVecArray()->data(), Q_data->getDepth(),
+           X_data->getGhostedLocalFormVecArray()->data(), X_data->getDepth(),
            idx_data,
            patch, spread_box, periodic_shift, spread_fcn);
+    Q_data->restoreArrays();
+    X_data->restoreArrays();
     return;
 }// spread
 
+template<class T>
+void
+LEInteractor::spread(
+    Pointer<NodeData<NDIM,double> > q_data,
+    const Pointer<LData> Q_data,
+    const Pointer<LData> X_data,
+    const Pointer<LIndexSetData<T> > idx_data,
+    const Pointer<Patch<NDIM> > patch,
+    const Box<NDIM>& spread_box,
+    const IntVector<NDIM>& periodic_shift,
+    const std::string& spread_fcn)
+{
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(Q_data);
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(X_data);
+    TBOX_ASSERT(idx_data);
+    TBOX_ASSERT(patch);
+    TBOX_ASSERT(Q_data->getDepth() == static_cast<unsigned int>(q_data->getDepth()));
+    TBOX_ASSERT(X_data->getDepth() == NDIM);
+#endif
+    spread(q_data,
+           Q_data->getGhostedLocalFormVecArray()->data(), Q_data->getDepth(),
+           X_data->getGhostedLocalFormVecArray()->data(), X_data->getDepth(),
+           idx_data,
+           patch, spread_box, periodic_shift, spread_fcn);
+    Q_data->restoreArrays();
+    X_data->restoreArrays();
+    return;
+}// spread
+
+template<class T>
 void
 LEInteractor::spread(
     Pointer<SideData<NDIM,double> > q_data,
-    const Pointer<LNodeLevelData>& Q_data,
-    const Pointer<LNodeLevelData>& X_data,
-    const Pointer<LNodeIndexData>& idx_data,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<LData> Q_data,
+    const Pointer<LData> X_data,
+    const Pointer<LIndexSetData<T> > idx_data,
+    const Pointer<Patch<NDIM> > patch,
     const Box<NDIM>& spread_box,
     const IntVector<NDIM>& periodic_shift,
     const std::string& spread_fcn)
@@ -1172,24 +1276,26 @@ LEInteractor::spread(
                    << "  side-centered spreading requires vector-valued data.\n");
     }
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!Q_data.isNull());
-    TBOX_ASSERT(!q_data.isNull());
-    TBOX_ASSERT(!X_data.isNull());
-    TBOX_ASSERT(!idx_data.isNull());
-    TBOX_ASSERT(!patch.isNull());
+    TBOX_ASSERT(Q_data);
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(X_data);
+    TBOX_ASSERT(idx_data);
+    TBOX_ASSERT(patch);
     TBOX_ASSERT(q_data->getDepth() == 1);
     TBOX_ASSERT(Q_data->getDepth() == NDIM);
     TBOX_ASSERT(X_data->getDepth() == NDIM);
 #endif
-    if (Q_data->getLocalNodeCount() == 0 && Q_data->getLocalGhostNodeCount() == 0) return;
     spread(q_data,
-           &(*Q_data)(0), Q_data->getDepth(),
-           &(*X_data)(0), X_data->getDepth(),
+           Q_data->getGhostedLocalFormVecArray()->data(), Q_data->getDepth(),
+           X_data->getGhostedLocalFormVecArray()->data(), X_data->getDepth(),
            idx_data,
            patch, spread_box, periodic_shift, spread_fcn);
+    Q_data->restoreArrays();
+    X_data->restoreArrays();
     return;
 }// spread
 
+template<class T>
 void
 LEInteractor::spread(
     Pointer<CellData<NDIM,double> > q_data,
@@ -1197,30 +1303,29 @@ LEInteractor::spread(
     const int Q_depth,
     const double* const X_data,
     const int X_depth,
-    const Pointer<LNodeIndexData>& idx_data,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<LIndexSetData<T> > idx_data,
+    const Pointer<Patch<NDIM> > patch,
     const Box<NDIM>& spread_box,
     const IntVector<NDIM>& periodic_shift,
     const std::string& spread_fcn)
 {
-    t_spread->start();
-
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!q_data.isNull());
-    TBOX_ASSERT(!idx_data.isNull());
-    TBOX_ASSERT(!patch.isNull());
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(idx_data);
+    TBOX_ASSERT(patch);
     TBOX_ASSERT(Q_depth == q_data->getDepth());
     TBOX_ASSERT(X_depth == NDIM);
+#else
+    NULL_USE(X_depth);
 #endif
     // Determine the patch geometry.
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
     const double* const x_lower = pgeom->getXLower();
     const double* const x_upper = pgeom->getXUpper();
     const double* const dx = pgeom->getDx();
-    std::vector<int> patch_touches_lower_physical_bdry(NDIM,0);
-    std::vector<int> patch_touches_upper_physical_bdry(NDIM,0);
-    std::vector<int> use_alt_one_sided_delta(NDIM,0);
-    for (int axis = 0; axis < NDIM; ++axis)
+    blitz::TinyVector<int,NDIM> patch_touches_lower_physical_bdry(0);
+    blitz::TinyVector<int,NDIM> patch_touches_upper_physical_bdry(0);
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
     {
         static const int lower = 0;
         patch_touches_lower_physical_bdry[axis] = pgeom->getTouchesRegularBoundary(axis,lower);
@@ -1232,21 +1337,83 @@ LEInteractor::spread(
     std::vector<int> local_indices;
     std::vector<double> periodic_offsets;
     buildLocalIndices(local_indices, periodic_offsets, spread_box, patch, periodic_shift, idx_data);
-    if (local_indices.empty()) return;
 
     // Spread.
-    spread(q_data->getPointer(), q_data->getBox(), q_data->getGhostCellWidth(), q_data->getDepth(),
-           Q_data, Q_depth, X_data, X_depth,
-           x_lower, x_upper, dx,
-           patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
-           use_alt_one_sided_delta,
-           local_indices, periodic_offsets,
-           spread_fcn);
-
-    t_spread->stop();
+    if (!local_indices.empty())
+    {
+        spread(q_data->getPointer(), q_data->getBox(), q_data->getGhostCellWidth(), q_data->getDepth(),
+               Q_data, Q_depth, X_data,
+               x_lower, x_upper, dx,
+               patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
+               local_indices, periodic_offsets,
+               spread_fcn);
+    }
     return;
 }// spread
 
+template<class T>
+void
+LEInteractor::spread(
+    Pointer<NodeData<NDIM,double> > q_data,
+    const double* const Q_data,
+    const int Q_depth,
+    const double* const X_data,
+    const int X_depth,
+    const Pointer<LIndexSetData<T> > idx_data,
+    const Pointer<Patch<NDIM> > patch,
+    const Box<NDIM>& spread_box,
+    const IntVector<NDIM>& periodic_shift,
+    const std::string& spread_fcn)
+{
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(idx_data);
+    TBOX_ASSERT(patch);
+    TBOX_ASSERT(Q_depth == q_data->getDepth());
+    TBOX_ASSERT(X_depth == NDIM);
+#else
+    NULL_USE(X_depth);
+#endif
+    // Determine the patch geometry.
+    const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
+    const double* const x_lower = pgeom->getXLower();
+    const double* const x_upper = pgeom->getXUpper();
+    const double* const dx = pgeom->getDx();
+    blitz::TinyVector<int,NDIM> patch_touches_lower_physical_bdry(0);
+    blitz::TinyVector<int,NDIM> patch_touches_upper_physical_bdry(0);
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    {
+        static const int lower = 0;
+        patch_touches_lower_physical_bdry[axis] = pgeom->getTouchesRegularBoundary(axis,lower);
+        static const int upper = 1;
+        patch_touches_upper_physical_bdry[axis] = pgeom->getTouchesRegularBoundary(axis,upper);
+    }
+
+    // Generate a list of local indices which lie in the specified box.
+    std::vector<int> local_indices;
+    std::vector<double> periodic_offsets;
+    buildLocalIndices(local_indices, periodic_offsets, spread_box, patch, periodic_shift, idx_data);
+
+    // Spread.
+    if (!local_indices.empty())
+    {
+        blitz::TinyVector<double,NDIM> x_lower_node, x_upper_node;
+        for (unsigned int d = 0; d < NDIM; ++d)
+        {
+            x_lower_node[d] = x_lower[d]-0.5*dx[d];
+            x_upper_node[d] = x_upper[d]+0.5*dx[d];
+        }
+        spread(q_data->getPointer(), NodeGeometry<NDIM>::toNodeBox(q_data->getBox()), q_data->getGhostCellWidth(), q_data->getDepth(),
+               Q_data, Q_depth, X_data,
+               x_lower_node.data(), x_upper_node.data(), dx,
+               patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
+               local_indices, periodic_offsets,
+               spread_fcn);
+    }
+    return;
+}// spread
+
+template<class T>
 void
 LEInteractor::spread(
     Pointer<SideData<NDIM,double> > q_data,
@@ -1254,35 +1421,36 @@ LEInteractor::spread(
     const int Q_depth,
     const double* const X_data,
     const int X_depth,
-    const Pointer<LNodeIndexData>& idx_data,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<LIndexSetData<T> > idx_data,
+    const Pointer<Patch<NDIM> > patch,
     const Box<NDIM>& spread_box,
     const IntVector<NDIM>& periodic_shift,
     const std::string& spread_fcn)
 {
-    t_spread->start();
-
-    if (Q_depth != NDIM || q_data->getDepth() != 1)
-    {
-        TBOX_ERROR("LEInteractor::spread():\n"
-                   << "  side-centered spreading requires vector-valued data.\n");
-    }
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!q_data.isNull());
-    TBOX_ASSERT(!idx_data.isNull());
-    TBOX_ASSERT(!patch.isNull());
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(idx_data);
+    TBOX_ASSERT(patch);
     TBOX_ASSERT(q_data->getDepth() == 1);
     TBOX_ASSERT(Q_depth == NDIM);
     TBOX_ASSERT(X_depth == NDIM);
+#else
+    NULL_USE(X_depth);
 #endif
+    if (Q_depth != NDIM || q_data->getDepth() != 1)
+    {
+        TBOX_ERROR("LEInteractor::spread():\n"
+                   << "  side-centered spreading requires vector-valued data.\n");
+    }
+
     // Determine the patch geometry.
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
     const double* const x_lower = pgeom->getXLower();
     const double* const x_upper = pgeom->getXUpper();
     const double* const dx = pgeom->getDx();
-    std::vector<int> patch_touches_lower_physical_bdry(NDIM,0);
-    std::vector<int> patch_touches_upper_physical_bdry(NDIM,0);
-    for (int axis = 0; axis < NDIM; ++axis)
+    blitz::TinyVector<int,NDIM> patch_touches_lower_physical_bdry(0);
+    blitz::TinyVector<int,NDIM> patch_touches_upper_physical_bdry(0);
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
     {
         static const int lower = 0;
         patch_touches_lower_physical_bdry[axis] = pgeom->getTouchesRegularBoundary(axis,lower);
@@ -1294,40 +1462,34 @@ LEInteractor::spread(
     std::vector<int> local_indices;
     std::vector<double> periodic_offsets;
     buildLocalIndices(local_indices, periodic_offsets, spread_box, patch, periodic_shift, idx_data);
-    if (local_indices.empty()) return;
-    const int local_sz = (*std::max_element(local_indices.begin(),local_indices.end()))+1;
 
     // Spread.
-    double x_lower_axis[NDIM], x_upper_axis[NDIM];
-    std::vector<double> Q_data_axis(local_sz);
-    for (int axis = 0; axis < NDIM; ++axis)
+    if (!local_indices.empty())
     {
-        std::vector<int> use_alt_one_sided_delta(NDIM,0);
-        //use_alt_one_sided_delta[axis] = 1;
-        // NOTE: When the previous line is not commented, a shifted one-sided
-        // delta function is used for the normal component at physical
-        // boundaries, avoiding spreading data to the exact physical boundary.
-        for (int d = 0; d < NDIM; ++d)
+        blitz::TinyVector<double,NDIM> x_lower_axis, x_upper_axis;
+        const int local_sz = (*std::max_element(local_indices.begin(),local_indices.end()))+1;
+        std::vector<double> Q_data_axis(local_sz);
+        for (unsigned int axis = 0; axis < NDIM; ++axis)
         {
-            x_lower_axis[d] = x_lower[d];
-            x_upper_axis[d] = x_upper[d];
+            for (unsigned int d = 0; d < NDIM; ++d)
+            {
+                x_lower_axis[d] = x_lower[d];
+                x_upper_axis[d] = x_upper[d];
+            }
+            x_lower_axis[axis] -= 0.5*dx[axis];
+            x_upper_axis[axis] += 0.5*dx[axis];
+            for (unsigned int k = 0; k < local_indices.size(); ++k)
+            {
+                Q_data_axis[local_indices[k]] = Q_data[NDIM*local_indices[k]+axis];
+            }
+            spread(q_data->getPointer(axis), SideGeometry<NDIM>::toSideBox(q_data->getBox(),axis), q_data->getGhostCellWidth(), 1,
+                   &Q_data_axis[0], 1, X_data,
+                   x_lower_axis.data(), x_upper_axis.data(), dx,
+                   patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
+                   local_indices, periodic_offsets,
+                   spread_fcn);
         }
-        x_lower_axis[axis] -= 0.5*dx[axis];
-        x_upper_axis[axis] += 0.5*dx[axis];
-        for (unsigned k = 0; k < local_indices.size(); ++k)
-        {
-            Q_data_axis[local_indices[k]] = Q_data[NDIM*local_indices[k]+axis];
-        }
-        spread(q_data->getPointer(axis), SideGeometry<NDIM>::toSideBox(q_data->getBox(),axis), q_data->getGhostCellWidth(), 1,
-               &Q_data_axis[0], 1, X_data, X_depth,
-               x_lower_axis, x_upper_axis, dx,
-               patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
-               use_alt_one_sided_delta,
-               local_indices, periodic_offsets,
-               spread_fcn);
     }
-
-    t_spread->stop();
     return;
 }// spread
 
@@ -1338,7 +1500,25 @@ LEInteractor::spread(
     const int Q_depth,
     const std::vector<double>& X_data,
     const int X_depth,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<Patch<NDIM> > patch,
+    const Box<NDIM>& spread_box,
+    const std::string& interp_fcn)
+{
+    if (Q_data.size() == 0) return;
+    spread(q_data,
+           &Q_data[0], Q_data.size(), Q_depth,
+           &X_data[0], X_data.size(), X_depth,
+           patch, spread_box, interp_fcn);
+}// spread
+
+void
+LEInteractor::spread(
+    Pointer<NodeData<NDIM,double> > q_data,
+    const std::vector<double>& Q_data,
+    const int Q_depth,
+    const std::vector<double>& X_data,
+    const int X_depth,
+    const Pointer<Patch<NDIM> > patch,
     const Box<NDIM>& spread_box,
     const std::string& interp_fcn)
 {
@@ -1356,7 +1536,7 @@ LEInteractor::spread(
     const int Q_depth,
     const std::vector<double>& X_data,
     const int X_depth,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<Patch<NDIM> > patch,
     const Box<NDIM>& spread_box,
     const std::string& interp_fcn)
 {
@@ -1376,28 +1556,27 @@ LEInteractor::spread(
     const double* const X_data,
     const int X_size,
     const int X_depth,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<Patch<NDIM> > patch,
     const Box<NDIM>& spread_box,
     const std::string& spread_fcn)
 {
-    t_spread->start();
-
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!q_data.isNull());
-    TBOX_ASSERT(!patch.isNull());
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(patch);
     TBOX_ASSERT(Q_depth == q_data->getDepth());
     TBOX_ASSERT(X_depth == NDIM);
     TBOX_ASSERT(Q_size/Q_depth == X_size/X_depth);
+#else
+    NULL_USE(Q_size);
 #endif
     // Determine the patch geometry.
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
     const double* const x_lower = pgeom->getXLower();
     const double* const x_upper = pgeom->getXUpper();
     const double* const dx = pgeom->getDx();
-    std::vector<int> patch_touches_lower_physical_bdry(NDIM,0);
-    std::vector<int> patch_touches_upper_physical_bdry(NDIM,0);
-    std::vector<int> use_alt_one_sided_delta(NDIM,0);
-    for (int axis = 0; axis < NDIM; ++axis)
+    blitz::TinyVector<int,NDIM> patch_touches_lower_physical_bdry(0);
+    blitz::TinyVector<int,NDIM> patch_touches_upper_physical_bdry(0);
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
     {
         static const int lower = 0;
         patch_touches_lower_physical_bdry[axis] = pgeom->getTouchesRegularBoundary(axis,lower);
@@ -1409,19 +1588,80 @@ LEInteractor::spread(
     // all periodic offsets to zero.
     std::vector<int> local_indices;
     buildLocalIndices(local_indices, spread_box, patch, X_data, X_size, X_depth);
-    std::vector<double> periodic_offsets(NDIM*local_indices.size(),0.0);
-    if (local_indices.empty()) return;
+    std::vector<double> periodic_offsets(NDIM*local_indices.size());
 
     // Spread.
-    spread(q_data->getPointer(), q_data->getBox(), q_data->getGhostCellWidth(), q_data->getDepth(),
-           Q_data, Q_depth, X_data, X_depth,
-           x_lower, x_upper, dx,
-           patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
-           use_alt_one_sided_delta,
-           local_indices, periodic_offsets,
-           spread_fcn);
+    if (!local_indices.empty())
+    {
+        spread(q_data->getPointer(), q_data->getBox(), q_data->getGhostCellWidth(), q_data->getDepth(),
+               Q_data, Q_depth, X_data,
+               x_lower, x_upper, dx,
+               patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
+               local_indices, periodic_offsets,
+               spread_fcn);
+    }
+    return;
+}// spread
 
-    t_spread->stop();
+void
+LEInteractor::spread(
+    Pointer<NodeData<NDIM,double> > q_data,
+    const double* const Q_data,
+    const int Q_size,
+    const int Q_depth,
+    const double* const X_data,
+    const int X_size,
+    const int X_depth,
+    const Pointer<Patch<NDIM> > patch,
+    const Box<NDIM>& spread_box,
+    const std::string& spread_fcn)
+{
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(patch);
+    TBOX_ASSERT(Q_depth == q_data->getDepth());
+    TBOX_ASSERT(X_depth == NDIM);
+    TBOX_ASSERT(Q_size/Q_depth == X_size/X_depth);
+#else
+    NULL_USE(Q_size);
+#endif
+    // Determine the patch geometry.
+    const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
+    const double* const x_lower = pgeom->getXLower();
+    const double* const x_upper = pgeom->getXUpper();
+    const double* const dx = pgeom->getDx();
+    blitz::TinyVector<int,NDIM> patch_touches_lower_physical_bdry(0);
+    blitz::TinyVector<int,NDIM> patch_touches_upper_physical_bdry(0);
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    {
+        static const int lower = 0;
+        patch_touches_lower_physical_bdry[axis] = pgeom->getTouchesRegularBoundary(axis,lower);
+        static const int upper = 1;
+        patch_touches_upper_physical_bdry[axis] = pgeom->getTouchesRegularBoundary(axis,upper);
+    }
+
+    // Generate a list of local indices which lie in the specified box and set
+    // all periodic offsets to zero.
+    std::vector<int> local_indices;
+    buildLocalIndices(local_indices, spread_box, patch, X_data, X_size, X_depth);
+    std::vector<double> periodic_offsets(NDIM*local_indices.size());
+
+    // Spread.
+    if (!local_indices.empty())
+    {
+        blitz::TinyVector<double,NDIM> x_lower_node, x_upper_node;
+        for (unsigned int d = 0; d < NDIM; ++d)
+        {
+            x_lower_node[d] = x_lower[d]-0.5*dx[d];
+            x_upper_node[d] = x_upper[d]+0.5*dx[d];
+        }
+        spread(q_data->getPointer(), NodeGeometry<NDIM>::toNodeBox(q_data->getBox()), q_data->getGhostCellWidth(), q_data->getDepth(),
+               Q_data, Q_depth, X_data,
+               x_lower_node.data(), x_upper_node.data(), dx,
+               patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
+               local_indices, periodic_offsets,
+               spread_fcn);
+    }
     return;
 }// spread
 
@@ -1429,25 +1669,23 @@ void
 LEInteractor::spread(
     Pointer<SideData<NDIM,double> > q_data,
     const double* const Q_data,
-    const int Q_size,
+    const int /*Q_size*/,
     const int Q_depth,
     const double* const X_data,
     const int X_size,
     const int X_depth,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<Patch<NDIM> > patch,
     const Box<NDIM>& spread_box,
     const std::string& spread_fcn)
 {
-    t_spread->start();
-
     if (Q_depth != NDIM || q_data->getDepth() != 1)
     {
         TBOX_ERROR("LEInteractor::spread():\n"
                    << "  side-centered spreading requires vector-valued data.\n");
     }
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!q_data.isNull());
-    TBOX_ASSERT(!patch.isNull());
+    TBOX_ASSERT(q_data);
+    TBOX_ASSERT(patch);
     TBOX_ASSERT(Q_depth == NDIM);
     TBOX_ASSERT(X_depth == NDIM);
 #endif
@@ -1456,9 +1694,9 @@ LEInteractor::spread(
     const double* const x_lower = pgeom->getXLower();
     const double* const x_upper = pgeom->getXUpper();
     const double* const dx = pgeom->getDx();
-    std::vector<int> patch_touches_lower_physical_bdry(NDIM,0);
-    std::vector<int> patch_touches_upper_physical_bdry(NDIM,0);
-    for (int axis = 0; axis < NDIM; ++axis)
+    blitz::TinyVector<int,NDIM> patch_touches_lower_physical_bdry(0);
+    blitz::TinyVector<int,NDIM> patch_touches_upper_physical_bdry(0);
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
     {
         static const int lower = 0;
         patch_touches_lower_physical_bdry[axis] = pgeom->getTouchesRegularBoundary(axis,lower);
@@ -1470,41 +1708,35 @@ LEInteractor::spread(
     // all periodic offsets to zero.
     std::vector<int> local_indices;
     buildLocalIndices(local_indices, spread_box, patch, X_data, X_size, X_depth);
-    std::vector<double> periodic_offsets(NDIM*local_indices.size(),0.0);
-    if (local_indices.empty()) return;
-    const int local_sz = (*std::max_element(local_indices.begin(),local_indices.end()))+1;
+    std::vector<double> periodic_offsets(NDIM*local_indices.size());
 
     // Spread.
-    double x_lower_axis[NDIM], x_upper_axis[NDIM];
-    std::vector<double> Q_data_axis(local_sz);
-    for (int axis = 0; axis < NDIM; ++axis)
+    if (!local_indices.empty())
     {
-        std::vector<int> use_alt_one_sided_delta(NDIM,0);
-        //use_alt_one_sided_delta[axis] = 1;
-        // NOTE: When the previous line is not commented, a shifted one-sided
-        // delta function is used for the normal component at physical
-        // boundaries, avoiding spreading data to the exact physical boundary.
-        for (int d = 0; d < NDIM; ++d)
+        blitz::TinyVector<double,NDIM> x_lower_axis, x_upper_axis;
+        const int local_sz = (*std::max_element(local_indices.begin(),local_indices.end()))+1;
+        std::vector<double> Q_data_axis(local_sz);
+        for (unsigned int axis = 0; axis < NDIM; ++axis)
         {
-            x_lower_axis[d] = x_lower[d];
-            x_upper_axis[d] = x_upper[d];
+            for (unsigned int d = 0; d < NDIM; ++d)
+            {
+                x_lower_axis[d] = x_lower[d];
+                x_upper_axis[d] = x_upper[d];
+            }
+            x_lower_axis[axis] -= 0.5*dx[axis];
+            x_upper_axis[axis] += 0.5*dx[axis];
+            for (unsigned int k = 0; k < local_indices.size(); ++k)
+            {
+                Q_data_axis[local_indices[k]] = Q_data[NDIM*local_indices[k]+axis];
+            }
+            spread(q_data->getPointer(axis), SideGeometry<NDIM>::toSideBox(q_data->getBox(),axis), q_data->getGhostCellWidth(), 1,
+                   &Q_data_axis[0], 1, X_data,
+                   x_lower_axis.data(), x_upper_axis.data(), dx,
+                   patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
+                   local_indices, periodic_offsets,
+                   spread_fcn);
         }
-        x_lower_axis[axis] -= 0.5*dx[axis];
-        x_upper_axis[axis] += 0.5*dx[axis];
-        for (unsigned k = 0; k < local_indices.size(); ++k)
-        {
-            Q_data_axis[local_indices[k]] = Q_data[NDIM*local_indices[k]+axis];
-        }
-        spread(q_data->getPointer(axis), SideGeometry<NDIM>::toSideBox(q_data->getBox(),axis), q_data->getGhostCellWidth(), 1,
-               &Q_data_axis[0], 1, X_data, X_depth,
-               x_lower_axis, x_upper_axis, dx,
-               patch_touches_lower_physical_bdry, patch_touches_upper_physical_bdry,
-               use_alt_one_sided_delta,
-               local_indices, periodic_offsets,
-               spread_fcn);
     }
-
-    t_spread->stop();
     return;
 }// spread
 
@@ -1517,7 +1749,6 @@ LEInteractor::interpolate(
     double* const Q_data,
     const int Q_depth,
     const double* const X_data,
-    const int X_depth,
     const double* const q_data,
     const Box<NDIM>& q_data_box,
     const IntVector<NDIM>& q_gcw,
@@ -1525,15 +1756,13 @@ LEInteractor::interpolate(
     const double* const x_lower,
     const double* const x_upper,
     const double* const dx,
-    const std::vector<int>& patch_touches_lower_physical_bdry,
-    const std::vector<int>& patch_touches_upper_physical_bdry,
-    const std::vector<int>& use_alt_one_sided_delta,
+    const blitz::TinyVector<int,NDIM>& patch_touches_lower_physical_bdry,
+    const blitz::TinyVector<int,NDIM>& patch_touches_upper_physical_bdry,
     const std::vector<int>& local_indices,
     const std::vector<double>& periodic_offsets,
     const std::string& interp_fcn)
 {
     if (local_indices.empty()) return;
-    t_interpolate_f77->start();
     const int local_indices_size = local_indices.size();
     const IntVector<NDIM>& ilower = q_data_box.lower();
     const IntVector<NDIM>& iupper = q_data_box.upper();
@@ -1551,7 +1780,7 @@ LEInteractor::interpolate(
 #endif
             q_data,
             &local_indices[0], &periodic_offsets[0], local_indices_size,
-            X_data,Q_data);
+            X_data, Q_data);
     }
     else if (interp_fcn == "PIECEWISE_LINEAR")
     {
@@ -1560,14 +1789,10 @@ LEInteractor::interpolate(
             dx,x_lower,x_upper,q_depth,
 #if (NDIM == 2)
             ilower(0),iupper(0),ilower(1),iupper(1),
-            &patch_touches_lower_physical_bdry[0],
-            &patch_touches_upper_physical_bdry[0],
             q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
             ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-            &patch_touches_lower_physical_bdry[0],
-            &patch_touches_upper_physical_bdry[0],
             q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
             q_data,
@@ -1578,23 +1803,17 @@ LEInteractor::interpolate(
                    "  Weighting function " << interp_fcn << " is only supported in 2D" << std::endl);
 #endif
     }
-    else if (interp_fcn == "WIDE_PIECEWISE_LINEAR")
+    else if (interp_fcn == "WIDE4_PIECEWISE_LINEAR")
     {
 #if (NDIM == 2)
-        LAGRANGIAN_WIDE_PIECEWISE_LINEAR_INTERP_FC(
+        LAGRANGIAN_WIDE4_PIECEWISE_LINEAR_INTERP_FC(
             dx,x_lower,x_upper,q_depth,
 #if (NDIM == 2)
             ilower(0),iupper(0),ilower(1),iupper(1),
-            &patch_touches_lower_physical_bdry[0],
-            &patch_touches_upper_physical_bdry[0],
-            &use_alt_one_sided_delta[0],
             q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
             ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-            &patch_touches_lower_physical_bdry[0],
-            &patch_touches_upper_physical_bdry[0],
-            &use_alt_one_sided_delta[0],
             q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
             q_data,
@@ -1612,16 +1831,10 @@ LEInteractor::interpolate(
             dx,x_lower,x_upper,q_depth,
 #if (NDIM == 2)
             ilower(0),iupper(0),ilower(1),iupper(1),
-            &patch_touches_lower_physical_bdry[0],
-            &patch_touches_upper_physical_bdry[0],
-            &use_alt_one_sided_delta[0],
             q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
             ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-            &patch_touches_lower_physical_bdry[0],
-            &patch_touches_upper_physical_bdry[0],
-            &use_alt_one_sided_delta[0],
             q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
             q_data,
@@ -1632,23 +1845,17 @@ LEInteractor::interpolate(
                    "  Weighting function " << interp_fcn << " is only supported in 2D" << std::endl);
 #endif
     }
-    else if (interp_fcn == "WIDE_PIECEWISE_CUBIC")
+    else if (interp_fcn == "WIDE8_PIECEWISE_CUBIC")
     {
 #if (NDIM == 2)
-        LAGRANGIAN_WIDE_PIECEWISE_CUBIC_INTERP_FC(
+        LAGRANGIAN_WIDE8_PIECEWISE_CUBIC_INTERP_FC(
             dx,x_lower,x_upper,q_depth,
 #if (NDIM == 2)
             ilower(0),iupper(0),ilower(1),iupper(1),
-            &patch_touches_lower_physical_bdry[0],
-            &patch_touches_upper_physical_bdry[0],
-            &use_alt_one_sided_delta[0],
             q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
             ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-            &patch_touches_lower_physical_bdry[0],
-            &patch_touches_upper_physical_bdry[0],
-            &use_alt_one_sided_delta[0],
             q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
             q_data,
@@ -1665,39 +1872,27 @@ LEInteractor::interpolate(
             dx,x_lower,x_upper,q_depth,
 #if (NDIM == 2)
             ilower(0),iupper(0),ilower(1),iupper(1),
-            &patch_touches_lower_physical_bdry[0],
-            &patch_touches_upper_physical_bdry[0],
-            &use_alt_one_sided_delta[0],
             q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
             ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-            &patch_touches_lower_physical_bdry[0],
-            &patch_touches_upper_physical_bdry[0],
-            &use_alt_one_sided_delta[0],
             q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
             q_data,
             &local_indices[0], &periodic_offsets[0], local_indices_size,
             X_data,Q_data);
     }
-    else if (interp_fcn == "WIDE_IB_3")
+    else if (interp_fcn == "WIDE6_IB_3")
     {
 #if (NDIM == 2)
-        LAGRANGIAN_WIDE_IB_3_INTERP_FC(
+        LAGRANGIAN_WIDE6_IB_3_INTERP_FC(
             dx,x_lower,x_upper,q_depth,
 #if (NDIM == 2)
             ilower(0),iupper(0),ilower(1),iupper(1),
-            &patch_touches_lower_physical_bdry[0],
-            &patch_touches_upper_physical_bdry[0],
-            &use_alt_one_sided_delta[0],
             q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
             ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-            &patch_touches_lower_physical_bdry[0],
-            &patch_touches_upper_physical_bdry[0],
-            &use_alt_one_sided_delta[0],
             q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
             q_data,
@@ -1716,46 +1911,49 @@ LEInteractor::interpolate(
             ilower(0),iupper(0),ilower(1),iupper(1),
             &patch_touches_lower_physical_bdry[0],
             &patch_touches_upper_physical_bdry[0],
-            &use_alt_one_sided_delta[0],
             q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
             ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
             &patch_touches_lower_physical_bdry[0],
             &patch_touches_upper_physical_bdry[0],
-            &use_alt_one_sided_delta[0],
             q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
             q_data,
             &local_indices[0], &periodic_offsets[0], local_indices_size,
             X_data,Q_data);
     }
-    else if (interp_fcn == "WIDE_IB_4")
+    else if (interp_fcn == "WIDE8_IB_4")
     {
-#if (NDIM == 2)
-        LAGRANGIAN_WIDE_IB_4_INTERP_FC(
+        LAGRANGIAN_WIDE8_IB_4_INTERP_FC(
             dx,x_lower,x_upper,q_depth,
 #if (NDIM == 2)
             ilower(0),iupper(0),ilower(1),iupper(1),
-            &patch_touches_lower_physical_bdry[0],
-            &patch_touches_upper_physical_bdry[0],
-            &use_alt_one_sided_delta[0],
             q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
             ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-            &patch_touches_lower_physical_bdry[0],
-            &patch_touches_upper_physical_bdry[0],
-            &use_alt_one_sided_delta[0],
             q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
             q_data,
             &local_indices[0], &periodic_offsets[0], local_indices_size,
             X_data,Q_data);
-#else
-        TBOX_ERROR("LEInteractor::interpolate()\n" <<
-                   "  Weighting function " << interp_fcn << " is only supported in 2D" << std::endl);
+    }
+    else if (interp_fcn == "WIDE16_IB_4")
+    {
+        LAGRANGIAN_WIDE16_IB_4_INTERP_FC(
+            dx,x_lower,x_upper,q_depth,
+#if (NDIM == 2)
+            ilower(0),iupper(0),ilower(1),iupper(1),
+            q_gcw(0),q_gcw(1),
 #endif
+#if (NDIM == 3)
+            ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
+            q_gcw(0),q_gcw(1),q_gcw(2),
+#endif
+            q_data,
+            &local_indices[0], &periodic_offsets[0], local_indices_size,
+            X_data,Q_data);
     }
     else if (interp_fcn == "IB_6")
     {
@@ -1791,7 +1989,6 @@ LEInteractor::interpolate(
                    "  Unknown interpolation weighting function "
                    << interp_fcn << std::endl);
     }
-    t_interpolate_f77->stop();
     return;
 }// interpolate
 
@@ -1804,124 +2001,72 @@ LEInteractor::spread(
     const double* const Q_data,
     const int Q_depth,
     const double* const X_data,
-    const int X_depth,
     const double* const x_lower,
     const double* const x_upper,
     const double* const dx,
-    const std::vector<int>& patch_touches_lower_physical_bdry,
-    const std::vector<int>& patch_touches_upper_physical_bdry,
-    const std::vector<int>& use_alt_one_sided_delta,
+    const blitz::TinyVector<int,NDIM>& patch_touches_lower_physical_bdry,
+    const blitz::TinyVector<int,NDIM>& patch_touches_upper_physical_bdry,
     const std::vector<int>& local_indices,
     const std::vector<double>& periodic_offsets,
     const std::string& spread_fcn)
 {
     if (local_indices.empty()) return;
-    t_spread_f77->start();
     const int local_indices_size = local_indices.size();
     const IntVector<NDIM>& ilower = q_data_box.lower();
     const IntVector<NDIM>& iupper = q_data_box.upper();
     if (spread_fcn == "PIECEWISE_CONSTANT")
     {
-        if (s_precision_mode == DOUBLE)
-        {
-            LAGRANGIAN_PIECEWISE_CONSTANT_SPREAD_FC(
-                dx,x_lower,x_upper,q_depth,
-                &local_indices[0], &periodic_offsets[0], local_indices_size,
-                X_data, Q_data,
+        LAGRANGIAN_PIECEWISE_CONSTANT_SPREAD_FC(
+            dx,x_lower,x_upper,q_depth,
+            &local_indices[0], &periodic_offsets[0], local_indices_size,
+            X_data, Q_data,
 #if (NDIM == 2)
-                ilower(0),iupper(0),ilower(1),iupper(1),
-                q_gcw(0),q_gcw(1),
+            ilower(0),iupper(0),ilower(1),iupper(1),
+            q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
-                ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-                q_gcw(0),q_gcw(1),q_gcw(2),
+            ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
+            q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
-                q_data);
-        }
-        else if (s_precision_mode == DOUBLE_DOUBLE)
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  extended precision not currently supported for PIECEWISE_CONSTANT delta function.\n");
-        }
-        else
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  invalid precision mode; s_precision_mode = " << s_precision_mode << ".\n");
-        }
+            q_data);
     }
     else if (spread_fcn == "PIECEWISE_LINEAR")
     {
 #if (NDIM == 2)
-        if (s_precision_mode == DOUBLE)
-        {
-            LAGRANGIAN_PIECEWISE_LINEAR_SPREAD_FC(
-                dx,x_lower,x_upper,q_depth,
-                &local_indices[0], &periodic_offsets[0], local_indices_size,
-                X_data, Q_data,
+        LAGRANGIAN_PIECEWISE_LINEAR_SPREAD_FC(
+            dx,x_lower,x_upper,q_depth,
+            &local_indices[0], &periodic_offsets[0], local_indices_size,
+            X_data, Q_data,
 #if (NDIM == 2)
-                ilower(0),iupper(0),ilower(1),iupper(1),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                q_gcw(0),q_gcw(1),
+            ilower(0),iupper(0),ilower(1),iupper(1),
+            q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
-                ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                q_gcw(0),q_gcw(1),q_gcw(2),
+            ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
+            q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
-                q_data);
-        }
-        else if (s_precision_mode == DOUBLE_DOUBLE)
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  extended precision not currently supported for PIECEWISE_LINEAR delta function.\n");
-        }
-        else
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  invalid precision mode; s_precision_mode = " << s_precision_mode << ".\n");
-        }
+            q_data);
 #else
         TBOX_ERROR("LEInteractor::spread()\n" <<
                    "  Weighting function " << spread_fcn << " is only supported in 2D" << std::endl);
 #endif
     }
-    else if (spread_fcn == "WIDE_PIECEWISE_LINEAR")
+    else if (spread_fcn == "WIDE4_PIECEWISE_LINEAR")
     {
 #if (NDIM == 2)
-        if (s_precision_mode == DOUBLE)
-        {
-            LAGRANGIAN_WIDE_PIECEWISE_LINEAR_SPREAD_FC(
-                dx,x_lower,x_upper,q_depth,
-                &local_indices[0], &periodic_offsets[0], local_indices_size,
-                X_data, Q_data,
+        LAGRANGIAN_WIDE4_PIECEWISE_LINEAR_SPREAD_FC(
+            dx,x_lower,x_upper,q_depth,
+            &local_indices[0], &periodic_offsets[0], local_indices_size,
+            X_data, Q_data,
 #if (NDIM == 2)
-                ilower(0),iupper(0),ilower(1),iupper(1),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                &use_alt_one_sided_delta[0],
-                q_gcw(0),q_gcw(1),
+            ilower(0),iupper(0),ilower(1),iupper(1),
+            q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
-                ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                &use_alt_one_sided_delta[0],
-                q_gcw(0),q_gcw(1),q_gcw(2),
+            ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
+            q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
-                q_data);
-        }
-        else if (s_precision_mode == DOUBLE_DOUBLE)
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  extended precision not currently supported for WIDE_PIECEWISE_LINEAR delta function.\n");
-        }
-        else
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  invalid precision mode; s_precision_mode = " << s_precision_mode << ".\n");
-        }
+            q_data);
 #else
         TBOX_ERROR("LEInteractor::spread()\n" <<
                    "  Weighting function " << spread_fcn << " is only supported in 2D" << std::endl);
@@ -1930,78 +2075,40 @@ LEInteractor::spread(
     else if (spread_fcn == "PIECEWISE_CUBIC")
     {
 #if (NDIM == 2)
-        if (s_precision_mode == DOUBLE)
-        {
-            LAGRANGIAN_PIECEWISE_CUBIC_SPREAD_FC(
-                dx,x_lower,x_upper,q_depth,
-                &local_indices[0], &periodic_offsets[0], local_indices_size,
-                X_data, Q_data,
+        LAGRANGIAN_PIECEWISE_CUBIC_SPREAD_FC(
+            dx,x_lower,x_upper,q_depth,
+            &local_indices[0], &periodic_offsets[0], local_indices_size,
+            X_data, Q_data,
 #if (NDIM == 2)
-                ilower(0),iupper(0),ilower(1),iupper(1),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                &use_alt_one_sided_delta[0],
-                q_gcw(0),q_gcw(1),
+            ilower(0),iupper(0),ilower(1),iupper(1),
+            q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
-                ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                &use_alt_one_sided_delta[0],
-                q_gcw(0),q_gcw(1),q_gcw(2),
+            ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
+            q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
-                q_data);
-        }
-        else if (s_precision_mode == DOUBLE_DOUBLE)
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  extended precision not currently supported for PIECEWISE_CUBIC delta function.\n");
-        }
-        else
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  invalid precision mode; s_precision_mode = " << s_precision_mode << ".\n");
-        }
+            q_data);
 #else
         TBOX_ERROR("LEInteractor::spread()\n" <<
                    "  Weighting function " << spread_fcn << " is only supported in 2D" << std::endl);
 #endif
     }
-    else if (spread_fcn == "WIDE_PIECEWISE_CUBIC")
+    else if (spread_fcn == "WIDE8_PIECEWISE_CUBIC")
     {
 #if (NDIM == 2)
-        if (s_precision_mode == DOUBLE)
-        {
-            LAGRANGIAN_WIDE_PIECEWISE_CUBIC_SPREAD_FC(
-                dx,x_lower,x_upper,q_depth,
-                &local_indices[0], &periodic_offsets[0], local_indices_size,
-                X_data, Q_data,
+        LAGRANGIAN_WIDE8_PIECEWISE_CUBIC_SPREAD_FC(
+            dx,x_lower,x_upper,q_depth,
+            &local_indices[0], &periodic_offsets[0], local_indices_size,
+            X_data, Q_data,
 #if (NDIM == 2)
-                ilower(0),iupper(0),ilower(1),iupper(1),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                &use_alt_one_sided_delta[0],
-                q_gcw(0),q_gcw(1),
+            ilower(0),iupper(0),ilower(1),iupper(1),
+            q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
-                ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                &use_alt_one_sided_delta[0],
-                q_gcw(0),q_gcw(1),q_gcw(2),
+            ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
+            q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
-                q_data);
-        }
-        else if (s_precision_mode == DOUBLE_DOUBLE)
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  extended precision not currently supported for WIDE_PIECEWISE_CUBIC delta function.\n");
-        }
-        else
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  invalid precision mode; s_precision_mode = " << s_precision_mode << ".\n");
-        }
+            q_data);
 #else
         TBOX_ERROR("LEInteractor::spread()\n" <<
                    "  Weighting function " << spread_fcn << " is only supported in 2D" << std::endl);
@@ -2009,74 +2116,36 @@ LEInteractor::spread(
     }
     else if (spread_fcn == "IB_3")
     {
-        if (s_precision_mode == DOUBLE)
-        {
-            LAGRANGIAN_IB_3_SPREAD_FC(
-                dx,x_lower,x_upper,q_depth,
-                &local_indices[0], &periodic_offsets[0], local_indices_size,
-                X_data, Q_data,
+        LAGRANGIAN_IB_3_SPREAD_FC(
+            dx,x_lower,x_upper,q_depth,
+            &local_indices[0], &periodic_offsets[0], local_indices_size,
+            X_data, Q_data,
 #if (NDIM == 2)
-                ilower(0),iupper(0),ilower(1),iupper(1),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                &use_alt_one_sided_delta[0],
-                q_gcw(0),q_gcw(1),
+            ilower(0),iupper(0),ilower(1),iupper(1),
+            q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
-                ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                &use_alt_one_sided_delta[0],
-                q_gcw(0),q_gcw(1),q_gcw(2),
+            ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
+            q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
-                q_data);
-        }
-        else if (s_precision_mode == DOUBLE_DOUBLE)
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  extended precision not currently supported for IB_3 delta function.\n");
-        }
-        else
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  invalid precision mode; s_precision_mode = " << s_precision_mode << ".\n");
-        }
+            q_data);
     }
-    else if (spread_fcn == "WIDE_IB_3")
+    else if (spread_fcn == "WIDE6_IB_3")
     {
 #if (NDIM == 2)
-        if (s_precision_mode == DOUBLE)
-        {
-            LAGRANGIAN_WIDE_IB_3_SPREAD_FC(
-                dx,x_lower,x_upper,q_depth,
-                &local_indices[0], &periodic_offsets[0], local_indices_size,
-                X_data, Q_data,
+        LAGRANGIAN_WIDE6_IB_3_SPREAD_FC(
+            dx,x_lower,x_upper,q_depth,
+            &local_indices[0], &periodic_offsets[0], local_indices_size,
+            X_data, Q_data,
 #if (NDIM == 2)
-                ilower(0),iupper(0),ilower(1),iupper(1),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                &use_alt_one_sided_delta[0],
-                q_gcw(0),q_gcw(1),
+            ilower(0),iupper(0),ilower(1),iupper(1),
+            q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
-                ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                &use_alt_one_sided_delta[0],
-                q_gcw(0),q_gcw(1),q_gcw(2),
+            ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
+            q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
-                q_data);
-        }
-        else if (s_precision_mode == DOUBLE_DOUBLE)
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  extended precision not currently supported for WIDE_IB_3 delta function.\n");
-        }
-        else
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  invalid precision mode; s_precision_mode = " << s_precision_mode << ".\n");
-        }
+            q_data);
 #else
         TBOX_ERROR("LEInteractor::spread()\n" <<
                    "  Weighting function " << spread_fcn << " is only supported in 2D" << std::endl);
@@ -2084,143 +2153,75 @@ LEInteractor::spread(
     }
     else if (spread_fcn == "IB_4")
     {
-        if (s_precision_mode == DOUBLE)
-        {
-            LAGRANGIAN_IB_4_SPREAD_FC(
-                dx,x_lower,x_upper,q_depth,
-                &local_indices[0], &periodic_offsets[0], local_indices_size,
-                X_data, Q_data,
+        LAGRANGIAN_IB_4_SPREAD_FC(
+            dx,x_lower,x_upper,q_depth,
+            &local_indices[0], &periodic_offsets[0], local_indices_size,
+            X_data, Q_data,
 #if (NDIM == 2)
-                ilower(0),iupper(0),ilower(1),iupper(1),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                &use_alt_one_sided_delta[0],
-                q_gcw(0),q_gcw(1),
+            ilower(0),iupper(0),ilower(1),iupper(1),
+            &patch_touches_lower_physical_bdry[0],
+            &patch_touches_upper_physical_bdry[0],
+            q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
-                ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                &use_alt_one_sided_delta[0],
-                q_gcw(0),q_gcw(1),q_gcw(2),
+            ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
+            &patch_touches_lower_physical_bdry[0],
+            &patch_touches_upper_physical_bdry[0],
+            q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
-                q_data);
-        }
-        else if (s_precision_mode == DOUBLE_DOUBLE)
-        {
-            LAGRANGIAN_IB_4_SPREAD_XP_FC(
-                dx,x_lower,x_upper,q_depth,
-                &local_indices[0], &periodic_offsets[0], local_indices_size,
-                X_data, Q_data,
-#if (NDIM == 2)
-                ilower(0),iupper(0),ilower(1),iupper(1),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                &use_alt_one_sided_delta[0],
-                q_gcw(0),q_gcw(1),
-#endif
-#if (NDIM == 3)
-                ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                &use_alt_one_sided_delta[0],
-                q_gcw(0),q_gcw(1),q_gcw(2),
-#endif
-                q_data);
-        }
-        else
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  invalid precision mode; s_precision_mode = " << s_precision_mode << ".\n");
-        }
+            q_data);
     }
-    else if (spread_fcn == "WIDE_IB_4")
+    else if (spread_fcn == "WIDE8_IB_4")
     {
+        LAGRANGIAN_WIDE8_IB_4_SPREAD_FC(
+            dx,x_lower,x_upper,q_depth,
+            &local_indices[0], &periodic_offsets[0], local_indices_size,
+            X_data, Q_data,
 #if (NDIM == 2)
-        if (s_precision_mode == DOUBLE)
-        {
-            LAGRANGIAN_WIDE_IB_4_SPREAD_FC(
-                dx,x_lower,x_upper,q_depth,
-                &local_indices[0], &periodic_offsets[0], local_indices_size,
-                X_data, Q_data,
-#if (NDIM == 2)
-                ilower(0),iupper(0),ilower(1),iupper(1),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                &use_alt_one_sided_delta[0],
-                q_gcw(0),q_gcw(1),
+            ilower(0),iupper(0),ilower(1),iupper(1),
+            q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
-                ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                &use_alt_one_sided_delta[0],
-                q_gcw(0),q_gcw(1),q_gcw(2),
+            ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
+            q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
-                q_data);
-        }
-        else if (s_precision_mode == DOUBLE_DOUBLE)
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  extended precision not currently supported for WIDE_IB_4 delta function.\n");
-        }
-        else
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  invalid precision mode; s_precision_mode = " << s_precision_mode << ".\n");
-        }
-#else
-        TBOX_ERROR("LEInteractor::spread()\n" <<
-                   "  Weighting function " << spread_fcn << " is only supported in 2D" << std::endl);
+            q_data);
+    }
+    else if (spread_fcn == "WIDE16_IB_4")
+    {
+        LAGRANGIAN_WIDE16_IB_4_SPREAD_FC(
+            dx,x_lower,x_upper,q_depth,
+            &local_indices[0], &periodic_offsets[0], local_indices_size,
+            X_data, Q_data,
+#if (NDIM == 2)
+            ilower(0),iupper(0),ilower(1),iupper(1),
+            q_gcw(0),q_gcw(1),
 #endif
+#if (NDIM == 3)
+            ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
+            q_gcw(0),q_gcw(1),q_gcw(2),
+#endif
+            q_data);
     }
     else if (spread_fcn == "IB_6")
     {
-        if (s_precision_mode == DOUBLE)
-        {
-            LAGRANGIAN_IB_6_SPREAD_FC(
-                dx,x_lower,x_upper,q_depth,
-                &local_indices[0], &periodic_offsets[0], local_indices_size,
-                X_data,Q_data,
+        LAGRANGIAN_IB_6_SPREAD_FC(
+            dx,x_lower,x_upper,q_depth,
+            &local_indices[0], &periodic_offsets[0], local_indices_size,
+            X_data,Q_data,
 #if (NDIM == 2)
-                ilower(0),iupper(0),ilower(1),iupper(1),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                q_gcw(0),q_gcw(1),
+            ilower(0),iupper(0),ilower(1),iupper(1),
+            &patch_touches_lower_physical_bdry[0],
+            &patch_touches_upper_physical_bdry[0],
+            q_gcw(0),q_gcw(1),
 #endif
 #if (NDIM == 3)
-                ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                q_gcw(0),q_gcw(1),q_gcw(2),
+            ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
+            &patch_touches_lower_physical_bdry[0],
+            &patch_touches_upper_physical_bdry[0],
+            q_gcw(0),q_gcw(1),q_gcw(2),
 #endif
-                q_data);
-        }
-        else if (s_precision_mode == DOUBLE_DOUBLE)
-        {
-            LAGRANGIAN_IB_6_SPREAD_XP_FC(
-                dx,x_lower,x_upper,q_depth,
-                &local_indices[0], &periodic_offsets[0], local_indices_size,
-                X_data,Q_data,
-#if (NDIM == 2)
-                ilower(0),iupper(0),ilower(1),iupper(1),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                q_gcw(0),q_gcw(1),
-#endif
-#if (NDIM == 3)
-                ilower(0),iupper(0),ilower(1),iupper(1),ilower(2),iupper(2),
-                &patch_touches_lower_physical_bdry[0],
-                &patch_touches_upper_physical_bdry[0],
-                q_gcw(0),q_gcw(1),q_gcw(2),
-#endif
-                q_data);
-        }
-        else
-        {
-            TBOX_ERROR("LEInteractor::spread():\n"
-                       << "  invalid precision mode; s_precision_mode = " << s_precision_mode << ".\n");
-        }
+            q_data);
     }
     else if (spread_fcn == "USER_DEFINED")
     {
@@ -2236,68 +2237,92 @@ LEInteractor::spread(
                    "  Unknown spreading weighting function "
                    << spread_fcn << std::endl);
     }
-    t_spread_f77->stop();
     return;
 }// spread
 
+template<class T>
 void
 LEInteractor::buildLocalIndices(
     std::vector<int>& local_indices,
     std::vector<double>& periodic_offsets,
     const Box<NDIM>& box,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<Patch<NDIM> > patch,
     const IntVector<NDIM>& periodic_shift,
-    const Pointer<LNodeIndexData>& idx_data)
+    const Pointer<LIndexSetData<T> > idx_data)
 {
-    local_indices.clear();
+    local_indices   .clear();
     periodic_offsets.clear();
-    const int upper_bound = idx_data->getInteriorLocalIndices().size() + idx_data->getGhostLocalIndices().size();
+    const unsigned int upper_bound = idx_data->getInteriorLocalPETScIndices().size() + idx_data->getGhostLocalPETScIndices().size();
     if (upper_bound == 0) return;
+    local_indices   .reserve(     upper_bound);
+    periodic_offsets.reserve(NDIM*upper_bound);
 
     const Box<NDIM>& patch_box = patch->getBox();
     const Index<NDIM>& ilower = patch_box.lower();
     const Index<NDIM>& iupper = patch_box.upper();
+    const Box<NDIM>& ghost_box = idx_data->getGhostBox();
 
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
     const double* const dx = pgeom->getDx();
+    blitz::TinyVector<bool,NDIM> patch_touches_lower_periodic_bdry, patch_touches_upper_periodic_bdry;
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
+    {
+        patch_touches_lower_periodic_bdry[axis] = pgeom->getTouchesPeriodicBoundary(axis,0);
+        patch_touches_upper_periodic_bdry[axis] = pgeom->getTouchesPeriodicBoundary(axis,1);
+    }
 
-    local_indices.reserve(upper_bound);
-    periodic_offsets.reserve(NDIM*upper_bound);
+    blitz::TinyVector<int   ,NDIM>      offset;
+    blitz::TinyVector<double,NDIM> node_offset;
     if (s_sort_mode == NO_SORT)
     {
-        for (LNodeIndexData::LNodeIndexSetPatchIterator it(*idx_data); it; it++)
+        if (box == patch_box)
         {
-            const Index<NDIM>& i = it.getIndex();
-            if (box.contains(i))
+            local_indices = idx_data->getInteriorLocalPETScIndices();
+            periodic_offsets.resize(NDIM*local_indices.size(),0.0);
+        }
+        else if (box == ghost_box)
+        {
+            local_indices = idx_data->getLocalPETScIndices();
+            periodic_offsets.resize(NDIM*idx_data->getInteriorLocalPETScIndices().size(),0.0);
+            periodic_offsets.insert(periodic_offsets.end(), idx_data->getGhostPeriodicOffsets().begin(), idx_data->getGhostPeriodicOffsets().end());
+        }
+        else
+        {
+            for (typename LIndexSetData<T>::SetIterator it(*idx_data); it; it++)
             {
-                const LNodeIndexSet& node_set = it.getItem();
-                const LNodeIndexSet::size_type num_ids = node_set.size();
+                const Index<NDIM>& i = it.getIndex();
+                if (!box.contains(i)) continue;
 
-                std::vector<int> offset(NDIM,0);
-                static const int lower = 0;
-                static const int upper = 1;
-                for (int d = 0; d < NDIM; ++d)
+                for (unsigned int d = 0; d < NDIM; ++d)
                 {
-                    if      (pgeom->getTouchesPeriodicBoundary(d,lower) && i(d) < ilower(d))
+                    if      (patch_touches_lower_periodic_bdry[d] && i(d) < ilower(d))
                     {
                         offset[d] = -periodic_shift(d);  // X is ABOVE the top    of the patch --- need to shift DOWN
                     }
-                    else if (pgeom->getTouchesPeriodicBoundary(d,upper) && i(d) > iupper(d))
+                    else if (patch_touches_upper_periodic_bdry[d] && i(d) > iupper(d))
                     {
                         offset[d] = +periodic_shift(d);  // X is BELOW the bottom of the patch --- need to shift UP
                     }
-                }
-                periodic_offsets.resize(periodic_offsets.size()+NDIM*num_ids);
-                for (LNodeIndexSet::size_type n = 0; n < num_ids; ++n)
-                {
-                    for (int d = 0; d < NDIM; ++d)
+                    else
                     {
-                        periodic_offsets[periodic_offsets.size()-NDIM*(num_ids-n)+d] = double(offset[d])*dx[d];
+                        offset[d] = 0;
                     }
                 }
 
-                local_indices.resize(local_indices.size()+num_ids);
-                std::transform(node_set.begin(), node_set.end(), local_indices.end()-num_ids, GetLocalPETScIndex());
+                const LSet<T>& node_set = it.getItem();
+                const typename LSet<T>::size_type num_ids = node_set.size();
+                const unsigned int old_size = local_indices.size();
+                const unsigned int new_size = old_size+num_ids;
+                local_indices   .resize(     new_size);
+                periodic_offsets.resize(NDIM*new_size);
+                for (typename LSet<T>::size_type n = 0; n < num_ids; ++n)
+                {
+                    local_indices[old_size+n] = node_set[n]->getLocalPETScIndex();
+                    for (unsigned int d = 0; d < NDIM; ++d)
+                    {
+                        periodic_offsets[NDIM*(old_size+n)+d] = static_cast<double>(offset[d])*dx[d];
+                    }
+                }
             }
         }
     }
@@ -2309,51 +2334,43 @@ LEInteractor::buildLocalIndices(
                        << "  invalid debug sort mode; s_sort_mode = " << s_sort_mode << ".\n");
         }
 
-        std::vector<std::pair<Pointer<LNodeIndex>,std::vector<double> > > box_idxs_and_offsets;
+        std::vector<std::pair<const LNodeIndex*,blitz::TinyVector<double,NDIM> > > box_idxs_and_offsets;
         box_idxs_and_offsets.reserve(upper_bound);
-
-        for (LNodeIndexData::LNodeIndexSetPatchIterator it(*idx_data); it; it++)
+        for (typename LIndexSetData<T> ::SetIterator it(*idx_data); it; it++)
         {
             const Index<NDIM>& i = it.getIndex();
-            if (box.contains(i))
+            if (!box.contains(i)) continue;
+
+            for (unsigned int d = 0; d < NDIM; ++d)
             {
-                const LNodeIndexSet& node_set = it.getItem();
-
-                std::vector<int> offset(NDIM,0);
-                static const int lower = 0;
-                static const int upper = 1;
-                for (int d = 0; d < NDIM; ++d)
+                if      (patch_touches_lower_periodic_bdry[d] && i(d) < ilower(d))
                 {
-                    if      (pgeom->getTouchesPeriodicBoundary(d,lower) && i(d) < ilower(d))
-                    {
-                        offset[d] = -periodic_shift(d);  // X is ABOVE the top of the patch --- need to shift DOWN
-                    }
-                    else if (pgeom->getTouchesPeriodicBoundary(d,upper) && i(d) > iupper(d))
-                    {
-                        offset[d] = +periodic_shift(d);  // X is BELOW the bottom of the patch --- need to shift UP
-                    }
+                    offset[d] = -periodic_shift(d);  // X is ABOVE the top    of the patch --- need to shift DOWN
                 }
-                std::vector<double> node_offset(NDIM);
-                for (int d = 0; d < NDIM; ++d)
+                else if (patch_touches_upper_periodic_bdry[d] && i(d) > iupper(d))
                 {
-                    node_offset[d] = double(offset[d])*dx[d];
+                    offset[d] = +periodic_shift(d);  // X is BELOW the bottom of the patch --- need to shift UP
                 }
-
-                for (LNodeIndexSet::const_iterator cit = node_set.begin(); cit != node_set.end(); ++cit)
+                else
                 {
-                    box_idxs_and_offsets.push_back(std::make_pair(*cit,node_offset));
+                    offset[d] = 0;
                 }
+                node_offset[d] = static_cast<double>(offset[d])*dx[d];
             }
+
+            const LSet<T>& node_set = it.getItem();
+            for (typename LSet<T>::const_iterator cit = node_set.begin(); cit != node_set.end(); ++cit)
+            {
+                box_idxs_and_offsets.push_back(std::make_pair(cit->getPointer(),node_offset));
+            }
+
         }
 
         std::sort(box_idxs_and_offsets.begin(),box_idxs_and_offsets.end(),SortModeComp());
-        for (unsigned n = 0; n < box_idxs_and_offsets.size(); ++n)
+        for (unsigned int n = 0; n < box_idxs_and_offsets.size(); ++n)
         {
             local_indices.push_back(box_idxs_and_offsets[n].first->getLocalPETScIndex());
-            for (int d = 0; d < NDIM; ++d)
-            {
-                periodic_offsets.push_back(box_idxs_and_offsets[n].second[d]);
-            }
+            periodic_offsets.insert(periodic_offsets.end(),box_idxs_and_offsets[n].second.data(),box_idxs_and_offsets[n].second.data()+NDIM);
         }
     }
     return;
@@ -2363,7 +2380,7 @@ void
 LEInteractor::buildLocalIndices(
     std::vector<int>& local_indices,
     const Box<NDIM>& box,
-    const Pointer<Patch<NDIM> >& patch,
+    const Pointer<Patch<NDIM> > patch,
     const double* const X_data,
     const int X_size,
     const int X_depth)
@@ -2401,7 +2418,7 @@ LEInteractor::userDefinedInterpolate(
     const int* const q_gcw,
     const int q_depth,
     const double* const x_lower,
-    const double* const x_upper,
+    const double* const /*x_upper*/,
     const double* const dx,
     const int* const local_indices,
     const double* const X_shift,
@@ -2416,30 +2433,30 @@ LEInteractor::userDefinedInterpolate(
 #endif
                                               q_depth);
     blitz::GeneralArrayStorage<NDIM+1> storage_order = blitz::ColumnMajorArray<NDIM+1>();
-    for (int d = 0; d < NDIM; ++d)
+    for (unsigned int d = 0; d < NDIM; ++d)
     {
         storage_order.base()[d] = ilower[d]-q_gcw[d];
     }
     const blitz::Array<double,NDIM+1> q_data(const_cast<double*>(q), shape, blitz::neverDeleteData, storage_order);
 
-    double X_cell[NDIM];
-    int stencil_center[NDIM], stencil_lower[NDIM], stencil_upper[NDIM];
+    blitz::TinyVector<double,NDIM> X_cell;
+    blitz::TinyVector<int,NDIM> stencil_center, stencil_lower, stencil_upper;
     for (int l = 0; l < num_local_indices; ++l)
     {
         const int s = local_indices[l];
 
         // Determine the Cartesian cell in which X(s) is located.
-        for (int d = 0; d < NDIM; ++d)
+        for (unsigned int d = 0; d < NDIM; ++d)
         {
-            stencil_center[d] = int(std::floor((X[d+s*NDIM]+X_shift[d+l*NDIM]-x_lower[d])/dx[d])) + ilower[d];
-            X_cell[d] = x_lower[d]+(double(stencil_center[d]-ilower[d])+0.5)*dx[d];
+            stencil_center[d] = static_cast<int>(std::floor((X[d+s*NDIM]+X_shift[d+l*NDIM]-x_lower[d])/dx[d])) + ilower[d];
+            X_cell[d] = x_lower[d]+(static_cast<double>(stencil_center[d]-ilower[d])+0.5)*dx[d];
         }
 
         // Determine the interpolation stencil corresponding to the position of
         // X(s) within the cell.
         if (s_delta_fcn_stencil_size%2 == 0)
         {
-            for (int d = 0; d < NDIM; ++d)
+            for (unsigned int d = 0; d < NDIM; ++d)
             {
                 if (X[d+s*NDIM] < X_cell[d])
                 {
@@ -2455,14 +2472,14 @@ LEInteractor::userDefinedInterpolate(
         }
         else
         {
-            for (int d = 0; d < NDIM; ++d)
+            for (unsigned int d = 0; d < NDIM; ++d)
             {
                 stencil_lower[d] = stencil_center[d]-s_delta_fcn_stencil_size/2;
                 stencil_upper[d] = stencil_center[d]+s_delta_fcn_stencil_size/2;
             }
         }
 
-        for (int d = 0; d < NDIM; ++d)
+        for (unsigned int d = 0; d < NDIM; ++d)
         {
             stencil_lower[d] = std::min(std::max(stencil_lower[d],ilower[d]-q_gcw[d]),iupper[d]+q_gcw[d]);
             stencil_upper[d] = std::min(std::max(stencil_upper[d],ilower[d]-q_gcw[d]),iupper[d]+q_gcw[d]);
@@ -2472,19 +2489,19 @@ LEInteractor::userDefinedInterpolate(
         blitz::Array<double,1> w0(blitz::Range(stencil_lower[0],stencil_upper[0]));
         for (int ic0 = stencil_lower[0]; ic0 <= stencil_upper[0]; ++ic0)
         {
-            w0(ic0) = s_delta_fcn((X[0+s*NDIM]+X_shift[0+l*NDIM]-(X_cell[0]+double(ic0-stencil_center[0])*dx[0]))/dx[0]);
+            w0(ic0) = s_delta_fcn((X[0+s*NDIM]+X_shift[0+l*NDIM]-(X_cell[0]+static_cast<double>(ic0-stencil_center[0])*dx[0]))/dx[0]);
         }
 
         blitz::Array<double,1> w1(blitz::Range(stencil_lower[1],stencil_upper[1]));
         for (int ic1 = stencil_lower[1]; ic1 <= stencil_upper[1]; ++ic1)
         {
-            w1(ic1) = s_delta_fcn((X[1+s*NDIM]+X_shift[1+l*NDIM]-(X_cell[1]+double(ic1-stencil_center[1])*dx[1]))/dx[1]);
+            w1(ic1) = s_delta_fcn((X[1+s*NDIM]+X_shift[1+l*NDIM]-(X_cell[1]+static_cast<double>(ic1-stencil_center[1])*dx[1]))/dx[1]);
         }
 #if (NDIM == 3)
         blitz::Array<double,1> w2(blitz::Range(stencil_lower[2],stencil_upper[2]));
         for (int ic2 = stencil_lower[2]; ic2 <= stencil_upper[2]; ++ic2)
         {
-            w2(ic2) = s_delta_fcn((X[2+s*NDIM]+X_shift[2+l*NDIM]-(X_cell[2]+double(ic2-stencil_center[2])*dx[2]))/dx[2]);
+            w2(ic2) = s_delta_fcn((X[2+s*NDIM]+X_shift[2+l*NDIM]-(X_cell[2]+static_cast<double>(ic2-stencil_center[2])*dx[2]))/dx[2]);
         }
 #endif
         // Interpolate u onto V.
@@ -2522,7 +2539,7 @@ LEInteractor::userDefinedSpread(
     const int* const q_gcw,
     const int q_depth,
     const double* const x_lower,
-    const double* const x_upper,
+    const double* const /*x_upper*/,
     const double* const dx,
     const double* const Q,
     const int Q_depth,
@@ -2540,30 +2557,30 @@ LEInteractor::userDefinedSpread(
 #endif
                                               q_depth);
     blitz::GeneralArrayStorage<NDIM+1> storage_order = blitz::ColumnMajorArray<NDIM+1>();
-    for (int d = 0; d < NDIM; ++d)
+    for (unsigned int d = 0; d < NDIM; ++d)
     {
         storage_order.base()[d] = ilower[d]-q_gcw[d];
     }
     blitz::Array<double,NDIM+1> q_data(q, shape, blitz::neverDeleteData, storage_order);
 
-    double X_cell[NDIM];
-    int stencil_center[NDIM], stencil_lower[NDIM], stencil_upper[NDIM];
+    blitz::TinyVector<double,NDIM> X_cell;
+    blitz::TinyVector<int,NDIM> stencil_center, stencil_lower, stencil_upper;
     for (int l = 0; l < num_local_indices; ++l)
     {
         const int s = local_indices[l];
 
         // Determine the Cartesian cell in which X(s) is located.
-        for (int d = 0; d < NDIM; ++d)
+        for (unsigned int d = 0; d < NDIM; ++d)
         {
-            stencil_center[d] = int(std::floor((X[d+s*NDIM]+X_shift[d+l*NDIM]-x_lower[d])/dx[d])) + ilower[d];
-            X_cell[d] = x_lower[d]+(double(stencil_center[d]-ilower[d])+0.5)*dx[d];
+            stencil_center[d] = static_cast<int>(std::floor((X[d+s*NDIM]+X_shift[d+l*NDIM]-x_lower[d])/dx[d])) + ilower[d];
+            X_cell[d] = x_lower[d]+(static_cast<double>(stencil_center[d]-ilower[d])+0.5)*dx[d];
         }
 
         // Determine the interpolation stencil corresponding to the position of
         // X(s) within the cell.
         if (s_delta_fcn_stencil_size%2 == 0)
         {
-            for (int d = 0; d < NDIM; ++d)
+            for (unsigned int d = 0; d < NDIM; ++d)
             {
                 if (X[d+s*NDIM] < X_cell[d])
                 {
@@ -2579,14 +2596,14 @@ LEInteractor::userDefinedSpread(
         }
         else
         {
-            for (int d = 0; d < NDIM; ++d)
+            for (unsigned int d = 0; d < NDIM; ++d)
             {
                 stencil_lower[d] = stencil_center[d]-s_delta_fcn_stencil_size/2;
                 stencil_upper[d] = stencil_center[d]+s_delta_fcn_stencil_size/2;
             }
         }
 
-        for (int d = 0; d < NDIM; ++d)
+        for (unsigned int d = 0; d < NDIM; ++d)
         {
             stencil_lower[d] = std::min(std::max(stencil_lower[d],ilower[d]-q_gcw[d]),iupper[d]+q_gcw[d]);
             stencil_upper[d] = std::min(std::max(stencil_upper[d],ilower[d]-q_gcw[d]),iupper[d]+q_gcw[d]);
@@ -2597,19 +2614,19 @@ LEInteractor::userDefinedSpread(
         blitz::Array<double,1> w0(blitz::Range(stencil_lower[0],stencil_upper[0]));
         for (int ic0 = stencil_lower[0]; ic0 <= stencil_upper[0]; ++ic0)
         {
-            w0(ic0) = s_delta_fcn((X[0+s*NDIM]+X_shift[0+l*NDIM]-(X_cell[0]+double(ic0-stencil_center[0])*dx[0]))/dx[0]);
+            w0(ic0) = s_delta_fcn((X[0+s*NDIM]+X_shift[0+l*NDIM]-(X_cell[0]+static_cast<double>(ic0-stencil_center[0])*dx[0]))/dx[0]);
         }
 
         blitz::Array<double,1> w1(blitz::Range(stencil_lower[1],stencil_upper[1]));
         for (int ic1 = stencil_lower[1]; ic1 <= stencil_upper[1]; ++ic1)
         {
-            w1(ic1) = s_delta_fcn((X[1+s*NDIM]+X_shift[1+l*NDIM]-(X_cell[1]+double(ic1-stencil_center[1])*dx[1]))/dx[1]);
+            w1(ic1) = s_delta_fcn((X[1+s*NDIM]+X_shift[1+l*NDIM]-(X_cell[1]+static_cast<double>(ic1-stencil_center[1])*dx[1]))/dx[1]);
         }
 #if (NDIM == 3)
         blitz::Array<double,1> w2(blitz::Range(stencil_lower[2],stencil_upper[2]));
         for (int ic2 = stencil_lower[2]; ic2 <= stencil_upper[2]; ++ic2)
         {
-            w2(ic2) = s_delta_fcn((X[2+s*NDIM]+X_shift[2+l*NDIM]-(X_cell[2]+double(ic2-stencil_center[2])*dx[2]))/dx[2]);
+            w2(ic2) = s_delta_fcn((X[2+s*NDIM]+X_shift[2+l*NDIM]-(X_cell[2]+static_cast<double>(ic2-stencil_center[2])*dx[2]))/dx[2]);
         }
 #endif
         // Spread V onto u.
@@ -2644,5 +2661,147 @@ LEInteractor::userDefinedSpread(
 } // namespace IBTK
 
 /////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <ibtk/LNode.h>
+
+template void IBTK::LEInteractor::interpolate(
+    SAMRAI::tbox::Pointer<LData> Q_data,
+    const SAMRAI::tbox::Pointer<LData> X_data,
+    const SAMRAI::tbox::Pointer<LIndexSetData<LNode> > idx_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::pdat::CellData<NDIM,double> > q_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+    const SAMRAI::hier::Box<NDIM>& interp_box,
+    const SAMRAI::hier::IntVector<NDIM>& periodic_shift,
+    const std::string& interp_fcn);
+
+template void IBTK::LEInteractor::interpolate(
+    SAMRAI::tbox::Pointer<LData> Q_data,
+    const SAMRAI::tbox::Pointer<LData> X_data,
+    const SAMRAI::tbox::Pointer<LIndexSetData<LNode> > idx_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::pdat::NodeData<NDIM,double> > q_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+    const SAMRAI::hier::Box<NDIM>& interp_box,
+    const SAMRAI::hier::IntVector<NDIM>& periodic_shift,
+    const std::string& interp_fcn);
+
+template void IBTK::LEInteractor::interpolate(
+    SAMRAI::tbox::Pointer<LData> Q_data,
+    const SAMRAI::tbox::Pointer<LData> X_data,
+    const SAMRAI::tbox::Pointer<LIndexSetData<LNode> > idx_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> > q_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+    const SAMRAI::hier::Box<NDIM>& interp_box,
+    const SAMRAI::hier::IntVector<NDIM>& periodic_shift,
+    const std::string& interp_fcn);
+
+template void IBTK::LEInteractor::interpolate(
+    double* const Q_data,
+    const int Q_depth,
+    const double* const X_data,
+    const int X_depth,
+    const SAMRAI::tbox::Pointer<LIndexSetData<LNode> > idx_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::pdat::CellData<NDIM,double> > q_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+    const SAMRAI::hier::Box<NDIM>& interp_box,
+    const SAMRAI::hier::IntVector<NDIM>& periodic_shift,
+    const std::string& interp_fcn);
+
+template void IBTK::LEInteractor::interpolate(
+    double* const Q_data,
+    const int Q_depth,
+    const double* const X_data,
+    const int X_depth,
+    const SAMRAI::tbox::Pointer<LIndexSetData<LNode> > idx_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::pdat::NodeData<NDIM,double> > q_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+    const SAMRAI::hier::Box<NDIM>& interp_box,
+    const SAMRAI::hier::IntVector<NDIM>& periodic_shift,
+    const std::string& interp_fcn);
+
+template void IBTK::LEInteractor::interpolate(
+    double* const Q_data,
+    const int Q_depth,
+    const double* const X_data,
+    const int X_depth,
+    const SAMRAI::tbox::Pointer<LIndexSetData<LNode> > idx_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> > q_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+    const SAMRAI::hier::Box<NDIM>& interp_box,
+    const SAMRAI::hier::IntVector<NDIM>& periodic_shift,
+    const std::string& interp_fcn);
+
+template void IBTK::LEInteractor::spread(
+    SAMRAI::tbox::Pointer<SAMRAI::pdat::CellData<NDIM,double> > q_data,
+    const SAMRAI::tbox::Pointer<LData> Q_data,
+    const SAMRAI::tbox::Pointer<LData> X_data,
+    const SAMRAI::tbox::Pointer<LIndexSetData<LNode> > idx_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+    const SAMRAI::hier::Box<NDIM>& spread_box,
+    const SAMRAI::hier::IntVector<NDIM>& periodic_shift,
+    const std::string& spread_fcn);
+
+template void IBTK::LEInteractor::spread(
+    SAMRAI::tbox::Pointer<SAMRAI::pdat::NodeData<NDIM,double> > q_data,
+    const SAMRAI::tbox::Pointer<LData> Q_data,
+    const SAMRAI::tbox::Pointer<LData> X_data,
+    const SAMRAI::tbox::Pointer<LIndexSetData<LNode> > idx_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+    const SAMRAI::hier::Box<NDIM>& spread_box,
+    const SAMRAI::hier::IntVector<NDIM>& periodic_shift,
+    const std::string& spread_fcn);
+
+template void IBTK::LEInteractor::spread(
+    SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> > q_data,
+    const SAMRAI::tbox::Pointer<LData> Q_data,
+    const SAMRAI::tbox::Pointer<LData> X_data,
+    const SAMRAI::tbox::Pointer<LIndexSetData<LNode> > idx_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+    const SAMRAI::hier::Box<NDIM>& spread_box,
+    const SAMRAI::hier::IntVector<NDIM>& periodic_shift,
+    const std::string& spread_fcn);
+
+template void IBTK::LEInteractor::spread(
+    SAMRAI::tbox::Pointer<SAMRAI::pdat::CellData<NDIM,double> > q_data,
+    const double* const Q_data,
+    const int Q_depth,
+    const double* const X_data,
+    const int X_depth,
+    const SAMRAI::tbox::Pointer<LIndexSetData<LNode> > idx_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+    const SAMRAI::hier::Box<NDIM>& spread_box,
+    const SAMRAI::hier::IntVector<NDIM>& periodic_shift,
+    const std::string& spread_fcn);
+
+template void IBTK::LEInteractor::spread(
+    SAMRAI::tbox::Pointer<SAMRAI::pdat::NodeData<NDIM,double> > q_data,
+    const double* const Q_data,
+    const int Q_depth,
+    const double* const X_data,
+    const int X_depth,
+    const SAMRAI::tbox::Pointer<LIndexSetData<LNode> > idx_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+    const SAMRAI::hier::Box<NDIM>& spread_box,
+    const SAMRAI::hier::IntVector<NDIM>& periodic_shift,
+    const std::string& spread_fcn);
+
+template void IBTK::LEInteractor::spread(
+    SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> > q_data,
+    const double* const Q_data,
+    const int Q_depth,
+    const double* const X_data,
+    const int X_depth,
+    const SAMRAI::tbox::Pointer<LIndexSetData<LNode> > idx_data,
+    const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+    const SAMRAI::hier::Box<NDIM>& spread_box,
+    const SAMRAI::hier::IntVector<NDIM>& periodic_shift,
+    const std::string& spread_fcn);
+
+template void IBTK::LEInteractor::buildLocalIndices(
+    std::vector<int>& local_indices,
+    std::vector<double>& periodic_offsets,
+    const SAMRAI::hier::Box<NDIM>& box,
+    const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+    const SAMRAI::hier::IntVector<NDIM>& periodic_shift,
+    const SAMRAI::tbox::Pointer<LIndexSetData<LNode> > idx_data);
 
 //////////////////////////////////////////////////////////////////////////////

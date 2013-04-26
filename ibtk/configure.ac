@@ -24,6 +24,7 @@ AC_PROG_F77		# Check for a Fortran 77 compiler.
 AC_FC_LIBRARY_LDFLAGS	# Determine the linker flags for the Fortran intrinsic and runtime libraries.
 AC_FC_WRAPPERS
 LIBS="$LIBS $FCLIBS"
+AM_PROG_AR
 
 if test "x$F77" != "x" -a "$F77" != "$FC" ; then
   AC_MSG_WARN([environment variables F77 and FC differ; using F77=$FC])
@@ -91,13 +92,31 @@ fi
 
 AC_MSG_CHECKING([whether compiler supports __builtin_expect keyword])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[
-if (__builtin_expect(true,1)) return 0;
+    if (__builtin_expect(true,1))
+    {
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
 ]])],[
 have_builtin_expect=1
 AC_MSG_RESULT(yes)],[
 have_builtin_expect=0
 AC_MSG_RESULT(no)])
 AC_DEFINE_UNQUOTED(HAVE_BUILTIN_EXPECT,$have_builtin_expect,[Boolean value indicating whether the C++ compiler supports the __builtin_expect keyword])
+
+AC_MSG_CHECKING([whether compiler supports __builtin_prefetch keyword])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[
+    __builtin_prefetch(0,0,0);
+    return 0;
+]])],[
+have_builtin_prefetch=1
+AC_MSG_RESULT(yes)],[
+have_builtin_prefetch=0
+AC_MSG_RESULT(no)])
+AC_DEFINE_UNQUOTED(HAVE_BUILTIN_PREFETCH,$have_builtin_prefetch,[Boolean value indicating whether the C++ compiler supports the __builtin_prefetch keyword])
 
 # Checks for other programs.
 AC_PROG_RANLIB
@@ -192,26 +211,6 @@ fi
 ###########################################################################
 # Checks for libraries.
 ###########################################################################
-
-AC_ARG_ENABLE([blitz],
-  AS_HELP_STRING(--enable-blitz,enable support for the optional Blitz++ library @<:@default=yes@:>@),
-  [BLITZ_ENABLED=$enableval], [BLITZ_ENABLED=yes])
-if test "$BLITZ_ENABLED" == "" ; then
-  BLITZ_ENABLED=yes
-fi
-
-AC_ARG_WITH([blitz],
-  AS_HELP_STRING(--with-blitz=PATH,location of optional Blitz++ installation @<:@default=/usr/local/sfw/blitz/current@:>@),
-  [if test "$BLITZ_ENABLED" == "no" ; then
-     AC_MSG_WARN([--with-blitz is specified, but support for Blitz++ is DISABLED])
-     BLITZ_DIR=NONE
-   else
-     if test ! -d "$withval" ; then
-       AC_MSG_ERROR([you must specify an existing directory when using --with-blitz=PATH])
-     fi
-     BLITZ_DIR=$withval
-   fi],
-  [BLITZ_DIR=/usr/local/sfw/blitz/current])
 
 AC_ARG_WITH([hdf5],
   AS_HELP_STRING(--with-hdf5=PATH,location of required hdf5 installation @<:@default=/usr/local/sfw/hdf5/current@:>@),
@@ -331,20 +330,6 @@ AX_BLAS(,)
 AX_LAPACK(,)
 LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FCLIBS"
 
-AM_CONDITIONAL([BLITZ_ENABLED],[test "$BLITZ_ENABLED" == "yes"])
-if test "$BLITZ_ENABLED" == "yes"; then
-  echo
-  echo "===================================="
-  echo "Configuring optional package Blitz++"
-  echo "===================================="
-  CONFIGURE_BLITZ
-else
-  echo
-  echo "===================================="
-  echo "Optional package Blitz++ is DISABLED"
-  echo "===================================="
-fi
-
 AM_CONDITIONAL([SILO_ENABLED],[test "$SILO_ENABLED" == "yes"])
 if test "$SILO_ENABLED" == "yes"; then
   echo
@@ -411,9 +396,10 @@ AC_CONFIG_FILES([
   doc/online_Doxyfile
   examples/Makefile
   examples/CCLaplace/Makefile
+  examples/CCPoisson/Makefile
   examples/PhysBdryOps/Makefile
-  examples/Poisson/Makefile
   examples/SCLaplace/Makefile
+  examples/SCPoisson/Makefile
   examples/VCLaplace/Makefile
   lib/Makefile
   scripts/Makefile
@@ -443,5 +429,5 @@ AC_CONFIG_FILES([
   src/utilities/Makefile
   third_party/Makefile
 ])
-AC_CONFIG_SUBDIRS([third_party/qd-2.3.11])
+AC_CONFIG_SUBDIRS([third_party/blitz-0.10])
 AC_OUTPUT

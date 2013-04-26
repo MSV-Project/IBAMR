@@ -1,7 +1,7 @@
 // Filename: EdgeDataSynchronization.h
 // Created on 02 Feb 2011 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,9 @@
 #include <PatchHierarchy.h>
 #include <RefineAlgorithm.h>
 
+// BLITZ++ INCLUDES
+#include <blitz/tinyvec2.h>
+
 // C++ STDLIB INCLUDES
 #include <vector>
 
@@ -53,7 +56,7 @@ namespace IBTK
  * "synchronize" edge-centered values defined at patch boundaries.
  */
 class EdgeDataSynchronization
-    : public virtual SAMRAI::tbox::DescribedClass
+    : public SAMRAI::tbox::DescribedClass
 {
 public:
     /*!
@@ -71,7 +74,7 @@ public:
          */
         inline
         SynchronizationTransactionComponent(
-            const int data_idx=-1,
+            int data_idx=-1,
             const std::string& coarsen_op_name="NONE")
             : d_data_idx(data_idx),
               d_coarsen_op_name(coarsen_op_name)
@@ -138,7 +141,6 @@ public:
     /*!
      * \brief Destructor.
      */
-    virtual
     ~EdgeDataSynchronization();
 
     /*!
@@ -185,7 +187,7 @@ public:
      */
     void
     synchronizeData(
-        const double& fill_time);
+        double fill_time);
 
 protected:
 
@@ -228,8 +230,8 @@ private:
     SAMRAI::tbox::Pointer<SAMRAI::xfer::CoarsenAlgorithm<NDIM> > d_coarsen_alg;
     std::vector<SAMRAI::tbox::Pointer<SAMRAI::xfer::CoarsenSchedule<NDIM> > > d_coarsen_scheds;
 
-    std::vector<SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineAlgorithm<NDIM> > > d_refine_alg;
-    std::vector<std::vector<SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineSchedule<NDIM> > > > d_refine_scheds;
+    blitz::TinyVector<SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineAlgorithm<NDIM> >,NDIM> d_refine_alg;
+    blitz::TinyVector<std::vector<SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineSchedule<NDIM> > >,NDIM> d_refine_scheds;
 };
 }// namespace IBTK
 

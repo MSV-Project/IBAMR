@@ -1,4 +1,4 @@
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -39,10 +39,9 @@
 #include <ibtk/HierarchyMathOps.h>
 
 // LIBMESH INCLUDES
-#include <../base/variable.h>
-#include <equation_systems.h>
-#include <exact_solution.h>
-#include <mesh.h>
+#include <libmesh/equation_systems.h>
+#include <libmesh/exact_solution.h>
+#include <libmesh/mesh.h>
 using namespace libMesh;
 
 // SAMRAI INCLUDES

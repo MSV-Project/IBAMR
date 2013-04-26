@@ -56,7 +56,7 @@ set(HYPRE_GZ hypre-${HYPRE_VERSION}.tar.gz)
 set(HYPRE_MD5 6b4db576c68d2072e48efbc00ea58489)
 
 set(BLITZ_HG_URL http://blitz.hg.sourceforge.net:8000/hgroot/blitz/blitz)
-set(BLITZ_HG_TAG Blitz_0_9)
+set(BLITZ_HG_TAG 77c9002404a7)
 
 set(SAMRAI_MAJOR 2)
 set(SAMRAI_MINOR 4)

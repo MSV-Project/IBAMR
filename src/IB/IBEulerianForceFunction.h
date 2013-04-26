@@ -1,7 +1,7 @@
-// Filename: IBEulerianForceFunction.h
-// Created on 28 Sep 2004 by Boyce Griffith
+// Filename: SpongeLayerForceFunction.h
+// Created on 28 Oct 2011 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,62 +30,46 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef included_IBEulerianForceFunction
-#define included_IBEulerianForceFunction
+#ifndef included_SpongeLayerForceFunction
+#define included_SpongeLayerForceFunction
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
-// IBTK INCLUDES
-#include <ibtk/CartGridFunction.h>
+// IBAMR INCLUDES
+#include <ibamr/INSHierarchyIntegrator.h>
 
 // SAMRAI INCLUDES
-#include <Patch.h>
-#include <Variable.h>
-#include <tbox/Pointer.h>
+#include <CellData.h>
+#include <SideData.h>
+
+// BLITZ++ INCLUDES
+#include <blitz/tinyvec2.h>
 
 /////////////////////////////// CLASS DEFINITION /////////////////////////////
 
 namespace IBAMR
 {
 /*!
- * \brief Class IBEulerianForceFunction is used to communicate the Eulerian body
- * force computed by class IBHierarchyIntegrator to the incompressible
- * Navier-Stokes solver.
+ * \brief Class SpongeLayerForceFunction provides forcing at physical boundaries
+ * that weakly imposes homogeneous Dirichlet boundary conditions.
  */
-class IBEulerianForceFunction
+class SpongeLayerForceFunction
     : public IBTK::CartGridFunction
 {
 public:
     /*!
      * \brief Constructor.
      */
-    IBEulerianForceFunction(
+    SpongeLayerForceFunction(
         const std::string& object_name,
-        const int F_current_idx,
-        const int F_new_idx,
-        const int F_half_idx);
+        SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db,
+        const INSHierarchyIntegrator* fluid_solver,
+        SAMRAI::tbox::Pointer<SAMRAI::geom::CartesianGridGeometry<NDIM> > grid_geometry);
 
     /*!
-     * \brief Virtual destructor.
+     * \brief Destructor.
      */
-    virtual
-    ~IBEulerianForceFunction();
-
-    /*!
-     * \brief Set the current and new times for the present timestep.
-     */
-    void
-    setTimeInterval(
-        const double current_time,
-        const double new_time);
-
-    /*!
-     * \brief Register an optional additional body force specification which
-     * will be added to the IB force.
-     */
-    void
-    registerBodyForceSpecification(
-        SAMRAI::tbox::Pointer<IBTK::CartGridFunction> F_fcn);
+    ~SpongeLayerForceFunction();
 
     /*!
      * \name Methods to set the data.
@@ -95,19 +79,19 @@ public:
     /*!
      * \note This concrete IBTK::CartGridFunction is time-dependent.
      */
-    virtual bool
+    bool
     isTimeDependent() const;
 
     /*!
      * Set the data on the patch interior.
      */
-    virtual void
+    void
     setDataOnPatch(
-        const int data_idx,
+        int data_idx,
         SAMRAI::tbox::Pointer<SAMRAI::hier::Variable<NDIM> > var,
         SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
-        const double data_time,
-        const bool initial_time=false,
+        double data_time,
+        bool initial_time=false,
         SAMRAI::tbox::Pointer<SAMRAI::hier::PatchLevel<NDIM> > level=SAMRAI::tbox::Pointer<SAMRAI::hier::PatchLevel<NDIM> >(NULL));
 
     //\}
@@ -118,7 +102,7 @@ private:
      *
      * \note This constructor is not implemented and should not be used.
      */
-    IBEulerianForceFunction();
+    SpongeLayerForceFunction();
 
     /*!
      * \brief Copy constructor.
@@ -127,8 +111,8 @@ private:
      *
      * \param from The value to copy to this object.
      */
-    IBEulerianForceFunction(
-        const IBEulerianForceFunction& from);
+    SpongeLayerForceFunction(
+        const SpongeLayerForceFunction& from);
 
     /*!
      * \brief Assignment operator.
@@ -139,32 +123,43 @@ private:
      *
      * \return A reference to this object.
      */
-    IBEulerianForceFunction&
+    SpongeLayerForceFunction&
     operator=(
-        const IBEulerianForceFunction& that);
+        const SpongeLayerForceFunction& that);
 
     /*!
-     * The current and new time for the present timestep.
+     * Set the data on the patch interior.
      */
-    double d_current_time, d_new_time;
+    void
+    setDataOnPatchCell(
+        SAMRAI::tbox::Pointer<SAMRAI::pdat::CellData<NDIM,double> > F_data,
+        SAMRAI::tbox::Pointer<SAMRAI::pdat::CellData<NDIM,double> > U_current_data,
+        SAMRAI::tbox::Pointer<SAMRAI::pdat::CellData<NDIM,double> > U_new_data,
+        double kappa,
+        SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch);
 
     /*!
-     * Patch data descriptor indices for the current, new, and half-time force
-     * data.
+     * Set the data on the patch interior.
      */
-    const int d_F_current_idx, d_F_new_idx, d_F_half_idx;
+    void
+    setDataOnPatchSide(
+        SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> > F_data,
+        SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> > U_current_data,
+        SAMRAI::tbox::Pointer<SAMRAI::pdat::SideData<NDIM,double> > U_new_data,
+        double kappa,
+        SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch);
 
-    /*!
-     * Optional body force generator.
-     */
-    SAMRAI::tbox::Pointer<IBTK::CartGridFunction> d_body_force_fcn;
+    blitz::TinyVector<SAMRAI::tbox::Array<bool>,2*NDIM> d_forcing_enabled;
+    blitz::TinyVector<double,2*NDIM> d_width;
+    const INSHierarchyIntegrator* const d_fluid_solver;
+    SAMRAI::tbox::Pointer<SAMRAI::geom::CartesianGridGeometry<NDIM> > d_grid_geometry;
 };
 }// namespace IBAMR
 
 /////////////////////////////// INLINE ///////////////////////////////////////
 
-//#include <ibamr/IBEulerianForceFunction.I>
+//#include <ibamr/SpongeLayerForceFunction.I>
 
 //////////////////////////////////////////////////////////////////////////////
 
-#endif //#ifndef included_IBEulerianForceFunction
+#endif //#ifndef included_SpongeLayerForceFunction

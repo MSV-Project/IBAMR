@@ -1,7 +1,7 @@
 // Filename: FACPreconditionerStrategy.h
 // Created on 10 Sep 2010 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -65,9 +65,11 @@ class FACPreconditionerStrategy
 {
 public:
     /*!
-     * \brief Empty default constructor.
+     * \brief Constructor.
      */
-    FACPreconditionerStrategy();
+    FACPreconditionerStrategy(
+        const std::string& object_name,
+        bool homogeneous_bc=false);
 
     /*!
      * \brief Empty virtual desctructor.
@@ -76,14 +78,71 @@ public:
     ~FACPreconditionerStrategy();
 
     /*!
+     * \brief Return the object name.
+     */
+    const std::string&
+    getName() const;
+
+    /*!
+     * \brief Return whether the operator is initialized.
+     */
+    virtual bool
+    getIsInitialized() const;
+
+    /*!
      * \brief Method to allow the FACPreconditioner object to register itself
      * with the concrete FACPreconditionerStrategy.
-     *
-     * \note A default empty implementation is provided.
      */
     virtual void
     setFACPreconditioner(
         SAMRAI::tbox::ConstPointer<FACPreconditioner> preconditioner);
+
+    /*!
+     * \brief Set whether the solver should use homogeneous boundary conditions.
+     */
+    virtual void
+    setHomogeneousBc(
+        bool homogeneous_bc);
+
+    /*!
+     * \brief Return whether the solver is using homogeneous boundary
+     * conditions.
+     */
+    virtual bool
+    getHomogeneousBc() const;
+
+    /*!
+     * \brief Set the time at which the solution is to be evaluated.
+     */
+    virtual void
+    setSolutionTime(
+        double solution_time);
+
+    /*!
+     * \brief Get the time at which the solution is being evaluated.
+     */
+    virtual double
+    getSolutionTime() const;
+
+    /*!
+     * \brief Set the current time interval.
+     */
+    virtual void
+    setTimeInterval(
+        double current_time,
+        double new_time);
+
+    /*!
+     * \brief Get the current time interval.
+     */
+    virtual std::pair<double,double>
+    getTimeInterval() const;
+
+    /*!
+     * \brief Get the current time step size.
+     */
+    virtual double
+    getDt() const;
 
     /*!
      * \brief Restrict the residual from the source vector to the destination
@@ -151,20 +210,19 @@ public:
         int coarsest_level_num) = 0;
 
     /*!
-     * \brief Compute the composite-grid residual on the specified level of the
-     * patch hierarchy.
+     * \brief Compute the composite-grid residual on the specified range of
+     * levels of the patch hierarchy.
      */
     virtual void
     computeResidual(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& residual,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& solution,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& rhs,
-        int level_num) = 0;
+        int coarsest_level_num,
+        int finest_level_num) = 0;
 
     /*!
      * \brief Initialize any hierarchy-dependent data.
-     *
-     * \note A default empty implementation is provided.
      */
     virtual void
     initializeOperatorState(
@@ -174,13 +232,56 @@ public:
     /*!
      * \brief Deallocate any hierarchy-dependent data initialized by
      * initializeOperatorState().
-     *
-     * \note A default empty implementation is provided.
      */
     virtual void
     deallocateOperatorState();
 
+    /*!
+     * \name Logging functions.
+     */
+    //\{
+
+    /*!
+     * \brief Print class data to stream.
+     */
+    virtual void
+    printClassData(
+        std::ostream& stream);
+
+    //\}
+
+protected:
+    /*!
+     * \brief Return a SAMRAIVectorReal object that corresponds to the given
+     * object but restricted to a single level of the patch hierarchy.
+     */
+    virtual SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> >
+    getLevelSAMRAIVectorReal(
+        const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& vec,
+        int level_num) const;
+
+    // Pointer to the FACPreconditioner that is using this operator.
+    SAMRAI::tbox::ConstPointer<IBTK::FACPreconditioner> d_preconditioner;
+
+    // Object name.
+    const std::string d_object_name;
+
+    // Boolean value to indicate whether the preconditioner is presently
+    // initialized.
+    bool d_is_initialized;
+
+    // Solver configuration.
+    bool d_homogeneous_bc;
+    double d_solution_time, d_current_time, d_new_time;
+
 private:
+    /*!
+     * \brief Default constructor.
+     *
+     * \note This constructor is not implemented and should not be used.
+     */
+    FACPreconditionerStrategy();
+
     /*!
      * \brief Copy constructor.
      *

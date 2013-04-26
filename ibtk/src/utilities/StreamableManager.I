@@ -1,7 +1,7 @@
 // Filename: StreamableManager.I
 // Created on 14 Jun 2004 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -56,7 +56,7 @@ StreamableManager::packStream(
     SAMRAI::tbox::Pointer<Streamable>& data_item)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!data_item.isNull());
+    TBOX_ASSERT(data_item);
 #endif
     const int streamable_id = data_item->getStreamableClassID();
     stream.pack(&streamable_id,1);

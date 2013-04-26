@@ -1,7 +1,7 @@
 // Filename: PETScSNESFunctionGOWrapper.h
 // Created on 27 Dec 2003 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,7 @@ namespace IBTK
 {
 /*!
  * \brief Class PETScSNESFunctionGOWrapper provides a GeneralOperator interface
- * for a <A HREF="http://www-unix.mcs.anl.gov/petsc">PETSc</A> SNES nonlinear
+ * for a <A HREF="http://www.mcs.anl.gov/petsc">PETSc</A> SNES nonlinear
  * function.
  */
 class PETScSNESFunctionGOWrapper
@@ -70,13 +70,12 @@ public:
     PETScSNESFunctionGOWrapper(
         const std::string& object_name,
         const SNES& petsc_snes,
-        PetscErrorCode (* const petsc_snes_form_func)(SNES,Vec,Vec,void*),
-        void* const petsc_snes_func_ctx);
+        PetscErrorCode (*petsc_snes_form_func)(SNES,Vec,Vec,void*),
+        void* petsc_snes_func_ctx);
 
     /*!
-     * \brief Virtual destructor.
+     * \brief Destructor.
      */
-    virtual
     ~PETScSNESFunctionGOWrapper();
 
     /*!
@@ -133,7 +132,7 @@ public:
      * \param x input
      * \param y output: y=F[x]
      */
-    virtual void
+    void
     apply(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
@@ -167,7 +166,7 @@ public:
      * \param in input vector
      * \param out output vector
      */
-    virtual void
+    void
     initializeOperatorState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& in,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& out);
@@ -182,24 +181,8 @@ public:
      *
      * \see initializeOperatorState
      */
-    virtual void
+    void
     deallocateOperatorState();
-
-    //\}
-
-    /*!
-     * \name Logging functions.
-     */
-    //\{
-
-    /*!
-     * \brief Enable or disable logging.
-     *
-     * \param enabled logging state: true=on, false=off
-     */
-    virtual void
-    enableLogging(
-        bool enabled=true);
 
     //\}
 
@@ -234,9 +217,6 @@ private:
     operator=(
         const PETScSNESFunctionGOWrapper& that);
 
-    std::string d_object_name;
-    bool d_is_initialized, d_do_log;
-
     const SNES d_petsc_snes;
     PetscErrorCode (* const d_petsc_snes_form_func)(SNES,Vec,Vec,void*);
     void* const d_petsc_snes_func_ctx;
@@ -247,7 +227,7 @@ private:
 
 /////////////////////////////// INLINE ///////////////////////////////////////
 
-#include <ibtk/PETScSNESFunctionGOWrapper.I>
+//#include <ibtk/PETScSNESFunctionGOWrapper.I>
 
 //////////////////////////////////////////////////////////////////////////////
 

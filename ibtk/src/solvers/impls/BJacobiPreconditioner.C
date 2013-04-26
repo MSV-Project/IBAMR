@@ -1,7 +1,7 @@
 // Filename: BJacobiPreconditioner.C
 // Created on 11 Apr 2005 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -45,10 +45,8 @@
 #endif
 
 // IBTK INCLUDES
+#include <ibtk/ibtk_utilities.h>
 #include <ibtk/namespaces.h>
-
-// C++ STDLIB INCLUDES
-#include <ostream>
 
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
@@ -59,26 +57,24 @@ namespace IBTK
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
 BJacobiPreconditioner::BJacobiPreconditioner(
-    Pointer<Database> input_db)
-    : d_is_initialized(false),
-      d_pc_map(),
-      d_initial_guess_nonzero(false),
-      d_rel_residual_tol(1.0e-6),
-      d_abs_residual_tol(1.0e-30),
-      d_max_iterations(1)
+    const std::string& object_name,
+    Pointer<Database> input_db,
+    const std::string& /*default_options_prefix*/)
+    : d_pc_map()
 {
+    // Setup default options.
+    GeneralSolver::init(object_name, /*homogeneous_bc*/ true);
+    d_initial_guess_nonzero = false;
+    d_max_iterations = 1;
+
     // Get configuration data from the input database.
-    if (!input_db.isNull())
+    if (input_db)
     {
         // LinearSolver options.
-        d_initial_guess_nonzero = input_db->getBoolWithDefault(
-            "initial_guess_nonzero", d_initial_guess_nonzero);
-        d_rel_residual_tol = input_db->getDoubleWithDefault(
-            "rel_residual_tol", d_rel_residual_tol);
-        d_abs_residual_tol = input_db->getDoubleWithDefault(
-            "abs_residual_tol", d_abs_residual_tol);
-        d_max_iterations = input_db->getIntegerWithDefault(
-            "max_iterations", d_max_iterations);
+        if (input_db->keyExists("initial_guess_nonzero")) setInitialGuessNonzero(input_db->getBool("initial_guess_nonzero"));
+        if (input_db->keyExists("rel_residual_tol")) setRelativeTolerance(input_db->getDouble("rel_residual_tol"));
+        if (input_db->keyExists("abs_residual_tol")) setAbsoluteTolerance(input_db->getDouble("abs_residual_tol"));
+        if (input_db->keyExists("max_iterations")) setMaxIterations(input_db->getInteger("max_iterations"));
     }
     return;
 }// BJacobiPreconditioner()
@@ -92,11 +88,10 @@ BJacobiPreconditioner::~BJacobiPreconditioner()
 void
 BJacobiPreconditioner::setComponentPreconditioner(
     Pointer<LinearSolver> preconditioner,
-    const int component)
+    const unsigned int component)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!preconditioner.isNull());
-    TBOX_ASSERT(component >= 0);
+    TBOX_ASSERT(preconditioner);
 #endif
     d_pc_map[component] = preconditioner;
     return;
@@ -107,12 +102,6 @@ BJacobiPreconditioner::solveSystem(
     SAMRAIVectorReal<NDIM,double>& x,
     SAMRAIVectorReal<NDIM,double>& b)
 {
-    /*!
-     * \todo Setup the solver so that it works correctly for multiple
-     * iterations.
-     */
-    TBOX_ASSERT(d_max_iterations == 1);
-
     // Initialize the preconditioner, when necessary.
     const bool deallocate_after_solve = !d_is_initialized;
     if (deallocate_after_solve) initializeSolverState(x,b);
@@ -129,6 +118,13 @@ BJacobiPreconditioner::solveSystem(
     const std::string& x_name = x.getName();
     const std::string& b_name = b.getName();
     bool ret_val = true;
+
+    // Zero out the initial guess.
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(d_initial_guess_nonzero == false);
+#endif
+    x.setToScalar(0.0, /*interior_only*/ false);
+
     for (int comp = 0; comp < x.getNumberOfComponents(); ++comp)
     {
         // Setup a SAMRAIVectorReal to correspond to the individual vector
@@ -136,19 +132,11 @@ BJacobiPreconditioner::solveSystem(
         std::ostringstream str;
         str << comp;
 
-        SAMRAIVectorReal<NDIM,double> x_comp(
-            x_name+"_component_"+str.str(),
-            hierarchy, coarsest_ln, finest_ln);
-        x_comp.addComponent(x.getComponentVariable(comp),
-                            x.getComponentDescriptorIndex(comp),
-                            x.getControlVolumeIndex(comp));
+        SAMRAIVectorReal<NDIM,double> x_comp(x_name+"_component_"+str.str(), hierarchy, coarsest_ln, finest_ln);
+        x_comp.addComponent(x.getComponentVariable(comp), x.getComponentDescriptorIndex(comp), x.getControlVolumeIndex(comp));
 
-        SAMRAIVectorReal<NDIM,double> b_comp(
-            b_name+"_component_"+str.str(),
-            hierarchy, coarsest_ln, finest_ln);
-        b_comp.addComponent(b.getComponentVariable(comp),
-                            b.getComponentDescriptorIndex(comp),
-                            b.getControlVolumeIndex(comp));
+        SAMRAIVectorReal<NDIM,double> b_comp(b_name+"_component_"+str.str(), hierarchy, coarsest_ln, finest_ln);
+        b_comp.addComponent(b.getComponentVariable(comp), b.getComponentDescriptorIndex(comp), b.getControlVolumeIndex(comp));
 
         // Configure the component preconditioner.
         Pointer<LinearSolver> pc_comp = d_pc_map[comp];
@@ -164,7 +152,6 @@ BJacobiPreconditioner::solveSystem(
 
     // Deallocate the preconditioner, when necessary.
     if (deallocate_after_solve) deallocateSolverState();
-
     return ret_val;
 }// solveSystem
 
@@ -185,26 +172,18 @@ BJacobiPreconditioner::initializeSolverState(
     // Initialize the component preconditioners.
     const std::string& x_name = x.getName();
     const std::string& b_name = b.getName();
-    for (std::map<int,Pointer<LinearSolver> >::iterator it = d_pc_map.begin();
-         it != d_pc_map.end(); ++it)
+    for (std::map<unsigned int,Pointer<LinearSolver> >::iterator it = d_pc_map.begin(); it != d_pc_map.end(); ++it)
     {
-        const int comp = (*it).first;
-        SAMRAIVectorReal<NDIM,double> x_comp(
-            x_name+"_component", hierarchy, coarsest_ln, finest_ln);
-        SAMRAIVectorReal<NDIM,double> b_comp(
-            b_name+"_component", hierarchy, coarsest_ln, finest_ln);
-        x_comp.addComponent(x.getComponentVariable(comp),
-                            x.getComponentDescriptorIndex(comp),
-                            x.getControlVolumeIndex(comp));
-        b_comp.addComponent(b.getComponentVariable(comp),
-                            b.getComponentDescriptorIndex(comp),
-                            b.getControlVolumeIndex(comp));
+        const int comp = it->first;
+        SAMRAIVectorReal<NDIM,double> x_comp(x_name+"_component", hierarchy, coarsest_ln, finest_ln);
+        x_comp.addComponent(x.getComponentVariable(comp), x.getComponentDescriptorIndex(comp), x.getControlVolumeIndex(comp));
+        SAMRAIVectorReal<NDIM,double> b_comp(b_name+"_component", hierarchy, coarsest_ln, finest_ln);
+        b_comp.addComponent(b.getComponentVariable(comp), b.getComponentDescriptorIndex(comp), b.getControlVolumeIndex(comp));
         d_pc_map[comp]->initializeSolverState(x_comp, b_comp);
     }
 
     // Indicate that the preconditioner is initialized.
     d_is_initialized = true;
-
     return;
 }// initializeSolverState
 
@@ -214,28 +193,65 @@ BJacobiPreconditioner::deallocateSolverState()
     if (!d_is_initialized) return;
 
     // Deallocate the component preconditioners.
-    for (std::map<int,Pointer<LinearSolver> >::iterator it = d_pc_map.begin();
-         it != d_pc_map.end(); ++it)
+    for (std::map<unsigned int,Pointer<LinearSolver> >::iterator it = d_pc_map.begin(); it != d_pc_map.end(); ++it)
     {
-        const int comp = (*it).first;
+        const int comp = it->first;
         d_pc_map[comp]->deallocateSolverState();
     }
 
     // Indicate that the preconditioner is NOT initialized.
     d_is_initialized = false;
-
     return;
 }// deallocateSolverState
+
+void
+BJacobiPreconditioner::setInitialGuessNonzero(
+    bool initial_guess_nonzero)
+{
+    if (initial_guess_nonzero)
+    {
+        TBOX_ERROR("BJacobiPreconditioner::setInitialGuessNonzero()\n"
+                   << "  class IBTK::BJacobiPreconditioner requires a zero initial guess" << std::endl);
+    }
+    d_initial_guess_nonzero = initial_guess_nonzero;
+    return;
+}// setInitialGuessNonzero
+
+void
+BJacobiPreconditioner::setMaxIterations(
+    int max_iterations)
+{
+    if (max_iterations > 1)
+    {
+        TBOX_ERROR("BJacobiPreconditioner::setMaxIterations()\n"
+                   << "  class IBTK::BJacobiPreconditioner requires max_iterations == 1" << std::endl);
+    }
+    d_max_iterations = max_iterations;
+    return;
+}// setMaxIterations
+
+int
+BJacobiPreconditioner::getNumIterations() const
+{
+    IBTK_DO_ONCE(
+        TBOX_WARNING("BJacobiPreconditioner::getNumIterations() not supported" << std::endl);
+                 );
+    return 0;
+}// getNumIterations
+
+double
+BJacobiPreconditioner::getResidualNorm() const
+{
+    IBTK_DO_ONCE(
+        TBOX_WARNING("BJacobiPreconditioner::getResidualNorm() not supported" << std::endl);
+                 );
+    return 0.0;
+}// getResidualNorm
 
 /////////////////////////////// PRIVATE //////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBTK
-
-/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBTK::BJacobiPreconditioner>;
 
 //////////////////////////////////////////////////////////////////////////////

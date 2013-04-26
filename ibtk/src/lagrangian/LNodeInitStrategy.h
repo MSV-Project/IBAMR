@@ -1,7 +1,7 @@
-// Filename: LNodeInitStrategy.h
+// Filename: LInitStrategy.h
 // Created on 11 Jul 2004 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,13 +30,13 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef included_LNodeInitStrategy
-#define included_LNodeInitStrategy
+#ifndef included_LInitStrategy
+#define included_LInitStrategy
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 // IBTK INCLUDES
-#include <ibtk/LNodeLevelData.h>
+#include <ibtk/LData.h>
 
 // SAMRAI INCLUDES
 #include <PatchHierarchy.h>
@@ -47,28 +47,35 @@
 // C++ STDLIB INCLUDES
 #include <map>
 
+/////////////////////////////// FORWARD DECLARATIONS /////////////////////////
+
+namespace IBTK
+{
+class LDataManager;
+}
+
 /////////////////////////////// CLASS DEFINITION /////////////////////////////
 
 namespace IBTK
 {
 /*!
- * \brief Class LNodeInitStrategy provides a mechanism for specifying the
+ * \brief Class LInitStrategy provides a mechanism for specifying the
  * initial configuration of the curvilinear mesh.
  */
-class LNodeInitStrategy
+class LInitStrategy
     : public virtual SAMRAI::tbox::DescribedClass
 {
 public:
     /*!
      * \brief Default constructor.
      */
-    LNodeInitStrategy();
+    LInitStrategy();
 
     /*!
      * \brief Destructor.
      */
     virtual
-    ~LNodeInitStrategy();
+    ~LInitStrategy();
 
     /*!
      * \return A boolean value indicating whether Lagrangian data is associated
@@ -76,19 +83,19 @@ public:
      */
     virtual bool
     getLevelHasLagrangianData(
-        const int level_number,
-        const bool can_be_refined) const = 0;
+        int level_number,
+        bool can_be_refined) const = 0;
 
     /*!
      * \return The number of local nodes on the patch level.
      */
-    virtual int
+    virtual unsigned int
     computeLocalNodeCountOnPatchLevel(
-        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        const int level_number,
-        const double init_data_time,
-        const bool can_be_refined,
-        const bool initial_time) = 0;
+        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        int level_number,
+        double init_data_time,
+        bool can_be_refined,
+        bool initial_time) = 0;
 
     /*!
      * \brief Initialize the structure indexing information on the patch level.
@@ -99,74 +106,74 @@ public:
     initializeStructureIndexingOnPatchLevel(
         std::map<int,std::string>& strct_id_to_strct_name_map,
         std::map<int,std::pair<int,int> >& strct_id_to_lag_idx_range_map,
-        const int level_number,
-        const double init_data_time,
-        const bool can_be_refined,
-        const bool initial_time,
-        IBTK::LDataManager* const lag_manager);
+        int level_number,
+        double init_data_time,
+        bool can_be_refined,
+        bool initial_time,
+        LDataManager* l_data_manager);
 
     /*!
-     * \brief Initialize the LNodeIndex and LNodeLevel data needed to specify
-     * the configuration of the curvilinear mesh on the patch level.
+     * \brief Initialize the LNode and LData data needed to specify the
+     * configuration of the curvilinear mesh on the patch level.
      *
      * \return The number of local nodes initialized on the patch level.
      */
-    virtual int
+    virtual unsigned int
     initializeDataOnPatchLevel(
-        const int lag_node_index_idx,
-        const int global_index_offset,
-        const int local_index_offset,
-        SAMRAI::tbox::Pointer<LNodeLevelData>& X_data,
-        SAMRAI::tbox::Pointer<LNodeLevelData>& U_data,
-        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        const int level_number,
-        const double init_data_time,
-        const bool can_be_refined,
-        const bool initial_time,
-        LDataManager* const lag_manager) = 0;
+        int lag_node_index_idx,
+        unsigned int global_index_offset,
+        unsigned int local_index_offset,
+        SAMRAI::tbox::Pointer<LData> X_data,
+        SAMRAI::tbox::Pointer<LData> U_data,
+        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        int level_number,
+        double init_data_time,
+        bool can_be_refined,
+        bool initial_time,
+        LDataManager* l_data_manager) = 0;
 
     /*!
-     * \brief Initialize the LNodeLevel data needed to specify the mass and
-     * spring constant data required by the penalty IB method.
+     * \brief Initialize the LData needed to specify the mass and spring
+     * constant data required by the penalty IB method.
      *
      * \return The number of local nodes initialized on the patch level.
      *
      * \note A default empty implementation is provided when support for massive
      * boundaries is not required.
      */
-    virtual int
+    virtual unsigned int
     initializeMassDataOnPatchLevel(
-        const int global_index_offset,
-        const int local_index_offset,
-        SAMRAI::tbox::Pointer<LNodeLevelData>& M_data,
-        SAMRAI::tbox::Pointer<LNodeLevelData>& K_data,
-        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        const int level_number,
-        const double init_data_time,
-        const bool can_be_refined,
-        const bool initial_time,
-        LDataManager* const lag_manager);
+        unsigned int global_index_offset,
+        unsigned int local_index_offset,
+        SAMRAI::tbox::Pointer<LData> M_data,
+        SAMRAI::tbox::Pointer<LData> K_data,
+        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        int level_number,
+        double init_data_time,
+        bool can_be_refined,
+        bool initial_time,
+        LDataManager* l_data_manager);
 
     /*!
-     * \brief Initialize the LNodeLevel data needed to specify director vectors
-     * required by some material models.
+     * \brief Initialize the LData needed to specify director vectors required
+     * by some material models.
      *
      * \return The number of local nodes initialized on the patch level.
      *
      * \note A default empty implementation is provided when support for
      * directors is not required.
      */
-    virtual int
+    virtual unsigned int
     initializeDirectorDataOnPatchLevel(
-        const int global_index_offset,
-        const int local_index_offset,
-        SAMRAI::tbox::Pointer<LNodeLevelData>& D_data,
-        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        const int level_number,
-        const double init_data_time,
-        const bool can_be_refined,
-        const bool initial_time,
-        LDataManager* const lag_manager);
+        unsigned int global_index_offset,
+        unsigned int local_index_offset,
+        SAMRAI::tbox::Pointer<LData> D_data,
+        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        int level_number,
+        double init_data_time,
+        bool can_be_refined,
+        bool initial_time,
+        LDataManager* l_data_manager);
 
     /*!
      * \brief Provide cell tagging for the initial configuration of the
@@ -183,10 +190,10 @@ public:
      */
     virtual void
     tagCellsForInitialRefinement(
-        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        const int level_number,
-        const double error_data_time,
-        const int tag_index);
+        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        int level_number,
+        double error_data_time,
+        int tag_index);
 
 private:
     /*!
@@ -196,8 +203,8 @@ private:
      *
      * \param from The value to copy to this object.
      */
-    LNodeInitStrategy(
-        const LNodeInitStrategy& from);
+    LInitStrategy(
+        const LInitStrategy& from);
 
     /*!
      * \brief Assignment operator.
@@ -208,16 +215,16 @@ private:
      *
      * \return A reference to this object.
      */
-    LNodeInitStrategy&
+    LInitStrategy&
     operator=(
-        const LNodeInitStrategy& that);
+        const LInitStrategy& that);
 };
 }// namespace IBTK
 
 /////////////////////////////// INLINE ///////////////////////////////////////
 
-//#include <ibtk/LNodeInitStrategy.I>
+//#include <ibtk/LInitStrategy.I>
 
 //////////////////////////////////////////////////////////////////////////////
 
-#endif //#ifndef included_LNodeInitStrategy
+#endif //#ifndef included_LInitStrategy

@@ -1,7 +1,7 @@
 // Filename: ibtk_utilities.h
 // Created on 27 Jan 2011 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -34,6 +34,11 @@
 #define included_ibtk_utilities
 
 /////////////////////////////// MACRO DEFINITIONS ////////////////////////////
+
+#define IBTK_BIT_SET(   bitfield,b) ((bitfield) |=  (1 << (b)))
+#define IBTK_BIT_CLEAR( bitfield,b) ((bitfield) &= ~(1 << (b)))
+#define IBTK_BIT_TOGGLE(bitfield,b) ((bitfield) ^=  (1 << (b)))
+#define IBTK_BIT_CHECK( bitfield,b) ((bitfield) &   (1 << (b)))
 
 #include <tbox/PIO.h>
 

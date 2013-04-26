@@ -1,7 +1,7 @@
 // Filename: KrylovLinearSolver.C
 // Created on 09 Sep 2003 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -56,6 +56,10 @@ namespace IBTK
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
 KrylovLinearSolver::KrylovLinearSolver()
+    : d_A(NULL),
+      d_pc_solver(NULL),
+      d_x(NULL),
+      d_b(NULL)
 {
     // intentionally blank
     return;
@@ -68,57 +72,99 @@ KrylovLinearSolver::~KrylovLinearSolver()
 }// ~KrylovLinearSolver()
 
 void
-KrylovLinearSolver::setNullspace(
-    const bool contains_constant_vector,
-    Pointer<SAMRAIVectorReal<NDIM,double> > nullspace_basis_vec)
+KrylovLinearSolver::setHierarchyMathOps(
+    Pointer<HierarchyMathOps> hier_math_ops)
 {
-    if (!nullspace_basis_vec.isNull())
+    LinearSolver::setHierarchyMathOps(hier_math_ops);
+    if (d_A) d_A->setHierarchyMathOps(d_hier_math_ops);
+    if (d_pc_solver) d_pc_solver->setHierarchyMathOps(d_hier_math_ops);
+    return;
+}// setHierarchyMathOps
+
+void
+KrylovLinearSolver::setHomogeneousBc(
+    bool homogeneous_bc)
+{
+    LinearSolver::setHomogeneousBc(homogeneous_bc);
+    if (d_A) d_A->setHomogeneousBc(homogeneous_bc);
+    return;
+}// setHomogeneousBc
+
+void
+KrylovLinearSolver::setSolutionTime(
+    const double solution_time)
+{
+    LinearSolver::setSolutionTime(solution_time);
+    if (d_A) d_A->setSolutionTime(solution_time);
+    if (d_pc_solver) d_pc_solver->setSolutionTime(solution_time);
+    return;
+}// setSolutionTime
+
+void
+KrylovLinearSolver::setTimeInterval(
+    const double current_time,
+    const double new_time)
+{
+    LinearSolver::setTimeInterval(current_time, new_time);
+    if (d_A) d_A->setTimeInterval(current_time, new_time);
+    if (d_pc_solver) d_pc_solver->setTimeInterval(current_time, new_time);
+    return;
+}// setTimeInterval
+
+void
+KrylovLinearSolver::setOperator(
+    Pointer<LinearOperator> A)
+{
+    Pointer<LinearOperator> A_old = d_A;
+    d_A = A;
+    if (d_A)
     {
-        setNullspace(contains_constant_vector, std::vector<Pointer<SAMRAIVectorReal<NDIM,double> > >(1, nullspace_basis_vec));
+        d_A->setHomogeneousBc(d_homogeneous_bc);
+        d_A->setSolutionTime(d_solution_time);
+        d_A->setTimeInterval(d_current_time, d_new_time);
+        if (d_is_initialized && (d_A != A_old) && d_A)
+        {
+            d_A->initializeOperatorState(*d_x, *d_b);
+        }
     }
-    else
+    return;
+}// setOperator
+
+Pointer<LinearOperator>
+KrylovLinearSolver::getOperator() const
+{
+    return d_A;
+}// getOperator
+
+void
+KrylovLinearSolver::setPreconditioner(
+    Pointer<LinearSolver> pc_solver)
+{
+    Pointer<LinearSolver> pc_solver_old = d_pc_solver;
+    d_pc_solver = pc_solver;
+    if (d_pc_solver)
     {
-        setNullspace(contains_constant_vector, std::vector<Pointer<SAMRAIVectorReal<NDIM,double> > >());
+        d_pc_solver->setHomogeneousBc(true);
+        d_pc_solver->setSolutionTime(d_solution_time);
+        d_pc_solver->setTimeInterval(d_current_time, d_new_time);
+        if (d_is_initialized && (d_pc_solver != pc_solver_old) && d_pc_solver)
+        {
+            d_pc_solver->initializeSolverState(*d_b, *d_b);
+        }
     }
     return;
-}// setNullspace
+}// setPreconditioner
 
-void
-KrylovLinearSolver::setNullspace(
-    const bool contains_constant_vector,
-    const std::vector<Pointer<SAMRAIVectorReal<NDIM,double> > >& nullspace_basis_vecs)
+Pointer<LinearSolver>
+KrylovLinearSolver::getPreconditioner() const
 {
-    (void) contains_constant_vector;
-    (void) nullspace_basis_vecs;
-    // intentionally blank
-    return;
-}// setNullspace
-
-void
-KrylovLinearSolver::initializeSolverState(
-    const SAMRAIVectorReal<NDIM,double>& x,
-    const SAMRAIVectorReal<NDIM,double>& b)
-{
-    LinearSolver::initializeSolverState(x,b);
-    return;
-}// initializeSolverState
-
-void
-KrylovLinearSolver::deallocateSolverState()
-{
-    LinearSolver::deallocateSolverState();
-    return;
-}// deallocateSolverState
+    return d_pc_solver;
+}// getPreconditioner
 
 /////////////////////////////// PRIVATE //////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBTK
-
-/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBTK::KrylovLinearSolver>;
 
 //////////////////////////////////////////////////////////////////////////////

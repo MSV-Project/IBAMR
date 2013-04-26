@@ -1,7 +1,7 @@
 // Filename: CartExtrapPhysBdryOp.h
 // Created on 30 Sep 2006 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -40,7 +40,6 @@
 #include <IntVector.h>
 #include <Patch.h>
 #include <RefinePatchStrategy.h>
-#include <tbox/DescribedClass.h>
 
 // C++ STDLIB INCLUDES
 #include <set>
@@ -57,8 +56,7 @@ namespace IBTK
  * values.
  */
 class CartExtrapPhysBdryOp
-    : public SAMRAI::xfer::RefinePatchStrategy<NDIM>,
-      public virtual SAMRAI::tbox::DescribedClass
+    : public SAMRAI::xfer::RefinePatchStrategy<NDIM>
 {
 public:
     /*!

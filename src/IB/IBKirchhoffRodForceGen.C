@@ -1,7 +1,7 @@
 // Filename: IBKirchhoffRodForceGen.C
 // Created on 22 Jun 2010 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -51,8 +51,6 @@
 
 // IBTK INCLUDES
 #include <ibtk/IBTK_CHKERRQ.h>
-#include <ibtk/LNodeIndexData.h>
-#include <ibtk/PETScVecOps.h>
 
 // SAMRAI INCLUDES
 #include <Box.h>
@@ -102,12 +100,11 @@ interpolate_directors(
     blitz::Array<double,2> sqrt_A(3,3,blitz::ColumnMajorArray<2>());
     DSQRTM_FC(sqrt_A.data(), A.data());
 
-    for (int alpha = 0; alpha < 3; ++alpha)
-    {
-        blitz::firstIndex i;
-        blitz::secondIndex j;
-        *D_half(alpha) = blitz::sum(sqrt_A(i,j)*(*D(alpha))(j),j);
-    }
+    blitz::firstIndex i;
+    blitz::secondIndex j;
+    *D_half(0) = blitz::sum(sqrt_A(i,j)*(*D(0))(j),j);
+    *D_half(1) = blitz::sum(sqrt_A(i,j)*(*D(1))(j),j);
+    *D_half(2) = blitz::sum(sqrt_A(i,j)*(*D(2))(j),j);
     return;
 }// interpolate_directors
 
@@ -142,7 +139,7 @@ compute_force_and_torque(
     blitz::Array<double,1>& D2_next,
     blitz::Array<double,1>& D3,
     blitz::Array<double,1>& D3_next,
-    const std::vector<double>& material_params)
+    const blitz::TinyVector<double,IBRodForceSpec::NUM_MATERIAL_PARAMS>& material_params)
 {
     blitz::Array<blitz::Array<double,1>*,1> D(3);
     D = &D1 , &D2 , &D3;
@@ -160,16 +157,16 @@ compute_force_and_torque(
 
     interpolate_directors(D_half, D, D_next);
 
-    const double ds = material_params[0];
-    const double a1 = material_params[1];
-    const double a2 = material_params[2];
-    const double a3 = material_params[3];
-    const double b1 = material_params[4];
-    const double b2 = material_params[5];
-    const double b3 = material_params[6];
+    const double ds     = material_params[0];
+    const double a1     = material_params[1];
+    const double a2     = material_params[2];
+    const double a3     = material_params[3];
+    const double b1     = material_params[4];
+    const double b2     = material_params[5];
+    const double b3     = material_params[6];
     const double kappa1 = material_params[7];
     const double kappa2 = material_params[8];
-    const double tau = material_params[9];
+    const double tau    = material_params[9];
 
     const blitz::Array<double,1> dX_ds((X_next-X)/ds);
     const double F1 = b1* dot(D1_half, dX_ds);
@@ -221,14 +218,14 @@ IBKirchhoffRodForceGen::~IBKirchhoffRodForceGen()
     {
         if (*it)
         {
-            ierr = MatDestroy(*it);  IBTK_CHKERRQ(ierr);
+            ierr = MatDestroy(&*it);  IBTK_CHKERRQ(ierr);
         }
     }
     for (std::vector<Mat>::iterator it = d_X_next_mats.begin(); it != d_X_next_mats.end(); ++it)
     {
         if (*it)
         {
-            ierr = MatDestroy(*it);  IBTK_CHKERRQ(ierr);
+            ierr = MatDestroy(&*it);  IBTK_CHKERRQ(ierr);
         }
     }
     return;
@@ -238,20 +235,17 @@ void
 IBKirchhoffRodForceGen::initializeLevelData(
     const Pointer<PatchHierarchy<NDIM> > hierarchy,
     const int level_number,
-    const double init_data_time,
-    const bool initial_time,
-    LDataManager* const lag_manager)
+    const double /*init_data_time*/,
+    const bool /*initial_time*/,
+    LDataManager* const l_data_manager)
 {
-    if (!lag_manager->levelContainsLagrangianData(level_number)) return;
+    if (!l_data_manager->levelContainsLagrangianData(level_number)) return;
 
-    t_initialize_level_data->start();
+    IBAMR_TIMER_START(t_initialize_level_data);
 
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!hierarchy.isNull());
+    TBOX_ASSERT(hierarchy);
 #endif
-    (void) init_data_time;
-    (void) initial_time;
-
     int ierr;
 
     Pointer<PatchLevel<NDIM> > level = hierarchy->getPatchLevel(level_number);
@@ -259,7 +253,7 @@ IBKirchhoffRodForceGen::initializeLevelData(
     // Resize the vectors corresponding to data individually maintained for
     // separate levels of the patch hierarchy.
     const int level_num = level->getLevelNumber();
-    const int new_size = std::max(level_num+1, int(d_is_initialized.size()));
+    const int new_size = std::max(level_num+1, static_cast<int>(d_is_initialized.size()));
 
     d_D_next_mats.resize(new_size);
     d_X_next_mats.resize(new_size);
@@ -272,71 +266,65 @@ IBKirchhoffRodForceGen::initializeLevelData(
     Mat& X_next_mat = d_X_next_mats[level_num];
     std::vector<int>& petsc_curr_node_idxs = d_petsc_curr_node_idxs[level_num];
     std::vector<int>& petsc_next_node_idxs = d_petsc_next_node_idxs[level_num];
-    std::vector<std::vector<double> >& material_params = d_material_params[level_num];
+    std::vector<blitz::TinyVector<double,IBRodForceSpec::NUM_MATERIAL_PARAMS> >& material_params = d_material_params[level_num];
 
     if (D_next_mat)
     {
-        ierr = MatDestroy(D_next_mat);  IBTK_CHKERRQ(ierr);
+        ierr = MatDestroy(&D_next_mat);  IBTK_CHKERRQ(ierr);
     }
     if (X_next_mat)
     {
-        ierr = MatDestroy(X_next_mat);  IBTK_CHKERRQ(ierr);
+        ierr = MatDestroy(&X_next_mat);  IBTK_CHKERRQ(ierr);
     }
     petsc_curr_node_idxs.clear();
     petsc_next_node_idxs.clear();
     material_params.clear();
 
-    // The patch data descriptor index for the LNodeIndexData.
-    const int lag_node_index_idx = lag_manager->getLNodeIndexPatchDescriptorIndex();
+    // The LMesh object provides the set of local Lagrangian nodes.
+    const Pointer<LMesh> mesh = l_data_manager->getLMesh(level_num);
+    const std::vector<LNode*>& local_nodes = mesh->getLocalNodes();
 
     // Determine the "next" node indices for all rods associated with the
     // present MPI process.
-    for (PatchLevel<NDIM>::Iterator p(level); p; p++)
+    for (std::vector<LNode*>::const_iterator cit = local_nodes.begin(); cit != local_nodes.end(); ++cit)
     {
-        Pointer<Patch<NDIM> > patch = level->getPatch(p());
-        const Box<NDIM>& patch_box = patch->getBox();
-        const Pointer<LNodeIndexData> idx_data = patch->getPatchData(lag_node_index_idx);
-        for (LNodeIndexData::LNodeIndexIterator it = idx_data->lnode_index_begin(patch_box);
-             it != idx_data->lnode_index_end(); ++it)
+        const LNode* const node_idx = *cit;
+        const IBRodForceSpec* const force_spec = node_idx->getNodeDataItem<IBRodForceSpec>();
+        if (force_spec)
         {
-            const LNodeIndex& node_idx = *it;
-            const Pointer<IBRodForceSpec> force_spec = node_idx.getNodeData<IBRodForceSpec>();
-            if (!force_spec.isNull())
+            const int& curr_idx = node_idx->getLagrangianIndex();
+            const unsigned int num_rods = force_spec->getNumberOfRods();
+#ifdef DEBUG_CHECK_ASSERTIONS
+            TBOX_ASSERT(curr_idx == force_spec->getMasterNodeIndex());
+#endif
+            const std::vector<int>& next_idxs = force_spec->getNextNodeIndices();
+            const std::vector<blitz::TinyVector<double,IBRodForceSpec::NUM_MATERIAL_PARAMS> >& params = force_spec->getMaterialParams();
+#ifdef DEBUG_CHECK_ASSERTIONS
+            TBOX_ASSERT(num_rods == next_idxs.size());
+#endif
+            for (unsigned int k = 0; k < num_rods; ++k)
             {
-                const int& curr_idx = node_idx.getLagrangianIndex();
-                const unsigned num_rods = force_spec->getNumberOfRods();
-#ifdef DEBUG_CHECK_ASSERTIONS
-                TBOX_ASSERT(curr_idx == force_spec->getMasterNodeIndex());
-#endif
-                const std::vector<int>& next_idxs = force_spec->getNextNodeIndices();
-                const std::vector<std::vector<double> >& params = force_spec->getMaterialParams();
-#ifdef DEBUG_CHECK_ASSERTIONS
-                TBOX_ASSERT(num_rods == next_idxs.size());
-#endif
-                for (unsigned k = 0; k < num_rods; ++k)
-                {
-                    petsc_curr_node_idxs.push_back(curr_idx);
-                    petsc_next_node_idxs.push_back(next_idxs[k]);
-                    material_params.push_back(params[k]);
-                }
+                petsc_curr_node_idxs.push_back(curr_idx);
+                petsc_next_node_idxs.push_back(next_idxs[k]);
+                material_params.push_back(params[k]);
             }
         }
     }
 
     // Map the Lagrangian node indices to the PETSc indices corresponding to the
     // present data distribution.
-    lag_manager->mapLagrangianToPETSc(petsc_curr_node_idxs, level_num);
-    lag_manager->mapLagrangianToPETSc(petsc_next_node_idxs, level_num);
+    l_data_manager->mapLagrangianToPETSc(petsc_curr_node_idxs, level_num);
+    l_data_manager->mapLagrangianToPETSc(petsc_next_node_idxs, level_num);
 
     // Determine the global node offset and the number of local nodes.
-    const int global_node_offset = lag_manager->getGlobalNodeOffset(level_num);
-    const int num_local_nodes = lag_manager->getNumberOfLocalNodes(level_num);
+    const int global_node_offset = l_data_manager->getGlobalNodeOffset(level_num);
+    const int num_local_nodes = l_data_manager->getNumberOfLocalNodes(level_num);
 
     // Determine the non-zero structure for the matrices.
-    const int local_sz = petsc_curr_node_idxs.size();
+    const unsigned int local_sz = petsc_curr_node_idxs.size();
 
     std::vector<int> next_d_nz(local_sz,1), next_o_nz(local_sz,0);
-    for (int k = 0; k < local_sz; ++k)
+    for (unsigned int k = 0; k < local_sz; ++k)
     {
         const int& next_idx = petsc_next_node_idxs[k];
         if (next_idx >= global_node_offset &&
@@ -353,16 +341,16 @@ IBKirchhoffRodForceGen::initializeLevelData(
     // Create new MPI block AIJ matrices and set the values of the non-zero
     // entries.
     {
-        ierr = MatCreateMPIBAIJ(PETSC_COMM_WORLD,
-                                3*3, 3*3*local_sz, 3*3*num_local_nodes,
-                                PETSC_DETERMINE, PETSC_DETERMINE,
-                                PETSC_DEFAULT, local_sz > 0 ? &next_d_nz[0] : PETSC_NULL,
-                                PETSC_DEFAULT, local_sz > 0 ? &next_o_nz[0] : PETSC_NULL,
-                                &D_next_mat);  IBTK_CHKERRQ(ierr);
+        ierr = MatCreateBAIJ(PETSC_COMM_WORLD,
+                             3*3, 3*3*local_sz, 3*3*num_local_nodes,
+                             PETSC_DETERMINE, PETSC_DETERMINE,
+                             PETSC_DEFAULT, local_sz > 0 ? &next_d_nz[0] : NULL,
+                             PETSC_DEFAULT, local_sz > 0 ? &next_o_nz[0] : NULL,
+                             &D_next_mat);  IBTK_CHKERRQ(ierr);
 
-        blitz::Array<double,2> curr_vals(3*3,3*3);  curr_vals = 0.0;
-        blitz::Array<double,2> next_vals(3*3,3*3);  next_vals = 0.0;
-        for (int d = 0; d < 3*3; ++d)
+        blitz::TinyMatrix<double,3*3,3*3> curr_vals; curr_vals = 0.0;
+        blitz::TinyMatrix<double,3*3,3*3> next_vals; next_vals = 0.0;
+        for (unsigned int d = 0; d < 3*3; ++d)
         {
             curr_vals(d,d) =  0.0;
             next_vals(d,d) = +1.0;
@@ -370,11 +358,11 @@ IBKirchhoffRodForceGen::initializeLevelData(
 
         int i_offset;
 
-        ierr = MatGetOwnershipRange(D_next_mat, &i_offset, PETSC_NULL);
+        ierr = MatGetOwnershipRange(D_next_mat, &i_offset, NULL);
         IBTK_CHKERRQ(ierr);
         i_offset /= 3*3;
 
-        for (int k = 0; k < local_sz; ++k)
+        for (unsigned int k = 0; k < local_sz; ++k)
         {
             int i = i_offset + k;
             int j_curr = petsc_curr_node_idxs[k];
@@ -385,16 +373,16 @@ IBKirchhoffRodForceGen::initializeLevelData(
     }
 
     {
-        ierr = MatCreateMPIBAIJ(PETSC_COMM_WORLD,
-                                NDIM, NDIM*local_sz, NDIM*num_local_nodes,
-                                PETSC_DETERMINE, PETSC_DETERMINE,
-                                PETSC_DEFAULT, local_sz > 0 ? &next_d_nz[0] : PETSC_NULL,
-                                PETSC_DEFAULT, local_sz > 0 ? &next_o_nz[0] : PETSC_NULL,
-                                &X_next_mat);  IBTK_CHKERRQ(ierr);
+        ierr = MatCreateBAIJ(PETSC_COMM_WORLD,
+                             NDIM, NDIM*local_sz, NDIM*num_local_nodes,
+                             PETSC_DETERMINE, PETSC_DETERMINE,
+                             PETSC_DEFAULT, local_sz > 0 ? &next_d_nz[0] : NULL,
+                             PETSC_DEFAULT, local_sz > 0 ? &next_o_nz[0] : NULL,
+                             &X_next_mat);  IBTK_CHKERRQ(ierr);
 
-        blitz::Array<double,2> curr_vals(NDIM,NDIM);  curr_vals = 0.0;
-        blitz::Array<double,2> next_vals(NDIM,NDIM);  next_vals = 0.0;
-        for (int d = 0; d < NDIM; ++d)
+        blitz::TinyMatrix<double,NDIM,NDIM> curr_vals;  curr_vals = 0.0;
+        blitz::TinyMatrix<double,NDIM,NDIM> next_vals;  next_vals = 0.0;
+        for (unsigned int d = 0; d < NDIM; ++d)
         {
             curr_vals(d,d) =  0.0;
             next_vals(d,d) = +1.0;
@@ -402,11 +390,11 @@ IBKirchhoffRodForceGen::initializeLevelData(
 
         int i_offset;
 
-        ierr = MatGetOwnershipRange(X_next_mat, &i_offset, PETSC_NULL);
+        ierr = MatGetOwnershipRange(X_next_mat, &i_offset, NULL);
         IBTK_CHKERRQ(ierr);
         i_offset /= NDIM;
 
-        for (int k = 0; k < local_sz; ++k)
+        for (unsigned int k = 0; k < local_sz; ++k)
         {
             int i = i_offset + k;
             int j_curr = petsc_curr_node_idxs[k];
@@ -425,32 +413,31 @@ IBKirchhoffRodForceGen::initializeLevelData(
     // Indicate that the level data has been initialized.
     d_is_initialized[level_num] = true;
 
-    t_initialize_level_data->stop();
+    IBAMR_TIMER_STOP(t_initialize_level_data);
     return;
 }// initializeLevelData
 
 void
 IBKirchhoffRodForceGen::computeLagrangianForceAndTorque(
-    Pointer<LNodeLevelData> F_data,
-    Pointer<LNodeLevelData> N_data,
-    Pointer<LNodeLevelData> X_data,
-    Pointer<LNodeLevelData> D_data,
-    Pointer<LNodeLevelData> U_data,
-    const Pointer<PatchHierarchy<NDIM> > hierarchy,
+    Pointer<LData> F_data,
+    Pointer<LData> N_data,
+    Pointer<LData> X_data,
+    Pointer<LData> D_data,
+    const Pointer<PatchHierarchy<NDIM> > /*hierarchy*/,
     const int level_number,
-    const double data_time,
-    LDataManager* const lag_manager)
+    const double /*data_time*/,
+    LDataManager* const l_data_manager)
 {
-    if (!lag_manager->levelContainsLagrangianData(level_number)) return;
+    if (!l_data_manager->levelContainsLagrangianData(level_number)) return;
 
-    t_compute_lagrangian_force_and_torque->start();
+    IBAMR_TIMER_START(t_compute_lagrangian_force_and_torque);
 
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(level_number < int(d_is_initialized.size()));
+    TBOX_ASSERT(level_number < static_cast<int>(d_is_initialized.size()));
     TBOX_ASSERT(d_is_initialized[level_number]);
 #endif
 
-    const int global_offset = lag_manager->getGlobalNodeOffset(level_number);
+    const int global_offset = l_data_manager->getGlobalNodeOffset(level_number);
 
     int ierr;
 
@@ -460,24 +447,20 @@ IBKirchhoffRodForceGen::computeLagrangianForceAndTorque(
     ierr = MatGetOwnershipRange(d_D_next_mats[level_number], &i_start, &i_stop);
     IBTK_CHKERRQ(ierr);
 
-    Vec D_vec = D_data->getGlobalVec();
-
+    Vec D_vec = D_data->getVec();
     Vec D_next_vec;
     ierr = VecCreateMPI(PETSC_COMM_WORLD, i_stop-i_start, PETSC_DECIDE, &D_next_vec);  IBTK_CHKERRQ(ierr);
-    ierr = VecSetBlockSize(D_next_vec, 3*3);                                           IBTK_CHKERRQ(ierr);
 
     ierr = MatGetOwnershipRange(d_X_next_mats[level_number], &i_start, &i_stop);
     IBTK_CHKERRQ(ierr);
 
-    Vec X_vec = X_data->getGlobalVec();
-
+    Vec X_vec = X_data->getVec();
     Vec X_next_vec;
     ierr = VecCreateMPI(PETSC_COMM_WORLD, i_stop-i_start, PETSC_DECIDE, &X_next_vec);  IBTK_CHKERRQ(ierr);
-    ierr = VecSetBlockSize(X_next_vec, NDIM);                                          IBTK_CHKERRQ(ierr);
 
     // Compute the node displacements.
-    ierr = MatMult(d_D_next_mats[level_number], D_data->getGlobalVec(), D_next_vec);  IBTK_CHKERRQ(ierr);
-    ierr = MatMult(d_X_next_mats[level_number], X_data->getGlobalVec(), X_next_vec);  IBTK_CHKERRQ(ierr);
+    ierr = MatMult(d_D_next_mats[level_number], D_vec, D_next_vec);  IBTK_CHKERRQ(ierr);
+    ierr = MatMult(d_X_next_mats[level_number], X_vec, X_next_vec);  IBTK_CHKERRQ(ierr);
 
     // Compute the rod forces acting on the nodes of the Lagrangian mesh.
     double* D_vals;
@@ -494,15 +477,15 @@ IBKirchhoffRodForceGen::computeLagrangianForceAndTorque(
 
     std::vector<int>& petsc_curr_node_idxs = d_petsc_curr_node_idxs[level_number];
     std::vector<int>& petsc_next_node_idxs = d_petsc_next_node_idxs[level_number];
-    const std::vector<std::vector<double> >& material_params = d_material_params[level_number];
+    const std::vector<blitz::TinyVector<double,IBRodForceSpec::NUM_MATERIAL_PARAMS> >& material_params = d_material_params[level_number];
 
-    const int local_sz = petsc_curr_node_idxs.size();
+    const unsigned int local_sz = petsc_curr_node_idxs.size();
     std::vector<double> F_curr_node_vals(NDIM*local_sz,0.0);
     std::vector<double> N_curr_node_vals(NDIM*local_sz,0.0);
     std::vector<double> F_next_node_vals(NDIM*local_sz,0.0);
     std::vector<double> N_next_node_vals(NDIM*local_sz,0.0);
 
-    for (int k = 0; k < local_sz; ++k)
+    for (unsigned int k = 0; k < local_sz; ++k)
     {
         // Compute the forces applied by the rod to the "current" and "next"
         // nodes.
@@ -540,43 +523,28 @@ IBKirchhoffRodForceGen::computeLagrangianForceAndTorque(
     ierr = VecRestoreArray(D_vec, &D_vals);            IBTK_CHKERRQ(ierr);
 
     ierr = VecRestoreArray(D_next_vec, &D_next_vals);  IBTK_CHKERRQ(ierr);
-    ierr = VecDestroy(D_next_vec);                     IBTK_CHKERRQ(ierr);
+    ierr = VecDestroy(&D_next_vec);                    IBTK_CHKERRQ(ierr);
 
     ierr = VecRestoreArray(X_vec, &X_vals);            IBTK_CHKERRQ(ierr);
 
     ierr = VecRestoreArray(X_next_vec, &X_next_vals);  IBTK_CHKERRQ(ierr);
-    ierr = VecDestroy(X_next_vec);                     IBTK_CHKERRQ(ierr);
+    ierr = VecDestroy(&X_next_vec);                    IBTK_CHKERRQ(ierr);
 
-    Vec F_vec = F_data->getGlobalVec();
-    ierr = PETScVecOps::VecSetValuesBlocked(F_vec,
-                                            petsc_curr_node_idxs.size(),
-                                            !petsc_curr_node_idxs.empty() ? &petsc_curr_node_idxs[0] : PETSC_NULL,
-                                            !petsc_curr_node_idxs.empty() ? &    F_curr_node_vals[0] : PETSC_NULL,
-                                            ADD_VALUES);  IBTK_CHKERRQ(ierr);
-    ierr = PETScVecOps::VecSetValuesBlocked(F_vec,
-                                            petsc_next_node_idxs.size(),
-                                            !petsc_next_node_idxs.empty() ? &petsc_next_node_idxs[0] : PETSC_NULL,
-                                            !petsc_next_node_idxs.empty() ? &    F_next_node_vals[0] : PETSC_NULL,
-                                            ADD_VALUES);  IBTK_CHKERRQ(ierr);
+    Vec F_vec = F_data->getVec();
+    Vec N_vec = N_data->getVec();
+    if (local_sz > 0)
+    {
+        ierr = VecSetValuesBlocked(F_vec, petsc_curr_node_idxs.size(), &petsc_curr_node_idxs[0], &F_curr_node_vals[0], ADD_VALUES);  IBTK_CHKERRQ(ierr);
+        ierr = VecSetValuesBlocked(F_vec, petsc_next_node_idxs.size(), &petsc_next_node_idxs[0], &F_next_node_vals[0], ADD_VALUES);  IBTK_CHKERRQ(ierr);
+        ierr = VecSetValuesBlocked(N_vec, petsc_curr_node_idxs.size(), &petsc_curr_node_idxs[0], &N_curr_node_vals[0], ADD_VALUES);  IBTK_CHKERRQ(ierr);
+        ierr = VecSetValuesBlocked(N_vec, petsc_next_node_idxs.size(), &petsc_next_node_idxs[0], &N_next_node_vals[0], ADD_VALUES);  IBTK_CHKERRQ(ierr);
+    }
+    ierr = VecAssemblyBegin(F_vec);  IBTK_CHKERRQ(ierr);
+    ierr = VecAssemblyBegin(N_vec);  IBTK_CHKERRQ(ierr);
+    ierr = VecAssemblyEnd(F_vec);    IBTK_CHKERRQ(ierr);
+    ierr = VecAssemblyEnd(N_vec);    IBTK_CHKERRQ(ierr);
 
-    Vec N_vec = N_data->getGlobalVec();
-    ierr = PETScVecOps::VecSetValuesBlocked(N_vec,
-                                            petsc_curr_node_idxs.size(),
-                                            !petsc_curr_node_idxs.empty() ? &petsc_curr_node_idxs[0] : PETSC_NULL,
-                                            !petsc_curr_node_idxs.empty() ? &    N_curr_node_vals[0] : PETSC_NULL,
-                                            ADD_VALUES);  IBTK_CHKERRQ(ierr);
-    ierr = PETScVecOps::VecSetValuesBlocked(N_vec,
-                                            petsc_next_node_idxs.size(),
-                                            !petsc_next_node_idxs.empty() ? &petsc_next_node_idxs[0] : PETSC_NULL,
-                                            !petsc_next_node_idxs.empty() ? &    N_next_node_vals[0] : PETSC_NULL,
-                                            ADD_VALUES);  IBTK_CHKERRQ(ierr);
-
-    ierr = PETScVecOps::VecAssemblyBegin(F_vec);  IBTK_CHKERRQ(ierr);
-    ierr = PETScVecOps::VecAssemblyBegin(N_vec);  IBTK_CHKERRQ(ierr);
-    ierr = PETScVecOps::VecAssemblyEnd(F_vec);    IBTK_CHKERRQ(ierr);
-    ierr = PETScVecOps::VecAssemblyEnd(N_vec);    IBTK_CHKERRQ(ierr);
-
-    t_compute_lagrangian_force_and_torque->stop();
+    IBAMR_TIMER_STOP(t_compute_lagrangian_force_and_torque);
     return;
 }// computeLagrangianForceAndTorque
 
@@ -588,7 +556,7 @@ void
 IBKirchhoffRodForceGen::getFromInput(
     Pointer<Database> db)
 {
-    if (!db.isNull())
+    if (db)
     {
         // intentionally blank
     }
@@ -598,10 +566,5 @@ IBKirchhoffRodForceGen::getFromInput(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBAMR
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBAMR::IBKirchhoffRodForceGen>;
 
 //////////////////////////////////////////////////////////////////////////////

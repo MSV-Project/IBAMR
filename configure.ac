@@ -5,7 +5,8 @@ AC_PREREQ([2.68])
 AC_INIT([IBAMR],[101029],[griffith AT cims DOT nyu DOT edu])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_HEADERS([config/IBAMR_config.h])
-AM_INIT_AUTOMAKE([1.11.1 -Wall -Werror dist-bzip2 foreign])
+AX_PREFIX_CONFIG_H([config/IBAMR_prefix_config.h])
+AM_INIT_AUTOMAKE([1.11.1 -Wall -Werror dist-bzip2 foreign  -Wno-extra-portability])
 AM_MAINTAINER_MODE([disable])
 AC_LANG(C++)
 
@@ -23,6 +24,7 @@ AC_PROG_F77		# Check for a Fortran 77 compiler.
 AC_FC_LIBRARY_LDFLAGS	# Determine the linker flags for the Fortran intrinsic and runtime libraries.
 AC_FC_WRAPPERS
 LIBS="$LIBS $FCLIBS"
+AM_PROG_AR
 
 if test "x$F77" != "x" -a "$F77" != "$FC" ; then
   AC_MSG_WARN([environment variables F77 and FC differ; using F77=$FC])
@@ -90,13 +92,31 @@ fi
 
 AC_MSG_CHECKING([whether compiler supports __builtin_expect keyword])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[
-if (__builtin_expect(true,1)) return 0;
+    if (__builtin_expect(true,1))
+    {
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
 ]])],[
 have_builtin_expect=1
 AC_MSG_RESULT(yes)],[
 have_builtin_expect=0
 AC_MSG_RESULT(no)])
 AC_DEFINE_UNQUOTED(HAVE_BUILTIN_EXPECT,$have_builtin_expect,[Boolean value indicating whether the C++ compiler supports the __builtin_expect keyword])
+
+AC_MSG_CHECKING([whether compiler supports __builtin_prefetch keyword])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[
+    __builtin_prefetch(0,0,0);
+    return 0;
+]])],[
+have_builtin_prefetch=1
+AC_MSG_RESULT(yes)],[
+have_builtin_prefetch=0
+AC_MSG_RESULT(no)])
+AC_DEFINE_UNQUOTED(HAVE_BUILTIN_PREFETCH,$have_builtin_prefetch,[Boolean value indicating whether the C++ compiler supports the __builtin_prefetch keyword])
 
 # Checks for other programs.
 AC_PROG_RANLIB
@@ -188,42 +208,9 @@ else
   AC_DEFINE([USING_EXPENSIVE_CF_INTERPOLATION],[false],[Boolean value indicating whether we are using the expensive version of the quadratic coarse-fine interface code])
 fi
 
-# Checks to see whether subdomain indices should be enabled.
-AC_ARG_ENABLE([subdomain-indices],
-  AS_HELP_STRING(--enable-subdomain-indices,[enable the use of subdomain indices for standard IB mechanical elements @<:@default=no@:>@]),
-  [SUBDOMAIN_INDICES=$enable_subdomain_indices], [SUBDOMAIN_INDICES=no])
-
-if test "$SUBDOMAIN_INDICES" == "yes" ; then
-  echo "subdomain indices are ENABLED!"
-  AC_DEFINE([ENABLE_SUBDOMAIN_INDICES],[true],[Boolean value indicating whether we are using subdomain indices])
-else
-  echo "subdomain indices are DISABLED!"
-  AC_DEFINE([ENABLE_SUBDOMAIN_INDICES],[false],[Boolean value indicating whether we are using subdomain indices])
-fi
-
 ###########################################################################
 # Checks for libraries.
 ###########################################################################
-
-AC_ARG_ENABLE([blitz],
-  AS_HELP_STRING(--enable-blitz,enable support for the optional Blitz++ library @<:@default=yes@:>@),
-  [BLITZ_ENABLED=$enableval], [BLITZ_ENABLED=yes])
-if test "$BLITZ_ENABLED" == "" ; then
-  BLITZ_ENABLED=yes
-fi
-
-AC_ARG_WITH([blitz],
-  AS_HELP_STRING(--with-blitz=PATH,location of optional Blitz++ installation @<:@default=/usr/local/sfw/blitz/current@:>@),
-  [if test "$BLITZ_ENABLED" == "no" ; then
-     AC_MSG_WARN([--with-blitz is specified, but support for Blitz++ is DISABLED])
-     BLITZ_DIR=NONE
-   else
-     if test ! -d "$withval" ; then
-       AC_MSG_ERROR([you must specify an existing directory when using --with-blitz=PATH])
-     fi
-     BLITZ_DIR=$withval
-   fi],
-  [BLITZ_DIR=/usr/local/sfw/blitz/current])
 
 AC_ARG_WITH([hdf5],
   AS_HELP_STRING(--with-hdf5=PATH,location of required hdf5 installation @<:@default=/usr/local/sfw/hdf5/current@:>@),
@@ -343,20 +330,6 @@ AX_BLAS(,)
 AX_LAPACK(,)
 LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FCLIBS"
 
-AM_CONDITIONAL([BLITZ_ENABLED],[test "$BLITZ_ENABLED" == "yes"])
-if test "$BLITZ_ENABLED" == "yes"; then
-  echo
-  echo "===================================="
-  echo "Configuring optional package Blitz++"
-  echo "===================================="
-  CONFIGURE_BLITZ
-else
-  echo
-  echo "===================================="
-  echo "Optional package Blitz++ is DISABLED"
-  echo "===================================="
-fi
-
 AM_CONDITIONAL([SILO_ENABLED],[test "$SILO_ENABLED" == "yes"])
 if test "$SILO_ENABLED" == "yes"; then
   echo
@@ -425,20 +398,18 @@ AC_CONFIG_FILES([
   doc/online_Doxyfile
   examples/Makefile
   examples/IB/Makefile
-  examples/IB/cell_centered/Makefile
-  examples/IB/cell_centered/ex0/Makefile
-  examples/IB/cell_centered/ex1/Makefile
-  examples/IB/cell_centered/ex2/Makefile
-  examples/IB/staggered_grid/Makefile
-  examples/IB/staggered_grid/explicit/Makefile
-  examples/IB/staggered_grid/explicit/ex0/Makefile
-  examples/IB/staggered_grid/explicit/ex1/Makefile
-  examples/IB/staggered_grid/explicit/ex2/Makefile
-  examples/IB/staggered_grid/explicit/ex3/Makefile
-  examples/IB/staggered_grid/explicit/ex4/Makefile
-  examples/IB/staggered_grid/implicit/Makefile
-  examples/IB/staggered_grid/implicit/ex0/Makefile
-  examples/IB/staggered_grid/implicit/ex1/Makefile
+  examples/IB/explicit/Makefile
+  examples/IB/explicit/ex0/Makefile
+  examples/IB/explicit/ex1/Makefile
+  examples/IB/explicit/ex2/Makefile
+  examples/IB/explicit/ex3/Makefile
+  examples/IB/explicit/ex4/Makefile
+  examples/IB/explicit/ex5/Makefile
+  examples/IB/explicit/ex6/Makefile
+  examples/IB/implicit/Makefile
+  examples/IB/implicit/ex0/Makefile
+  examples/IB/implicit/ex1/Makefile
+  examples/IB/implicit/ex2/Makefile
   examples/IBFE/Makefile
   examples/IBFE/explicit/Makefile
   examples/IBFE/explicit/ex0/Makefile
@@ -449,25 +420,22 @@ AC_CONFIG_FILES([
   examples/IBFE/explicit/ex5/Makefile
   examples/IBFE/explicit/ex6/Makefile
   examples/IBFE/explicit/ex7/Makefile
+  examples/IMP/Makefile
+  examples/IMP/explicit/Makefile
+  examples/IMP/explicit/ex0/Makefile
   examples/adv_diff/Makefile
+  examples/adv_diff/ex0/Makefile
+  examples/adv_diff/ex1/Makefile
+  examples/adv_diff/ex2/Makefile
   examples/advect/Makefile
   examples/navier_stokes/Makefile
-  examples/navier_stokes/cell_centered/Makefile
-  examples/navier_stokes/cell_centered/approx_projection/Makefile
-  examples/navier_stokes/cell_centered/approx_projection/ex0/Makefile
-  examples/navier_stokes/cell_centered/approx_projection/ex1/Makefile
-  examples/navier_stokes/cell_centered/approx_projection/ex2/Makefile
-  examples/navier_stokes/cell_centered/exact_projection/Makefile
-  examples/navier_stokes/cell_centered/exact_projection/ex0/Makefile
-  examples/navier_stokes/cell_centered/exact_projection/ex1/Makefile
-  examples/navier_stokes/staggered_grid/Makefile
-  examples/navier_stokes/staggered_grid/ex0/Makefile
-  examples/navier_stokes/staggered_grid/ex1/Makefile
-  examples/navier_stokes/staggered_grid/ex2/Makefile
-  examples/navier_stokes/staggered_grid/ex3/Makefile
-  examples/vc_navier_stokes/Makefile
-  examples/vc_navier_stokes/operator_test/Makefile
-  examples/vc_navier_stokes/solver_test/Makefile
+  examples/navier_stokes/ex0/Makefile
+  examples/navier_stokes/ex1/Makefile
+  examples/navier_stokes/ex2/Makefile
+  examples/navier_stokes/ex3/Makefile
+  examples/navier_stokes/ex4/Makefile
+  examples/navier_stokes/ex5/Makefile
+  examples/navier_stokes/ex6/Makefile
   lib/Makefile
   src/Makefile
   src/fortran/Makefile
@@ -478,6 +446,7 @@ AC_CONFIG_FILES([
   src/advect/fortran/Makefile
   src/navier_stokes/Makefile
   src/navier_stokes/fortran/Makefile
+  src/solid_mechanics/Makefile
   src/utilities/Makefile
   src/tools/Makefile
 ])

@@ -1,7 +1,7 @@
-// Filename: LNodeIndexIterator.I
+// Filename: LSetDataIterator.I
 // Created on 11 Dec 2009 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -43,8 +43,9 @@ namespace IBTK
 {
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
+template<class T>
 inline
-LNodeIndexIterator::LNodeIndexIterator()
+LSetDataIterator<T>::LSetDataIterator()
     : d_box(),
       d_index_it(),
       d_node_set(),
@@ -52,11 +53,12 @@ LNodeIndexIterator::LNodeIndexIterator()
 {
     // intentionally blank
     return;
-}// LNodeIndexIterator
+}// LSetDataIterator
 
+template<class T>
 inline
-LNodeIndexIterator::LNodeIndexIterator(
-    const LNodeIndexIterator& that)
+LSetDataIterator<T>::LSetDataIterator(
+    const LSetDataIterator<T>& that)
     : d_box(that.d_box),
       d_index_it(that.d_index_it),
       d_node_set(that.d_node_set),
@@ -64,18 +66,20 @@ LNodeIndexIterator::LNodeIndexIterator(
 {
     // intentionally blank
     return;
-}// LNodeIndexIterator
+}// LSetDataIterator
 
+template<class T>
 inline
-LNodeIndexIterator::~LNodeIndexIterator()
+LSetDataIterator<T>::~LSetDataIterator()
 {
     // intentionally blank
     return;
-}// ~LNodeIndexIterator
+}// ~LSetDataIterator
 
-inline LNodeIndexIterator&
-LNodeIndexIterator::operator=(
-    const LNodeIndexIterator& that)
+template<class T>
+inline LSetDataIterator<T>&
+LSetDataIterator<T>::operator=(
+    const LSetDataIterator<T>& that)
 {
     if (this != &that)
     {
@@ -87,81 +91,80 @@ LNodeIndexIterator::operator=(
     return *this;
 }// operator=
 
+template<class T>
 inline bool
-LNodeIndexIterator::operator==(
-    const LNodeIndexIterator& that)
+LSetDataIterator<T>::operator==(
+    const LSetDataIterator<T>& that)
 {
-    return ((d_node_set == NULL && that.d_node_set == NULL) ||
+    return ((!d_node_set && !that.d_node_set) ||
             (d_box      == that.d_box &&
              d_index_it == that.d_index_it &&
              d_node_set == that.d_node_set &&
              d_node_it  == that.d_node_it));
 }// operator==
 
+template<class T>
 inline bool
-LNodeIndexIterator::operator!=(
-    const LNodeIndexIterator& that)
+LSetDataIterator<T>::operator!=(
+    const LSetDataIterator<T>& that)
 {
     return !(*this == that);
 }// operator!=
 
-inline LNodeIndexIterator&
-LNodeIndexIterator::operator++()
+template<class T>
+inline LSetDataIterator<T>&
+LSetDataIterator<T>::operator++()
 {
-    if (d_node_set == NULL) return *this;
-    if (++d_node_it != d_node_set->end()) return *this;
+    if (!d_node_set) return *this;
+    ++d_node_it;
+    if (d_node_it != d_node_set->end()) return *this;
+    d_node_set = NULL;
     d_index_it++;
+    while (d_index_it && !d_box.contains(d_index_it.getIndex()))
+    {
+        d_index_it++;
+    }
     if (d_index_it)
     {
         d_node_set = &(*d_index_it);
-        while (d_index_it && !d_box.contains(d_index_it.getIndex()))
-        {
-            d_index_it++;
-        }
-
-        if (d_index_it && d_box.contains(d_index_it.getIndex()))
-        {
-            d_node_set = &(*d_index_it);
 #ifdef DEBUG_CHECK_ASSERTIONS
-            TBOX_ASSERT(!d_node_set->empty());
+        TBOX_ASSERT(!d_node_set->empty());
 #endif
-            d_node_it = d_node_set->begin();
-        }
-        else
-        {
-            d_node_set = NULL;
-        }
-    }
-    else
-    {
-        d_node_set = NULL;
+        d_node_it = d_node_set->begin();
     }
     return *this;
 }// operator++
 
-inline LNodeIndexIterator
-LNodeIndexIterator::operator++(
+template<class T>
+inline LSetDataIterator<T>
+LSetDataIterator<T>::operator++(
     int)
 {
-    LNodeIndexIterator tmp(*this);
+    LSetDataIterator<T> tmp(*this);
     ++(*this);
     return tmp;
 }// operator++
 
-inline LNodeIndex&
-LNodeIndexIterator::operator*() const
+template<class T>
+inline typename LSet<T>::value_type&
+LSetDataIterator<T>::operator*() const
 {
-    return getLNodeIndex();
+    return getDataItem();
 }// operator*
 
-inline LNodeIndex&
-LNodeIndexIterator::getLNodeIndex() const
+template<class T>
+inline typename LSet<T>::value_type&
+LSetDataIterator<T>::getDataItem() const
 {
-    return **d_node_it;
-}// getLNodeIndex
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(d_index_it && d_node_set);
+#endif
+    return *d_node_it;
+}// getDataItem
 
+template<class T>
 inline const SAMRAI::hier::Index<NDIM>&
-LNodeIndexIterator::getCellIndex() const
+LSetDataIterator<T>::getCellIndex() const
 {
     return d_index_it.getIndex();
 }// getCellIndex

@@ -1,7 +1,7 @@
 // Filename: IBSpringForceSpecFactory.C
 // Created on 14 Jul 2004 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "IBSpringForceSpecFactory.h"
+#include "IBSpringForceSpec.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
@@ -45,7 +45,6 @@
 #endif
 
 // IBAMR INCLUDES
-#include <ibamr/IBSpringForceSpec.h>
 #include <ibamr/namespaces.h>
 
 // IBTK INCLUDES
@@ -55,62 +54,53 @@
 
 namespace IBAMR
 {
-/////////////////////////////// STATIC ///////////////////////////////////////
-
-int IBSpringForceSpecFactory::s_class_id = -1;
-
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
-IBSpringForceSpecFactory::IBSpringForceSpecFactory()
+IBSpringForceSpec::Factory::Factory()
 {
     setStreamableClassID(StreamableManager::getUnregisteredID());
     return;
-}// IBSpringForceSpecFactory
+}// Factory
 
-IBSpringForceSpecFactory::~IBSpringForceSpecFactory()
+IBSpringForceSpec::Factory::~Factory()
 {
     // intentionally blank
     return;
-}// ~IBSpringForceSpecFactory
+}// ~Factory
 
 int
-IBSpringForceSpecFactory::getStreamableClassID() const
+IBSpringForceSpec::Factory::getStreamableClassID() const
 {
-    return s_class_id;
+    return STREAMABLE_CLASS_ID;
 }// getStreamableClassID
 
 void
-IBSpringForceSpecFactory::setStreamableClassID(
+IBSpringForceSpec::Factory::setStreamableClassID(
     const int class_id)
 {
-    s_class_id = class_id;
+    STREAMABLE_CLASS_ID = class_id;
     return;
 }// setStreamableClassID
 
 Pointer<Streamable>
-IBSpringForceSpecFactory::unpackStream(
+IBSpringForceSpec::Factory::unpackStream(
     AbstractStream& stream,
-    const IntVector<NDIM>& offset)
+    const IntVector<NDIM>& /*offset*/)
 {
     int num_springs;
     stream.unpack(&num_springs,1);
-    int master_idx;
-    stream.unpack(&master_idx,1);
-    std::vector<int> slave_idxs(num_springs);
-    stream.unpack(&slave_idxs[0],num_springs);
-    std::vector<int> force_fcn_idxs(num_springs);
-    stream.unpack(&force_fcn_idxs[0],num_springs);
-    std::vector<double> stiffnesses(num_springs);
-    stream.unpack(&stiffnesses[0],num_springs);
-    std::vector<double> rest_lengths(num_springs);
-    stream.unpack(&rest_lengths[0],num_springs);
-#if ENABLE_SUBDOMAIN_INDICES
-    std::vector<int> subdomain_idxs(num_springs);
-    stream.unpack(&subdomain_idxs[0],num_springs);
-    return new IBSpringForceSpec(master_idx,slave_idxs,force_fcn_idxs,stiffnesses,rest_lengths,subdomain_idxs);
-#else
-    return new IBSpringForceSpec(master_idx,slave_idxs,force_fcn_idxs,stiffnesses,rest_lengths);
-#endif
+    Pointer<IBSpringForceSpec> ret_val = new IBSpringForceSpec(num_springs);
+    stream.unpack(&ret_val->d_master_idx,1);
+    stream.unpack(&ret_val->d_slave_idxs[0],num_springs);
+    stream.unpack(&ret_val->d_force_fcn_idxs[0],num_springs);
+    for (int k = 0; k < num_springs; ++k)
+    {
+        int num_parameters;
+        stream.unpack(&num_parameters);
+        ret_val->d_parameters[k].resize(num_parameters);
+        stream.unpack(&ret_val->d_parameters[k][0],num_parameters);
+    }
+    return ret_val;
 }// unpackStream
 
 /////////////////////////////// PROTECTED ////////////////////////////////////
@@ -120,10 +110,5 @@ IBSpringForceSpecFactory::unpackStream(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBAMR
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBAMR::IBSpringForceSpecFactory>;
 
 //////////////////////////////////////////////////////////////////////////////

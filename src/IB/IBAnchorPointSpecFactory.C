@@ -1,7 +1,7 @@
 // Filename: IBAnchorPointSpecFactory.C
 // Created on 18 Aug 2008 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "IBAnchorPointSpecFactory.h"
+#include "IBAnchorPointSpec.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
@@ -45,7 +45,6 @@
 #endif
 
 // IBAMR INCLUDES
-#include <ibamr/IBAnchorPointSpec.h>
 #include <ibamr/namespaces.h>
 
 // IBTK INCLUDES
@@ -55,52 +54,43 @@
 
 namespace IBAMR
 {
-/////////////////////////////// STATIC ///////////////////////////////////////
-
-int IBAnchorPointSpecFactory::s_class_id = -1;
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
-IBAnchorPointSpecFactory::IBAnchorPointSpecFactory()
+IBAnchorPointSpec::Factory::Factory()
 {
     setStreamableClassID(StreamableManager::getUnregisteredID());
     return;
-}// IBAnchorPointSpecFactory
+}// Factory
 
-IBAnchorPointSpecFactory::~IBAnchorPointSpecFactory()
+IBAnchorPointSpec::Factory::~Factory()
 {
     // intentionally blank
     return;
-}// ~IBAnchorPointSpecFactory
+}// ~Factory
 
 int
-IBAnchorPointSpecFactory::getStreamableClassID() const
+IBAnchorPointSpec::Factory::getStreamableClassID() const
 {
-    return s_class_id;
+    return STREAMABLE_CLASS_ID;
 }// getStreamableClassID
 
 void
-IBAnchorPointSpecFactory::setStreamableClassID(
+IBAnchorPointSpec::Factory::setStreamableClassID(
     const int class_id)
 {
-    s_class_id = class_id;
+    STREAMABLE_CLASS_ID = class_id;
     return;
 }// setStreamableClassID
 
 Pointer<Streamable>
-IBAnchorPointSpecFactory::unpackStream(
+IBAnchorPointSpec::Factory::unpackStream(
     AbstractStream& stream,
-    const IntVector<NDIM>& offset)
+    const IntVector<NDIM>& /*offset*/)
 {
-    int node_idx;
-    stream.unpack(&node_idx,1);
-#if ENABLE_SUBDOMAIN_INDICES
-    int subdomain_idx;
-    stream.unpack(&subdomain_idx,1);
-    return new IBAnchorPointSpec(node_idx,subdomain_idx);
-#else
-    return new IBAnchorPointSpec(node_idx);
-#endif
+    Pointer<IBAnchorPointSpec> ret_val = new IBAnchorPointSpec();
+    stream.unpack(&ret_val->d_node_idx,1);
+    return ret_val;
 }// unpackStream
 
 /////////////////////////////// PROTECTED ////////////////////////////////////
@@ -110,10 +100,5 @@ IBAnchorPointSpecFactory::unpackStream(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBAMR
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBAMR::IBAnchorPointSpecFactory>;
 
 //////////////////////////////////////////////////////////////////////////////

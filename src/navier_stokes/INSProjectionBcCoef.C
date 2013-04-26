@@ -1,7 +1,7 @@
 // Filename: INSProjectionBcCoef.C
-// Created on 22 Feb 2007 by Boyce Griffith
+// Created on 23 Jul 2008 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -51,89 +51,10 @@
 #include <ibtk/PhysicalBoundaryUtilities.h>
 
 // SAMRAI INCLUDES
-#include <CellData.h>
-#include <FaceData.h>
-#include <SideData.h>
 #include <tbox/Utilities.h>
 
 // C++ STDLIB INCLUDES
 #include <limits>
-
-// FORTRAN ROUTINES
-#if (NDIM == 2)
-#define NAVIER_STOKES_HOMOGENEOUS_PROJECTION_BC_COEFS_FC FC_FUNC_(navier_stokes_homogeneous_projection_bc_coefs2d,NAVIER_STOKES_HOMOGENEOUS_PROJECTION_BC_COEFS2D)
-#define NAVIER_STOKES_FC_INHOMOGENEOUS_PROJECTION_BC_COEFS_FC FC_FUNC_(navier_stokes_fc_inhomogeneous_projection_bc_coefs2d,NAVIER_STOKES_FC_INHOMOGENEOUS_PROJECTION_BC_COEFS2D)
-#define NAVIER_STOKES_SC_INHOMOGENEOUS_PROJECTION_BC_COEFS_FC FC_FUNC_(navier_stokes_sc_inhomogeneous_projection_bc_coefs2d,NAVIER_STOKES_SC_INHOMOGENEOUS_PROJECTION_BC_COEFS2D)
-#endif
-#if (NDIM == 3)
-#define NAVIER_STOKES_HOMOGENEOUS_PROJECTION_BC_COEFS_FC FC_FUNC_(navier_stokes_homogeneous_projection_bc_coefs3d,NAVIER_STOKES_HOMOGENEOUS_PROJECTION_BC_COEFS3D)
-#define NAVIER_STOKES_FC_INHOMOGENEOUS_PROJECTION_BC_COEFS_FC FC_FUNC_(navier_stokes_fc_inhomogeneous_projection_bc_coefs3d,NAVIER_STOKES_FC_INHOMOGENEOUS_PROJECTION_BC_COEFS3D)
-#define NAVIER_STOKES_SC_INHOMOGENEOUS_PROJECTION_BC_COEFS_FC FC_FUNC_(navier_stokes_sc_inhomogeneous_projection_bc_coefs3d,NAVIER_STOKES_SC_INHOMOGENEOUS_PROJECTION_BC_COEFS3D)
-#endif
-
-// Function interfaces
-extern "C"
-{
-    void
-    NAVIER_STOKES_HOMOGENEOUS_PROJECTION_BC_COEFS_FC(
-        double* acoef, double* bcoef,
-        const int& blower0, const int& bupper0,
-        const int& blower1, const int& bupper1
-#if (NDIM == 3)
-        ,const int& blower2, const int& bupper2
-#endif
-                                                     );
-
-    void
-    NAVIER_STOKES_FC_INHOMOGENEOUS_PROJECTION_BC_COEFS_FC(
-        const double* u0, const double* u1,
-#if (NDIM == 3)
-        const double* u2,
-#endif
-        const int& u_gcw,
-        const double* P, const int& P_gcw,
-        const double* acoef, const double* bcoef, double* gcoef, const double* P_bdry,
-        const int& ilower0, const int& iupper0,
-        const int& ilower1, const int& iupper1,
-#if (NDIM == 3)
-        const int& ilower2, const int& iupper2,
-#endif
-        const int& blower0, const int& bupper0,
-        const int& blower1, const int& bupper1,
-#if (NDIM == 3)
-        const int& blower2, const int& bupper2,
-#endif
-        const int& location_index,
-        const int& using_pressure_increment,
-        const double& rho,
-        const double& dt
-                                                          );
-
-    void
-    NAVIER_STOKES_SC_INHOMOGENEOUS_PROJECTION_BC_COEFS_FC(
-        const double* u0, const double* u1,
-#if (NDIM == 3)
-        const double* u2,
-#endif
-        const int& u_gcw,
-        const double* P, const int& P_gcw,
-        const double* acoef, const double* bcoef, double* gcoef, const double* P_bdry,
-        const int& ilower0, const int& iupper0,
-        const int& ilower1, const int& iupper1,
-#if (NDIM == 3)
-        const int& ilower2, const int& iupper2,
-#endif
-        const int& blower0, const int& bupper0,
-        const int& blower1, const int& bupper1,
-#if (NDIM == 3)
-        const int& blower2, const int& bupper2,
-#endif
-        const int& location_index,
-        const int& using_pressure_increment,
-        const double& rho,
-        const double& dt
-                                                          );
-}
 
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
@@ -144,26 +65,12 @@ namespace IBAMR
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
 INSProjectionBcCoef::INSProjectionBcCoef(
-    const int P_idx,
-    RobinBcCoefStrategy<NDIM>* const P_bc_coef,
-    const ProjectionMethodType& projection_type,
-    const int u_idx,
-    const std::vector<RobinBcCoefStrategy<NDIM>*>& u_bc_coefs,
+    const std::vector<RobinBcCoefStrategy<NDIM>*>& bc_coefs,
     const bool homogeneous_bc)
-    : d_P_idx(-1),
-      d_P_bc_coef(NULL),
-      d_projection_type(),
-      d_u_idx(-1),
-      d_u_bc_coefs(NDIM,static_cast<RobinBcCoefStrategy<NDIM>*>(NULL)),
-      d_homogeneous_bc(false),
-      d_rho(std::numeric_limits<double>::quiet_NaN()),
-      d_dt(std::numeric_limits<double>::quiet_NaN())
+    : d_bc_coefs(NDIM,static_cast<RobinBcCoefStrategy<NDIM>*>(NULL)),
+      d_solution_time(std::numeric_limits<double>::quiet_NaN())
 {
-    setCurrentPressurePatchDataIndex(P_idx);
-    setPressurePhysicalBcCoef(P_bc_coef);
-    setProjectionType(projection_type);
-    setIntermediateVelocityPatchDataIndex(u_idx);
-    setVelocityPhysicalBcCoefs(u_bc_coefs);
+    setPhysicalBcCoefs(bc_coefs);
     setHomogeneousBc(homogeneous_bc);
     return;
 }// INSProjectionBcCoef
@@ -175,73 +82,68 @@ INSProjectionBcCoef::~INSProjectionBcCoef()
 }// ~INSProjectionBcCoef
 
 void
-INSProjectionBcCoef::setProblemCoefs(
-    const double rho,
-    const double dt)
+INSProjectionBcCoef::setPhysicalBcCoefs(
+    const std::vector<RobinBcCoefStrategy<NDIM>*>& bc_coefs)
 {
-    d_rho = rho;
-    d_dt = dt;
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(bc_coefs.size() == NDIM);
+#endif
+    d_bc_coefs = bc_coefs;
     return;
-}// setProblemCoefs
+}// setPhysicalBcCoefs
 
 void
-INSProjectionBcCoef::setCurrentPressurePatchDataIndex(
-    const int P_idx)
+INSProjectionBcCoef::setSolutionTime(
+    double solution_time)
 {
-    d_P_idx = P_idx;
+    d_solution_time = solution_time;
     return;
-}// setCurrentPressurePatchDataIndex
+}// setSolutionTime
 
 void
-INSProjectionBcCoef::setProjectionType(
-    const ProjectionMethodType& projection_type)
+INSProjectionBcCoef::setTimeInterval(
+    double /*current_time*/,
+    double /*new_time*/)
 {
-    d_projection_type = projection_type;
+    // intentionally blank
     return;
-}// setProjectionType
-
-void
-INSProjectionBcCoef::setPressurePhysicalBcCoef(
-    RobinBcCoefStrategy<NDIM>* const P_bc_coef)
-{
-    d_P_bc_coef = P_bc_coef;
-    return;
-}// setPressurePhysicalBcCoef
-
-void
-INSProjectionBcCoef::setIntermediateVelocityPatchDataIndex(
-    const int u_idx)
-{
-    d_u_idx = u_idx;
-    return;
-}// setIntermediateVelocityPatchDataIndex
-
-void
-INSProjectionBcCoef::setVelocityPhysicalBcCoefs(
-    const std::vector<RobinBcCoefStrategy<NDIM>*>& u_bc_coefs)
-{
-    if (u_bc_coefs.size() != NDIM)
-    {
-        TBOX_ERROR("INSProjectionBcCoef::setVelocityPhysicalBcCoefs():\n"
-                   << "  precisely NDIM boundary condition objects must be provided." << std::endl);
-    }
-    d_u_bc_coefs = u_bc_coefs;
-    return;
-}// setVelocityPhysicalBcCoefs
+}// setTimeInterval
 
 void
 INSProjectionBcCoef::setTargetPatchDataIndex(
-    const int target_idx)
+    int target_idx)
 {
-    // intentionally blank
+    ExtendedRobinBcCoefStrategy::setTargetPatchDataIndex(target_idx);
+    for (unsigned int d = 0; d < NDIM; ++d)
+    {
+        ExtendedRobinBcCoefStrategy* p_comp_bc_coef = dynamic_cast<ExtendedRobinBcCoefStrategy*>(d_bc_coefs[d]);
+        if (p_comp_bc_coef) p_comp_bc_coef->setTargetPatchDataIndex(target_idx);
+    }
     return;
 }// setTargetPatchDataIndex
 
 void
-INSProjectionBcCoef::setHomogeneousBc(
-    const bool homogeneous_bc)
+INSProjectionBcCoef::clearTargetPatchDataIndex()
 {
-    d_homogeneous_bc = homogeneous_bc;
+    ExtendedRobinBcCoefStrategy::clearTargetPatchDataIndex();
+    for (unsigned int d = 0; d < NDIM; ++d)
+    {
+        ExtendedRobinBcCoefStrategy* p_comp_bc_coef = dynamic_cast<ExtendedRobinBcCoefStrategy*>(d_bc_coefs[d]);
+        if (p_comp_bc_coef) p_comp_bc_coef->clearTargetPatchDataIndex();
+    }
+    return;
+}// clearTargetPatchDataIndex
+
+void
+INSProjectionBcCoef::setHomogeneousBc(
+    bool homogeneous_bc)
+{
+    ExtendedRobinBcCoefStrategy::setHomogeneousBc(homogeneous_bc);
+    for (unsigned int d = 0; d < NDIM; ++d)
+    {
+        ExtendedRobinBcCoefStrategy* p_comp_bc_coef = dynamic_cast<ExtendedRobinBcCoefStrategy*>(d_bc_coefs[d]);
+        if (p_comp_bc_coef) p_comp_bc_coef->setHomogeneousBc(homogeneous_bc);
+    }
     return;
 }// setHomogeneousBc
 
@@ -253,131 +155,62 @@ INSProjectionBcCoef::setBcCoefs(
     const Pointer<Variable<NDIM> >& variable,
     const Patch<NDIM>& patch,
     const BoundaryBox<NDIM>& bdry_box,
-    double fill_time) const
+    double /*fill_time*/) const
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(d_u_bc_coefs.size() == NDIM);
-    for (unsigned l = 0; l < d_u_bc_coefs.size(); ++l)
+    for (unsigned int d = 0; d < NDIM; ++d)
     {
-        TBOX_ASSERT(d_u_bc_coefs[l] != NULL);
+        TBOX_ASSERT(d_bc_coefs[d]);
     }
+    TBOX_ASSERT(acoef_data);
+    TBOX_ASSERT(bcoef_data);
 #endif
-    const int location_index   = bdry_box.getLocationIndex();
-    const int bdry_normal_axis = location_index/2;
-//  const bool is_lower        = location_index%2 == 0;
-    const Box<NDIM>& patch_box = patch.getBox();
     const Box<NDIM>& bc_coef_box = acoef_data->getBox();
-
-    // Set the normal velocity bc coefs.
-    d_u_bc_coefs[bdry_normal_axis]->setBcCoefs(
-        acoef_data, bcoef_data, gcoef_data, variable, patch, bdry_box, fill_time);
-
-    // Set the corresponding projection Poisson problem homogeneous Robin
-    // coefficients.
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!acoef_data.isNull());
-    TBOX_ASSERT(!bcoef_data.isNull());
     TBOX_ASSERT(bc_coef_box == acoef_data->getBox());
     TBOX_ASSERT(bc_coef_box == bcoef_data->getBox());
+    TBOX_ASSERT(!gcoef_data || (bc_coef_box == gcoef_data->getBox()));
 #endif
-    NAVIER_STOKES_HOMOGENEOUS_PROJECTION_BC_COEFS_FC(
-        acoef_data->getPointer(), bcoef_data->getPointer(),
-        bc_coef_box.lower(0), bc_coef_box.upper(0),
-        bc_coef_box.lower(1), bc_coef_box.upper(1)
-#if (NDIM == 3)
-        ,bc_coef_box.lower(2), bc_coef_box.upper(2)
-#endif
-                                                     );
+    // Set the unmodified velocity bc coefs.
+    const unsigned int location_index   = bdry_box.getLocationIndex();
+    const unsigned int bdry_normal_axis = location_index/2;
+    d_bc_coefs[bdry_normal_axis]->setBcCoefs(acoef_data, bcoef_data, gcoef_data, variable, patch, bdry_box, d_solution_time);
 
-    if (d_homogeneous_bc && !gcoef_data.isNull()) gcoef_data->fillAll(0.0);
+    // Ensure homogeneous boundary conditions are enforced.
+    if (d_homogeneous_bc && gcoef_data) gcoef_data->fillAll(0.0);
 
-    // Do not further modify the boundary condition coefficients unless we are
-    // setting inhomogeneous boundary conditions.
-    if (d_homogeneous_bc) return;
-
-    // Loop over the boundary box and reset the inhomogeneous coefficients.
-    Pointer<FaceData<NDIM,double> > u_fc_data = patch.getPatchData(d_u_idx);
-    Pointer<SideData<NDIM,double> > u_sc_data = patch.getPatchData(d_u_idx);
-    Pointer<CellData<NDIM,double> > P_data = patch.getPatchData(d_P_idx);
+    // Update the boundary condition coefficients.  Specifically, normal
+    // velocity boundary conditions are converted into Neumann conditions for
+    // the pressure, and normal traction boundary conditions are converted into
+    // Dirichlet conditions for the pressure.
+    for (Box<NDIM>::Iterator it(bc_coef_box); it; it++)
+    {
+        const Index<NDIM>& i = it();
+        double dummy_val;
+        double& alpha = acoef_data ? (*acoef_data)(i,0) : dummy_val;
+        double& beta  = bcoef_data ? (*bcoef_data)(i,0) : dummy_val;
+        double& gamma = gcoef_data ? (*gcoef_data)(i,0) : dummy_val;
+        const bool velocity_bc = MathUtilities<double>::equalEps(alpha,1.0);
+        const bool traction_bc = MathUtilities<double>::equalEps(beta ,1.0);
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!u_fc_data.isNull() || !u_sc_data.isNull());
-    TBOX_ASSERT(u_fc_data.isNull() || u_fc_data->getGhostCellWidth().max() == u_fc_data->getGhostCellWidth().min());
-    TBOX_ASSERT(u_sc_data.isNull() || u_sc_data->getGhostCellWidth().max() == u_sc_data->getGhostCellWidth().min());
-    TBOX_ASSERT(!P_data.isNull());
-    TBOX_ASSERT(P_data->getGhostCellWidth().max() == P_data->getGhostCellWidth().min());
-    TBOX_ASSERT(!gcoef_data.isNull());
-    TBOX_ASSERT(bc_coef_box == gcoef_data->getBox());
+        TBOX_ASSERT((velocity_bc || traction_bc) && !(velocity_bc && traction_bc));
 #endif
-
-    ArrayData<NDIM,double> acoef_data_P(bc_coef_box, 1);
-    ArrayData<NDIM,double> bcoef_data_P(bc_coef_box, 1);
-    ArrayData<NDIM,double> gcoef_data_P(bc_coef_box, 1);
-
-    Pointer<ArrayData<NDIM,double> > acoef_data_P_ptr(&acoef_data_P, false);
-    Pointer<ArrayData<NDIM,double> > bcoef_data_P_ptr(&bcoef_data_P, false);
-    Pointer<ArrayData<NDIM,double> > gcoef_data_P_ptr(&gcoef_data_P, false);
-
-    if (d_P_bc_coef != NULL)
-    {
-        d_P_bc_coef->setBcCoefs(
-            acoef_data_P_ptr, bcoef_data_P_ptr, gcoef_data_P_ptr, variable, patch, bdry_box, fill_time);
-    }
-
-    if (!u_fc_data.isNull())
-    {
-        const int u_ghosts = (u_fc_data->getGhostCellWidth()).max();
-        const int P_ghosts = (P_data->getGhostCellWidth()).max();
-        const int using_pressure_increment = (d_projection_type == PRESSURE_INCREMENT ? 1 : 0);
-        NAVIER_STOKES_FC_INHOMOGENEOUS_PROJECTION_BC_COEFS_FC(
-            u_fc_data->getPointer(0), u_fc_data->getPointer(1),
-#if (NDIM == 3)
-            u_fc_data->getPointer(2),
-#endif
-            u_ghosts,
-            P_data->getPointer(), P_ghosts,
-            acoef_data->getPointer(), bcoef_data->getPointer(), gcoef_data->getPointer(), gcoef_data_P.getPointer(),
-            patch_box.lower(0), patch_box.upper(0),
-            patch_box.lower(1), patch_box.upper(1),
-#if (NDIM == 3)
-            patch_box.lower(2), patch_box.upper(2),
-#endif
-            bc_coef_box.lower(0), bc_coef_box.upper(0),
-            bc_coef_box.lower(1), bc_coef_box.upper(1),
-#if (NDIM == 3)
-            bc_coef_box.lower(2), bc_coef_box.upper(2),
-#endif
-            location_index, using_pressure_increment,
-            d_rho, d_dt);
-    }
-    else if (!u_sc_data.isNull())
-    {
-        const int u_ghosts = (u_sc_data->getGhostCellWidth()).max();
-        const int P_ghosts = (P_data->getGhostCellWidth()).max();
-        const int using_pressure_increment = (d_projection_type == PRESSURE_INCREMENT ? 1 : 0);
-        NAVIER_STOKES_SC_INHOMOGENEOUS_PROJECTION_BC_COEFS_FC(
-            u_sc_data->getPointer(0), u_sc_data->getPointer(1),
-#if (NDIM == 3)
-            u_sc_data->getPointer(2),
-#endif
-            u_ghosts,
-            P_data->getPointer(), P_ghosts,
-            acoef_data->getPointer(), bcoef_data->getPointer(), gcoef_data->getPointer(), gcoef_data_P.getPointer(),
-            patch_box.lower(0), patch_box.upper(0),
-            patch_box.lower(1), patch_box.upper(1),
-#if (NDIM == 3)
-            patch_box.lower(2), patch_box.upper(2),
-#endif
-            bc_coef_box.lower(0), bc_coef_box.upper(0),
-            bc_coef_box.lower(1), bc_coef_box.upper(1),
-#if (NDIM == 3)
-            bc_coef_box.lower(2), bc_coef_box.upper(2),
-#endif
-            location_index, using_pressure_increment,
-            d_rho, d_dt);
-    }
-    else
-    {
-        TBOX_ERROR("this statement should not be reached!\n");
+        if (velocity_bc)
+        {
+            alpha = 0.0;
+            beta  = 1.0;
+            gamma = 0.0;
+        }
+        else if (traction_bc)
+        {
+            alpha = 1.0;
+            beta  = 0.0;
+            gamma = -gamma;
+        }
+        else
+        {
+            TBOX_ERROR("this statement should not be reached!\n");
+        }
     }
     return;
 }// setBcCoefs
@@ -386,17 +219,15 @@ IntVector<NDIM>
 INSProjectionBcCoef::numberOfExtensionsFillable() const
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(d_u_bc_coefs.size() == NDIM);
-    for (unsigned l = 0; l < d_u_bc_coefs.size(); ++l)
+    for (unsigned int d = 0; d < NDIM; ++d)
     {
-        TBOX_ASSERT(d_u_bc_coefs[l] != NULL);
+        TBOX_ASSERT(d_bc_coefs[d]);
     }
 #endif
     IntVector<NDIM> ret_val(std::numeric_limits<int>::max());
-    for (int d = 0; d < NDIM; ++d)
+    for (unsigned int d = 0; d < NDIM; ++d)
     {
-        ret_val = IntVector<NDIM>::min(
-            ret_val, d_u_bc_coefs[d]->numberOfExtensionsFillable());
+        ret_val = IntVector<NDIM>::min(ret_val, d_bc_coefs[d]->numberOfExtensionsFillable());
     }
     return ret_val;
 }// numberOfExtensionsFillable
@@ -408,7 +239,5 @@ INSProjectionBcCoef::numberOfExtensionsFillable() const
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBAMR
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
 
 //////////////////////////////////////////////////////////////////////////////

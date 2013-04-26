@@ -1,7 +1,7 @@
 // Filename: INSStaggeredCenteredConvectiveOperator.h
 // Created on 30 Oct 2008 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -36,15 +36,8 @@
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
 // IBAMR INCLUDES
-#include <ibamr/ibamr_enums.h>
-
-// IBTK INCLUDES
-#include <ibtk/GeneralOperator.h>
-
-// SAMRAI INCLUDES
-#include <RefineAlgorithm.h>
-#include <RefineOperator.h>
-#include <SideVariable.h>
+#include <ibamr/ConvectiveOperator.h>
+#include <ibamr/StaggeredStokesPhysicalBoundaryHelper.h>
 
 // C++ STDLIB INCLUDES
 #include <vector>
@@ -55,65 +48,55 @@ namespace IBAMR
 {
 /*!
  * \brief Class INSStaggeredCenteredConvectiveOperator is a concrete
- * IBTK::GeneralOperator which implements a centered convective differencing
+ * ConvectiveOperator which implements a centered convective differencing
  * operator.
  *
  * \see INSStaggeredHierarchyIntegrator
  */
 class INSStaggeredCenteredConvectiveOperator
-    : public IBTK::GeneralOperator
+    : public ConvectiveOperator
 {
 public:
     /*!
      * \brief Class constructor.
      */
     INSStaggeredCenteredConvectiveOperator(
-        const ConvectiveDifferencingType& difference_form);
+        const std::string& object_name,
+        SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db,
+        ConvectiveDifferencingType difference_form,
+        const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& bc_coefs);
 
     /*!
-     * \brief Virtual destructor.
+     * \brief Destructor.
      */
-    virtual
     ~INSStaggeredCenteredConvectiveOperator();
+
+    /*!
+     * \brief Static function to construct an
+     * INSStaggeredCenteredConvectiveOperator.
+     */
+    static SAMRAI::tbox::Pointer<ConvectiveOperator>
+    allocate_operator(
+        const std::string& object_name,
+        SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db,
+        ConvectiveDifferencingType difference_form,
+        const std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*>& bc_coefs)
+        {
+            return new INSStaggeredCenteredConvectiveOperator(object_name, input_db, difference_form, bc_coefs);
+        }// allocate_operator
 
     /*!
      * \brief Compute the action of the convective operator.
      */
     void
     applyConvectiveOperator(
-        const int U_idx,
-        const int N_idx);
+        int U_idx,
+        int N_idx);
 
     /*!
      * \name General operator functionality.
      */
     //\{
-
-    /*!
-     * \brief Compute \f$y=F[x]\f$.
-     *
-     * Before calling apply(), the form of the vectors \a x and \a y should be
-     * set properly by the user on all patch interiors on the specified range of
-     * levels in the patch hierarchy.  The user is responsible for all data
-     * management for the quantities associated with the vectors.  In
-     * particular, patch data in these vectors must be allocated prior to
-     * calling this method.
-     *
-     * \param x input vector
-     * \param y output vector, i.e., \f$y=F[x]\f$
-     *
-     * <b>Conditions on Parameters:</b>
-     * - vectors \a x and \a y must have same hierarchy
-     * - vectors \a x and \a y must have same structure, depth, etc.
-     *
-     * In general, the vectors \a x and \a y \em cannot be the same.
-     *
-     * \see initializeOperatorState
-     */
-    virtual void
-    apply(
-        SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
-        SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
 
     /*!
      * \brief Compute hierarchy dependent data required for computing y=F[x] and
@@ -145,7 +128,7 @@ public:
      * \param in input vector
      * \param out output vector
      */
-    virtual void
+    void
     initializeOperatorState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& in,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& out);
@@ -159,24 +142,8 @@ public:
      *
      * \see initializeOperatorState
      */
-    virtual void
+    void
     deallocateOperatorState();
-
-    //\}
-
-    /*!
-     * \name Logging functions.
-     */
-    //\{
-
-    /*!
-     * \brief Enable or disable logging.
-     *
-     * \param enabled logging state: true=on, false=off
-     */
-    virtual void
-    enableLogging(
-        bool enabled=true);
 
     //\}
 
@@ -211,17 +178,14 @@ private:
     operator=(
         const INSStaggeredCenteredConvectiveOperator& that);
 
-    // Whether the operator is initialized.
-    bool d_is_initialized;
+    // Boundary condition helper object.
+    SAMRAI::tbox::Pointer<StaggeredStokesPhysicalBoundaryHelper> d_bc_helper;
 
-    // Determines which form of differencing to use.
-    const ConvectiveDifferencingType d_difference_form;
-
-    // Data communication algorithms, operators, and schedules.
-    SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineAlgorithm<NDIM> > d_refine_alg;
-    SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineOperator<NDIM> > d_refine_op;
-    SAMRAI::tbox::Pointer<SAMRAI::xfer::RefinePatchStrategy<NDIM> > d_refine_strategy;
-    std::vector<SAMRAI::tbox::Pointer<SAMRAI::xfer::RefineSchedule<NDIM> > > d_refine_scheds;
+    // Cached communications operators.
+    std::vector<SAMRAI::solv::RobinBcCoefStrategy<NDIM>*> d_bc_coefs;
+    std::string d_bdry_extrap_type;
+    std::vector<IBTK::HierarchyGhostCellInterpolation::InterpolationTransactionComponent> d_transaction_comps;
+    SAMRAI::tbox::Pointer<IBTK::HierarchyGhostCellInterpolation> d_hier_bdry_fill;
 
     // Hierarchy configuration.
     SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > d_hierarchy;

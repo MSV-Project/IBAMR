@@ -1,7 +1,7 @@
 // Filename: IBAnchorPointSpec.C
 // Created on 18 Aug 2008 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,9 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
+// IBTK INCLUDES
+#include <ibtk/StreamableManager.h>
+
 // SAMRAI INCLUDES
 #include <tbox/PIO.h>
 #include <tbox/Utilities.h>
@@ -45,26 +48,24 @@ namespace IBAMR
 inline bool
 IBAnchorPointSpec::getIsRegisteredWithStreamableManager()
 {
-    return s_registered_factory;
+    return (STREAMABLE_CLASS_ID != IBTK::StreamableManager::getUnregisteredID());
 }// getIsRegisteredWithStreamableManager
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
 inline
 IBAnchorPointSpec::IBAnchorPointSpec(
-    const int node_idx,
-    const int subdomain_idx)
+    const int node_idx)
     : d_node_idx(node_idx)
-#if ENABLE_SUBDOMAIN_INDICES
-    , d_subdomain_idx(subdomain_idx)
-#endif
 {
-    if (!s_registered_factory)
+#ifdef DEBUG_CHECK_ASSERTIONS
+    if (!getIsRegisteredWithStreamableManager())
     {
         TBOX_ERROR("IBAnchorPointSpec::IBAnchorPointSpec():\n"
                    << "  must call IBAnchorPointSpec::registerWithStreamableManager() before\n"
                    << "  creating any IBAnchorPointSpec objects.\n");
     }
+#endif
     return;
 }// IBAnchorPointSpec
 
@@ -87,42 +88,16 @@ IBAnchorPointSpec::getNodeIndex()
     return d_node_idx;
 }// getNodeIndex
 
-inline const int&
-IBAnchorPointSpec::getSubdomainIndex() const
-{
-#if ENABLE_SUBDOMAIN_INDICES
-    return d_subdomain_idx;
-#else
-    static int dummy_idx = -1;
-    return dummy_idx;
-#endif
-}// getSubdomainIndex
-
-inline int&
-IBAnchorPointSpec::getSubdomainIndex()
-{
-#if ENABLE_SUBDOMAIN_INDICES
-    return d_subdomain_idx;
-#else
-    static int dummy_idx = -1;
-    return dummy_idx;
-#endif
-}// getSubdomainIndex
-
 inline int
 IBAnchorPointSpec::getStreamableClassID() const
 {
-    return s_class_id;
+    return STREAMABLE_CLASS_ID;
 }// getStreamableClassID
 
 inline size_t
 IBAnchorPointSpec::getDataStreamSize() const
 {
-    return SAMRAI::tbox::AbstractStream::sizeofInt()
-#if ENABLE_SUBDOMAIN_INDICES
-        + SAMRAI::tbox::AbstractStream::sizeofInt()
-#endif
-        ;
+    return SAMRAI::tbox::AbstractStream::sizeofInt();
 }// getDataStreamSize
 
 inline void
@@ -130,9 +105,6 @@ IBAnchorPointSpec::packStream(
     SAMRAI::tbox::AbstractStream& stream)
 {
     stream.pack(&d_node_idx,1);
-#if ENABLE_SUBDOMAIN_INDICES
-    stream.pack(&d_subdomain_idx,1);
-#endif
     return;
 }// packStream
 

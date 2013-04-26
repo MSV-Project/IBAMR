@@ -1,7 +1,7 @@
 // Filename: LagSiloDataWriter.h
 // Created on 26 Apr 2005 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -234,15 +234,6 @@ public:
     writePlotData(
         const int time_step_number,
         const double simulation_time);
-
-    ///
-    ///  The following routines:
-    ///
-    ///      putToDatabase()
-    ///
-    ///  are concrete implementations of functions declared in the
-    ///  SAMRAI::tbox::Serializable abstract base class.
-    ///
 
     /*!
      * Write out object state to the given database.

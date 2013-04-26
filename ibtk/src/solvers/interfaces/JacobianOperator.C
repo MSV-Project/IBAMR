@@ -1,7 +1,7 @@
 // Filename: JacobianOperator.C
 // Created on 20 Apr 2005 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -56,8 +56,8 @@ namespace IBTK
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
 JacobianOperator::JacobianOperator(
-    bool is_symmetric)
-    : LinearOperator(is_symmetric)
+    const std::string& object_name)
+    : LinearOperator(object_name, /*homogeneous_bc*/ true)
 {
     // intentionally blank
     return;

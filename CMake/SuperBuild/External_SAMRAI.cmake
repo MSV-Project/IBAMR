@@ -102,10 +102,10 @@ if(NOT DEFINED SAMRAI_DIR)
     CMAKE_ARGS
       ${CMAKE_OSX_EXTERNAL_PROJECT_ARGS}
       -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
+      -DFortranM4Parser:STRING=${CMAKE_CURRENT_SOURCE_DIR}/CMake/ParseM4Sources.cmake
       -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
       -DCMAKE_INSTALL_PREFIX:PATH=${ep_install_dir}
       -DBUILD_SHARED_LIBS:BOOL=${BUILD_SHARED_LIBS}
-      -DM4=${IBAMR_MODULE_PATH}/FindM4.cmake
       -DHDF5_ROOT=${ep_install_dir}
       -DSILO_ROOT=${ep_install_dir}
       -DMPI_CXX_COMPILER=${ep_install_dir}/bin/mpicxx
