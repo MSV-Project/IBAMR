@@ -40,11 +40,11 @@
 
 // LIBMESH INCLUDES
 #define LIBMESH_REQUIRE_SEPARATE_NAMESPACE
-#include <../base/variable.h>
-#include <point.h>
-#include <quadrature.h>
-#include <system.h>
-#include <vector_value.h>
+#include <base/variable.h>
+#include <libmesh/point.h>
+#include <libmesh/quadrature.h>
+#include <libmesh/system.h>
+#include <libmesh/vector_value.h>
 
 /////////////////////////////// CLASS DEFINITION /////////////////////////////
 

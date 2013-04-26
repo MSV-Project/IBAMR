@@ -37,6 +37,14 @@ if(NOT DEFINED IBTK_BUILD_SINGLE_LIBRARY)
   option(IBTK_BUILD_SINGLE_LIBRARY "Build single library" OFF)
 endif()
 
+# --------------------------------------------------------------------------
+# Find the M4 macro processor
+# --------------------------------------------------------------------------
+find_program( M4_EXECUTABLE m4 DOC "The M4 macro processor" )
+if( NOT M4_EXECUTABLE )
+   message( SEND_ERROR "Failed to find the M4 macro processor." )
+endif( NOT M4_EXECUTABLE )
+
 #----------------------------------------------------------------------------
 # Output directories.
 #----------------------------------------------------------------------------
@@ -93,6 +101,11 @@ set(IBTK_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMake)
 #------------------------------------------------------------------------------
 set(CMAKE_MODULE_PATH
   ${IBTK_MODULE_PATH} ${CMAKE_MODULE_PATH})
+
+# -----------------------------------------------------------------------------
+# Include the M4 parsing function
+# -----------------------------------------------------------------------------
+include(ParseM4Sources)
 
 # ----------------------------------------------------------------------------
 # IBTK version number.  An even minor number corresponds to releases.

@@ -5,16 +5,26 @@ set(kit_SRCS
   AdvDiffHierarchyIntegrator.C
   )
 
-add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f fortran/adv_diff_consdiff3d.f.m4)
+ParseM4Sources(
+  OutputFiles3D
+  FileExt ".f"
+  M4args -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} -DTOP_SRCDIR=${PROJECT_SOURCE_DIR}
+  InputFiles fortran/adv_diff_consdiff3d.f.m4 )
+
 set(kit_SRCS3D
   ${kit_SRCS}
-  ${FORTRAN_SRCS3D}
+  ${OutputFiles3D}
   )
 
-add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f fortran/adv_diff_consdiff2d.f.m4)
+ParseM4Sources(
+  OutputFiles2D
+  FileExt ".f"
+  M4args -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} -DTOP_SRCDIR=${PROJECT_SOURCE_DIR}
+  InputFiles fortran/adv_diff_consdiff2d.f.m4 )
+
 set(kit_SRCS2D
   ${kit_SRCS}
-  ${FORTRAN_SRCS2D}
+  ${OutputFiles2D}
   )
 
 #

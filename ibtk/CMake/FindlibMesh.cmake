@@ -20,9 +20,10 @@ set(LIBMESH_FOUND FALSE)
 # include this to handle the QUIETLY and REQUIRED arguments
 include(FindPackageHandleStandardArgs)
 include(GetPrerequisites)
-find_path(LIBMESH_HEADER_PATH libmesh.h
+
+find_path(LIBMESH_HEADER_PATH libmesh/libmesh.h
         HINTS ${LIBMESH_DIR}
-        PATH_SUFFIXES include/libmesh)
+        PATH_SUFFIXES include)
 
 set(LIBMESH_INCLUDE_PATH_WORK ${LIBMESH_HEADER_PATH})
 
@@ -39,7 +40,7 @@ find_library(EXODUSII_LIB
   PATH_SUFFIXES lib/x86_64-opt-linux-gnu_opt
   )
 if(EXODUSII_LIB)
-  set(HAVE_LIBEXODUSII 1)
+  set(HAVE_LIBEXODUSII TRUE)
 endif()
 
 find_library(FPARSER_LIB
@@ -48,7 +49,7 @@ find_library(FPARSER_LIB
   PATH_SUFFIXES lib/x86_64-opt-linux-gnu_opt
   )
 if(FPARSER_LIB)
-  set(HAVE_LIBFPARSER 1)
+  set(HAVE_LIBFPARSER TRUE)
 endif()
 
 find_library(GK_LIB
@@ -57,7 +58,7 @@ find_library(GK_LIB
   PATH_SUFFIXES lib/x86_64-opt-linux-gnu_opt
   )
 if(GK_LIB)
-  set(HAVE_LIBGK 1)
+  set(HAVE_LIBGK TRUE)
 endif()
 
 find_library(GMV_LIB
@@ -66,7 +67,7 @@ find_library(GMV_LIB
   PATH_SUFFIXES lib/x86_64-opt-linux-gnu_opt
   )
 if(GMV_LIB)
-  set(HAVE_LIBGMV 1)
+  set(HAVE_LIBGMV TRUE)
 endif()
 
 find_library(GZSTREAM_LIB
@@ -75,7 +76,7 @@ find_library(GZSTREAM_LIB
   PATH_SUFFIXES lib/x86_64-opt-linux-gnu_opt
   )
 if(GZSTREAM_LIB)
-  set(HAVE_LIBGZSTREAM 1)
+  set(HAVE_LIBGZSTREAM TRUE)
 endif()
 
 find_library(HILBERT_LIB
@@ -84,7 +85,7 @@ find_library(HILBERT_LIB
   PATH_SUFFIXES lib/x86_64-opt-linux-gnu_opt
   )
 if(HILBERT_LIB)
-  set(HAVE_LIBHILBERT 1)
+  set(HAVE_LIBHILBERT TRUE)
 endif()
 
 find_library(LASPACK_LIB
@@ -93,7 +94,7 @@ find_library(LASPACK_LIB
   PATH_SUFFIXES lib/x86_64-opt-linux-gnu_opt
   )
 if(LASPACK_LIB)
-  set(HAVE_LIBLASPACK 1)
+  set(HAVE_LIBLASPACK TRUE)
 endif()
 
 find_library(METIS_LIB
@@ -102,7 +103,7 @@ find_library(METIS_LIB
   PATH_SUFFIXES lib/x86_64-opt-linux-gnu_opt
   )
 if(METIS_LIB)
-  set(HAVE_LIBMETIS 1)
+  set(HAVE_LIBMETIS TRUE)
 endif()
 
 find_library(NEMESIS_LIB
@@ -111,7 +112,7 @@ find_library(NEMESIS_LIB
   PATH_SUFFIXES lib/x86_64-opt-linux-gnu_opt
   )
 if(NEMESIS_LIB)
-  set(HAVE_LIBNEMESIS 1)
+  set(HAVE_LIBNEMESIS TRUE)
 endif()
 
 find_library(NETCDF_LIB
@@ -120,7 +121,7 @@ find_library(NETCDF_LIB
   PATH_SUFFIXES lib/x86_64-opt-linux-gnu_opt
   )
 if(NETCDF_LIB)
-  set(HAVE_LIBNETCDF 1)
+  set(HAVE_LIBNETCDF TRUE)
 endif()
 
 find_library(PARMETIS_LIB
@@ -129,7 +130,7 @@ find_library(PARMETIS_LIB
   PATH_SUFFIXES lib/x86_64-opt-linux-gnu_opt
   )
 if(PARMETIS_LIB)
-  set(HAVE_LIBPARMETIS 1)
+  set(HAVE_LIBPARMETIS TRUE)
 endif()
 
 
@@ -139,7 +140,7 @@ find_library(SFCURVES_LIB
   PATH_SUFFIXES lib/x86_64-opt-linux-gnu_opt
   )
 if(SFCURVES_LIB)
-  set(HAVE_LIBSFCURVES 1)
+  set(HAVE_LIBSFCURVES TRUE)
 endif()
 
 
@@ -149,7 +150,7 @@ find_library(TETGEN_LIB
   PATH_SUFFIXES lib/x86_64-opt-linux-gnu_opt
   )
 if(TETGEN_LIB)
-  set(HAVE_LIBTETGEN 1)
+  set(HAVE_LIBTETGEN TRUE)
 endif()
 
 find_library(TRIANGLE_LIB
@@ -158,9 +159,8 @@ find_library(TRIANGLE_LIB
   PATH_SUFFIXES lib/x86_64-opt-linux-gnu_opt
   )
 if(TRIANGLE_LIB)
-  set(HAVE_LIBTRIANGLE 1)
+  set(HAVE_LIBTRIANGLE TRUE)
 endif()
-
 
 set(LIBMESH_LIBRARIES_WORK ${LIBMESH_LIB}
   ${EXODUSII_LIB}
@@ -188,4 +188,3 @@ if (LIBMESH_INCLUDE_PATH AND LIBMESH_LIBRARIES)
 else()
   set(LIBMESH_FOUND FALSE)
 endif()
-

@@ -11,27 +11,34 @@ set(kit_SRCS cf_interface/CartCellDoubleLinearCFInterpolation.C
   physical_boundary/CartSideRobinPhysBdryOp.C
   physical_boundary/ExtendedRobinBcCoefStrategy.C
   physical_boundary/PhysicalBoundaryUtilities.C
+  physical_boundary/TimeDependentLocationIndexRobinBcCoefs.C
   HierarchyGhostCellInterpolation.C
   )
 
-add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
-  physical_boundary/fortran/cartphysbdryop3d.f.m4
-  cf_interface/fortran/linearcfinterpolation3d.f.m4
-  cf_interface/fortran/quadcfinterpolation3d.f.m4)
+ParseM4Sources(
+  OutputFiles3D
+  FileExt ".f"
+  M4args -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} -DTOP_SRCDIR=${PROJECT_SOURCE_DIR}
+  InputFiles physical_boundary/fortran/cartphysbdryop3d.f.m4
+             cf_interface/fortran/linearcfinterpolation3d.f.m4
+             cf_interface/fortran/quadcfinterpolation3d.f.m4 )
 
 set(kit_SRCS3D
   ${kit_SRCS}
-  ${FORTRAN_SRCS3D}
+  ${OutputFiles3D}
   )
 
-add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
-  physical_boundary/fortran/cartphysbdryop2d.f.m4
-  cf_interface/fortran/linearcfinterpolation2d.f.m4
-  cf_interface/fortran/quadcfinterpolation2d.f.m4)
+ParseM4Sources(
+  OutputFiles2D
+  FileExt ".f"
+  M4args -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} -DTOP_SRCDIR=${PROJECT_SOURCE_DIR}
+  InputFiles physical_boundary/fortran/cartphysbdryop2d.f.m4
+             cf_interface/fortran/linearcfinterpolation2d.f.m4
+             cf_interface/fortran/quadcfinterpolation2d.f.m4 )
 
 set(kit_SRCS2D
   ${kit_SRCS}
-  ${FORTRAN_SRCS2D}
+  ${OutputFiles2D}
   )
 
 #

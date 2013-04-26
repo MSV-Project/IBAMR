@@ -41,7 +41,8 @@ CheckExternalProjectDependency(OPENMPI)
 set(proj OPENMPI)
 
 if(NOT DEFINED OPENMPI_DIR)
-
+  set(SOURCE_DIR ${IBAMR_BINARY_DIR}/SuperBuild/${proj})
+  set(BINARY_DIR ${IBAMR_BINARY_DIR}/SuperBuild/${proj}-build)
   # Set CMake OSX variable to pass down the external project
   set(CMAKE_OSX_EXTERNAL_PROJECT_ARGS)
   if(APPLE)
@@ -52,6 +53,10 @@ if(NOT DEFINED OPENMPI_DIR)
   endif()
 
 #     message(STATUS "Adding project:${proj}")
+  # Clean if necessary
+  if(EXISTS ${BINARY_DIR})
+    execute_process(COMMAND make clean WORKING_DIRECTORY ${BINARY_DIR})
+  endif()
   set(SHARED_LIB_CONF)
   if(BUILD_SHARED_LIBS)
     set(SHARED_LIB_CONF --enable-shared --disable-static)

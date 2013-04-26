@@ -2,32 +2,38 @@ set(KIT coarsen_ops)
 set(UKIT COARSEN_OPS)
 
 
-set(kit_SRCS LMarkerCoarsen.C
+set(kit_SRCS LagMarkerCoarsen.C
   VecCellCoarsenAdapter.C
   CartCellDoubleCubicCoarsen.C
   CartSideDoubleCubicCoarsen.C
 )
 
-add_m4_sources(FORTRAN_SRCS3D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
-  fortran/cubiccoarsen3d.f.m4)
-  
-set(kit_SRCS3D 
+ParseM4Sources(
+  OutputFiles3D
+  FileExt ".f"
+  M4args -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} -DTOP_SRCDIR=${PROJECT_SOURCE_DIR}
+  InputFiles fortran/cubiccoarsen3d.f.m4 )
+
+set(kit_SRCS3D
   ${kit_SRCS}
-  ${FORTRAN_SRCS3D}
+  ${OutputFiles3D}
   )
-  
-add_m4_sources(FORTRAN_SRCS2D -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} .f
-  fortran/cubiccoarsen2d.f.m4)
-  
-set(kit_SRCS2D 
+
+ParseM4Sources(
+  OutputFiles2D
+  FileExt ".f"
+  M4args -DSAMRAI_FORTDIR=${SAMRAI_FORTDIR} -DTOP_SRCDIR=${PROJECT_SOURCE_DIR}
+  InputFiles fortran/cubiccoarsen2d.f.m4 )
+
+set(kit_SRCS2D
   ${kit_SRCS}
-  ${FORTRAN_SRCS2D}
-  )  
+  ${OutputFiles2D}
+  )
 
 #
 # Include the common target module
 #
-include(${IBTK_MODULE_PATH}/KitCommonBlock.cmake)  
+include(${IBTK_MODULE_PATH}/KitCommonBlock.cmake)
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}

@@ -49,9 +49,9 @@
 #include <ibtk/namespaces.h>
 
 // LIBMESH INCLUDES
-#include <boundary_info.h>
-#include <dof_map.h>
-#include <fe_base.h>
+#include <libmesh/boundary_info.h>
+#include <libmesh/dof_map.h>
+#include <libmesh/fe_base.h>
 using namespace libMesh;
 
 /////////////////////////////// NAMESPACE ////////////////////////////////////

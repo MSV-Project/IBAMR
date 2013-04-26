@@ -46,7 +46,6 @@ set(HDF5_LIBRARIES ${HDF5_LIBRARIES_WORK} CACHE STRING "QD library to link again
 set(HDF5_COMPILE_FLAGS "-L${HDF5_DIR}/lib" CACHE STRING "QD compilation flags" FORCE)
 # set(HDF5_LINK_FLAGS -lHYPRE CACHE STRING "Hypre linking flags" FORCE)
 
-message("HDF5_LIBRARIES = ${HDF5_LIBRARIES}")
 # finally set a found variable
 if (HDF5_INCLUDE_PATH AND HDF5_LIBRARIES)
   set(HDF5_FOUND TRUE)

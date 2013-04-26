@@ -36,11 +36,6 @@ option(IBAMR_BUILD_2D_LIBRARY "Build the optional 2D libraries." OFF)
 # --------------------------------------------------------------------------
 option(IBAMR_BUILD_SINGLE_LIBRARY "Build IBAMR single library" OFF)
 
-# ----------------------------------------------------------------------------
-# We need the m4 macro preprocessor and helper macros
-# ----------------------------------------------------------------------------
-include(${CMAKE_CURRENT_SOURCE_DIR}/CMake/FindM4.cmake)
-
 #----------------------------------------------------------------------------
 # Superbuild Option - Enabled by default
 # ---------------------------------------------------------------------------
@@ -72,7 +67,7 @@ set(IBTK_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ibtk" CACHE PATH "Path to IBTK.
 # Superbuild script
 #
 if(IBAMR_SUPERBUILD)
-  include("${CMAKE_CURRENT_SOURCE_DIR}/CMake/SuperBuild/SuperBuild.cmake")
+  include(SuperBuild)
   return()
 endif()
 
@@ -99,6 +94,11 @@ add_subdirectory(${IBTK_SOURCE_DIR})
 # Update CMake module path
 #
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${IBTK_SOURCE_DIR}/CMake)
+
+# ----------------------------------------------------------------------------
+# We need the m4 macro preprocessor and helper macros
+# ----------------------------------------------------------------------------
+include(ParseM4Sources)
 
 # ----------------------------------------------------------------------------
 # Set IBAMR include directories
