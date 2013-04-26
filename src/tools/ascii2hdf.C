@@ -1,7 +1,7 @@
 // Filename: ascii2hdf.C
 // Created on 30 May 2007 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -196,7 +196,7 @@ initializeVertexData(
 
     // Define the file dataspace.
     static const int rankf = 2;
-    hsize_t dimsf[rankf] = { num_vertex , NDIM };
+    hsize_t dimsf[rankf] = { static_cast<hsize_t>(num_vertex) , NDIM };
     hid_t filespace = H5Screate_simple(rankf, dimsf, NULL);
 
     // Define the memory dataspace.
@@ -207,7 +207,7 @@ initializeVertexData(
     // Create the dataset with data compression enabled.
     hid_t plist = H5Pcreate(H5P_DATASET_CREATE);
     static const int rankc = 2;
-    hsize_t dimsc[rankc] = { min(num_vertex,BUFFER_SIZE) , NDIM };
+    hsize_t dimsc[rankc] = { static_cast<hsize_t>(min(num_vertex,BUFFER_SIZE)) , NDIM };
     H5Pset_chunk(plist, rankc, dimsc);
     H5Pset_deflate(plist, 6);
 
@@ -261,13 +261,13 @@ initializeVertexData(
             assert(num_vertex_block > 0 && num_vertex_block <= BUFFER_SIZE);
 #endif
             // Define the file hyperslab.
-            hsize_t offsetf[rankf] = { block*BUFFER_SIZE , 0 };
-            hsize_t countf[rankf] = { num_vertex_block , NDIM };
+            hsize_t offsetf[rankf] = { static_cast<hsize_t>(block*BUFFER_SIZE) , 0 };
+            hsize_t countf[rankf] = { static_cast<hsize_t>(num_vertex_block) , NDIM };
             H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offsetf, NULL, countf, NULL);
 
             // Define the memory hyperslab.
             hsize_t offsetm[rankm] = { 0 , 0 };
-            hsize_t countm[rankm] = { num_vertex_block , NDIM };
+            hsize_t countm[rankm] = { static_cast<hsize_t>(num_vertex_block) , NDIM };
             H5Sselect_hyperslab(memspace, H5S_SELECT_SET, offsetm, NULL, countm, NULL);
 
             // Write data to the hyperslab in the file from the hyperslab in
@@ -342,7 +342,7 @@ initializeSpringData(
 
     // Define the file dataspace.
     static const int rankf = 1;
-    hsize_t dimsf[rankf] = { num_spring };
+    hsize_t dimsf[rankf] = { static_cast<hsize_t>(num_spring) };
     hid_t filespace = H5Screate_simple(rankf, dimsf, NULL);
 
     // Define the memory dataspace.
@@ -353,7 +353,7 @@ initializeSpringData(
     // Create the datasets with data compression enabled.
     hid_t plist = H5Pcreate(H5P_DATASET_CREATE);
     static const int rankc = 1;
-    hsize_t dimsc[rankc] = { min(num_spring,BUFFER_SIZE) };
+    hsize_t dimsc[rankc] = { static_cast<hsize_t>(min(num_spring,BUFFER_SIZE)) };
     H5Pset_chunk(plist, rankc, dimsc);
     H5Pset_shuffle(plist);
     H5Pset_deflate(plist, 6);
@@ -473,13 +473,13 @@ initializeSpringData(
                 assert(num_spring_block > 0 && num_spring_block <= BUFFER_SIZE);
 #endif
                 // Define the file hyperslab.
-                hsize_t offsetf[rankf] = { block*BUFFER_SIZE };
-                hsize_t countf[rankf] = { num_spring_block };
+                hsize_t offsetf[rankf] = { static_cast<hsize_t>(block*BUFFER_SIZE) };
+                hsize_t countf[rankf] = { static_cast<hsize_t>(num_spring_block) };
                 H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offsetf, NULL, countf, NULL);
 
                 // Define the memory hyperslab.
                 hsize_t offsetm[rankm] = { 0 };
-                hsize_t countm[rankm] = { num_spring_block };
+                hsize_t countm[rankm] = { static_cast<hsize_t>(num_spring_block) };
                 H5Sselect_hyperslab(memspace, H5S_SELECT_SET, offsetm, NULL, countm, NULL);
 
                 // Write data to the hyperslabs in the file from the hyperslabs
@@ -563,7 +563,7 @@ initializeBeamData(
 
     // Define the file dataspace.
     static const int rankf = 1;
-    hsize_t dimsf[rankf] = { num_beam };
+    hsize_t dimsf[rankf] = { static_cast<hsize_t>(num_beam) };
     hid_t filespace = H5Screate_simple(rankf, dimsf, NULL);
 
     // Define the memory dataspace.
@@ -574,7 +574,7 @@ initializeBeamData(
     // Create the datasets with data compression enabled.
     hid_t plist = H5Pcreate(H5P_DATASET_CREATE);
     static const int rankc = 1;
-    hsize_t dimsc[rankc] = { min(num_beam,BUFFER_SIZE) };
+    hsize_t dimsc[rankc] = { static_cast<hsize_t>(min(num_beam,BUFFER_SIZE)) };
     H5Pset_chunk(plist, rankc, dimsc);
     H5Pset_shuffle(plist);
     H5Pset_deflate(plist, 6);
@@ -720,13 +720,13 @@ initializeBeamData(
                 assert(num_beam_block > 0 && num_beam_block <= BUFFER_SIZE);
 #endif
                 // Define the file hyperslab.
-                hsize_t offsetf[rankf] = { block*BUFFER_SIZE };
-                hsize_t countf[rankf] = { num_beam_block };
+                hsize_t offsetf[rankf] = { static_cast<hsize_t>(block*BUFFER_SIZE) };
+                hsize_t countf[rankf] = { static_cast<hsize_t>(num_beam_block) };
                 H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offsetf, NULL, countf, NULL);
 
                 // Define the memory hyperslab.
                 hsize_t offsetm[rankm] = { 0 };
-                hsize_t countm[rankm] = { num_beam_block };
+                hsize_t countm[rankm] = { static_cast<hsize_t>(num_beam_block) };
                 H5Sselect_hyperslab(memspace, H5S_SELECT_SET, offsetm, NULL, countm, NULL);
 
                 // Write data to the hyperslabs in the file from the hyperslabs
@@ -816,7 +816,7 @@ initializeTargetPointData(
 
     // Define the file dataspace.
     static const int rankf = 1;
-    hsize_t dimsf[rankf] = { num_target_point };
+    hsize_t dimsf[rankf] = { static_cast<hsize_t>(num_target_point) };
     hid_t filespace = H5Screate_simple(rankf, dimsf, NULL);
 
     // Define the memory dataspace.
@@ -827,7 +827,7 @@ initializeTargetPointData(
     // Create the datasets with data compression enabled.
     hid_t plist = H5Pcreate(H5P_DATASET_CREATE);
     static const int rankc = 1;
-    hsize_t dimsc[rankc] = { min(num_target_point,BUFFER_SIZE) };
+    hsize_t dimsc[rankc] = { static_cast<hsize_t>(min(num_target_point,BUFFER_SIZE)) };
     H5Pset_chunk(plist, rankc, dimsc);
     H5Pset_shuffle(plist);
     H5Pset_deflate(plist, 6);
@@ -921,13 +921,13 @@ initializeTargetPointData(
                 assert(num_target_point_block > 0 && num_target_point_block <= BUFFER_SIZE);
 #endif
                 // Define the file hyperslab.
-                hsize_t offsetf[rankf] = { block*BUFFER_SIZE };
-                hsize_t countf[rankf] = { num_target_point_block };
+                hsize_t offsetf[rankf] = { static_cast<hsize_t>(block*BUFFER_SIZE) };
+                hsize_t countf[rankf] = { static_cast<hsize_t>(num_target_point_block) };
                 H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offsetf, NULL, countf, NULL);
 
                 // Define the memory hyperslab.
                 hsize_t offsetm[rankm] = { 0 };
-                hsize_t countm[rankm] = { num_target_point_block };
+                hsize_t countm[rankm] = { static_cast<hsize_t>(num_target_point_block) };
                 H5Sselect_hyperslab(memspace, H5S_SELECT_SET, offsetm, NULL, countm, NULL);
 
                 // Write data to the hyperslabs in the file from the hyperslabs
@@ -1007,7 +1007,7 @@ initializeMassData(
 
     // Define the file dataspace.
     static const int rankf = 1;
-    hsize_t dimsf[rankf] = { num_mass_point };
+    hsize_t dimsf[rankf] = { static_cast<hsize_t>(num_mass_point) };
     hid_t filespace = H5Screate_simple(rankf, dimsf, NULL);
 
     // Define the memory dataspace.
@@ -1018,7 +1018,7 @@ initializeMassData(
     // Create the datasets with data compression enabled.
     hid_t plist = H5Pcreate(H5P_DATASET_CREATE);
     static const int rankc = 1;
-    hsize_t dimsc[rankc] = { min(num_mass_point,BUFFER_SIZE) };
+    hsize_t dimsc[rankc] = { static_cast<hsize_t>(min(num_mass_point,BUFFER_SIZE)) };
     H5Pset_chunk(plist, rankc, dimsc);
     H5Pset_shuffle(plist);
     H5Pset_deflate(plist, 6);
@@ -1113,13 +1113,13 @@ initializeMassData(
                 assert(num_mass_point_block > 0 && num_mass_point_block <= BUFFER_SIZE);
 #endif
                 // Define the file hyperslab.
-                hsize_t offsetf[rankf] = { block*BUFFER_SIZE };
-                hsize_t countf[rankf] = { num_mass_point_block };
+                hsize_t offsetf[rankf] = { static_cast<hsize_t>(block*BUFFER_SIZE) };
+                hsize_t countf[rankf] = { static_cast<hsize_t>(num_mass_point_block) };
                 H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offsetf, NULL, countf, NULL);
 
                 // Define the memory hyperslab.
                 hsize_t offsetm[rankm] = { 0 };
-                hsize_t countm[rankm] = { num_mass_point_block };
+                hsize_t countm[rankm] = { static_cast<hsize_t>(num_mass_point_block) };
                 H5Sselect_hyperslab(memspace, H5S_SELECT_SET, offsetm, NULL, countm, NULL);
 
                 // Write data to the hyperslabs in the file from the hyperslabs
@@ -1260,7 +1260,7 @@ initializeInstrumentationData(
 
     // Define the file dataspace.
     static const int rankf = 1;
-    hsize_t dimsf[rankf] = { num_inst_point };
+    hsize_t dimsf[rankf] = { static_cast<hsize_t>(num_inst_point) };
     hid_t filespace = H5Screate_simple(rankf, dimsf, NULL);
 
     // Define the memory dataspace.
@@ -1271,7 +1271,7 @@ initializeInstrumentationData(
     // Create the datasets with data compression enabled.
     hid_t plist = H5Pcreate(H5P_DATASET_CREATE);
     static const int rankc = 1;
-    hsize_t dimsc[rankc] = { min(num_inst_point,BUFFER_SIZE) };
+    hsize_t dimsc[rankc] = { static_cast<hsize_t>(min(num_inst_point,BUFFER_SIZE)) };
     H5Pset_chunk(plist, rankc, dimsc);
     H5Pset_shuffle(plist);
     H5Pset_deflate(plist, 6);
@@ -1378,13 +1378,13 @@ initializeInstrumentationData(
                 assert(num_inst_point_block > 0 && num_inst_point_block <= BUFFER_SIZE);
 #endif
                 // Define the file hyperslab.
-                hsize_t offsetf[rankf] = { block*BUFFER_SIZE };
-                hsize_t countf[rankf] = { num_inst_point_block };
+                hsize_t offsetf[rankf] = { static_cast<hsize_t>(block*BUFFER_SIZE) };
+                hsize_t countf[rankf] = { static_cast<hsize_t>(num_inst_point_block) };
                 H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offsetf, NULL, countf, NULL);
 
                 // Define the memory hyperslab.
                 hsize_t offsetm[rankm] = { 0 };
-                hsize_t countm[rankm] = { num_inst_point_block };
+                hsize_t countm[rankm] = { static_cast<hsize_t>(num_inst_point_block) };
                 H5Sselect_hyperslab(memspace, H5S_SELECT_SET, offsetm, NULL, countm, NULL);
 
                 // Write data to the hyperslabs in the file from the hyperslabs
@@ -1401,8 +1401,7 @@ initializeInstrumentationData(
 
     // Ensure that a complete range of instrument indices were found in the
     // input file.
-    for (vector<bool>::iterator meter_it = encountered_instrument_idx.begin();
-         meter_it != encountered_instrument_idx.end(); ++meter_it)
+    for (vector<bool>::iterator meter_it = encountered_instrument_idx.begin(); meter_it != encountered_instrument_idx.end(); ++meter_it)
     {
         const int meter_idx = distance(encountered_instrument_idx.begin(),meter_it);
         if ((*meter_it) == false)
@@ -1412,8 +1411,7 @@ initializeInstrumentationData(
         }
 
         vector<bool>& meter_node_idxs = encountered_node_idx[meter_idx];
-        for (vector<bool>::iterator node_it = meter_node_idxs.begin();
-             node_it != meter_node_idxs.end(); ++node_it)
+        for (vector<bool>::iterator node_it = meter_node_idxs.begin(); node_it != meter_node_idxs.end(); ++node_it)
         {
             const int node_idx = distance(meter_node_idxs.begin(),node_it);
             if ((*node_it) == false)

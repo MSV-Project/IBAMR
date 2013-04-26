@@ -1,7 +1,7 @@
-// Filename: LNodeIndexTransaction.C
+// Filename: LTransaction.C
 // Created on 03 Mar 2010 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "LNodeIndexTransaction.h"
+#include "LTransaction.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
@@ -47,6 +47,9 @@
 // IBTK INCLUDES
 #include <ibtk/namespaces.h>
 
+// SAMRAI INCLUDES
+#include <IntVector.h>
+
 // C++ STDLIB INCLUDES
 #include <algorithm>
 
@@ -58,128 +61,134 @@ namespace IBTK
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
-LNodeIndexTransaction::LNodeIndexTransaction(
+template<class T>
+LTransaction<T>::LTransaction(
     const int src_proc,
     const int dst_proc)
-    : d_src_index_set(),
+    : d_src_item_set(),
       d_src_proc(src_proc),
       d_outgoing_bytes(0),
-      d_dst_index_set(),
+      d_dst_item_set(),
       d_dst_proc(dst_proc)
 {
     // intentionally blank
     return;
-}// LNodeIndexTransaction
+}// LTransaction
 
-LNodeIndexTransaction::LNodeIndexTransaction(
+template<class T>
+LTransaction<T>::LTransaction(
     const int src_proc,
     const int dst_proc,
-    const std::vector<LNodeIndexTransactionComponent>& src_index_set)
-    : d_src_index_set(src_index_set),
+    const std::vector<LTransactionComponent>& src_item_set)
+    : d_src_item_set(src_item_set),
       d_src_proc(src_proc),
       d_outgoing_bytes(0),
-      d_dst_index_set(),
+      d_dst_item_set(),
       d_dst_proc(dst_proc)
 {
     d_outgoing_bytes = AbstractStream::sizeofInt();
-    for (std::vector<LNodeIndexTransactionComponent>::const_iterator cit = d_src_index_set.begin();
-         cit != d_src_index_set.end(); ++cit)
+    for (typename std::vector<LTransactionComponent>::const_iterator cit = d_src_item_set.begin(); cit != d_src_item_set.end(); ++cit)
     {
-        d_outgoing_bytes += cit->lag_idx->getDataStreamSize() + NDIM*AbstractStream::sizeofDouble();
+        d_outgoing_bytes += cit->item->getDataStreamSize() + NDIM*AbstractStream::sizeofDouble();
     }
     return;
-}// LNodeIndexTransaction
+}// LTransaction
 
-LNodeIndexTransaction::~LNodeIndexTransaction()
+template<class T>
+LTransaction<T>::~LTransaction()
 {
     // intentionally blank
     return;
-}// ~LNodeIndexTransaction
+}// ~LTransaction
 
+template<class T>
 bool
-LNodeIndexTransaction::canEstimateIncomingMessageSize()
+LTransaction<T>::canEstimateIncomingMessageSize()
 {
     return false;
 }// canEstimateIncomingMessageSize
 
+template<class T>
 int
-LNodeIndexTransaction::computeIncomingMessageSize()
+LTransaction<T>::computeIncomingMessageSize()
 {
     return 0;
 }// computeIncomingMessageSize
 
+template<class T>
 int
-LNodeIndexTransaction::computeOutgoingMessageSize()
+LTransaction<T>::computeOutgoingMessageSize()
 {
     return d_outgoing_bytes;
 }// computeOutgoingMessageSize
 
+template<class T>
 int
-LNodeIndexTransaction::getSourceProcessor()
+LTransaction<T>::getSourceProcessor()
 {
     return d_src_proc;
 }// getSourceProcessor
 
+template<class T>
 int
-LNodeIndexTransaction::getDestinationProcessor()
+LTransaction<T>::getDestinationProcessor()
 {
     return d_dst_proc;
 }// getDestinationProcessor
 
+template<class T>
 void
-LNodeIndexTransaction::packStream(
+LTransaction<T>::packStream(
     AbstractStream& stream)
 {
-    stream << int(d_src_index_set.size());
-    for (std::vector<LNodeIndexTransactionComponent>::const_iterator cit = d_src_index_set.begin();
-         cit != d_src_index_set.end(); ++cit)
+    stream << static_cast<int>(d_src_item_set.size());
+    for (typename std::vector<LTransactionComponent>::iterator it = d_src_item_set.begin(); it != d_src_item_set.end(); ++it)
     {
-        const Pointer<LNodeIndex>& idx = cit->lag_idx;
-        idx->packStream(stream);
-        const std::vector<double>& posn = cit->posn;
-        stream.pack(&posn[0],NDIM);
+        typename LSet<T>::value_type& item = it->item;
+        item->packStream(stream);
+        const blitz::TinyVector<double,NDIM>& posn = it->posn;
+        stream.pack(posn.data(),NDIM);
     }
     return;
 }// packStream
 
+template<class T>
 void
-LNodeIndexTransaction::unpackStream(
+LTransaction<T>::unpackStream(
     AbstractStream& stream)
 {
     static const IntVector<NDIM> periodic_offset = 0;
-    int num_idxs;
-    stream >> num_idxs;
-    d_dst_index_set.resize(num_idxs);
-    for (std::vector<LNodeIndexTransactionComponent>::iterator it = d_dst_index_set.begin();
-         it != d_dst_index_set.end(); ++it)
+    int num_items;
+    stream >> num_items;
+    d_dst_item_set.resize(num_items);
+    for (typename std::vector<LTransactionComponent>::iterator it = d_dst_item_set.begin(); it != d_dst_item_set.end(); ++it)
     {
-        it->lag_idx = new LNodeIndex();
-        Pointer<LNodeIndex> idx = it->lag_idx;
-        idx->unpackStream(stream, periodic_offset);
-        std::vector<double>& posn = it->posn;
-        posn.resize(NDIM);
-        stream.unpack(&posn[0],NDIM);
+        it->item->unpackStream(stream, periodic_offset);
+        blitz::TinyVector<double,NDIM>& posn = it->posn;
+        stream.unpack(posn.data(),NDIM);
     }
     return;
 }// unpackStream
 
+template<class T>
 void
-LNodeIndexTransaction::copyLocalData()
+LTransaction<T>::copyLocalData()
 {
-    d_dst_index_set = d_src_index_set;
+    d_dst_item_set = d_src_item_set;
     return;
 }// copyLocalData
 
+template<class T>
 void
-LNodeIndexTransaction::printClassData(
+LTransaction<T>::printClassData(
     std::ostream& stream) const
 {
-    stream << "LNodeIndex Transaction"                                    << std::endl;
-    stream << "   number of outgoing indices: " << d_src_index_set.size() << std::endl;
-    stream << "   outgoing processor rank:    " << d_src_proc             << std::endl;
-    stream << "   outgoing bytes:             " << d_outgoing_bytes       << std::endl;
-    stream << "   number of incoming indices: " << d_dst_index_set.size() << std::endl;
-    stream << "   incoming processor rank:    " << d_dst_proc             << std::endl;
+    stream << "LNodeIndex Transaction"                                   << std::endl;
+    stream << "   number of outgoing indices: " << d_src_item_set.size() << std::endl;
+    stream << "   outgoing processor rank:    " << d_src_proc            << std::endl;
+    stream << "   outgoing bytes:             " << d_outgoing_bytes      << std::endl;
+    stream << "   number of incoming indices: " << d_dst_item_set.size() << std::endl;
+    stream << "   incoming processor rank:    " << d_dst_proc            << std::endl;
     return;
 }// printClassData
 
@@ -192,5 +201,14 @@ LNodeIndexTransaction::printClassData(
 }// namespace IBTK
 
 /////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
+
+#include <ibtk/LMarker.h>
+template class IBTK::LTransaction<IBTK::LMarker>;
+
+#include <ibtk/LNode.h>
+template class IBTK::LTransaction<IBTK::LNode>;
+
+#include <ibtk/LNodeIndex.h>
+template class IBTK::LTransaction<IBTK::LNodeIndex>;
 
 //////////////////////////////////////////////////////////////////////////////

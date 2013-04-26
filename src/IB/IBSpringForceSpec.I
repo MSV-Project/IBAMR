@@ -1,7 +1,7 @@
 // Filename: IBSpringForceSpec.I
 // Created on 11 Jun 2007 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,9 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
+// IBTK INCLUDES
+#include <ibtk/StreamableManager.h>
+
 // SAMRAI INCLUDES
 #include <tbox/PIO.h>
 #include <tbox/Utilities.h>
@@ -45,43 +48,52 @@ namespace IBAMR
 inline bool
 IBSpringForceSpec::getIsRegisteredWithStreamableManager()
 {
-    return s_registered_factory;
+    return (STREAMABLE_CLASS_ID != IBTK::StreamableManager::getUnregisteredID());
 }// getIsRegisteredWithStreamableManager
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
 inline
 IBSpringForceSpec::IBSpringForceSpec(
-    const int master_idx,
-    const std::vector<int>& slave_idxs,
-    const std::vector<int>& force_fcn_idxs,
-    const std::vector<double>& stiffnesses,
-    const std::vector<double>& rest_lengths,
-    const std::vector<int>& subdomain_idxs)
-    : d_master_idx(master_idx),
-      d_slave_idxs(slave_idxs),
-      d_force_fcn_idxs(force_fcn_idxs),
-      d_stiffnesses(stiffnesses),
-      d_rest_lengths(rest_lengths)
-#if ENABLE_SUBDOMAIN_INDICES
-    , d_subdomain_idxs(subdomain_idxs)
-#endif
+    const unsigned int num_springs)
+    : d_master_idx(-1),
+      d_slave_idxs(num_springs),
+      d_force_fcn_idxs(num_springs),
+      d_parameters(num_springs)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    const int num_springs = d_slave_idxs.size();
-    TBOX_ASSERT(num_springs == int(d_force_fcn_idxs.size()));
-    TBOX_ASSERT(num_springs == int(d_stiffnesses.size()));
-    TBOX_ASSERT(num_springs == int(d_rest_lengths.size()));
-#if ENABLE_SUBDOMAIN_INDICES
-    TBOX_ASSERT(num_springs == int(d_subdomain_idxs.size()));
-#endif
-#endif
-    if (!s_registered_factory)
+    if (!getIsRegisteredWithStreamableManager())
     {
         TBOX_ERROR("IBSpringForceSpec::IBSpringForceSpec():\n"
                    << "  must call IBSpringForceSpec::registerWithStreamableManager() before\n"
                    << "  creating any IBSpringForceSpec objects.\n");
     }
+#endif
+    return;
+}// IBSpringForceSpec
+
+inline
+IBSpringForceSpec::IBSpringForceSpec(
+    const int master_idx,
+    const std::vector<int>& slave_idxs,
+    const std::vector<int>& force_fcn_idxs,
+    const std::vector<std::vector<double> >& parameters)
+    : d_master_idx(master_idx),
+      d_slave_idxs(slave_idxs),
+      d_force_fcn_idxs(force_fcn_idxs),
+      d_parameters(parameters)
+{
+#ifdef DEBUG_CHECK_ASSERTIONS
+    const unsigned int num_springs = d_slave_idxs.size();
+    TBOX_ASSERT(num_springs == d_force_fcn_idxs.size());
+    TBOX_ASSERT(num_springs == d_parameters.size());
+    if (!getIsRegisteredWithStreamableManager())
+    {
+        TBOX_ERROR("IBSpringForceSpec::IBSpringForceSpec():\n"
+                   << "  must call IBSpringForceSpec::registerWithStreamableManager() before\n"
+                   << "  creating any IBSpringForceSpec objects.\n");
+    }
+#endif
     return;
 }// IBSpringForceSpec
 
@@ -92,14 +104,13 @@ IBSpringForceSpec::~IBSpringForceSpec()
     return;
 }// ~IBSpringForceSpec
 
-inline unsigned
+inline unsigned int
 IBSpringForceSpec::getNumberOfSprings() const
 {
-    const int num_springs = d_slave_idxs.size();
+    const unsigned int num_springs = d_slave_idxs.size();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(num_springs == int(d_force_fcn_idxs.size()));
-    TBOX_ASSERT(num_springs == int(d_stiffnesses.size()));
-    TBOX_ASSERT(num_springs == int(d_rest_lengths.size()));
+    TBOX_ASSERT(num_springs == d_force_fcn_idxs.size());
+    TBOX_ASSERT(num_springs == d_parameters.size());
 #endif
     return num_springs;
 }// getNumberOfSprings
@@ -140,94 +151,59 @@ IBSpringForceSpec::getForceFunctionIndices()
     return d_force_fcn_idxs;
 }// getForceFunctionIndices
 
-inline const std::vector<double>&
-IBSpringForceSpec::getStiffnesses() const
+inline const std::vector<std::vector<double> >&
+IBSpringForceSpec::getParameters() const
 {
-    return d_stiffnesses;
-}// getStiffnesses
+    return d_parameters;
+}// getParameters
 
-inline std::vector<double>&
-IBSpringForceSpec::getStiffnesses()
+inline std::vector<std::vector<double> >&
+IBSpringForceSpec::getParameters()
 {
-    return d_stiffnesses;
-}// getStiffnesses
-
-inline const std::vector<double>&
-IBSpringForceSpec::getRestingLengths() const
-{
-    return d_rest_lengths;
-}// getRestingLengths
-
-inline std::vector<double>&
-IBSpringForceSpec::getRestingLengths()
-{
-    return d_rest_lengths;
-}// getRestingLengths
-
-inline const std::vector<int>&
-IBSpringForceSpec::getSubdomainIndices() const
-{
-#if ENABLE_SUBDOMAIN_INDICES
-    return d_subdomain_idxs;
-#else
-    static std::vector<int> dummy_idxs;
-    return dummy_idxs;
-#endif
-}// getSubdomainIndices
-
-inline std::vector<int>&
-IBSpringForceSpec::getSubdomainIndices()
-{
-#if ENABLE_SUBDOMAIN_INDICES
-    return d_subdomain_idxs;
-#else
-    static std::vector<int> dummy_idxs;
-    return dummy_idxs;
-#endif
-}// getSubdomainIndices
+    return d_parameters;
+}// getParameters
 
 inline int
 IBSpringForceSpec::getStreamableClassID() const
 {
-    return s_class_id;
+    return STREAMABLE_CLASS_ID;
 }// getStreamableClassID
 
 inline size_t
 IBSpringForceSpec::getDataStreamSize() const
 {
-    const int num_springs = d_slave_idxs.size();
+    const unsigned int num_springs = d_slave_idxs.size();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(num_springs == int(d_force_fcn_idxs.size()));
-    TBOX_ASSERT(num_springs == int(d_stiffnesses.size()));
-    TBOX_ASSERT(num_springs == int(d_rest_lengths.size()));
+    TBOX_ASSERT(num_springs == d_force_fcn_idxs.size());
+    TBOX_ASSERT(num_springs == d_parameters.size());
 #endif
-    return ((2+2*num_springs)*SAMRAI::tbox::AbstractStream::sizeofInt() +
-            (  2*num_springs)*SAMRAI::tbox::AbstractStream::sizeofDouble())
-#if ENABLE_SUBDOMAIN_INDICES
-        + num_springs*SAMRAI::tbox::AbstractStream::sizeofInt()
-#endif
-        ;
+    size_t size = (2+2*num_springs)*SAMRAI::tbox::AbstractStream::sizeofInt();
+    for (unsigned int k = 0; k < num_springs; ++k)
+    {
+        size += SAMRAI::tbox::AbstractStream::sizeofInt() + d_parameters[k].size()*SAMRAI::tbox::AbstractStream::sizeofDouble();
+    }
+    return size;
 }// getDataStreamSize
 
 inline void
 IBSpringForceSpec::packStream(
     SAMRAI::tbox::AbstractStream& stream)
 {
-    const int num_springs = d_slave_idxs.size();
+    const unsigned int num_springs = d_slave_idxs.size();
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(num_springs == int(d_force_fcn_idxs.size()));
-    TBOX_ASSERT(num_springs == int(d_stiffnesses.size()));
-    TBOX_ASSERT(num_springs == int(d_rest_lengths.size()));
+    TBOX_ASSERT(num_springs == d_force_fcn_idxs.size());
+    TBOX_ASSERT(num_springs == d_parameters.size());
 #endif
-    stream.pack(&num_springs,1);
+    stream << static_cast<int>(num_springs);
     stream.pack(&d_master_idx,1);
     stream.pack(&d_slave_idxs[0],num_springs);
     stream.pack(&d_force_fcn_idxs[0],num_springs);
-    stream.pack(&d_stiffnesses[0],num_springs);
-    stream.pack(&d_rest_lengths[0],num_springs);
-#if ENABLE_SUBDOMAIN_INDICES
-    stream.pack(&d_subdomain_idxs[0],num_springs);
-#endif
+    for (unsigned int k = 0; k < num_springs; ++k)
+    {
+        const int num_parameters = d_parameters[k].size();
+        stream << num_parameters;
+        stream.pack(&d_parameters[k][0],num_parameters);
+    }
     return;
 }// packStream
 

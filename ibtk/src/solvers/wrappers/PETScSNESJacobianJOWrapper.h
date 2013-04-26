@@ -1,7 +1,7 @@
 // Filename: PETScSNESJacobianJOWrapper.h
 // Created on 27 Dec 2003 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -54,7 +54,7 @@ namespace IBTK
 {
 /*!
  * \brief Class PETScSNESJacobianJOWrapper provides a JacobianOperator interface
- * for a <A HREF="http://www-unix.mcs.anl.gov/petsc">PETSc</A> SNES Jacobian.
+ * for a <A HREF="http://www.mcs.anl.gov/petsc">PETSc</A> SNES Jacobian.
  */
 class PETScSNESJacobianJOWrapper
     : public JacobianOperator
@@ -69,13 +69,12 @@ public:
     PETScSNESJacobianJOWrapper(
         const std::string& object_name,
         const SNES& petsc_snes,
-        PetscErrorCode (* const petsc_snes_form_jac)(SNES,Vec,Mat*,Mat*,MatStructure*,void*),
-        void* const petsc_snes_jac_ctx);
+        PetscErrorCode (*petsc_snes_form_jac)(SNES,Vec,Mat*,Mat*,MatStructure*,void*),
+        void* petsc_snes_jac_ctx);
 
     /*!
-     * \brief Virtual destructor.
+     * \brief Destructor.
      */
-    virtual
     ~PETScSNESJacobianJOWrapper();
 
     /*!
@@ -115,14 +114,14 @@ public:
      *
      * \param x value where the Jacobian is to be evaluated
      */
-    virtual void
+    void
     formJacobian(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x);
 
     /*!
      * \brief Return the vector where the Jacobian is evaluated.
      */
-    virtual SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> >
+    SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> >
     getBaseVector() const;
 
     //\}
@@ -154,7 +153,7 @@ public:
      * \param x input
      * \param y output: y=Ax
      */
-    virtual void
+    void
     apply(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
@@ -182,64 +181,8 @@ public:
      * \param y input
      * \param z output: z=Ax+y
      */
-    virtual void
+    void
     applyAdd(
-        SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
-        SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y,
-        SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& z);
-
-    /*!
-     * \brief Compute y=A'x.
-     *
-     * Before calling this function, the form of the vectors x and y should be
-     * set properly by the user on all patch interiors on the range of levels
-     * covered by the operator.  All data in these vectors should be allocated.
-     * The user is responsible for managing the storage for the vectors.
-     *
-     * Conditions on arguments:
-     * - vectors must have same hierarchy
-     * - vectors must have same variables (except that x \em must have enough
-     *   ghost cells for computation of A'x).
-     *
-     * In general, the vectors x and y \em cannot be the same.
-     *
-     * \note The operator NEED NOT be initialized prior to calling apply.
-     *
-     * \see initializeOperatorState
-     *
-     * \param x input
-     * \param y output: y=A'x
-     */
-    virtual void
-    applyAdjoint(
-        SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
-        SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y);
-
-    /*!
-     * \brief Compute z=A'x+y.
-     *
-     * Before calling this function, the form of the vectors x, y, and z should
-     * be set properly by the user on all patch interiors on the range of levels
-     * covered by the operator.  All data in these vectors should be allocated.
-     * The user is responsible for managing the storage for the vectors.
-     *
-     * Conditions on arguments:
-     * - vectors must have same hierarchy
-     * - vectors must have same variables (except that x \em must have enough
-     *   ghost cells for computation of A'x).
-     *
-     * In general, the vectors x and z \em cannot be the same.
-     *
-     * \note The operator NEED NOT be initialized prior to calling apply.
-     *
-     * \see initializeOperatorState
-     *
-     * \param x input
-     * \param y input
-     * \param z output: z=A'x+y
-     */
-    virtual void
-    applyAdjointAdd(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& y,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& z);
@@ -248,9 +191,9 @@ public:
      * \brief Compute hierarchy dependent data required for computing y=Ax and
      * z=Ax+y.
      *
-     * The vector arguments for apply(), applyAdjoint(), etc, need not match
-     * those for initializeOperatorState().  However, there must be a certain
-     * degree of similarity, including
+     * The vector arguments for apply(), applyAdd(), etc, need not match those
+     * for initializeOperatorState().  However, there must be a certain degree
+     * of similarity, including
      * - hierarchy configuration (hierarchy pointer and level range)
      * - number, type and alignment of vector component data
      * - ghost cell widths of data in the input and output vectors
@@ -274,7 +217,7 @@ public:
      * \param in input vector
      * \param out output vector
      */
-    virtual void
+    void
     initializeOperatorState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& in,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& out);
@@ -289,24 +232,8 @@ public:
      *
      * \see initializeOperatorState
      */
-    virtual void
+    void
     deallocateOperatorState();
-
-    //\}
-
-    /*!
-     * \name Logging functions.
-     */
-    //\{
-
-    /*!
-     * \brief Enable or disable logging.
-     *
-     * \param enabled logging state: true=on, false=off
-     */
-    virtual void
-    enableLogging(
-        bool enabled=true);
 
     //\}
 
@@ -341,9 +268,6 @@ private:
     operator=(
         const PETScSNESJacobianJOWrapper& that);
 
-    std::string d_object_name;
-    bool d_is_initialized, d_do_log;
-
     const SNES d_petsc_snes;
     Mat d_petsc_snes_jac;
     PetscErrorCode (* const d_petsc_snes_form_jac)(SNES,Vec,Mat*,Mat*,MatStructure*,void*);
@@ -355,7 +279,7 @@ private:
 
 /////////////////////////////// INLINE ///////////////////////////////////////
 
-#include <ibtk/PETScSNESJacobianJOWrapper.I>
+//#include <ibtk/PETScSNESJacobianJOWrapper.I>
 
 //////////////////////////////////////////////////////////////////////////////
 

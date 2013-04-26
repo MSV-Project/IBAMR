@@ -1,7 +1,7 @@
 // Filename: SideSynchCopyFillPattern.C
 // Created on 10 Mar 2010 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -79,13 +79,13 @@ SideSynchCopyFillPattern::calculateOverlap(
     Pointer<SideOverlap<NDIM> > box_geom_overlap =
         dst_geometry.calculateOverlap(src_geometry, src_mask, overwrite_interior, src_offset);
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!box_geom_overlap.isNull());
+    TBOX_ASSERT(box_geom_overlap);
 #endif
     if (box_geom_overlap->isOverlapEmpty()) return box_geom_overlap;
 
     const SideGeometry<NDIM>* const t_dst_geometry = dynamic_cast<const SideGeometry<NDIM>*>(&dst_geometry);
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(t_dst_geometry != NULL);
+    TBOX_ASSERT(t_dst_geometry);
 #endif
     BoxList<NDIM> dst_boxes[NDIM];
     for (int axis = 0; axis < NDIM; ++axis)

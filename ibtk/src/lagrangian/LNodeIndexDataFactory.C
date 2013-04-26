@@ -1,7 +1,7 @@
-// Filename: LNodeIndexDataFactory.C
-// Created on 04 Jun 2007 by Boyce Griffith
+// Filename: LIndexSetDataFactory.C
+// Created on 13 May 2011 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "LNodeIndexDataFactory.h"
+#include "LIndexSetDataFactory.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
@@ -45,7 +45,7 @@
 #endif
 
 // IBTK INCLUDES
-#include <ibtk/LNodeIndexData.h>
+#include <ibtk/LIndexSetData.h>
 #include <ibtk/namespaces.h>
 
 // SAMRAI INCLUDES
@@ -59,62 +59,68 @@ namespace IBTK
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
-LNodeIndexDataFactory::LNodeIndexDataFactory(
+template<class T>
+LIndexSetDataFactory<T>::LIndexSetDataFactory(
     const IntVector<NDIM>& ghosts)
-    : IndexDataFactory<NDIM,LNodeIndexSet,CellGeometry<NDIM> >(ghosts)
+    : LSetDataFactory<T>(ghosts)
 {
     // intentionally blank
     return;
-}// LNodeIndexDataFactory
+}// LIndexSetDataFactory
 
-LNodeIndexDataFactory::~LNodeIndexDataFactory()
+template<class T>
+LIndexSetDataFactory<T>::~LIndexSetDataFactory()
 {
     // intentionally blank
     return;
-}// ~LNodeIndexDataFactory
+}// ~LIndexSetDataFactory
 
+template<class T>
 Pointer<PatchDataFactory<NDIM> >
-LNodeIndexDataFactory::cloneFactory(
+LIndexSetDataFactory<T>::cloneFactory(
     const IntVector<NDIM>& ghosts)
 {
-    return new LNodeIndexDataFactory(ghosts);
+    return new LIndexSetDataFactory<T>(ghosts);
 }// cloneFactory
 
+template<class T>
 Pointer<PatchData<NDIM> >
-LNodeIndexDataFactory::allocate(
+LIndexSetDataFactory<T>::allocate(
     const Box<NDIM>& box,
     Pointer<Arena> pool) const
 {
-    if (pool.isNull())
+    if (!pool)
     {
         pool = ArenaManager::getManager()->getStandardAllocator();
     }
-    PatchData<NDIM>* pd = new (pool) LNodeIndexData(box,getGhostCellWidth());
+    PatchData<NDIM>* pd = new (pool) LIndexSetData<T>(box,LSetDataFactory<T>::getGhostCellWidth());
     return Pointer<PatchData<NDIM> >(pd, pool);
 }// allocate
 
+template<class T>
 Pointer<PatchData<NDIM> >
-LNodeIndexDataFactory::allocate(
+LIndexSetDataFactory<T>::allocate(
     const Patch<NDIM>& patch,
     Pointer<Arena> pool) const
 {
     return allocate(patch.getBox(), pool);
 }// allocate
 
+template<class T>
 size_t
-LNodeIndexDataFactory::getSizeOfMemory(
-    const Box<NDIM>& box) const
+LIndexSetDataFactory<T>::getSizeOfMemory(
+    const Box<NDIM>& /*box*/) const
 {
-    (void) box;
-    return Arena::align(sizeof(LNodeIndexData));
+    return Arena::align(sizeof(LIndexSetData<T>));
 }// getSizeOfMemory
 
+template<class T>
 bool
-LNodeIndexDataFactory::validCopyTo(
+LIndexSetDataFactory<T>::validCopyTo(
     const Pointer<PatchDataFactory<NDIM> >& dst_pdf) const
 {
-    Pointer<LNodeIndexDataFactory> lnidf = dst_pdf;
-    return !lnidf.isNull();
+    const Pointer<LIndexSetDataFactory<T> > lnidf = dst_pdf;
+    return lnidf;
 }// validCopyTo
 
 /////////////////////////////// PROTECTED ////////////////////////////////////
@@ -128,6 +134,13 @@ LNodeIndexDataFactory::validCopyTo(
 /////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
 
 #include <tbox/Pointer.C>
-template class Pointer<IBTK::LNodeIndexDataFactory>;
+
+#include <ibtk/LNode.h>
+template class IBTK::LIndexSetDataFactory<IBTK::LNode>;
+template class Pointer<IBTK::LIndexSetDataFactory<IBTK::LNode> >;
+
+#include <ibtk/LNodeIndex.h>
+template class IBTK::LIndexSetDataFactory<IBTK::LNodeIndex>;
+template class Pointer<IBTK::LIndexSetDataFactory<IBTK::LNodeIndex> >;
 
 //////////////////////////////////////////////////////////////////////////////

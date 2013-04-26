@@ -1,7 +1,7 @@
 // Filename: IBTargetPointForceSpecFactory.C
 // Created on 21 Mar 2007 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "IBTargetPointForceSpecFactory.h"
+#include "IBTargetPointForceSpec.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
@@ -45,7 +45,6 @@
 #endif
 
 // IBAMR INCLUDES
-#include <ibamr/IBTargetPointForceSpec.h>
 #include <ibamr/namespaces.h>
 
 // IBTK INCLUDES
@@ -55,58 +54,45 @@
 
 namespace IBAMR
 {
-/////////////////////////////// STATIC ///////////////////////////////////////
-
-int IBTargetPointForceSpecFactory::s_class_id = -1;
-
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
-IBTargetPointForceSpecFactory::IBTargetPointForceSpecFactory()
+IBTargetPointForceSpec::Factory::Factory()
 {
     setStreamableClassID(StreamableManager::getUnregisteredID());
     return;
-}// IBTargetPointForceSpecFactory
+}// Factory
 
-IBTargetPointForceSpecFactory::~IBTargetPointForceSpecFactory()
+IBTargetPointForceSpec::Factory::~Factory()
 {
     // intentionally blank
     return;
-}// ~IBTargetPointForceSpecFactory
+}// ~Factory
 
 int
-IBTargetPointForceSpecFactory::getStreamableClassID() const
+IBTargetPointForceSpec::Factory::getStreamableClassID() const
 {
-    return s_class_id;
+    return STREAMABLE_CLASS_ID;
 }// getStreamableClassID
 
 void
-IBTargetPointForceSpecFactory::setStreamableClassID(
+IBTargetPointForceSpec::Factory::setStreamableClassID(
     const int class_id)
 {
-    s_class_id = class_id;
+    STREAMABLE_CLASS_ID = class_id;
     return;
 }// setStreamableClassID
 
 Pointer<Streamable>
-IBTargetPointForceSpecFactory::unpackStream(
+IBTargetPointForceSpec::Factory::unpackStream(
     AbstractStream& stream,
-    const IntVector<NDIM>& offset)
+    const IntVector<NDIM>& /*offset*/)
 {
-    int mastr_idx;
-    stream.unpack(&mastr_idx,1);
-    double kappa_target;
-    stream.unpack(&kappa_target,1);
-    double eta_target;
-    stream.unpack(&eta_target,1);
-    std::vector<double> X_target(NDIM);
-    stream.unpack(&X_target[0],NDIM);
-#if ENABLE_SUBDOMAIN_INDICES
-    int subdomain_idx;
-    stream.unpack(&subdomain_idx,1);
-    return new IBTargetPointForceSpec(mastr_idx,kappa_target,eta_target,X_target,subdomain_idx);
-#else
-    return new IBTargetPointForceSpec(mastr_idx,kappa_target,eta_target,X_target);
-#endif
+    Pointer<IBTargetPointForceSpec> ret_val = new IBTargetPointForceSpec();
+    stream.unpack(&ret_val->d_master_idx,1);
+    stream.unpack(&ret_val->d_kappa_target,1);
+    stream.unpack(&ret_val->d_eta_target,1);
+    stream.unpack(ret_val->d_X_target.data(),NDIM);
+    return ret_val;
 }// unpackStream
 
 /////////////////////////////// PROTECTED ////////////////////////////////////
@@ -116,10 +102,5 @@ IBTargetPointForceSpecFactory::unpackStream(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBAMR
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBAMR::IBTargetPointForceSpecFactory>;
 
 //////////////////////////////////////////////////////////////////////////////

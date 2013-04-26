@@ -1,7 +1,7 @@
 // Filename: Streamable.h
 // Created on 14 Jun 2004 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -41,8 +41,8 @@
 #include <tbox/DescribedClass.h>
 #include <tbox/Pointer.h>
 
-// C++ STDLIB INCLUDES
-#include <vector>
+// BLITZ++ INCLUDES
+#include <blitz/tinyvec2.h>
 
 /////////////////////////////// CLASS DEFINITION /////////////////////////////
 
@@ -110,7 +110,7 @@ public:
     virtual void
     registerPeriodicShift(
         const SAMRAI::hier::IntVector<NDIM>& offset,
-        const std::vector<double>& displacement);
+        const blitz::TinyVector<double,NDIM>& displacement);
 
 private:
     /*!

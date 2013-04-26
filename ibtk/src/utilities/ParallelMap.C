@@ -1,7 +1,7 @@
 // Filename: ParallelMap.C
 // Created on 28 Jun 2010 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -139,8 +139,7 @@ ParallelMap::communicateData()
         // broadcast by each process.
         std::vector<int> keys_to_send;
         std::vector<tbox::Pointer<Streamable> > data_items_to_send;
-        for (std::map<int,tbox::Pointer<Streamable> >::const_iterator cit = d_pending_additions.begin();
-             cit != d_pending_additions.end(); ++cit)
+        for (std::map<int,tbox::Pointer<Streamable> >::const_iterator cit = d_pending_additions.begin(); cit != d_pending_additions.end(); ++cit)
         {
             keys_to_send.push_back(cit->first);
             data_items_to_send.push_back(cit->second);

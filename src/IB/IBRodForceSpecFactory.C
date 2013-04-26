@@ -1,7 +1,7 @@
 // Filename: IBRodForceSpecFactory.C
 // Created on 23 Jun 2010 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "IBRodForceSpecFactory.h"
+#include "IBRodForceSpec.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
@@ -45,7 +45,6 @@
 #endif
 
 // IBAMR INCLUDES
-#include <ibamr/IBRodForceSpec.h>
 #include <ibamr/namespaces.h>
 
 // IBTK INCLUDES
@@ -55,61 +54,49 @@
 
 namespace IBAMR
 {
-/////////////////////////////// STATIC ///////////////////////////////////////
-
-int IBRodForceSpecFactory::s_class_id = -1;
-
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
-IBRodForceSpecFactory::IBRodForceSpecFactory()
+IBRodForceSpec::Factory::Factory()
 {
     setStreamableClassID(StreamableManager::getUnregisteredID());
     return;
-}// IBRodForceSpecFactory
+}// Factory
 
-IBRodForceSpecFactory::~IBRodForceSpecFactory()
+IBRodForceSpec::Factory::~Factory()
 {
     // intentionally blank
     return;
-}// ~IBRodForceSpecFactory
+}// ~Factory
 
 int
-IBRodForceSpecFactory::getStreamableClassID() const
+IBRodForceSpec::Factory::getStreamableClassID() const
 {
-    return s_class_id;
+    return STREAMABLE_CLASS_ID;
 }// getStreamableClassID
 
 void
-IBRodForceSpecFactory::setStreamableClassID(
+IBRodForceSpec::Factory::setStreamableClassID(
     const int class_id)
 {
-    s_class_id = class_id;
+    STREAMABLE_CLASS_ID = class_id;
     return;
 }// setStreamableClassID
 
 Pointer<Streamable>
-IBRodForceSpecFactory::unpackStream(
+IBRodForceSpec::Factory::unpackStream(
     AbstractStream& stream,
-    const IntVector<NDIM>& offset)
+    const IntVector<NDIM>& /*offset*/)
 {
     int num_rods;
     stream.unpack(&num_rods,1);
-    int master_idx;
-    stream.unpack(&master_idx,1);
-    std::vector<int> next_idxs(num_rods);
-    stream.unpack(&next_idxs[0],num_rods);
-    std::vector<std::vector<double> > material_params(num_rods,std::vector<double>(10));
-    for (int n = 0; n < num_rods; ++n)
+    Pointer<IBRodForceSpec> ret_val = new IBRodForceSpec(num_rods);
+    stream.unpack(&ret_val->d_master_idx,1);
+    stream.unpack(&ret_val->d_next_idxs[0],num_rods);
+    for (int k = 0; k < num_rods; ++k)
     {
-        stream.unpack(&material_params[n][0],10);
+        stream.unpack(ret_val->d_material_params[k].data(),IBRodForceSpec::NUM_MATERIAL_PARAMS);
     }
-#if ENABLE_SUBDOMAIN_INDICES
-    std::vector<int> subdomain_idxs(num_rods);
-    stream.unpack(&subdomain_idxs[0],num_rods);
-    return new IBRodForceSpec(master_idx,next_idxs,material_params,subdomain_idxs);
-#else
-    return new IBRodForceSpec(master_idx,next_idxs,material_params);
-#endif
+    return ret_val;
 }// unpackStream
 
 /////////////////////////////// PROTECTED ////////////////////////////////////
@@ -119,10 +106,5 @@ IBRodForceSpecFactory::unpackStream(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBAMR
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBAMR::IBRodForceSpecFactory>;
 
 //////////////////////////////////////////////////////////////////////////////

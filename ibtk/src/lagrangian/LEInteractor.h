@@ -1,7 +1,7 @@
 // Filename: LEInteractor.h
 // Created on 14 Jul 2004 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -76,14 +76,6 @@ public:
      */
     enum SortMode {NO_SORT=0, SORT_INCREASING_LAG_IDX=1, SORT_DECREASING_LAG_IDX=2};
     static SortMode s_sort_mode;
-
-    /*!
-     * \brief Floating point precision modes for spreading routines.
-     *
-     * \note Default is: DOUBLE.
-     */
-    enum PrecisionMode {DOUBLE=0, DOUBLE_DOUBLE=1};
-    static PrecisionMode s_precision_mode;
 
     /*!
      * \brief Set configuration options from a user-supplied database.

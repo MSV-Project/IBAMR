@@ -1,7 +1,7 @@
 // Filename: VecCellDataFactory.I
 // Created on 09 Apr 2010 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -69,7 +69,7 @@ template<class TYPE>
 inline SAMRAI::hier::MultiblockDataTranslator<NDIM>*
 VecCellDataFactory<TYPE>::getMultiblockDataTranslator()
 {
-    if (d_mb_trans == NULL)
+    if (!d_mb_trans)
     {
         d_mb_trans = new SAMRAI::pdat::MultiblockCellDataTranslator<NDIM,TYPE>();
     }

@@ -1,7 +1,7 @@
 // Filename: NodeSynchCopyFillPattern.C
 // Created on 02 Feb 2011 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -81,13 +81,13 @@ NodeSynchCopyFillPattern::calculateOverlap(
     Pointer<NodeOverlap<NDIM> > box_geom_overlap =
         dst_geometry.calculateOverlap(src_geometry, src_mask, overwrite_interior, src_offset);
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!box_geom_overlap.isNull());
+    TBOX_ASSERT(box_geom_overlap);
 #endif
     if (box_geom_overlap->isOverlapEmpty()) return box_geom_overlap;
 
     const NodeGeometry<NDIM>* const t_dst_geometry = dynamic_cast<const NodeGeometry<NDIM>*>(&dst_geometry);
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(t_dst_geometry != NULL);
+    TBOX_ASSERT(t_dst_geometry);
 #endif
     BoxList<NDIM> dst_boxes;
     bool skip = false;

@@ -1,7 +1,7 @@
 // Filename: IBAnchorPointSpec.h
 // Created on 18 Aug 2008 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,14 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
+#ifndef included_IBAMR_prefix_config
+#include <IBAMR_prefix_config.h>
+#define included_IBAMR_prefix_config
+#endif
+
 // IBTK INCLUDES
 #include <ibtk/Streamable.h>
+#include <ibtk/StreamableFactory.h>
 
 // SAMRAI INCLUDES
 #include <tbox/AbstractStream.h>
@@ -79,20 +85,20 @@ public:
     getIsRegisteredWithStreamableManager();
 
     /*!
-     * \brief Default constructor.
-     *
-     * \note The subdomain index is ignored unless IBAMR is configured to enable
-     * support for subdomain indices.  Subdomain indices are not enabled by
-     * default.
+     * The unique class ID for this object type assigned by the
+     * IBTK::StreamableManager.
      */
-    IBAnchorPointSpec(
-        const int node_idx=-1,
-        const int subdomain_idx=-1);
+    static int STREAMABLE_CLASS_ID;
 
     /*!
-     * \brief Virtual destructor.
+     * \brief Default constructor.
      */
-    virtual
+    IBAnchorPointSpec(
+        int node_idx=-1);
+
+    /*!
+     * \brief Destructor.
+     */
     ~IBAnchorPointSpec();
 
     /*!
@@ -108,44 +114,24 @@ public:
     getNodeIndex();
 
     /*!
-     * \return A const reference to the subdomain index associated with this
-     * force spec object.
-     *
-     * \note IBAMR must be specifically configured to enable support for
-     * subdomain indices.  Subdomain indices are not enabled by default.
-     */
-    const int&
-    getSubdomainIndex() const;
-
-    /*!
-     * \return A non-const reference to the subdomain index associated with this
-     * force spec object.
-     *
-     * \note IBAMR must be specifically configured to enable support for
-     * subdomain indices.  Subdomain indices are not enabled by default.
-     */
-    int&
-    getSubdomainIndex();
-
-    /*!
      * \brief Return the unique identifier used to specify the
      * IBTK::StreamableFactory object used by the IBTK::StreamableManager to
      * extract Streamable objects from data streams.
      */
-    virtual int
+    int
     getStreamableClassID() const;
 
     /*!
      * \brief Return an upper bound on the amount of space required to pack the
      * object to a buffer.
      */
-    virtual size_t
+    size_t
     getDataStreamSize() const;
 
     /*!
      * \brief Pack data into the output stream.
      */
-    virtual void
+    void
     packStream(
         SAMRAI::tbox::AbstractStream& stream);
 
@@ -174,28 +160,81 @@ private:
         const IBAnchorPointSpec& that);
 
     /*!
-     * Indicates whether the factory has been registered with the
-     * IBTK::StreamableManager.
-     */
-    static bool s_registered_factory;
-
-    /*!
-     * The unique class ID for this object type assigned by the
-     * IBTK::StreamableManager.
-     */
-    static int s_class_id;
-
-    /*!
      * The Lagrangian index of the anchored curvilinear mesh node.
      */
     int d_node_idx;
 
-#if ENABLE_SUBDOMAIN_INDICES
     /*!
-     * The subdomain index of the force spec object.
+     * \brief A factory class to rebuild IBAnchorPointSpec objects from
+     * SAMRAI::tbox::AbstractStream data streams.
      */
-    int d_subdomain_idx;
-#endif
+    class Factory
+        : public IBTK::StreamableFactory
+    {
+    public:
+        /*!
+         * \brief Destructor.
+         */
+        ~Factory();
+
+        /*!
+         * \brief Return the unique identifier used to specify the
+         * IBTK::StreamableFactory object used by the IBTK::StreamableManager to
+         * extract IBAnchorPointSpec objects from data streams.
+         */
+        int
+        getStreamableClassID() const;
+
+        /*!
+         * \brief Set the unique identifier used to specify the
+         * IBTK::StreamableFactory object used by the IBTK::StreamableManager to
+         * extract IBAnchorPointSpec objects from data streams.
+         */
+        void
+        setStreamableClassID(
+            int class_id);
+
+        /*!
+         * \brief Build an IBAnchorPointSpec object by unpacking data from the data
+         * stream.
+         */
+        SAMRAI::tbox::Pointer<IBTK::Streamable>
+        unpackStream(
+            SAMRAI::tbox::AbstractStream& stream,
+            const SAMRAI::hier::IntVector<NDIM>& offset);
+
+    private:
+        /*!
+         * \brief Default constructor.
+         */
+        Factory();
+
+        /*!
+         * \brief Copy constructor.
+         *
+         * \note This constructor is not implemented and should not be used.
+         *
+         * \param from The value to copy to this object.
+         */
+        Factory(
+            const Factory& from);
+
+        /*!
+         * \brief Assignment operator.
+         *
+         * \note This operator is not implemented and should not be used.
+         *
+         * \param that The value to assign to this object.
+         *
+         * \return A reference to this object.
+         */
+        Factory&
+        operator=(
+            const Factory& that);
+
+        friend class IBAnchorPointSpec;
+    };
+    typedef IBAnchorPointSpec::Factory IBAnchorPointSpecFactory;
 };
 }// namespace IBAMR
 

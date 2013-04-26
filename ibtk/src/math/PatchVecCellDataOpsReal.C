@@ -1,7 +1,7 @@
 // Filename: PatchVecCellDataOpsReal.C
 // Created on 09 Apr 2010 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -78,7 +78,7 @@ void PatchVecCellDataOpsReal<TYPE>::swapData(
     Pointer<VecCellData<TYPE> > d1 = patch->getPatchData(data1_id);
     Pointer<VecCellData<TYPE> > d2 = patch->getPatchData(data2_id);
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!d1.isNull() && !d2.isNull());
+    TBOX_ASSERT(d1 && d2);
     TBOX_ASSERT(d1->getDepth() && d2->getDepth());
     TBOX_ASSERT(d1->getBox() == d2->getBox());
     TBOX_ASSERT(d1->getGhostBox() == d2->getGhostBox());
@@ -95,7 +95,7 @@ void PatchVecCellDataOpsReal<TYPE>::printData(
     std::ostream& s) const
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!data.isNull());
+    TBOX_ASSERT(data);
 #endif
     s <<"Data box = " <<box <<std::endl;
     data->print(box, s);
@@ -110,7 +110,7 @@ void PatchVecCellDataOpsReal<TYPE>::copyData(
     const Box<NDIM>& box) const
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!dst.isNull() && !src.isNull());
+    TBOX_ASSERT(dst && src);
 #endif
     dst->copyOnBox(*src, box);
     return;
@@ -123,7 +123,7 @@ void PatchVecCellDataOpsReal<TYPE>::setToScalar(
     const Box<NDIM>& box) const
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!dst.isNull());
+    TBOX_ASSERT(dst);
 #endif
     dst->fillAll(alpha, box);
     return;

@@ -1,7 +1,7 @@
 // Filename: SideNoCornersFillPattern.C
 // Created on 09 Mar 2010 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,9 @@
 #include <SideGeometry.h>
 #include <SideOverlap.h>
 
+// BLITZ++ INCLUDES
+#include <blitz/tinyvec2.h>
+
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 namespace IBTK
@@ -56,9 +59,11 @@ static const std::string PATTERN_NAME = "SIDE_NO_CORNERS_FILL_PATTERN";
 
 SideNoCornersFillPattern::SideNoCornersFillPattern(
     const int stencil_width,
+    const bool include_dst_patch_box,
     const bool include_edges_on_dst_level,
     const bool include_edges_on_src_level)
     : d_stencil_width(stencil_width),
+      d_include_dst_patch_box(include_dst_patch_box),
       d_include_edges_on_dst_level(include_edges_on_dst_level),
       d_include_edges_on_src_level(include_edges_on_src_level),
       d_target_level_num(-1)
@@ -77,7 +82,7 @@ Pointer<BoxOverlap<NDIM> >
 SideNoCornersFillPattern::calculateOverlap(
     const BoxGeometry<NDIM>& dst_geometry,
     const BoxGeometry<NDIM>& src_geometry,
-    const Box<NDIM>& dst_patch_box,
+    const Box<NDIM>& /*dst_patch_box*/,
     const Box<NDIM>& src_mask,
     const bool overwrite_interior,
     const IntVector<NDIM>& src_offset) const
@@ -85,17 +90,17 @@ SideNoCornersFillPattern::calculateOverlap(
     Pointer<SideOverlap<NDIM> > box_geom_overlap =
         dst_geometry.calculateOverlap(src_geometry, src_mask, overwrite_interior, src_offset);
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!box_geom_overlap.isNull());
+    TBOX_ASSERT(box_geom_overlap);
 #endif
     const SideGeometry<NDIM>* const t_dst_geometry = dynamic_cast<const SideGeometry<NDIM>*>(&dst_geometry);
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(t_dst_geometry != NULL);
+    TBOX_ASSERT(t_dst_geometry);
 #endif
-    BoxList<NDIM> dst_boxes[NDIM];
+    blitz::TinyVector<BoxList<NDIM>,NDIM> dst_boxes;
     if (!box_geom_overlap->isOverlapEmpty())
     {
         const Box<NDIM>& dst_box = t_dst_geometry->getBox();
-        for (int axis = 0; axis < NDIM; ++axis)
+        for (unsigned int axis = 0; axis < NDIM; ++axis)
         {
             const BoxList<NDIM>& box_geom_overlap_boxes = box_geom_overlap->getDestinationBoxList(axis);
 
@@ -103,7 +108,7 @@ SideNoCornersFillPattern::calculateOverlap(
             BoxList<NDIM> stencil_boxes;
             if (NDIM == 2 || (!d_include_edges_on_src_level && !d_include_edges_on_dst_level))
             {
-                for (int i = 0; i < NDIM; ++i)
+                for (unsigned int i = 0; i < NDIM; ++i)
                 {
                     Box<NDIM> box = dst_box;
                     box.lower()(i) -= d_stencil_width(i);
@@ -113,9 +118,9 @@ SideNoCornersFillPattern::calculateOverlap(
             }
             else
             {
-                for (int j = 0; j < NDIM; ++j)
+                for (unsigned int j = 0; j < NDIM; ++j)
                 {
-                    for (int i = 0; i < NDIM; ++i)
+                    for (unsigned int i = 0; i < NDIM; ++i)
                     {
                         if (i == j) continue;
                         Box<NDIM> box = dst_box;
@@ -141,11 +146,11 @@ SideNoCornersFillPattern::calculateOverlap(
             }
         }
     }
-    return new SideOverlap<NDIM>(dst_boxes, src_offset);
+    return new SideOverlap<NDIM>(dst_boxes.data(), src_offset);
 }// calculateOverlap
 
 Pointer<BoxOverlap<NDIM> >
-SideNoCornersFillPattern::calculateOverlap(
+SideNoCornersFillPattern::calculateOverlapOnLevel(
     const BoxGeometry<NDIM>& dst_geometry,
     const BoxGeometry<NDIM>& src_geometry,
     const Box<NDIM>& dst_patch_box,
@@ -153,22 +158,22 @@ SideNoCornersFillPattern::calculateOverlap(
     const bool overwrite_interior,
     const IntVector<NDIM>& src_offset,
     const int dst_level_num,
-    const int src_level_num) const
+    const int /*src_level_num*/) const
 {
     Pointer<SideOverlap<NDIM> > box_geom_overlap =
         dst_geometry.calculateOverlap(src_geometry, src_mask, overwrite_interior, src_offset);
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!box_geom_overlap.isNull());
+    TBOX_ASSERT(box_geom_overlap);
 #endif
     const SideGeometry<NDIM>* const t_dst_geometry = dynamic_cast<const SideGeometry<NDIM>*>(&dst_geometry);
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(t_dst_geometry != NULL);
+    TBOX_ASSERT(t_dst_geometry);
 #endif
-    BoxList<NDIM> dst_boxes[NDIM];
+    blitz::TinyVector<BoxList<NDIM>,NDIM> dst_boxes;
     if (!box_geom_overlap->isOverlapEmpty())
     {
         const Box<NDIM>& dst_box = t_dst_geometry->getBox();
-        for (int axis = 0; axis < NDIM; ++axis)
+        for (unsigned int axis = 0; axis < NDIM; ++axis)
         {
             const BoxList<NDIM>& box_geom_overlap_boxes = box_geom_overlap->getDestinationBoxList(axis);
 
@@ -178,7 +183,7 @@ SideNoCornersFillPattern::calculateOverlap(
                 (!d_include_edges_on_dst_level && dst_level_num == d_target_level_num) ||
                 (!d_include_edges_on_src_level && dst_level_num != d_target_level_num))
             {
-                for (int i = 0; i < NDIM; ++i)
+                for (unsigned int i = 0; i < NDIM; ++i)
                 {
                     Box<NDIM> box = dst_box;
                     box.lower()(i) -= d_stencil_width(i);
@@ -188,9 +193,9 @@ SideNoCornersFillPattern::calculateOverlap(
             }
             else
             {
-                for (int j = 0; j < NDIM; ++j)
+                for (unsigned int j = 0; j < NDIM; ++j)
                 {
-                    for (int i = 0; i < NDIM; ++i)
+                    for (unsigned int i = 0; i < NDIM; ++i)
                     {
                         if (i == j) continue;
                         Box<NDIM> box = dst_box;
@@ -208,6 +213,10 @@ SideNoCornersFillPattern::calculateOverlap(
             {
                 BoxList<NDIM> overlap_boxes(stencil_boxes);
                 overlap_boxes.intersectBoxes(it1());
+                if (dst_level_num == d_target_level_num && !d_include_dst_patch_box)
+                {
+                    overlap_boxes.removeIntersections(SideGeometry<NDIM>::toSideBox(dst_patch_box,axis));
+                }
                 for (BoxList<NDIM>::Iterator it2(overlap_boxes); it2; it2++)
                 {
                     const Box<NDIM>& overlap_box = it2();
@@ -216,8 +225,8 @@ SideNoCornersFillPattern::calculateOverlap(
             }
         }
     }
-    return new SideOverlap<NDIM>(dst_boxes, src_offset);
-}// calculateOverlap
+    return new SideOverlap<NDIM>(dst_boxes.data(), src_offset);
+}// calculateOverlapOnLevel
 
 void
 SideNoCornersFillPattern::setTargetPatchLevelNumber(
@@ -246,10 +255,5 @@ SideNoCornersFillPattern::getPatternName() const
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBTK::SideNoCornersFillPattern>;
 
 //////////////////////////////////////////////////////////////////////////////

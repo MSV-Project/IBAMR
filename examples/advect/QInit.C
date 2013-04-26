@@ -1,7 +1,7 @@
 // Filename: QInit.C
 // Created on 19 Mar 2004 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -71,7 +71,7 @@ QInit::QInit(
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(!object_name.empty());
-    TBOX_ASSERT(!grid_geom.isNull());
+    TBOX_ASSERT(grid_geom);
 #endif
 
     // Default initial values.
@@ -107,7 +107,7 @@ QInit::setDataOnPatch(
 
     tbox::Pointer< pdat::CellData<NDIM,double> > Q_data = patch->getPatchData(data_idx);
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!Q_data.isNull());
+    TBOX_ASSERT(Q_data);
 #endif
     const hier::Box<NDIM>& patch_box = patch->getBox();
     const hier::Index<NDIM>& patch_lower = patch_box.lower();
@@ -214,7 +214,7 @@ void
 QInit::getFromInput(
     tbox::Pointer<tbox::Database> db)
 {
-    if (!db.isNull())
+    if (db)
     {
         if (db->keyExists("X"))
         {

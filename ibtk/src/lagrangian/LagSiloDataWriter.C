@@ -1,7 +1,7 @@
-// Filename: LagSiloDataWriter.C
+// Filename: LSiloDataWriter.C
 // Created on 26 Apr 2005 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "LagSiloDataWriter.h"
+#include "LSiloDataWriter.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
@@ -88,7 +88,7 @@ static const std::string SILO_SUMMARY_FILE_POSTFIX = ".summary.silo";
 static const std::string SILO_PROCESSOR_FILE_PREFIX = "lag_data.proc_";
 static const std::string SILO_PROCESSOR_FILE_POSTFIX = ".silo";
 
-// Version of LagSiloDataWriter restart file data.
+// Version of LSiloDataWriter restart file data.
 static const int LAG_SILO_DATA_WRITER_VERSION = 1;
 
 #if HAVE_LIBSILO
@@ -122,7 +122,7 @@ build_local_marker_cloud(
     for (int i = 0; i < nmarks; ++i)
     {
         // Get the coordinate data.
-        for (int d = 0; d < NDIM; ++d)
+        for (unsigned int d = 0; d < NDIM; ++d)
         {
             block_X[d*nmarks+i] = float(X[NDIM*i + d]);
         }
@@ -143,7 +143,7 @@ build_local_marker_cloud(
     // Set the working directory in the Silo database.
     if (DBSetDir(dbfile, dirname.c_str()) == -1)
     {
-        TBOX_ERROR("LagSiloDataWriter::build_local_marker_cloud()\n"
+        TBOX_ERROR("LSiloDataWriter::build_local_marker_cloud()\n"
                    << "  Could not set directory " << dirname << std::endl);
     }
 
@@ -160,7 +160,7 @@ build_local_marker_cloud(
 
     const char* meshname = "mesh";
     std::vector<float*> coords(NDIM);
-    for (int d = 0; d < NDIM; ++d)
+    for (unsigned int d = 0; d < NDIM; ++d)
     {
         coords[d] = nmarks > 0 ? &block_X[d*nmarks] : NULL;
     }
@@ -198,7 +198,7 @@ build_local_marker_cloud(
     // Reset the working directory in the Silo database.
     if (DBSetDir(dbfile, "..") == -1)
     {
-        TBOX_ERROR("LagSiloDataWriter::build_local_marker_cloud()\n"
+        TBOX_ERROR("LSiloDataWriter::build_local_marker_cloud()\n"
                    << "  Could not return to the base directory from subdirectory " << dirname << std::endl);
     }
     return;
@@ -226,7 +226,7 @@ build_local_curv_block(
 {
     // Check for co-dimension 1 or 2 data.
     IntVector<NDIM> nelem, degenerate;
-    for (int d = 0; d < NDIM; ++d)
+    for (unsigned int d = 0; d < NDIM; ++d)
     {
         if (nelem_in(d) == 1)
         {
@@ -281,7 +281,7 @@ build_local_curv_block(
                     ;
 
                 // Get the coordinate data.
-                for (int d = 0; d < NDIM; ++d)
+                for (unsigned int d = 0; d < NDIM; ++d)
                 {
                     block_X[d*ntot+offset] = float(X[NDIM*idx + d]);
                 }
@@ -311,7 +311,7 @@ build_local_curv_block(
     // Set the working directory in the Silo database.
     if (DBSetDir(dbfile, dirname.c_str()) == -1)
     {
-        TBOX_ERROR("LagSiloDataWriter::build_local_curv_block()\n"
+        TBOX_ERROR("LSiloDataWriter::build_local_curv_block()\n"
                    << "  Could not set directory " << dirname << std::endl);
     }
 
@@ -329,14 +329,14 @@ build_local_curv_block(
     const char* meshname = "mesh";
     const char* coordnames[3]  = { "xcoords" , "ycoords" , "zcoords" };
     std::vector<float*> coords(NDIM);
-    for (int d = 0; d < NDIM; ++d)
+    for (unsigned int d = 0; d < NDIM; ++d)
     {
         coords[d] = ntot > 0 ? &block_X[d*ntot] : 0;
     }
 
     int ndims = NDIM;
     std::vector<int> dims(NDIM);
-    for (int d = 0; d < NDIM; ++d)
+    for (unsigned int d = 0; d < NDIM; ++d)
     {
         dims[d] = nelem(d) + (periodic(d) ? 1 : 0);
     }
@@ -385,7 +385,7 @@ build_local_curv_block(
     // Reset the working directory in the Silo database.
     if (DBSetDir(dbfile, "..") == -1)
     {
-        TBOX_ERROR("LagSiloDataWriter::build_local_curv_block()\n"
+        TBOX_ERROR("LSiloDataWriter::build_local_curv_block()\n"
                    << "  Could not return to the base directory from subdirectory " << dirname << std::endl);
     }
     return;
@@ -424,14 +424,13 @@ build_local_ucd_mesh(
 
     int offset = 0;
     std::map<int,int> local_vertex_map;
-    for (std::set<int>::const_iterator it = vertices.begin();
-         it != vertices.end(); ++it)
+    for (std::set<int>::const_iterator it = vertices.begin(); it != vertices.end(); ++it)
     {
         const int idx = (*it);
         local_vertex_map[idx] = offset;
 
         // Get the coordinate data.
-        for (int d = 0; d < NDIM; ++d)
+        for (unsigned int d = 0; d < NDIM; ++d)
         {
             block_X[d*ntot+offset] = float(X[NDIM*offset + d]);
         }
@@ -454,10 +453,9 @@ build_local_ucd_mesh(
 
     // Prune duplicate edges.
     std::set<std::pair<int,int> > local_edge_set;
-    for (std::multimap<int,std::pair<int,int> >::const_iterator it = edge_map.begin();
-         it != edge_map.end(); ++it)
+    for (std::multimap<int,std::pair<int,int> >::const_iterator it = edge_map.begin(); it != edge_map.end(); ++it)
     {
-        std::pair<int,int> e = (*it).second;
+        std::pair<int,int> e = it->second;
 #ifdef DEBUG_CHECK_ASSERTIONS
         TBOX_ASSERT(vertices.count(e.first ) == 1);
         TBOX_ASSERT(vertices.count(e.second) == 1);
@@ -471,18 +469,17 @@ build_local_ucd_mesh(
 
     // Create an edge map corresponding to the pruned edge list.
     std::multimap<int,int> local_edge_map;
-    for (std::set<std::pair<int,int> >::const_iterator it = local_edge_set.begin();
-         it != local_edge_set.end(); ++it)
+    for (std::set<std::pair<int,int> >::const_iterator it = local_edge_set.begin(); it != local_edge_set.end(); ++it)
     {
-        const int e1 = (*it).first;
-        const int e2 = (*it).second;
+        const int e1 = it->first;
+        const int e2 = it->second;
         local_edge_map.insert(std::make_pair(local_vertex_map[e1],local_vertex_map[e2]));
     }
 
     // Set the working directory in the Silo database.
     if (DBSetDir(dbfile, dirname.c_str()) == -1)
     {
-        TBOX_ERROR("LagSiloDataWriter::build_local_ucd_mesh()\n"
+        TBOX_ERROR("LSiloDataWriter::build_local_ucd_mesh()\n"
                    << "  Could not set directory " << dirname << std::endl);
     }
 
@@ -502,7 +499,7 @@ build_local_ucd_mesh(
     const char* meshname = "mesh";
     const char* coordnames[3]  = { "xcoords" , "ycoords" , "zcoords" };
     std::vector<float*> coords(NDIM);
-    for (int d = 0; d < NDIM; ++d)
+    for (unsigned int d = 0; d < NDIM; ++d)
     {
         coords[d] = ntot > 0 ? &block_X[d*ntot] : NULL;
     }
@@ -512,15 +509,14 @@ build_local_ucd_mesh(
     std::vector<int> nodelist;
     nodelist.reserve(2*local_edge_map.size());
 
-    for (std::multimap<int,int>::const_iterator it = local_edge_map.begin();
-         it != local_edge_map.end(); ++it)
+    for (std::multimap<int,int>::const_iterator it = local_edge_map.begin(); it != local_edge_map.end(); ++it)
     {
-        nodelist.push_back((*it).first);
-        nodelist.push_back((*it).second);
+        nodelist.push_back(it->first);
+        nodelist.push_back(it->second);
     }
     int lnodelist = nodelist.size();
     int nshapetypes = 1;
-    int shapecnt[] = {local_edge_map.size()};
+    int shapecnt[] = {static_cast<int>(local_edge_map.size())};
     int shapesize[] = {2};
     int shapetype[] = {DB_ZONETYPE_BEAM};
     int nzones = local_edge_map.size();
@@ -580,7 +576,7 @@ build_local_ucd_mesh(
     // Reset the working directory in the Silo database.
     if (DBSetDir(dbfile, "..") == -1)
     {
-        TBOX_ERROR("LagSiloDataWriter::build_local_ucd_mesh()\n"
+        TBOX_ERROR("LSiloDataWriter::build_local_ucd_mesh()\n"
                    << "  Could not return to the base directory from subdirectory " << dirname << std::endl);
     }
     return;
@@ -590,7 +586,7 @@ build_local_ucd_mesh(
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
-LagSiloDataWriter::LagSiloDataWriter(
+LSiloDataWriter::LSiloDataWriter(
     const std::string& object_name,
     const std::string& dump_directory_name,
     bool register_for_restart)
@@ -620,7 +616,7 @@ LagSiloDataWriter::LagSiloDataWriter(
       d_ucd_mesh_names(d_finest_ln+1),
       d_ucd_mesh_vertices(d_finest_ln+1),
       d_ucd_mesh_edge_maps(d_finest_ln+1),
-      d_coords_data(d_finest_ln+1,Pointer<LNodeLevelData>(NULL)),
+      d_coords_data(d_finest_ln+1,Pointer<LData>(NULL)),
       d_nvars(d_finest_ln+1,0),
       d_var_names(d_finest_ln+1),
       d_var_start_depths(d_finest_ln+1),
@@ -636,7 +632,7 @@ LagSiloDataWriter::LagSiloDataWriter(
 #if HAVE_LIBSILO
     // intentionally blank
 #else
-    TBOX_WARNING("LagSiloDataWriter::LagSiloDataWriter(): SILO is not installed; cannot write data." << std::endl);
+    TBOX_WARNING("LSiloDataWriter::LSiloDataWriter(): SILO is not installed; cannot write data." << std::endl);
 #endif
     if (d_registered_for_restart)
     {
@@ -651,9 +647,9 @@ LagSiloDataWriter::LagSiloDataWriter(
         getFromRestart();
     }
     return;
-}// LagSiloDataWriter
+}// LSiloDataWriter
 
-LagSiloDataWriter::~LagSiloDataWriter()
+LSiloDataWriter::~LSiloDataWriter()
 {
     if (d_registered_for_restart)
     {
@@ -664,36 +660,34 @@ LagSiloDataWriter::~LagSiloDataWriter()
     int ierr;
     for (int ln = d_coarsest_ln; ln <= d_finest_ln; ++ln)
     {
-        for (std::map<int,Vec>::iterator it = d_dst_vec[ln].begin();
-             it != d_dst_vec[ln].end(); ++it)
+        for (std::map<int,Vec>::iterator it = d_dst_vec[ln].begin(); it != d_dst_vec[ln].end(); ++it)
         {
-            Vec& v = (*it).second;
+            Vec& v = it->second;
             if (v)
             {
-                ierr = VecDestroy(v);
+                ierr = VecDestroy(&v);
                 IBTK_CHKERRQ(ierr);
             }
         }
-        for (std::map<int,VecScatter>::iterator it = d_vec_scatter[ln].begin();
-             it != d_vec_scatter[ln].end(); ++it)
+        for (std::map<int,VecScatter>::iterator it = d_vec_scatter[ln].begin(); it != d_vec_scatter[ln].end(); ++it)
         {
-            VecScatter& vs = (*it).second;
+            VecScatter& vs = it->second;
             if (vs)
             {
-                ierr = VecScatterDestroy(vs);
+                ierr = VecScatterDestroy(&vs);
                 IBTK_CHKERRQ(ierr);
             }
         }
     }
     return;
-}// ~LagSiloDataWriter
+}// ~LSiloDataWriter
 
 void
-LagSiloDataWriter::setPatchHierarchy(
+LSiloDataWriter::setPatchHierarchy(
     Pointer<PatchHierarchy<NDIM> > hierarchy)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!hierarchy.isNull());
+    TBOX_ASSERT(hierarchy);
     TBOX_ASSERT(hierarchy->getFinestLevelNumber() >= d_finest_ln);
 #endif
     // Reset the hierarchy.
@@ -702,13 +696,13 @@ LagSiloDataWriter::setPatchHierarchy(
 }// setPatchHierarchy
 
 void
-LagSiloDataWriter::resetLevels(
+LSiloDataWriter::resetLevels(
     const int coarsest_ln,
     const int finest_ln)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT((coarsest_ln >= 0) && (finest_ln >= coarsest_ln));
-    if (!d_hierarchy.isNull())
+    if (d_hierarchy)
     {
         TBOX_ASSERT(finest_ln <= d_hierarchy->getFinestLevelNumber());
     }
@@ -717,44 +711,40 @@ LagSiloDataWriter::resetLevels(
     int ierr;
     for (int ln = std::max(d_coarsest_ln,0); (ln <= d_finest_ln) && (ln < coarsest_ln); ++ln)
     {
-        for (std::map<int,Vec>::iterator it = d_dst_vec[ln].begin();
-             it != d_dst_vec[ln].end(); ++it)
+        for (std::map<int,Vec>::iterator it = d_dst_vec[ln].begin(); it != d_dst_vec[ln].end(); ++it)
         {
-            Vec& v = (*it).second;
-            if (v != static_cast<Vec>(NULL))
+            Vec& v = it->second;
+            if (v)
             {
-                ierr = VecDestroy(v);  IBTK_CHKERRQ(ierr);
+                ierr = VecDestroy(&v);  IBTK_CHKERRQ(ierr);
             }
         }
-        for (std::map<int,VecScatter>::iterator it = d_vec_scatter[ln].begin();
-             it != d_vec_scatter[ln].end(); ++it)
+        for (std::map<int,VecScatter>::iterator it = d_vec_scatter[ln].begin(); it != d_vec_scatter[ln].end(); ++it)
         {
-            VecScatter& vs = (*it).second;
-            if (vs != static_cast<VecScatter>(NULL))
+            VecScatter& vs = it->second;
+            if (vs)
             {
-                ierr = VecScatterDestroy(vs);  IBTK_CHKERRQ(ierr);
+                ierr = VecScatterDestroy(&vs);  IBTK_CHKERRQ(ierr);
             }
         }
     }
 
     for (int ln = finest_ln+1; ln <= d_finest_ln; ++ln)
     {
-        for (std::map<int,Vec>::iterator it = d_dst_vec[ln].begin();
-             it != d_dst_vec[ln].end(); ++it)
+        for (std::map<int,Vec>::iterator it = d_dst_vec[ln].begin(); it != d_dst_vec[ln].end(); ++it)
         {
-            Vec& v = (*it).second;
-            if (v != static_cast<Vec>(NULL))
+            Vec& v = it->second;
+            if (v)
             {
-                ierr = VecDestroy(v);  IBTK_CHKERRQ(ierr);
+                ierr = VecDestroy(&v);  IBTK_CHKERRQ(ierr);
             }
         }
-        for (std::map<int,VecScatter>::iterator it = d_vec_scatter[ln].begin();
-             it != d_vec_scatter[ln].end(); ++it)
+        for (std::map<int,VecScatter>::iterator it = d_vec_scatter[ln].begin(); it != d_vec_scatter[ln].end(); ++it)
         {
-            VecScatter& vs = (*it).second;
-            if (vs != static_cast<VecScatter>(NULL))
+            VecScatter& vs = it->second;
+            if (vs)
             {
-                ierr = VecScatterDestroy(vs);  IBTK_CHKERRQ(ierr);
+                ierr = VecScatterDestroy(&vs);  IBTK_CHKERRQ(ierr);
             }
         }
     }
@@ -804,7 +794,7 @@ LagSiloDataWriter::resetLevels(
 }// resetLevels
 
 void
-LagSiloDataWriter::registerMarkerCloud(
+LSiloDataWriter::registerMarkerCloud(
     const std::string& name,
     const int nmarks,
     const int first_lag_idx,
@@ -851,8 +841,8 @@ LagSiloDataWriter::registerMarkerCloud(
     {
         if (d_cloud_names[level_number][k] == name)
         {
-            d_cloud_nmarks       [level_number].push_back(nmarks);
-            d_cloud_first_lag_idx[level_number].push_back(first_lag_idx);
+            d_cloud_nmarks       [level_number][k] = nmarks;
+            d_cloud_first_lag_idx[level_number][k] = first_lag_idx;
             return;
         }
     }
@@ -866,7 +856,7 @@ LagSiloDataWriter::registerMarkerCloud(
 }// registerMarkerCloud
 
 void
-LagSiloDataWriter::registerLogicallyCartesianBlock(
+LSiloDataWriter::registerLogicallyCartesianBlock(
     const std::string& name,
     const IntVector<NDIM>& nelem,
     const IntVector<NDIM>& periodic,
@@ -879,7 +869,7 @@ LagSiloDataWriter::registerLogicallyCartesianBlock(
     }
 
 #ifdef DEBUG_CHECK_ASSERTIONS
-    for (int d = 0; d < NDIM; ++d)
+    for (unsigned int d = 0; d < NDIM; ++d)
     {
         TBOX_ASSERT(nelem(d) > 0);
         TBOX_ASSERT(periodic(d) == 0 || periodic(d) == 1);
@@ -935,7 +925,7 @@ LagSiloDataWriter::registerLogicallyCartesianBlock(
 }// registerLogicallyCartesianBlock
 
 void
-LagSiloDataWriter::registerLogicallyCartesianMultiblock(
+LSiloDataWriter::registerLogicallyCartesianMultiblock(
     const std::string& name,
     const std::vector<IntVector<NDIM> >& nelem,
     const std::vector<IntVector<NDIM> >& periodic,
@@ -953,7 +943,7 @@ LagSiloDataWriter::registerLogicallyCartesianMultiblock(
     int sz = nelem.size();
     for (int i = 0; i < sz; ++i)
     {
-        for (int d = 0; d < NDIM; ++d)
+        for (unsigned int d = 0; d < NDIM; ++d)
         {
             TBOX_ASSERT(nelem[i](d) > 0);
             TBOX_ASSERT(periodic[i](d) == 0 || periodic[i](d) == 1);
@@ -1012,9 +1002,9 @@ LagSiloDataWriter::registerLogicallyCartesianMultiblock(
 }// registerLogicallyCartesianMultiblock
 
 void
-LagSiloDataWriter::registerUnstructuredMesh(
+LSiloDataWriter::registerUnstructuredMesh(
     const std::string& name,
-    const std::multimap<int,std::pair<int,int> > edge_map,
+    const std::multimap<int,std::pair<int,int> >& edge_map,
     const int level_number)
 {
     if (level_number < d_coarsest_ln || level_number > d_finest_ln)
@@ -1054,10 +1044,9 @@ LagSiloDataWriter::registerUnstructuredMesh(
 
     // Extract the list of vertices from the list of edges.
     std::set<int> vertices;
-    for (std::multimap<int,std::pair<int,int> >::const_iterator it = edge_map.begin();
-         it != edge_map.end(); ++it)
+    for (std::multimap<int,std::pair<int,int> >::const_iterator it = edge_map.begin(); it != edge_map.end(); ++it)
     {
-        const std::pair<int,int>& e = (*it).second;
+        const std::pair<int,int>& e = it->second;
         vertices.insert(e.first );
         vertices.insert(e.second);
     }
@@ -1083,8 +1072,8 @@ LagSiloDataWriter::registerUnstructuredMesh(
 }// registerUnstructuredMesh
 
 void
-LagSiloDataWriter::registerCoordsData(
-    Pointer<LNodeLevelData> coords_data,
+LSiloDataWriter::registerCoordsData(
+    Pointer<LData> coords_data,
     const int level_number)
 {
     if (level_number < d_coarsest_ln || level_number > d_finest_ln)
@@ -1093,7 +1082,7 @@ LagSiloDataWriter::registerCoordsData(
     }
 
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!coords_data.isNull());
+    TBOX_ASSERT(coords_data);
     TBOX_ASSERT(coords_data->getDepth() == NDIM);
     TBOX_ASSERT(d_coarsest_ln <= level_number &&
                 d_finest_ln   >= level_number);
@@ -1103,9 +1092,9 @@ LagSiloDataWriter::registerCoordsData(
 }// registerCoordsData
 
 void
-LagSiloDataWriter::registerVariableData(
+LSiloDataWriter::registerVariableData(
     const std::string& var_name,
-    Pointer<LNodeLevelData> var_data,
+    Pointer<LData> var_data,
     const int level_number)
 {
     const int start_depth = 0;
@@ -1115,9 +1104,9 @@ LagSiloDataWriter::registerVariableData(
 }// registerVariableData
 
 void
-LagSiloDataWriter::registerVariableData(
+LSiloDataWriter::registerVariableData(
     const std::string& var_name,
-    Pointer<LNodeLevelData> var_data,
+    Pointer<LData> var_data,
     const int start_depth,
     const int var_depth,
     const int level_number)
@@ -1129,7 +1118,7 @@ LagSiloDataWriter::registerVariableData(
 
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(!var_name.empty());
-    TBOX_ASSERT(!var_data.isNull());
+    TBOX_ASSERT(var_data);
     TBOX_ASSERT(d_coarsest_ln <= level_number &&
                 d_finest_ln   >= level_number);
 #endif
@@ -1151,7 +1140,7 @@ LagSiloDataWriter::registerVariableData(
 }// registerVariableData
 
 void
-LagSiloDataWriter::registerLagrangianAO(
+LSiloDataWriter::registerLagrangianAO(
     AO& ao,
     const int level_number)
 {
@@ -1170,7 +1159,7 @@ LagSiloDataWriter::registerLagrangianAO(
 }// registerLagrangianAO
 
 void
-LagSiloDataWriter::registerLagrangianAO(
+LSiloDataWriter::registerLagrangianAO(
     std::vector<AO>& ao,
     const int coarsest_ln,
     const int finest_ln)
@@ -1196,7 +1185,7 @@ LagSiloDataWriter::registerLagrangianAO(
 }// registerLagrangianAO
 
 void
-LagSiloDataWriter::writePlotData(
+LSiloDataWriter::writePlotData(
     const int time_step_number,
     const double simulation_time)
 {
@@ -1253,8 +1242,7 @@ LagSiloDataWriter::writePlotData(
     current_file_name += temp_buf;
     current_file_name += SILO_PROCESSOR_FILE_POSTFIX;
 
-    if ((dbfile = DBCreate(current_file_name.c_str(), DB_CLOBBER, DB_LOCAL, NULL, DB_PDB))
-        == NULL)
+    if (!(dbfile = DBCreate(current_file_name.c_str(), DB_CLOBBER, DB_LOCAL, NULL, DB_PDB)))
     {
         TBOX_ERROR(d_object_name << "::writePlotData()\n"
                    << "  Could not create DBfile named " << current_file_name << std::endl);
@@ -1266,14 +1254,14 @@ LagSiloDataWriter::writePlotData(
     // Set the local data.
     for (int ln = d_coarsest_ln; ln <= d_finest_ln; ++ln)
     {
-        if (!d_coords_data[ln].isNull())
+        if (d_coords_data[ln])
         {
             // Scatter the data from "global" to "local" form.
             Vec local_X_vec;
             ierr = VecDuplicate(d_dst_vec[ln][NDIM], &local_X_vec);
             IBTK_CHKERRQ(ierr);
 
-            Vec& global_X_vec = d_coords_data[ln]->getGlobalVec();
+            Vec global_X_vec = d_coords_data[ln]->getVec();
             ierr = VecScatterBegin(d_vec_scatter[ln][NDIM], global_X_vec, local_X_vec,
                                    INSERT_VALUES, SCATTER_FORWARD);
             IBTK_CHKERRQ(ierr);
@@ -1295,7 +1283,7 @@ LagSiloDataWriter::writePlotData(
                 ierr = VecDuplicate(d_dst_vec[ln][var_depth], &local_v_vec);
                 IBTK_CHKERRQ(ierr);
 
-                Vec& global_v_vec = d_var_data[ln][v]->getGlobalVec();
+                Vec global_v_vec = d_var_data[ln][v]->getVec();
                 ierr = VecScatterBegin(d_vec_scatter[ln][var_depth], global_v_vec, local_v_vec,
                                        INSERT_VALUES, SCATTER_FORWARD);
                 IBTK_CHKERRQ(ierr);
@@ -1452,13 +1440,13 @@ LagSiloDataWriter::writePlotData(
             // Clean up allocated data.
             ierr = VecRestoreArray(local_X_vec, &local_X_arr);
             IBTK_CHKERRQ(ierr);
-            ierr = VecDestroy(local_X_vec);
+            ierr = VecDestroy(&local_X_vec);
             IBTK_CHKERRQ(ierr);
             for (int v = 0; v < d_nvars[ln]; ++v)
             {
                 ierr = VecRestoreArray(local_v_vecs[v], &local_v_arrs[v]);
                 IBTK_CHKERRQ(ierr);
-                ierr = VecDestroy(local_v_vecs[v]);
+                ierr = VecDestroy(&local_v_vecs[v]);
                 IBTK_CHKERRQ(ierr);
             }
         }
@@ -1727,8 +1715,7 @@ LagSiloDataWriter::writePlotData(
         // process.
         sprintf(temp_buf, "%06d", d_time_step_number);
         std::string summary_file_name = dump_dirname + "/" + SILO_SUMMARY_FILE_PREFIX + temp_buf + SILO_SUMMARY_FILE_POSTFIX;
-        if ((dbfile = DBCreate(summary_file_name.c_str(), DB_CLOBBER, DB_LOCAL, NULL, DB_PDB))
-            == NULL)
+        if (!(dbfile = DBCreate(summary_file_name.c_str(), DB_CLOBBER, DB_LOCAL, NULL, DB_PDB)))
         {
             TBOX_ERROR(d_object_name << "::writePlotData()\n"
                        << "  Could not create DBfile named " << summary_file_name << std::endl);
@@ -1984,26 +1971,17 @@ LagSiloDataWriter::writePlotData(
     }
     SAMRAI_MPI::barrier();
 #else
-    TBOX_WARNING("LagSiloDataWriter::writePlotData(): SILO is not installed; cannot write data." << std::endl);
+    TBOX_WARNING("LSiloDataWriter::writePlotData(): SILO is not installed; cannot write data." << std::endl);
 #endif //if HAVE_LIBSILO
     return;
 }// writePlotData
 
-///
-///  The following routines:
-///
-///      putToDatabase()
-///
-///  are concrete implementations of functions declared in the
-///  Serializable abstract base class.
-///
-
 void
-LagSiloDataWriter::putToDatabase(
+LSiloDataWriter::putToDatabase(
     Pointer<Database> db)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!db.isNull());
+    TBOX_ASSERT(db);
 #endif
     db->putInteger("LAG_SILO_DATA_WRITER_VERSION",
                    LAG_SILO_DATA_WRITER_VERSION);
@@ -2032,8 +2010,7 @@ LagSiloDataWriter::putToDatabase(
 
             std::vector<int> flattened_block_nelems;
             flattened_block_nelems.reserve(NDIM*d_block_nelems.size());
-            for (std::vector<IntVector<NDIM> >::const_iterator cit = d_block_nelems[ln].begin();
-                 cit != d_block_nelems[ln].end(); ++cit)
+            for (std::vector<IntVector<NDIM> >::const_iterator cit = d_block_nelems[ln].begin(); cit != d_block_nelems[ln].end(); ++cit)
             {
                 flattened_block_nelems.insert(flattened_block_nelems.end(), &(*cit)[0], &(*cit)[0]+NDIM);
             }
@@ -2041,8 +2018,7 @@ LagSiloDataWriter::putToDatabase(
 
             std::vector<int> flattened_block_periodic;
             flattened_block_periodic.reserve(NDIM*d_block_periodic.size());
-            for (std::vector<IntVector<NDIM> >::const_iterator cit = d_block_periodic[ln].begin();
-                 cit != d_block_periodic[ln].end(); ++cit)
+            for (std::vector<IntVector<NDIM> >::const_iterator cit = d_block_periodic[ln].begin(); cit != d_block_periodic[ln].end(); ++cit)
             {
                 flattened_block_periodic.insert(flattened_block_periodic.end(), &(*cit)[0], &(*cit)[0]+NDIM);
             }
@@ -2067,8 +2043,7 @@ LagSiloDataWriter::putToDatabase(
                 {
                     std::vector<int> flattened_mb_nelems;
                     flattened_mb_nelems.reserve(NDIM*d_mb_nelems.size());
-                    for (std::vector<IntVector<NDIM> >::const_iterator cit = d_mb_nelems[ln][mb].begin();
-                         cit != d_mb_nelems[ln][mb].end(); ++cit)
+                    for (std::vector<IntVector<NDIM> >::const_iterator cit = d_mb_nelems[ln][mb].begin(); cit != d_mb_nelems[ln][mb].end(); ++cit)
                     {
                         flattened_mb_nelems.insert(flattened_mb_nelems.end(), &(*cit)[0], &(*cit)[0]+NDIM);
                     }
@@ -2076,8 +2051,7 @@ LagSiloDataWriter::putToDatabase(
 
                     std::vector<int> flattened_mb_periodic;
                     flattened_mb_periodic.reserve(NDIM*d_mb_periodic.size());
-                    for (std::vector<IntVector<NDIM> >::const_iterator cit = d_mb_periodic[ln][mb].begin();
-                         cit != d_mb_periodic[ln][mb].end(); ++cit)
+                    for (std::vector<IntVector<NDIM> >::const_iterator cit = d_mb_periodic[ln][mb].begin(); cit != d_mb_periodic[ln][mb].end(); ++cit)
                     {
                         flattened_mb_periodic.insert(flattened_mb_periodic.end(), &(*cit)[0], &(*cit)[0]+NDIM);
                     }
@@ -2101,8 +2075,7 @@ LagSiloDataWriter::putToDatabase(
 
                 std::vector<int> ucd_mesh_vertices_vector;
                 ucd_mesh_vertices_vector.reserve(d_ucd_mesh_vertices[ln][mesh].size());
-                for (std::set<int>::const_iterator cit = d_ucd_mesh_vertices[ln][mesh].begin();
-                     cit != d_ucd_mesh_vertices[ln][mesh].end(); ++cit)
+                for (std::set<int>::const_iterator cit = d_ucd_mesh_vertices[ln][mesh].begin(); cit != d_ucd_mesh_vertices[ln][mesh].end(); ++cit)
                 {
                     ucd_mesh_vertices_vector.push_back(*cit);
                 }
@@ -2111,11 +2084,10 @@ LagSiloDataWriter::putToDatabase(
 
                 std::vector<int> ucd_mesh_edge_maps_vector;
                 ucd_mesh_edge_maps_vector.reserve(3*d_ucd_mesh_edge_maps[ln][mesh].size());
-                for (std::multimap<int,std::pair<int,int> >::const_iterator cit = d_ucd_mesh_edge_maps[ln][mesh].begin();
-                     cit != d_ucd_mesh_edge_maps[ln][mesh].end(); ++cit)
+                for (std::multimap<int,std::pair<int,int> >::const_iterator cit = d_ucd_mesh_edge_maps[ln][mesh].begin(); cit != d_ucd_mesh_edge_maps[ln][mesh].end(); ++cit)
                 {
-                    const int i = (*cit).first;
-                    std::pair<int,int> e = (*cit).second;
+                    const int i = cit->first;
+                    std::pair<int,int> e = cit->second;
                     ucd_mesh_edge_maps_vector.push_back(i);
                     ucd_mesh_edge_maps_vector.push_back(e.first);
                     ucd_mesh_edge_maps_vector.push_back(e.second);
@@ -2133,11 +2105,11 @@ LagSiloDataWriter::putToDatabase(
 /////////////////////////////// PRIVATE //////////////////////////////////////
 
 void
-LagSiloDataWriter::buildVecScatters(
+LSiloDataWriter::buildVecScatters(
     AO& ao,
     const int level_number)
 {
-    if (d_coords_data[level_number].isNull()) return;
+    if (!d_coords_data[level_number]) return;
 
     int ierr;
 
@@ -2198,77 +2170,68 @@ LagSiloDataWriter::buildVecScatters(
     std::vector<int> ao_dummy(1,-1);
     ierr = AOApplicationToPetsc(
         ao,
-        (!ref_is_idxs.empty() ? int(ref_is_idxs.size()) : int(ao_dummy.size())),
+        (!ref_is_idxs.empty() ? static_cast<int>(ref_is_idxs.size()) : static_cast<int>(ao_dummy.size())),
         (!ref_is_idxs.empty() ? &ref_is_idxs[0]         : &ao_dummy[0]));
     IBTK_CHKERRQ(ierr);
 
     // Setup IS indices for all necessary data depths.
     std::map<int,std::vector<int> > src_is_idxs;
 
-    src_is_idxs[NDIM].resize(ref_is_idxs.size());
-    std::transform(ref_is_idxs.begin(), ref_is_idxs.end(),
-                   src_is_idxs[NDIM].begin(),
-                   std::bind2nd(std::multiplies<int>(),NDIM));
-    d_src_vec[level_number][NDIM] = d_coords_data[level_number]->getGlobalVec();
+    src_is_idxs[NDIM] = ref_is_idxs;
+    d_src_vec[level_number][NDIM] = d_coords_data[level_number]->getVec();
 
     for (int v = 0; v < d_nvars[level_number]; ++v)
     {
         const int var_depth = d_var_depths[level_number][v];
         if (src_is_idxs.find(var_depth) == src_is_idxs.end())
         {
-            src_is_idxs[var_depth].resize(ref_is_idxs.size());
-            std::transform(ref_is_idxs.begin(), ref_is_idxs.end(),
-                           src_is_idxs[var_depth].begin(),
-                           std::bind2nd(std::multiplies<int>(),var_depth));
-            d_src_vec[level_number][var_depth] = d_var_data[level_number][v]->getGlobalVec();
+            src_is_idxs[var_depth] = ref_is_idxs;
+            d_src_vec[level_number][var_depth] = d_var_data[level_number][v]->getVec();
         }
     }
 
     // Create the VecScatters to scatter data from the global PETSc Vec to
     // contiguous local subgrids.  VecScatter objects are individually created
     // for data depths as necessary.
-    for (std::map<int,std::vector<int> >::iterator it = src_is_idxs.begin();
-         it != src_is_idxs.end(); ++it)
+    for (std::map<int,std::vector<int> >::iterator it = src_is_idxs.begin(); it != src_is_idxs.end(); ++it)
     {
-        const int depth = (*it).first;
-        const std::vector<int>& idxs = (*it).second;
+        const int depth = it->first;
+        const std::vector<int>& idxs = it->second;
 
         IS src_is;
         ierr = ISCreateBlock(PETSC_COMM_WORLD, depth, idxs.size(),
-                             (idxs.empty() ? PETSC_NULL : &idxs[0]), &src_is);
+                             (idxs.empty() ? PETSC_NULL : &idxs[0]),
+                             PETSC_COPY_VALUES, &src_is);
         IBTK_CHKERRQ(ierr);
 
         Vec& src_vec = d_src_vec[level_number][depth];
         Vec& dst_vec = d_dst_vec[level_number][depth];
         if (dst_vec)
         {
-            ierr = VecDestroy(dst_vec);
+            ierr = VecDestroy(&dst_vec);
             IBTK_CHKERRQ(ierr);
         }
         ierr = VecCreateMPI(PETSC_COMM_WORLD, depth*idxs.size(),
                             PETSC_DETERMINE, &dst_vec);
         IBTK_CHKERRQ(ierr);
 
-        ierr = VecSetBlockSize(dst_vec, depth);
-        IBTK_CHKERRQ(ierr);
-
         VecScatter& vec_scatter = d_vec_scatter[level_number][depth];
         if (vec_scatter)
         {
-            ierr = VecScatterDestroy(vec_scatter);
+            ierr = VecScatterDestroy(&vec_scatter);
             IBTK_CHKERRQ(ierr);
         }
-        ierr = VecScatterCreate(src_vec, src_is, dst_vec, PETSC_NULL,
+        ierr = VecScatterCreate(src_vec, src_is, dst_vec, NULL,
                                 &vec_scatter);
         IBTK_CHKERRQ(ierr);
 
-        ierr = ISDestroy(src_is);  IBTK_CHKERRQ(ierr);
+        ierr = ISDestroy(&src_is);  IBTK_CHKERRQ(ierr);
     }
     return;
 }// buildVecScatters
 
 void
-LagSiloDataWriter::getFromRestart()
+LSiloDataWriter::getFromRestart()
 {
     Pointer<Database> restart_db =
         RestartManager::getManager()->getRootDatabase();
@@ -2324,9 +2287,9 @@ LagSiloDataWriter::getFromRestart()
             std::vector<int> flattened_block_nelems;
             flattened_block_nelems.resize(NDIM*d_block_nelems[ln].size());
             db->getIntegerArray("flattened_block_nelems"+ln_string, &flattened_block_nelems[0], flattened_block_nelems.size());
-            for (unsigned l = 0; l < d_block_nelems[ln].size(); ++l)
+            for (unsigned int l = 0; l < d_block_nelems[ln].size(); ++l)
             {
-                for (int d = 0; d < NDIM; ++d)
+                for (unsigned int d = 0; d < NDIM; ++d)
                 {
                     d_block_nelems[ln][l](d) = flattened_block_nelems[NDIM*l+d];
                 }
@@ -2336,9 +2299,9 @@ LagSiloDataWriter::getFromRestart()
             std::vector<int> flattened_block_periodic;
             flattened_block_periodic.resize(NDIM*d_block_periodic[ln].size());
             db->getIntegerArray("flattened_block_periodic"+ln_string, &flattened_block_periodic[0], flattened_block_periodic.size());
-            for (unsigned l = 0; l < d_block_periodic[ln].size(); ++l)
+            for (unsigned int l = 0; l < d_block_periodic[ln].size(); ++l)
             {
-                for (int d = 0; d < NDIM; ++d)
+                for (unsigned int d = 0; d < NDIM; ++d)
                 {
                     d_block_periodic[ln][l](d) = flattened_block_periodic[NDIM*l+d];
                 }
@@ -2371,9 +2334,9 @@ LagSiloDataWriter::getFromRestart()
                     std::vector<int> flattened_mb_nelems;
                     flattened_mb_nelems.resize(NDIM*d_mb_nelems[ln][mb].size());
                     db->getIntegerArray("flattened_mb_nelems"+ln_string+mb_string, &flattened_mb_nelems[0], flattened_mb_nelems.size());
-                    for (unsigned l = 0; l < d_mb_nelems[ln][mb].size(); ++l)
+                    for (unsigned int l = 0; l < d_mb_nelems[ln][mb].size(); ++l)
                     {
-                        for (int d = 0; d < NDIM; ++d)
+                        for (unsigned int d = 0; d < NDIM; ++d)
                         {
                             d_mb_nelems[ln][mb][l](d) = flattened_mb_nelems[NDIM*l+d];
                         }
@@ -2383,9 +2346,9 @@ LagSiloDataWriter::getFromRestart()
                     std::vector<int> flattened_mb_periodic;
                     flattened_mb_periodic.resize(NDIM*d_mb_periodic[ln][mb].size());
                     db->getIntegerArray("flattened_mb_periodic"+ln_string+mb_string, &flattened_mb_periodic[0], flattened_mb_periodic.size());
-                    for (unsigned l = 0; l < d_mb_periodic[ln][mb].size(); ++l)
+                    for (unsigned int l = 0; l < d_mb_periodic[ln][mb].size(); ++l)
                     {
-                        for (int d = 0; d < NDIM; ++d)
+                        for (unsigned int d = 0; d < NDIM; ++d)
                         {
                             d_mb_periodic[ln][mb][l](d) = flattened_mb_periodic[NDIM*l+d];
                         }
@@ -2439,10 +2402,5 @@ LagSiloDataWriter::getFromRestart()
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBTK
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBTK::LagSiloDataWriter>;
 
 //////////////////////////////////////////////////////////////////////////////

@@ -54,9 +54,9 @@ if(NOT DEFINED OPENMPI_DIR)
 
 #     message(STATUS "Adding project:${proj}")
   # Clean if necessary
-  if(EXISTS ${BINARY_DIR})
-    execute_process(COMMAND make clean WORKING_DIRECTORY ${BINARY_DIR})
-  endif()
+#   if(EXISTS ${BINARY_DIR})
+#     execute_process(COMMAND make clean WORKING_DIRECTORY ${BINARY_DIR})
+#   endif()
   set(SHARED_LIB_CONF)
   if(BUILD_SHARED_LIBS)
     set(SHARED_LIB_CONF --enable-shared --disable-static)

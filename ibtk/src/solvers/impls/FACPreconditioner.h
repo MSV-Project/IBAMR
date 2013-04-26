@@ -1,7 +1,7 @@
 // Filename: FACPreconditioner.h
 // Created on 25 Aug 2010 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@
 
 // IBTK INCLUDES
 #include <ibtk/LinearSolver.h>
+#include <ibtk/ibtk_enums.h>
 
 /////////////////////////////// FORWARD DECLARATIONS /////////////////////////
 
@@ -63,9 +64,10 @@ namespace IBTK
  * Sample parameters for initialization from database (and their default
  * values): \verbatim
 
- num_pre_sweeps = 1     // see setNumPreSmoothingSweeps()
- num_post_sweeps = 1    // see setNumPostSmoothingSweeps()
- enable_logging = FALSE // see enableLogging()
+ cycle_type = "V_CYCLE"  // see setMGCycleType()
+ num_pre_sweeps = 0      // see setNumPreSmoothingSweeps()
+ num_post_sweeps = 2     // see setNumPostSmoothingSweeps()
+ enable_logging = FALSE  // see setLoggingEnabled()
  \endverbatim
 */
 class FACPreconditioner
@@ -77,19 +79,41 @@ public:
      */
     FACPreconditioner(
         const std::string& object_name,
-        FACPreconditionerStrategy& fac_strategy,
-        SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db=NULL);
+        SAMRAI::tbox::Pointer<FACPreconditionerStrategy> fac_strategy,
+        SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db,
+        const std::string& default_options_prefix);
 
     /*!
-     * Virtual destructor.
+     * Destructor.
      */
-    virtual
     ~FACPreconditioner();
 
     /*!
      * \name Linear solver functionality.
      */
     //\{
+
+    /*!
+     * \brief Set whether the solver should use homogeneous boundary conditions.
+     */
+    void
+    setHomogeneousBc(
+        bool homogeneous_bc);
+
+    /*!
+     * \brief Set the time at which the solution is to be evaluated.
+     */
+    void
+    setSolutionTime(
+        double solution_time);
+
+    /*!
+     * \brief Set the current time interval.
+     */
+    void
+    setTimeInterval(
+        double current_time,
+        double new_time);
 
     /*!
      * \brief Solve the linear system of equations \f$Ax=b\f$ for \f$x\f$.
@@ -128,7 +152,7 @@ public:
      * \return \p true if the solver converged to the specified tolerances, \p
      * false otherwise
      */
-    virtual bool
+    bool
     solveSystem(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -174,7 +198,7 @@ public:
      *
      * \see deallocateSolverState
      */
-    virtual void
+    void
     initializeSolverState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -192,7 +216,7 @@ public:
      *
      * \see initializeSolverState
      */
-    virtual void
+    void
     deallocateSolverState();
 
     //\}
@@ -202,58 +226,32 @@ public:
      */
     //\{
 
-
     /*!
      * \brief Set whether the initial guess is non-zero.
      */
-    virtual void
+    void
     setInitialGuessNonzero(
         bool initial_guess_nonzero=true);
 
     /*!
-     * \brief Get whether the initial guess is non-zero.
-     */
-    virtual bool
-    getInitialGuessNonzero() const;
-
-    /*!
      * \brief Set the maximum number of iterations to use per solve.
      */
-    virtual void
+    void
     setMaxIterations(
         int max_iterations);
 
     /*!
-     * \brief Get the maximum number of iterations to use per solve.
+     * \brief Set the multigrid algorithm cycle type.
      */
-    virtual int
-    getMaxIterations() const;
+    void
+    setMGCycleType(
+        MGCycleType cycle_type);
 
     /*!
-     * \brief Set the absolute residual tolerance for convergence.
+     * \brief Get the multigrid algorithm cycle type.
      */
-    virtual void
-    setAbsoluteTolerance(
-        double abs_residual_tol);
-
-    /*!
-     * \brief Get the absolute residual tolerance for convergence.
-     */
-    virtual double
-    getAbsoluteTolerance() const;
-
-    /*!
-     * \brief Set the relative residual tolerance for convergence.
-     */
-    virtual void
-    setRelativeTolerance(
-        double rel_residual_tol);
-
-    /*!
-     * \brief Get the relative residual tolerance for convergence.
-     */
-    virtual double
-    getRelativeTolerance() const;
+    MGCycleType
+    getMGCycleType() const;
 
     /*!
      * \brief Set the number of pre-smoothing sweeps to employ.
@@ -285,38 +283,39 @@ public:
 
     //\}
 
-    /*!
-     * \name Functions to access data on the most recent solve.
-     */
-    //\{
+protected:
+   void
+   FACVCycleNoPreSmoothing(
+       SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& u,
+       SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& f,
+       int level_num);
 
-    /*!
-     * \brief Return the iteration count from the most recent linear solve.
-     */
-    virtual int
-    getNumIterations() const;
+   void
+   FACVCycle(
+       SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& u,
+       SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& f,
+       int level_num);
 
-    /*!
-     * \brief Return the residual norm from the most recent iteration.
-     */
-    virtual double
-    getResidualNorm() const;
+   void
+   FACWCycle(
+       SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& u,
+       SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& f,
+       int level_num);
 
-    //\}
+   void
+   FACFCycle(
+       SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& u,
+       SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& f,
+       int level_num);
 
-    /*!
-     * \name Logging functions.
-     */
-    //\{
-
-    /*!
-     * \brief Enable or disable logging.
-     */
-    virtual void
-    enableLogging(
-        bool enabled=true);
-
-    //\}
+    SAMRAI::tbox::Pointer<FACPreconditionerStrategy> d_fac_strategy;
+    SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > d_hierarchy;
+    int d_coarsest_ln;
+    int d_finest_ln;
+    MGCycleType d_cycle_type;
+    int d_num_pre_sweeps, d_num_post_sweeps;
+    SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> > d_f, d_r;
+    bool d_recompute_residual;
 
 private:
     /*!
@@ -352,28 +351,12 @@ private:
     void
     getFromInput(
         SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> db);
-
-   void
-   FACCycle(
-       SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& u,
-       SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& f,
-       int level_num);
-
-    std::string d_object_name;
-    bool d_is_initialized;
-    FACPreconditionerStrategy& d_fac_strategy;
-    SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > d_hierarchy;
-    int d_coarsest_ln;
-    int d_finest_ln;
-    int d_num_pre_sweeps, d_num_post_sweeps;
-    SAMRAI::tbox::Pointer<SAMRAI::solv::SAMRAIVectorReal<NDIM,double> > d_f, d_r;
-    bool d_do_log;
 };
 }// namespace IBTK
 
 /////////////////////////////// INLINE ///////////////////////////////////////
 
-#include <ibtk/FACPreconditioner.I>
+//#include <ibtk/FACPreconditioner.I>
 
 //////////////////////////////////////////////////////////////////////////////
 

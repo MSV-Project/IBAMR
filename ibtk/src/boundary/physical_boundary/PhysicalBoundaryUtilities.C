@@ -1,7 +1,7 @@
 // Filename: PhysicalBoundaryUtilities.C
 // Created on 30 Sep 2006 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -128,8 +128,7 @@ PhysicalBoundaryUtilities::isLower(
     int codim,
     int direction)
 {
-    const BoundaryLookupTable<NDIM>* const bdry_lookup_table =
-        BoundaryLookupTable<NDIM>::getLookupTable();
+    const BoundaryLookupTable<NDIM>* const bdry_lookup_table = BoundaryLookupTable<NDIM>::getLookupTable();
 
     if (codim == NDIM) return bdry_lookup_table->isLower(loc, codim, direction);
 
@@ -175,8 +174,7 @@ PhysicalBoundaryUtilities::isUpper(
     int codim,
     int direction)
 {
-    const BoundaryLookupTable<NDIM>* const bdry_lookup_table =
-        BoundaryLookupTable<NDIM>::getLookupTable();
+    const BoundaryLookupTable<NDIM>* const bdry_lookup_table = BoundaryLookupTable<NDIM>::getLookupTable();
 
     if (codim == NDIM) return bdry_lookup_table->isUpper(loc, codim, direction);
 
@@ -259,9 +257,7 @@ PhysicalBoundaryUtilities::trimBoundaryCodim1Box(
             trimmed_b_box.upper()[d] = std::min(b_box.upper()[d], patch_box.upper()[d]);
         }
     }
-    const BoundaryBox<NDIM> trimmed_bdry_box(
-        trimmed_b_box,
-        bdry_box.getBoundaryType(), bdry_box.getLocationIndex());
+    const BoundaryBox<NDIM> trimmed_bdry_box(trimmed_b_box, bdry_box.getBoundaryType(), bdry_box.getLocationIndex());
     return trimmed_bdry_box;
 }// trimBoundaryCodim1Box
 

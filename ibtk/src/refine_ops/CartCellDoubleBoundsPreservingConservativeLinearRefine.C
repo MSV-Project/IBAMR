@@ -1,7 +1,7 @@
 // Filename: CartCellDoubleBoundsPreservingConservativeLinearRefine.C
 // Created on 06 Jul 2010 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -86,7 +86,7 @@ CartCellDoubleBoundsPreservingConservativeLinearRefine::findRefineOperator(
     const std::string& op_name) const
 {
     const Pointer<CellVariable<NDIM,double> > cc_var = var;
-    return (!cc_var.isNull() && op_name == s_op_name);
+    return (cc_var && op_name == s_op_name);
 }// findRefineOperator
 
 const std::string&
@@ -165,8 +165,8 @@ CartCellDoubleBoundsPreservingConservativeLinearRefine::refine(
     Pointer<CellData<NDIM,double> > fdata = fine.getPatchData(dst_component);
     Pointer<CellData<NDIM,double> > cdata = coarse.getPatchData(src_component);
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!fdata.isNull());
-    TBOX_ASSERT(!cdata.isNull());
+    TBOX_ASSERT(fdata);
+    TBOX_ASSERT(cdata);
     TBOX_ASSERT(fdata->getDepth() == cdata->getDepth());
 #endif
     const int data_depth = fdata->getDepth();

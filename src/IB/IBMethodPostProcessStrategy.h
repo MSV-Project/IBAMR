@@ -1,7 +1,7 @@
 // Filename: IBMethodPostProcessStrategy.h
 // Created on 24 Sep 2008 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,7 @@ namespace IBAMR
  * specifying post-processing code for use in an IB computation.
  */
 class IBMethodPostProcessStrategy
-    : public SAMRAI::tbox::DescribedClass
+    : public virtual SAMRAI::tbox::DescribedClass
 {
 public:
     /*!

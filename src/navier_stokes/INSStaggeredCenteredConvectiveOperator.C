@@ -1,7 +1,7 @@
 // Filename: INSStaggeredCenteredConvectiveOperator.C
 // Created on 30 Oct 2008 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -50,6 +50,7 @@
 
 // IBTK INCLUDES
 #include <ibtk/CartExtrapPhysBdryOp.h>
+#include <ibtk/CartSideDoubleSpecializedLinearRefine.h>
 
 // SAMRAI INCLUDES
 #include <CartesianGridGeometry.h>
@@ -143,17 +144,6 @@ namespace
 // Number of ghosts cells used for each variable quantity.
 static const int GADVECTG = 1;
 
-// Type of coarsening to perform prior to setting coarse-fine boundary and
-// physical boundary ghost cell values.
-static const std::string DATA_COARSEN_TYPE = "CUBIC_COARSEN";
-
-// Type of extrapolation to use at physical boundaries.
-static const std::string BDRY_EXTRAP_TYPE = "LINEAR";
-
-// Whether to enforce consistent interpolated values at Type 2 coarse-fine
-// interface ghost cells.
-static const bool CONSISTENT_TYPE_2_BDRY = false;
-
 // Timers.
 static Timer* t_apply_convective_operator;
 static Timer* t_apply;
@@ -164,12 +154,13 @@ static Timer* t_deallocate_operator_state;
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
 INSStaggeredCenteredConvectiveOperator::INSStaggeredCenteredConvectiveOperator(
-    const ConvectiveDifferencingType& difference_form)
-    : d_is_initialized(false),
-      d_difference_form(difference_form),
-      d_refine_alg(NULL),
-      d_refine_op(NULL),
-      d_refine_scheds(),
+    const std::string& object_name,
+    Pointer<Database> input_db,
+    const ConvectiveDifferencingType difference_form,
+    const std::vector<RobinBcCoefStrategy<NDIM>*>& bc_coefs)
+    : ConvectiveOperator(object_name, difference_form),
+      d_bc_coefs(bc_coefs),
+      d_bdry_extrap_type("CONSTANT"),
       d_hierarchy(NULL),
       d_coarsest_ln(-1),
       d_finest_ln(-1),
@@ -185,19 +176,24 @@ INSStaggeredCenteredConvectiveOperator::INSStaggeredCenteredConvectiveOperator(
                    << "  valid choices are: ADVECTIVE, CONSERVATIVE, SKEW_SYMMETRIC\n");
     }
 
+    if (input_db)
+    {
+        if (input_db->keyExists("bdry_extrap_type")) d_bdry_extrap_type = input_db->getString("bdry_extrap_type");
+    }
+
     VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
     Pointer<VariableContext> context = var_db->getContext("INSStaggeredCenteredConvectiveOperator::CONTEXT");
 
     const std::string U_var_name = "INSStaggeredCenteredConvectiveOperator::U";
     d_U_var = var_db->getVariable(U_var_name);
-    if (d_U_var.isNull())
+    if (d_U_var)
     {
-        d_U_var = new SideVariable<NDIM,double>(U_var_name);
-        d_U_scratch_idx = var_db->registerVariableAndContext(d_U_var, context, IntVector<NDIM>(GADVECTG));
+        d_U_scratch_idx = var_db->mapVariableAndContextToIndex(d_U_var, context);
     }
     else
     {
-        d_U_scratch_idx = var_db->mapVariableAndContextToIndex(d_U_var, context);
+        d_U_var = new SideVariable<NDIM,double>(U_var_name);
+        d_U_scratch_idx = var_db->registerVariableAndContext(d_U_var, context, IntVector<NDIM>(GADVECTG));
     }
 #ifdef DEBUG_CHECK_ASSERTIONS
     TBOX_ASSERT(d_U_scratch_idx >= 0);
@@ -224,28 +220,32 @@ INSStaggeredCenteredConvectiveOperator::applyConvectiveOperator(
     const int U_idx,
     const int N_idx)
 {
-    t_apply_convective_operator->start();
-
+    IBAMR_TIMER_START(t_apply_convective_operator);
+#ifdef DEBUG_CHECK_ASSERTIONS
     if (!d_is_initialized)
     {
         TBOX_ERROR("INSStaggeredCenteredConvectiveOperator::applyConvectiveOperator():\n"
                    << "  operator must be initialized prior to call to applyConvectiveOperator\n");
     }
+    TBOX_ASSERT(U_idx == d_u_idx);
+#endif
 
-    // Setup communications schedules.
-    Pointer<CartesianGridGeometry<NDIM> > grid_geom = d_hierarchy->getGridGeometry();
-    Pointer<RefineAlgorithm<NDIM> > refine_alg = new RefineAlgorithm<NDIM>();
-    refine_alg->registerRefine(d_U_scratch_idx, // destination
-                               U_idx,           // source
-                               d_U_scratch_idx, // temporary work space
-                               d_refine_op);
+    // Fill ghost cell values for all components.
+    static const bool homogeneous_bc = false;
+    typedef HierarchyGhostCellInterpolation::InterpolationTransactionComponent InterpolationTransactionComponent;
+    std::vector<InterpolationTransactionComponent> transaction_comps(1);
+    transaction_comps[0] = InterpolationTransactionComponent(d_U_scratch_idx, U_idx, "CONSERVATIVE_LINEAR_REFINE", false, "CONSERVATIVE_COARSEN", d_bdry_extrap_type, false, d_bc_coefs);
+    d_hier_bdry_fill->resetTransactionComponents(transaction_comps);
+    d_hier_bdry_fill->setHomogeneousBc(homogeneous_bc);
+    StaggeredStokesPhysicalBoundaryHelper::setupBcCoefObjects(d_bc_coefs, NULL, d_U_scratch_idx, -1, homogeneous_bc);
+    d_hier_bdry_fill->fillData(d_solution_time);
+    StaggeredStokesPhysicalBoundaryHelper::resetBcCoefObjects(d_bc_coefs, NULL);
+    d_bc_helper->enforceDivergenceFreeConditionAtBoundary(d_U_scratch_idx);
+    d_hier_bdry_fill->resetTransactionComponents(d_transaction_comps);
 
     // Compute the convective derivative.
     for (int ln = d_coarsest_ln; ln <= d_finest_ln; ++ln)
     {
-        refine_alg->resetSchedule(d_refine_scheds[ln]);
-        d_refine_scheds[ln]->fillData(0.0);
-        d_refine_alg->resetSchedule(d_refine_scheds[ln]);
         Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(ln);
         for (PatchLevel<NDIM>::Iterator p(level); p; p++)
         {
@@ -261,8 +261,8 @@ INSStaggeredCenteredConvectiveOperator::applyConvectiveOperator(
             Pointer<SideData<NDIM,double> > N_data = patch->getPatchData(N_idx);
             Pointer<SideData<NDIM,double> > U_data = patch->getPatchData(d_U_scratch_idx);
 
-            const IntVector<NDIM>& N_ghosts = N_data->getGhostCellWidth();
-            const IntVector<NDIM>& U_ghosts = U_data->getGhostCellWidth();
+            const IntVector<NDIM>& N_data_gcw = N_data->getGhostCellWidth();
+            const IntVector<NDIM>& U_data_gcw = U_data->getGhostCellWidth();
 
             switch (d_difference_form)
             {
@@ -272,18 +272,18 @@ INSStaggeredCenteredConvectiveOperator::applyConvectiveOperator(
 #if (NDIM == 2)
                         patch_lower(0), patch_upper(0),
                         patch_lower(1), patch_upper(1),
-                        U_ghosts(0), U_ghosts(1),
+                        U_data_gcw(0), U_data_gcw(1),
                         U_data->getPointer(0), U_data->getPointer(1),
-                        N_ghosts(0), N_ghosts(1),
+                        N_data_gcw(0), N_data_gcw(1),
                         N_data->getPointer(0), N_data->getPointer(1)
 #endif
 #if (NDIM == 3)
                         patch_lower(0), patch_upper(0),
                         patch_lower(1), patch_upper(1),
                         patch_lower(2), patch_upper(2),
-                        U_ghosts(0), U_ghosts(1), U_ghosts(2),
+                        U_data_gcw(0), U_data_gcw(1), U_data_gcw(2),
                         U_data->getPointer(0), U_data->getPointer(1), U_data->getPointer(2),
-                        N_ghosts(0), N_ghosts(1), N_ghosts(2),
+                        N_data_gcw(0), N_data_gcw(1), N_data_gcw(2),
                         N_data->getPointer(0), N_data->getPointer(1), N_data->getPointer(2)
 #endif
                                                               );
@@ -294,18 +294,18 @@ INSStaggeredCenteredConvectiveOperator::applyConvectiveOperator(
 #if (NDIM == 2)
                         patch_lower(0), patch_upper(0),
                         patch_lower(1), patch_upper(1),
-                        U_ghosts(0), U_ghosts(1),
+                        U_data_gcw(0), U_data_gcw(1),
                         U_data->getPointer(0), U_data->getPointer(1),
-                        N_ghosts(0), N_ghosts(1),
+                        N_data_gcw(0), N_data_gcw(1),
                         N_data->getPointer(0), N_data->getPointer(1)
 #endif
 #if (NDIM == 3)
                         patch_lower(0), patch_upper(0),
                         patch_lower(1), patch_upper(1),
                         patch_lower(2), patch_upper(2),
-                        U_ghosts(0), U_ghosts(1), U_ghosts(2),
+                        U_data_gcw(0), U_data_gcw(1), U_data_gcw(2),
                         U_data->getPointer(0), U_data->getPointer(1), U_data->getPointer(2),
-                        N_ghosts(0), N_ghosts(1), N_ghosts(2),
+                        N_data_gcw(0), N_data_gcw(1), N_data_gcw(2),
                         N_data->getPointer(0), N_data->getPointer(1), N_data->getPointer(2)
 #endif
                                                               );
@@ -316,18 +316,18 @@ INSStaggeredCenteredConvectiveOperator::applyConvectiveOperator(
 #if (NDIM == 2)
                         patch_lower(0), patch_upper(0),
                         patch_lower(1), patch_upper(1),
-                        U_ghosts(0), U_ghosts(1),
+                        U_data_gcw(0), U_data_gcw(1),
                         U_data->getPointer(0), U_data->getPointer(1),
-                        N_ghosts(0), N_ghosts(1),
+                        N_data_gcw(0), N_data_gcw(1),
                         N_data->getPointer(0), N_data->getPointer(1)
 #endif
 #if (NDIM == 3)
                         patch_lower(0), patch_upper(0),
                         patch_lower(1), patch_upper(1),
                         patch_lower(2), patch_upper(2),
-                        U_ghosts(0), U_ghosts(1), U_ghosts(2),
+                        U_data_gcw(0), U_data_gcw(1), U_data_gcw(2),
                         U_data->getPointer(0), U_data->getPointer(1), U_data->getPointer(2),
-                        N_ghosts(0), N_ghosts(1), N_ghosts(2),
+                        N_data_gcw(0), N_data_gcw(1), N_data_gcw(2),
                         N_data->getPointer(0), N_data->getPointer(1), N_data->getPointer(2)
 #endif
                                                                    );
@@ -340,34 +340,16 @@ INSStaggeredCenteredConvectiveOperator::applyConvectiveOperator(
         }
     }
 
-    t_apply_convective_operator->stop();
+    IBAMR_TIMER_STOP(t_apply_convective_operator);
     return;
 }// applyConvectiveOperator
-
-void
-INSStaggeredCenteredConvectiveOperator::apply(
-    SAMRAIVectorReal<NDIM,double>& x,
-    SAMRAIVectorReal<NDIM,double>& y)
-{
-    t_apply->start();
-
-    // Get the vector components.
-    const int U_idx = x.getComponentDescriptorIndex(0);
-    const int N_idx = y.getComponentDescriptorIndex(0);
-
-    // Compute the action of the operator.
-    applyConvectiveOperator(U_idx, N_idx);
-
-    t_apply->stop();
-    return;
-}// apply
 
 void
 INSStaggeredCenteredConvectiveOperator::initializeOperatorState(
     const SAMRAIVectorReal<NDIM,double>& in,
     const SAMRAIVectorReal<NDIM,double>& out)
 {
-    t_initialize_operator_state->start();
+    IBAMR_TIMER_START(t_initialize_operator_state);
 
     if (d_is_initialized) deallocateOperatorState();
 
@@ -379,22 +361,22 @@ INSStaggeredCenteredConvectiveOperator::initializeOperatorState(
     TBOX_ASSERT(d_hierarchy == out.getPatchHierarchy());
     TBOX_ASSERT(d_coarsest_ln == out.getCoarsestLevelNumber());
     TBOX_ASSERT(d_finest_ln == out.getFinestLevelNumber());
+#else
+    NULL_USE(out);
 #endif
-    // Setup the refine algorithm, operator, patch strategy, and schedules.
-    Pointer<CartesianGridGeometry<NDIM> > grid_geom = d_hierarchy->getGridGeometry();
-    d_refine_op = grid_geom->lookupRefineOperator(d_U_var, "CONSERVATIVE_LINEAR_REFINE");
-    d_refine_alg = new RefineAlgorithm<NDIM>();
-    d_refine_alg->registerRefine(d_U_scratch_idx,                   // destination
-                                 in.getComponentDescriptorIndex(0), // source
-                                 d_U_scratch_idx,                   // temporary work space
-                                 d_refine_op);
-    d_refine_strategy = new CartExtrapPhysBdryOp(d_U_scratch_idx, BDRY_EXTRAP_TYPE);
-    d_refine_scheds.resize(d_finest_ln+1);
-    for (int ln = d_coarsest_ln; ln <= d_finest_ln; ++ln)
-    {
-        Pointer<PatchLevel<NDIM> > level = d_hierarchy->getPatchLevel(ln);
-        d_refine_scheds[ln] = d_refine_alg->createSchedule(level, ln-1, d_hierarchy, d_refine_strategy);
-    }
+
+    // Setup the interpolation transaction information.
+    typedef HierarchyGhostCellInterpolation::InterpolationTransactionComponent InterpolationTransactionComponent;
+    d_transaction_comps.resize(1);
+    d_transaction_comps[0] = InterpolationTransactionComponent(d_U_scratch_idx, in.getComponentDescriptorIndex(0), "CONSERVATIVE_LINEAR_REFINE", false, "CONSERVATIVE_COARSEN", d_bdry_extrap_type, false, d_bc_coefs);
+
+    // Initialize the interpolation operators.
+    d_hier_bdry_fill = new HierarchyGhostCellInterpolation();
+    d_hier_bdry_fill->initializeOperatorState(d_transaction_comps, d_hierarchy);
+
+    // Initialize the BC helper.
+    d_bc_helper = new StaggeredStokesPhysicalBoundaryHelper();
+    d_bc_helper->cacheBcCoefData(d_bc_coefs, d_solution_time, d_hierarchy);
 
     // Allocate scratch data.
     for (int ln = d_coarsest_ln; ln <= d_finest_ln; ++ln)
@@ -407,7 +389,7 @@ INSStaggeredCenteredConvectiveOperator::initializeOperatorState(
     }
     d_is_initialized = true;
 
-    t_initialize_operator_state->stop();
+    IBAMR_TIMER_STOP(t_initialize_operator_state);
     return;
 }// initializeOperatorState
 
@@ -416,7 +398,7 @@ INSStaggeredCenteredConvectiveOperator::deallocateOperatorState()
 {
     if (!d_is_initialized) return;
 
-    t_deallocate_operator_state->start();
+    IBAMR_TIMER_START(t_deallocate_operator_state);
 
     // Deallocate scratch data.
     for (int ln = d_coarsest_ln; ln <= d_finest_ln; ++ln)
@@ -429,28 +411,14 @@ INSStaggeredCenteredConvectiveOperator::deallocateOperatorState()
     }
 
     // Deallocate the refine algorithm, operator, patch strategy, and schedules.
-    d_refine_op.setNull();
-    d_refine_alg.setNull();
-    d_refine_strategy.setNull();
-    for (int ln = d_coarsest_ln; ln <= d_finest_ln; ++ln)
-    {
-        d_refine_scheds[ln].setNull();
-    }
-    d_refine_scheds.clear();
+    d_hier_bdry_fill.setNull();
+    d_bc_helper.setNull();
 
     d_is_initialized = false;
 
-    t_deallocate_operator_state->stop();
+    IBAMR_TIMER_STOP(t_deallocate_operator_state);
     return;
 }// deallocateOperatorState
-
-void
-INSStaggeredCenteredConvectiveOperator::enableLogging(
-    bool enabled)
-{
-    // intentionally blank
-    return;
-}// enableLogging
 
 /////////////////////////////// PROTECTED ////////////////////////////////////
 
@@ -459,10 +427,5 @@ INSStaggeredCenteredConvectiveOperator::enableLogging(
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBAMR
-
-/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBAMR::INSStaggeredCenteredConvectiveOperator>;
 
 //////////////////////////////////////////////////////////////////////////////

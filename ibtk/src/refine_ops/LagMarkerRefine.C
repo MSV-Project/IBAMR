@@ -1,7 +1,7 @@
-// Filename: LagMarkerRefine.C
+// Filename: LMarkerRefine.C
 // Created on 04 Oct 2007 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "LagMarkerRefine.h"
+#include "LMarkerRefine.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
@@ -45,15 +45,15 @@
 #endif
 
 // IBTK INCLUDES
-#include <ibtk/LagMarker.h>
+#include <ibtk/LMarkerSet.h>
+#include <ibtk/LMarkerSetData.h>
+#include <ibtk/LMarkerSetVariable.h>
 #include <ibtk/IndexUtilities.h>
 #include <ibtk/namespaces.h>
 
 // SAMRAI INCLUDES
 #include <CartesianPatchGeometry.h>
 #include <CellGeometry.h>
-#include <IndexData.h>
-#include <IndexVariable.h>
 
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
@@ -61,7 +61,7 @@ namespace IBTK
 {
 /////////////////////////////// STATIC ///////////////////////////////////////
 
-const std::string LagMarkerRefine::s_op_name = "LAG_MARKER_REFINE";
+const std::string LMarkerRefine::s_op_name = "LMARKER_REFINE";
 
 namespace
 {
@@ -71,47 +71,47 @@ static const int REFINE_OP_STENCIL_WIDTH = 0;
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
-LagMarkerRefine::LagMarkerRefine()
+LMarkerRefine::LMarkerRefine()
 {
     // intentionally blank
     return;
-}// LagMarkerRefine
+}// LMarkerRefine
 
-LagMarkerRefine::~LagMarkerRefine()
+LMarkerRefine::~LMarkerRefine()
 {
     // intentionally blank
     return;
-}// ~LagMarkerRefine
+}// ~LMarkerRefine
 
 bool
-LagMarkerRefine::findRefineOperator(
+LMarkerRefine::findRefineOperator(
     const Pointer<Variable<NDIM> >& var,
     const std::string& op_name) const
 {
-    Pointer<IndexVariable<NDIM,LagMarker,CellGeometry<NDIM> > > mark_var = var;
-    return (!mark_var.isNull() && op_name == s_op_name);
+    Pointer<LMarkerSetVariable> mark_var = var;
+    return (mark_var && op_name == s_op_name);
 }// findRefineOperator
 
 const std::string&
-LagMarkerRefine::getOperatorName() const
+LMarkerRefine::getOperatorName() const
 {
     return s_op_name;
 }// getOperatorName
 
 int
-LagMarkerRefine::getOperatorPriority() const
+LMarkerRefine::getOperatorPriority() const
 {
     return REFINE_OP_PRIORITY;
 }// getOperatorPriority
 
 IntVector<NDIM>
-LagMarkerRefine::getStencilWidth() const
+LMarkerRefine::getStencilWidth() const
 {
     return REFINE_OP_STENCIL_WIDTH;
 }// getStencilWidth
 
 void
-LagMarkerRefine::refine(
+LMarkerRefine::refine(
     Patch<NDIM>& fine,
     const Patch<NDIM>& coarse,
     const int dst_component,
@@ -119,8 +119,8 @@ LagMarkerRefine::refine(
     const Box<NDIM>& fine_box,
     const IntVector<NDIM>& ratio) const
 {
-    Pointer<IndexData<NDIM,LagMarker,CellGeometry<NDIM> > > dst_mark_data = fine  .getPatchData(dst_component);
-    Pointer<IndexData<NDIM,LagMarker,CellGeometry<NDIM> > > src_mark_data = coarse.getPatchData(src_component);
+    Pointer<LMarkerSetData> dst_mark_data = fine  .getPatchData(dst_component);
+    Pointer<LMarkerSetData> src_mark_data = coarse.getPatchData(src_component);
 
     const Box<NDIM>& fine_patch_box = fine.getBox();
     const Pointer<CartesianPatchGeometry<NDIM> > fine_patch_geom = fine.getPatchGeometry();
@@ -130,35 +130,25 @@ LagMarkerRefine::refine(
     const double* const fine_patchXUpper = fine_patch_geom->getXUpper();
     const double* const fine_patchDx = fine_patch_geom->getDx();
 
-    //const Box<NDIM>& coarse_patch_box = coarse.getBox();
     const Pointer<CartesianPatchGeometry<NDIM> > coarse_patch_geom = coarse.getPatchGeometry();
-    //const Index<NDIM>& coarse_patch_lower = coarse_patch_box.lower();
-    //const Index<NDIM>& coarse_patch_upper = coarse_patch_box.upper();
-    //const double* const coarse_patchXLower = coarse_patch_geom->getXLower();
-    //const double* const coarse_patchXUpper = coarse_patch_geom->getXUpper();
     const double* const coarse_patchDx = coarse_patch_geom->getDx();
 
     const Box<NDIM> coarse_box = Box<NDIM>::coarsen(fine_box,ratio);
-    for (IndexData<NDIM,LagMarker,CellGeometry<NDIM> >::Iterator it(*src_mark_data); it; it++)
+    for (LMarkerSetData::SetIterator it(*src_mark_data); it; it++)
     {
         const Index<NDIM>& coarse_i = it.getIndex();
         if (coarse_box.contains(coarse_i))
         {
-            const LagMarker& coarse_mark = it();
-            const std::vector<double>& coarse_X = coarse_mark.getPositions();
-            const std::vector<double>& coarse_U = coarse_mark.getVelocities();
-            const std::vector<int>& coarse_idx = coarse_mark.getIndices();
-            const IntVector<NDIM>& coarse_offset = coarse_mark.getPeriodicOffset();
-            double X_shifted[NDIM];
-            for (int k = 0; k < coarse_mark.getNumberOfMarkers(); ++k)
+            const LMarkerSet& coarse_mark_set = it();
+            for (LMarkerSet::const_iterator cit = coarse_mark_set.begin(); cit != coarse_mark_set.end(); ++cit)
             {
-                const double* const X = &coarse_X[NDIM*k];
-                const double* const U = &coarse_U[NDIM*k];
-                const int& idx = coarse_idx[k];
-
-                for (int d = 0; d < NDIM; ++d)
+                const LMarkerSet::value_type& coarse_mark = *cit;
+                const blitz::TinyVector<double,NDIM>& X = coarse_mark->getPosition();
+                const IntVector<NDIM>& offset = coarse_mark->getPeriodicOffset();
+                blitz::TinyVector<double,NDIM> X_shifted;
+                for (unsigned int d = 0; d < NDIM; ++d)
                 {
-                    X_shifted[d] = X[d] + double(coarse_offset(d))*coarse_patchDx[d];
+                    X_shifted[d] = X[d] + static_cast<double>(offset(d))*coarse_patchDx[d];
                 }
 
                 const Index<NDIM> fine_i = IndexUtilities::getCellIndex(X_shifted, fine_patchXLower, fine_patchXUpper, fine_patchDx, fine_patch_lower, fine_patch_upper);
@@ -166,16 +156,10 @@ LagMarkerRefine::refine(
                 {
                     if (!dst_mark_data->isElement(fine_i))
                     {
-                        dst_mark_data->appendItem(fine_i, LagMarker());
+                        dst_mark_data->appendItemPointer(fine_i, new LMarkerSet());
                     }
-                    LagMarker& fine_mark = *(dst_mark_data->getItem(fine_i));
-                    std::vector<double>& fine_X = fine_mark.getPositions();
-                    std::vector<double>& fine_U = fine_mark.getVelocities();
-                    std::vector<int>& fine_idx = fine_mark.getIndices();
-
-                    fine_X.insert(fine_X.end(),X_shifted,X_shifted+NDIM);
-                    fine_U.insert(fine_U.end(),U,U+NDIM);
-                    fine_idx.push_back(idx);
+                    LMarkerSet& fine_mark_set = *(dst_mark_data->getItem(fine_i));
+                    fine_mark_set.push_back(coarse_mark);
                 }
             }
         }
@@ -190,10 +174,5 @@ LagMarkerRefine::refine(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBTK::LagMarkerRefine>;
 
 //////////////////////////////////////////////////////////////////////////////

@@ -10,7 +10,6 @@ set(kit_SRCS
   wrappers/PETScMatLOWrapper.C
   impls/BJacobiPreconditioner.C
   impls/PETScMultiVec.C
-  impls/SCPoissonFACOperator.C
   impls/DiagonalScalingPreconditioner.C
   impls/CCDivGradHypreLevelSolver.C
   impls/PETScKrylovLinearSolver.C

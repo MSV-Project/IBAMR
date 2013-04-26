@@ -1,5 +1,5 @@
 c
-c     Copyright (c) 2002-2010, Boyce Griffith
+c     Copyright (c) 2002-2013, Boyce Griffith
 c     All rights reserved.
 c
 c     Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@ c
       REAL function minmod(a,b)
       implicit none
       REAL a,b
-      minmod = (sign(0.5d0,a)+sign(0.5d0,b))*(abs(a+b)-abs(a-b))
+      minmod = 0.5d0*(sign(0.5d0,a)+sign(0.5d0,b))*(abs(a+b)-abs(a-b))
       return
       end
 c

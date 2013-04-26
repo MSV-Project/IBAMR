@@ -1,7 +1,7 @@
 // Filename: BJacobiPreconditioner.h
 // Created on 11 Apr 2005 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -38,11 +38,6 @@
 // IBTK INCLUDES
 #include <ibtk/LinearSolver.h>
 
-// SAMRAI INCLUDES
-#include <SAMRAIVectorReal.h>
-#include <tbox/Database.h>
-#include <tbox/Pointer.h>
-
 // C++ STDLIB INCLUDES
 #include <map>
 
@@ -74,21 +69,20 @@ namespace IBTK
  *
  */
 class BJacobiPreconditioner
-    : public virtual LinearSolver
+    : public LinearSolver
 {
 public:
     /*!
-     * \brief Default constructor.
-     *
-     * \param input_db optional SAMRAI::tbox::Database for input.
+     * \brief Constructor.
      */
     BJacobiPreconditioner(
-        SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db=NULL);
+        const std::string& object_name,
+        SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db,
+        const std::string& default_options_prefix);
 
     /*!
-     * \brief Virtual destructor.
+     * \brief Destructor.
      */
-    virtual
     ~BJacobiPreconditioner();
 
     /*!
@@ -98,7 +92,7 @@ public:
     void
     setComponentPreconditioner(
         SAMRAI::tbox::Pointer<LinearSolver> preconditioner,
-        const int component);
+        unsigned int component);
 
     /*!
      * \name Linear solver functionality.
@@ -142,7 +136,7 @@ public:
      * \return \p true if the solver converged to the specified tolerances, \p
      * false otherwise
      */
-    virtual bool
+    bool
     solveSystem(
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -184,7 +178,7 @@ public:
      *
      * \see deallocateSolverState
      */
-    virtual void
+    void
     initializeSolverState(
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& x,
         const SAMRAI::solv::SAMRAIVectorReal<NDIM,double>& b);
@@ -198,7 +192,7 @@ public:
      *
      * \see initializeSolverState
      */
-    virtual void
+    void
     deallocateSolverState();
 
     //\}
@@ -211,54 +205,16 @@ public:
     /*!
      * \brief Set whether the initial guess is non-zero.
      */
-    virtual void
+    void
     setInitialGuessNonzero(
         bool initial_guess_nonzero=true);
 
     /*!
-     * \brief Get whether the initial guess is non-zero.
-     */
-    virtual bool
-    getInitialGuessNonzero() const;
-
-    /*!
      * \brief Set the maximum number of iterations to use per solve.
      */
-    virtual void
+    void
     setMaxIterations(
         int max_iterations);
-
-    /*!
-     * \brief Get the maximum number of iterations to use per solve.
-     */
-    virtual int
-    getMaxIterations() const;
-
-    /*!
-     * \brief Set the absolute residual tolerance for convergence.
-     */
-    virtual void
-    setAbsoluteTolerance(
-        double abs_residual_tol);
-
-    /*!
-     * \brief Get the absolute residual tolerance for convergence.
-     */
-    virtual double
-    getAbsoluteTolerance() const;
-
-    /*!
-     * \brief Set the relative residual tolerance for convergence.
-     */
-    virtual void
-    setRelativeTolerance(
-        double rel_residual_tol);
-
-    /*!
-     * \brief Get the relative residual tolerance for convergence.
-     */
-    virtual double
-    getRelativeTolerance() const;
 
     //\}
 
@@ -270,32 +226,25 @@ public:
     /*!
      * \brief Return the iteration count from the most recent linear solve.
      */
-    virtual int
+    int
     getNumIterations() const;
 
     /*!
      * \brief Return the residual norm from the most recent iteration.
      */
-    virtual double
+    double
     getResidualNorm() const;
 
     //\}
 
-    /*!
-     * \name Logging functions.
-     */
-    //\{
-
-    /*!
-     * \brief Enable or disable logging.
-     */
-    virtual void
-    enableLogging(
-        bool enabled=true);
-
-    //\}
-
 private:
+    /*!
+     * \brief Default constructor.
+     *
+     * \note This constructor is not implemented and should not be used.
+     */
+    BJacobiPreconditioner();
+
     /*!
      * \brief Copy constructor.
      *
@@ -320,29 +269,15 @@ private:
         const BJacobiPreconditioner& that);
 
     /*!
-     * Boolean value to indicate whether the preconditioner is presently
-     * initialized.
-     */
-    bool d_is_initialized;
-
-    /*!
      * The component preconditioners.
      */
-    std::map<int,SAMRAI::tbox::Pointer<LinearSolver> > d_pc_map;
-
-    /*!
-     * Solver configuration parameters.
-     */
-    bool d_initial_guess_nonzero;
-    double d_rel_residual_tol;
-    double d_abs_residual_tol;
-    int d_max_iterations;
+    std::map<unsigned int,SAMRAI::tbox::Pointer<LinearSolver> > d_pc_map;
 };
 }// namespace IBTK
 
 /////////////////////////////// INLINE ///////////////////////////////////////
 
-#include <ibtk/BJacobiPreconditioner.I>
+//#include <ibtk/BJacobiPreconditioner.I>
 
 //////////////////////////////////////////////////////////////////////////////
 

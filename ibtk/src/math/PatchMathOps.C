@@ -1,7 +1,7 @@
 // Filename: PatchMathOps.C
 // Created on 23 Jul 2002 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -57,6 +57,9 @@
 #include <SideIndex.h>
 #include <tbox/Array.h>
 #include <tbox/Utilities.h>
+
+// BLITZ++ INCLUDES
+#include <blitz/tinyvec2.h>
 
 // FORTRAN ROUTINES
 #if (NDIM == 2)
@@ -942,9 +945,9 @@ PatchMathOps::~PatchMathOps()
 
 void
 PatchMathOps::curl(
-    Pointer<CellData<NDIM,double> >& dst,
-    const Pointer<CellData<NDIM,double> >& src,
-    const Pointer<Patch<NDIM> >& patch) const
+    Pointer<CellData<NDIM,double> > dst,
+    const Pointer<CellData<NDIM,double> > src,
+    const Pointer<Patch<NDIM> > patch) const
 {
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
     const double* const dx = pgeom->getDx();
@@ -1036,9 +1039,9 @@ PatchMathOps::curl(
 
 void
 PatchMathOps::curl(
-    Pointer<CellData<NDIM,double> >& dst,
-    const Pointer<FaceData<NDIM,double> >& src,
-    const Pointer<Patch<NDIM> >& patch) const
+    Pointer<CellData<NDIM,double> > dst,
+    const Pointer<FaceData<NDIM,double> > src,
+    const Pointer<Patch<NDIM> > patch) const
 {
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
     const double* const dx = pgeom->getDx();
@@ -1130,13 +1133,16 @@ PatchMathOps::curl(
 
 void
 PatchMathOps::curl(
-    Pointer<FaceData<NDIM,double> >& dst,
-    const Pointer<FaceData<NDIM,double> >& src,
-    const Pointer<Patch<NDIM> >& patch) const
+    Pointer<FaceData<NDIM,double> > dst,
+    const Pointer<FaceData<NDIM,double> > src,
+    const Pointer<Patch<NDIM> > patch) const
 {
 #if (NDIM != 3)
     TBOX_ERROR("PatchMathOps::curl():\n"
                << "  not implemented for NDIM != 3" << std::endl);
+    NULL_USE(dst);
+    NULL_USE(src);
+    NULL_USE(patch);
 #endif
 #if (NDIM == 3)
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
@@ -1209,9 +1215,9 @@ PatchMathOps::curl(
 
 void
 PatchMathOps::curl(
-    Pointer<CellData<NDIM,double> >& dst,
-    const Pointer<SideData<NDIM,double> >& src,
-    const Pointer<Patch<NDIM> >& patch) const
+    Pointer<CellData<NDIM,double> > dst,
+    const Pointer<SideData<NDIM,double> > src,
+    const Pointer<Patch<NDIM> > patch) const
 {
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
     const double* const dx = pgeom->getDx();
@@ -1303,13 +1309,16 @@ PatchMathOps::curl(
 
 void
 PatchMathOps::curl(
-    Pointer<SideData<NDIM,double> >& dst,
-    const Pointer<SideData<NDIM,double> >& src,
-    const Pointer<Patch<NDIM> >& patch) const
+    Pointer<SideData<NDIM,double> > dst,
+    const Pointer<SideData<NDIM,double> > src,
+    const Pointer<Patch<NDIM> > patch) const
 {
 #if (NDIM != 3)
     TBOX_ERROR("PatchMathOps::curl():\n"
                << "  not implemented for NDIM != 3" << std::endl);
+    NULL_USE(dst);
+    NULL_USE(src);
+    NULL_USE(patch);
 #endif
 #if (NDIM == 3)
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
@@ -1382,12 +1391,12 @@ PatchMathOps::curl(
 
 void
 PatchMathOps::div(
-    Pointer<CellData<NDIM,double> >& dst,
-    const double& alpha,
-    const Pointer<CellData<NDIM,double> >& src1,
-    const double& beta,
-    const Pointer<CellData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<CellData<NDIM,double> > dst,
+    const double alpha,
+    const Pointer<CellData<NDIM,double> > src1,
+    const double beta,
+    const Pointer<CellData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int l,
     const int m) const
 {
@@ -1458,7 +1467,7 @@ PatchMathOps::div(
     }
 #endif
 
-    if (src2.isNull() || (beta == 0.0))
+    if (!src2 || (beta == 0.0))
     {
         C_TO_C_DIV_FC(
             D, D_ghosts,
@@ -1507,12 +1516,12 @@ PatchMathOps::div(
 
 void
 PatchMathOps::div(
-    Pointer<CellData<NDIM,double> >& dst,
-    const double& alpha,
-    const Pointer<FaceData<NDIM,double> >& src1,
-    const double& beta,
-    const Pointer<CellData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<CellData<NDIM,double> > dst,
+    const double alpha,
+    const Pointer<FaceData<NDIM,double> > src1,
+    const double beta,
+    const Pointer<CellData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int l,
     const int m) const
 {
@@ -1557,7 +1566,7 @@ PatchMathOps::div(
     }
 #endif
 
-    if (src2.isNull() || (beta == 0.0))
+    if (!src2 || (beta == 0.0))
     {
         F_TO_C_DIV_FC(
             D, D_ghosts,
@@ -1614,12 +1623,12 @@ PatchMathOps::div(
 
 void
 PatchMathOps::div(
-    Pointer<CellData<NDIM,double> >& dst,
-    const double& alpha,
-    const Pointer<SideData<NDIM,double> >& src1,
-    const double& beta,
-    const Pointer<CellData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<CellData<NDIM,double> > dst,
+    const double alpha,
+    const Pointer<SideData<NDIM,double> > src1,
+    const double beta,
+    const Pointer<CellData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int l,
     const int m) const
 {
@@ -1664,7 +1673,7 @@ PatchMathOps::div(
     }
 #endif
 
-    if (src2.isNull() || (beta == 0.0))
+    if (!src2 || (beta == 0.0))
     {
         S_TO_C_DIV_FC(
             D, D_ghosts,
@@ -1721,12 +1730,12 @@ PatchMathOps::div(
 
 void
 PatchMathOps::grad(
-    Pointer<CellData<NDIM,double> >& dst,
-    const double& alpha,
-    const Pointer<CellData<NDIM,double> >& src1,
-    const double& beta,
-    const Pointer<CellData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<CellData<NDIM,double> > dst,
+    const double alpha,
+    const Pointer<CellData<NDIM,double> > src1,
+    const double beta,
+    const Pointer<CellData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int l) const
 {
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
@@ -1796,7 +1805,7 @@ PatchMathOps::grad(
     }
 #endif
 
-    if (src2.isNull() || (beta == 0.0))
+    if (!src2 || (beta == 0.0))
     {
         C_TO_C_GRAD_FC(
             G, G_ghosts,
@@ -1853,12 +1862,12 @@ PatchMathOps::grad(
 
 void
 PatchMathOps::grad(
-    Pointer<FaceData<NDIM,double> >& dst,
-    const double& alpha,
-    const Pointer<CellData<NDIM,double> >& src1,
-    const double& beta,
-    const Pointer<FaceData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<FaceData<NDIM,double> > dst,
+    const double alpha,
+    const Pointer<CellData<NDIM,double> > src1,
+    const double beta,
+    const Pointer<FaceData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int l) const
 {
     // Compute the gradient.
@@ -1913,7 +1922,7 @@ PatchMathOps::grad(
     }
 #endif
 
-    if (src2.isNull() || (beta == 0.0))
+    if (!src2 || (beta == 0.0))
     {
         C_TO_F_GRAD_FC(
             g0, g1,
@@ -1978,12 +1987,12 @@ PatchMathOps::grad(
 
 void
 PatchMathOps::grad(
-    Pointer<SideData<NDIM,double> >& dst,
-    const double& alpha,
-    const Pointer<CellData<NDIM,double> >& src1,
-    const double& beta,
-    const Pointer<SideData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<SideData<NDIM,double> > dst,
+    const double alpha,
+    const Pointer<CellData<NDIM,double> > src1,
+    const double beta,
+    const Pointer<SideData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int l) const
 {
     // Compute the gradient.
@@ -2038,7 +2047,7 @@ PatchMathOps::grad(
     }
 #endif
 
-    if (src2.isNull() || (beta == 0.0))
+    if (!src2 || (beta == 0.0))
     {
         C_TO_S_GRAD_FC(
             g0, g1,
@@ -2103,12 +2112,12 @@ PatchMathOps::grad(
 
 void
 PatchMathOps::grad(
-    Pointer<FaceData<NDIM,double> >& dst,
-    const Pointer<FaceData<NDIM,double> >& alpha,
-    const Pointer<CellData<NDIM,double> >& src1,
-    const double& beta,
-    const Pointer<FaceData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<FaceData<NDIM,double> > dst,
+    const Pointer<FaceData<NDIM,double> > alpha,
+    const Pointer<CellData<NDIM,double> > src1,
+    const double beta,
+    const Pointer<FaceData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int l) const
 {
     // Compute the gradient.
@@ -2218,7 +2227,7 @@ PatchMathOps::grad(
 #endif
             dx);
 
-        if ((!src2.isNull()) && (beta != 0.0))
+        if (src2 && (beta != 0.0))
         {
 #ifdef DEBUG_CHECK_ASSERTIONS
             const int v_ghosts = (src2->getGhostCellWidth()).max();
@@ -2269,7 +2278,7 @@ PatchMathOps::grad(
             dx);
 
         // Account for non-zero beta.
-        if ((!src2.isNull()) && (beta != 0.0))
+        if (src2 && (beta != 0.0))
         {
 #ifdef DEBUG_CHECK_ASSERTIONS
             const int v_ghosts = (src2->getGhostCellWidth()).max();
@@ -2303,12 +2312,12 @@ PatchMathOps::grad(
 
 void
 PatchMathOps::grad(
-    Pointer<SideData<NDIM,double> >& dst,
-    const Pointer<SideData<NDIM,double> >& alpha,
-    const Pointer<CellData<NDIM,double> >& src1,
-    const double& beta,
-    const Pointer<SideData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<SideData<NDIM,double> > dst,
+    const Pointer<SideData<NDIM,double> > alpha,
+    const Pointer<CellData<NDIM,double> > src1,
+    const double beta,
+    const Pointer<SideData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int l) const
 {
     // Compute the gradient.
@@ -2410,7 +2419,7 @@ PatchMathOps::grad(
 #endif
             dx);
 
-        if ((!src2.isNull()) && (beta != 0.0))
+        if (src2 && (beta != 0.0))
         {
 #ifdef DEBUG_CHECK_ASSERTIONS
             const int v_ghosts = (src2->getGhostCellWidth()).max();
@@ -2461,7 +2470,7 @@ PatchMathOps::grad(
             dx);
 
         // Account for non-zero beta.
-        if ((!src2.isNull()) && (beta != 0.0))
+        if (src2 && (beta != 0.0))
         {
 #ifdef DEBUG_CHECK_ASSERTIONS
             const int v_ghosts = (src2->getGhostCellWidth()).max();
@@ -2495,9 +2504,9 @@ PatchMathOps::grad(
 
 void
 PatchMathOps::interp(
-    Pointer<CellData<NDIM,double> >& dst,
-    const Pointer<FaceData<NDIM,double> >& src,
-    const Pointer<Patch<NDIM> >& patch) const
+    Pointer<CellData<NDIM,double> > dst,
+    const Pointer<FaceData<NDIM,double> > src,
+    const Pointer<Patch<NDIM> > patch) const
 {
     const int U_ghosts = (dst->getGhostCellWidth()).max();
     const int v_ghosts = (src->getGhostCellWidth()).max();
@@ -2560,15 +2569,15 @@ PatchMathOps::interp(
             ,patch_box.lower(2),patch_box.upper(2)
 #endif
                          );
-    }// for (int depth = 0; depth < src->getDepth(); ++depth)
+    }
     return;
 }// interp
 
 void
 PatchMathOps::interp(
-    Pointer<CellData<NDIM,double> >& dst,
-    const Pointer<SideData<NDIM,double> >& src,
-    const Pointer<Patch<NDIM> >& patch) const
+    Pointer<CellData<NDIM,double> > dst,
+    const Pointer<SideData<NDIM,double> > src,
+    const Pointer<Patch<NDIM> > patch) const
 {
     const int U_ghosts = (dst->getGhostCellWidth()).max();
     const int v_ghosts = (src->getGhostCellWidth()).max();
@@ -2631,15 +2640,15 @@ PatchMathOps::interp(
             ,patch_box.lower(2),patch_box.upper(2)
 #endif
                          );
-    }// for (int depth = 0; depth < src->getDepth(); ++depth)
+    }
     return;
 }// interp
 
 void
 PatchMathOps::interp(
-    Pointer<FaceData<NDIM,double> >& dst,
-    const Pointer<CellData<NDIM,double> >& src,
-    const Pointer<Patch<NDIM> >& patch) const
+    Pointer<FaceData<NDIM,double> > dst,
+    const Pointer<CellData<NDIM,double> > src,
+    const Pointer<Patch<NDIM> > patch) const
 {
     const int u_ghosts = (dst->getGhostCellWidth()).max();
     const int V_ghosts = (src->getGhostCellWidth()).max();
@@ -2711,15 +2720,15 @@ PatchMathOps::interp(
             ,patch_box.lower(2),patch_box.upper(2)
 #endif
                          );
-    }// for (int depth = 0; depth < dst->getDepth(); ++depth)
+    }
     return;
 }// interp
 
 void
 PatchMathOps::interp(
-    Pointer<SideData<NDIM,double> >& dst,
-    const Pointer<CellData<NDIM,double> >& src,
-    const Pointer<Patch<NDIM> >& patch) const
+    Pointer<SideData<NDIM,double> > dst,
+    const Pointer<CellData<NDIM,double> > src,
+    const Pointer<Patch<NDIM> > patch) const
 {
     const int u_ghosts = (dst->getGhostCellWidth()).max();
     const int V_ghosts = (src->getGhostCellWidth()).max();
@@ -2791,19 +2800,19 @@ PatchMathOps::interp(
             ,patch_box.lower(2),patch_box.upper(2)
 #endif
                          );
-    }// for (int depth = 0; depth < dst->getDepth(); ++depth)
+    }
     return;
 }// interp
 
 void
 PatchMathOps::laplace(
-    Pointer<CellData<NDIM,double> >& dst,
-    const double& alpha,
-    const double& beta,
-    const Pointer<CellData<NDIM,double> >& src1,
-    const double& gamma,
-    const Pointer<CellData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<CellData<NDIM,double> > dst,
+    const double alpha,
+    const double beta,
+    const Pointer<CellData<NDIM,double> > src1,
+    const double gamma,
+    const Pointer<CellData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int l,
     const int m,
     const int n) const
@@ -2867,7 +2876,7 @@ PatchMathOps::laplace(
     }
 #endif
 
-    if (src2.isNull() || (gamma == 0.0))
+    if (!src2 || (gamma == 0.0))
     {
         if (beta == 0.0)
         {
@@ -2950,13 +2959,13 @@ PatchMathOps::laplace(
 
 void
 PatchMathOps::laplace(
-    Pointer<SideData<NDIM,double> >& dst,
-    const double& alpha,
-    const double& beta,
-    const Pointer<SideData<NDIM,double> >& src1,
-    const double& gamma,
-    const Pointer<SideData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<SideData<NDIM,double> > dst,
+    const double alpha,
+    const double beta,
+    const Pointer<SideData<NDIM,double> > src1,
+    const double gamma,
+    const Pointer<SideData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int l,
     const int m,
     const int n) const
@@ -2964,15 +2973,15 @@ PatchMathOps::laplace(
     const Pointer<CartesianPatchGeometry<NDIM> > pgeom = patch->getPatchGeometry();
     const double* const dx = pgeom->getDx();
 
-    std::vector<double*> F(NDIM);
-    for (int d = 0; d < NDIM; ++d)
+    blitz::TinyVector<double*,NDIM> F;
+    for (unsigned int d = 0; d < NDIM; ++d)
     {
-        F[d]  = dst->getPointer(d,l);
+        F[d] = dst->getPointer(d,l);
     }
     const int F_ghosts = (dst->getGhostCellWidth()).max();
 
-    std::vector<const double*> U(NDIM);
-    for (int d = 0; d < NDIM; ++d)
+    blitz::TinyVector<const double*,NDIM> U;
+    for (unsigned int d = 0; d < NDIM; ++d)
     {
         U[d] = src1->getPointer(d,m);
     }
@@ -3028,12 +3037,12 @@ PatchMathOps::laplace(
     }
 #endif
 
-    if (src2.isNull() || (gamma == 0.0))
+    if (!src2 || (gamma == 0.0))
     {
-        std::vector<int> ilower(NDIM), iupper(NDIM);
-        for (int d = 0; d < NDIM; ++d)
+        blitz::TinyVector<int,NDIM> ilower, iupper;
+        for (unsigned int d = 0; d < NDIM; ++d)
         {
-            for (int dd = 0; dd < NDIM; ++dd)
+            for (unsigned int dd = 0; dd < NDIM; ++dd)
             {
                 ilower[dd] = patch_box.lower(dd);
                 iupper[dd] = patch_box.upper(dd);
@@ -3070,8 +3079,8 @@ PatchMathOps::laplace(
     }
     else
     {
-        std::vector<const double*> V(NDIM);
-        for (int d = 0; d < NDIM; ++d)
+        blitz::TinyVector<const double*,NDIM> V;
+        for (unsigned int d = 0; d < NDIM; ++d)
         {
             V[d] = src2->getPointer(d,n);
         }
@@ -3090,10 +3099,10 @@ PatchMathOps::laplace(
                        << "  dst, src1, and src2 must all live on the same patch" << std::endl);
         }
 #endif
-        std::vector<int> ilower(NDIM), iupper(NDIM);
-        for (int d = 0; d < NDIM; ++d)
+        blitz::TinyVector<int,NDIM> ilower, iupper;
+        for (unsigned int d = 0; d < NDIM; ++d)
         {
-            for (int dd = 0; dd < NDIM; ++dd)
+            for (unsigned int dd = 0; dd < NDIM; ++dd)
             {
                 ilower[dd] = patch_box.lower(dd);
                 iupper[dd] = patch_box.upper(dd);
@@ -3137,13 +3146,13 @@ PatchMathOps::laplace(
 
 void
 PatchMathOps::laplace(
-    Pointer<CellData<NDIM,double> >& dst,
-    const Pointer<FaceData<NDIM,double> >& alpha,
-    const double& beta,
-    const Pointer<CellData<NDIM,double> >& src1,
-    const double& gamma,
-    const Pointer<CellData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<CellData<NDIM,double> > dst,
+    const Pointer<FaceData<NDIM,double> > alpha,
+    const double beta,
+    const Pointer<CellData<NDIM,double> > src1,
+    const double gamma,
+    const Pointer<CellData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int l,
     const int m,
     const int n) const
@@ -3232,7 +3241,7 @@ PatchMathOps::laplace(
     }
 #endif
 
-    if (src2.isNull() || (gamma == 0.0))
+    if (!src2 || (gamma == 0.0))
     {
         if (beta == 0.0)
         {
@@ -3333,13 +3342,13 @@ PatchMathOps::laplace(
 
 void
 PatchMathOps::laplace(
-    Pointer<CellData<NDIM,double> >& dst,
-    const Pointer<SideData<NDIM,double> >& alpha,
-    const double& beta,
-    const Pointer<CellData<NDIM,double> >& src1,
-    const double& gamma,
-    const Pointer<CellData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<CellData<NDIM,double> > dst,
+    const Pointer<SideData<NDIM,double> > alpha,
+    const double beta,
+    const Pointer<CellData<NDIM,double> > src1,
+    const double gamma,
+    const Pointer<CellData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int l,
     const int m,
     const int n) const
@@ -3428,7 +3437,7 @@ PatchMathOps::laplace(
     }
 #endif
 
-    if (src2.isNull() || (gamma == 0.0))
+    if (!src2 || (gamma == 0.0))
     {
         if (beta == 0.0)
         {
@@ -3529,14 +3538,14 @@ PatchMathOps::laplace(
 
 void
 PatchMathOps::vc_laplace(
-    Pointer<SideData<NDIM,double> >& dst,
-    const double& alpha,
-    const double& beta,
-    const Pointer<NodeData<NDIM,double> >& coef,
-    const Pointer<SideData<NDIM,double> >& src1,
-    const double& gamma_in,
-    const Pointer<SideData<NDIM,double> >& src2_in,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<SideData<NDIM,double> > dst,
+    const double alpha,
+    const double beta,
+    const Pointer<NodeData<NDIM,double> > coef,
+    const Pointer<SideData<NDIM,double> > src1,
+    const double gamma_in,
+    const Pointer<SideData<NDIM,double> > src2_in,
+    const Pointer<Patch<NDIM> > patch,
     const int l,
     const int m,
     const int n) const
@@ -3562,8 +3571,8 @@ PatchMathOps::vc_laplace(
 #endif
     const int u_ghosts     = (src1->getGhostCellWidth()).max();
 
-    const double gamma = (src2_in.isNull() ? 0.0 : gamma_in);
-    const Pointer<SideData<NDIM,double> > src2 = (src2_in.isNull() ? src1 : src2_in);
+    const double gamma = (src2_in ? gamma_in : 0.0);
+    const Pointer<SideData<NDIM,double> > src2 = (src2_in ? src2_in : src1);
     const double* const v0 = src2->getPointer(0,n);
     const double* const v1 = src2->getPointer(1,n);
 #if (NDIM == 3)
@@ -3684,18 +3693,29 @@ PatchMathOps::vc_laplace(
 #if (NDIM == 3)
     TBOX_ERROR("PatchMathOps::vc_laplace():\n"
                << "  not presently implemented for NDIM = 3." << std::endl);
+    NULL_USE(dst);
+    NULL_USE(alpha);
+    NULL_USE(beta);
+    NULL_USE(coef);
+    NULL_USE(src1);
+    NULL_USE(gamma_in);
+    NULL_USE(src2_in);
+    NULL_USE(patch);
+    NULL_USE(l);
+    NULL_USE(m);
+    NULL_USE(n);
 #endif
     return;
 }// vc_laplace
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<CellData<NDIM,double> >& dst,
-    const double& alpha,
-    const Pointer<CellData<NDIM,double> >& src1,
-    const double& beta,
-    const Pointer<CellData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<CellData<NDIM,double> > dst,
+    const double alpha,
+    const Pointer<CellData<NDIM,double> > src1,
+    const double beta,
+    const Pointer<CellData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int i,
     const int j,
     const int k) const
@@ -3734,7 +3754,7 @@ PatchMathOps::pointwiseMultiply(
     }
 #endif
 
-    if (src2.isNull() || (beta == 0.0))
+    if (!src2 || (beta == 0.0))
     {
         MULTIPLY1_FC(
             D, D_ghosts,
@@ -3783,12 +3803,12 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<CellData<NDIM,double> >& dst,
-    const Pointer<CellData<NDIM,double> >& alpha,
-    const Pointer<CellData<NDIM,double> >& src1,
-    const double& beta,
-    const Pointer<CellData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<CellData<NDIM,double> > dst,
+    const Pointer<CellData<NDIM,double> > alpha,
+    const Pointer<CellData<NDIM,double> > src1,
+    const double beta,
+    const Pointer<CellData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int i,
     const int j,
     const int k,
@@ -3843,7 +3863,7 @@ PatchMathOps::pointwiseMultiply(
     }
 #endif
 
-    if (src2.isNull() || (beta == 0.0))
+    if (!src2 || (beta == 0.0))
     {
         MULTIPLY2_FC(
             D, D_ghosts,
@@ -3892,19 +3912,19 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<CellData<NDIM,double> >& dst,
-    const Pointer<CellData<NDIM,double> >& alpha,
-    const Pointer<CellData<NDIM,double> >& src1,
-    const Pointer<CellData<NDIM,double> >& beta,
-    const Pointer<CellData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<CellData<NDIM,double> > dst,
+    const Pointer<CellData<NDIM,double> > alpha,
+    const Pointer<CellData<NDIM,double> > src1,
+    const Pointer<CellData<NDIM,double> > beta,
+    const Pointer<CellData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int i,
     const int j,
     const int k,
     const int l,
     const int m) const
 {
-    if (src2.isNull())
+    if (!src2)
     {
         const double zero = 0.0;
         pointwiseMultiply(dst,alpha,src1,zero,src2,patch,i,j,k,l);
@@ -4007,17 +4027,17 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<FaceData<NDIM,double> >& dst,
-    const double& alpha,
-    const Pointer<FaceData<NDIM,double> >& src1,
-    const double& beta,
-    const Pointer<FaceData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<FaceData<NDIM,double> > dst,
+    const double alpha,
+    const Pointer<FaceData<NDIM,double> > src1,
+    const double beta,
+    const Pointer<FaceData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int i,
     const int j,
     const int k) const
 {
-    for (int axis = 0; axis < NDIM; ++axis)
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
     {
         double* const D       = dst->getPointer(axis,i);
         const int D_ghosts    = (dst->getGhostCellWidth()).max();
@@ -4054,7 +4074,7 @@ PatchMathOps::pointwiseMultiply(
         }
 #endif
 
-        if (src2.isNull() || (beta == 0.0))
+        if (!src2 || (beta == 0.0))
         {
             MULTIPLY1_FC(
                 D, D_ghosts,
@@ -4104,18 +4124,18 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<FaceData<NDIM,double> >& dst,
-    const Pointer<FaceData<NDIM,double> >& alpha,
-    const Pointer<FaceData<NDIM,double> >& src1,
-    const double& beta,
-    const Pointer<FaceData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<FaceData<NDIM,double> > dst,
+    const Pointer<FaceData<NDIM,double> > alpha,
+    const Pointer<FaceData<NDIM,double> > src1,
+    const double beta,
+    const Pointer<FaceData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int i,
     const int j,
     const int k,
     const int l) const
 {
-    for (int axis = 0; axis < NDIM; ++axis)
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
     {
         double* const D       = dst->getPointer(axis,i);
         const int D_ghosts    = (dst->getGhostCellWidth()).max();
@@ -4167,7 +4187,7 @@ PatchMathOps::pointwiseMultiply(
         }
 #endif
 
-        if (src2.isNull() || (beta == 0.0))
+        if (!src2 || (beta == 0.0))
         {
             MULTIPLY2_FC(
                 D, D_ghosts,
@@ -4217,26 +4237,26 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<FaceData<NDIM,double> >& dst,
-    const Pointer<FaceData<NDIM,double> >& alpha,
-    const Pointer<FaceData<NDIM,double> >& src1,
-    const Pointer<FaceData<NDIM,double> >& beta,
-    const Pointer<FaceData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<FaceData<NDIM,double> > dst,
+    const Pointer<FaceData<NDIM,double> > alpha,
+    const Pointer<FaceData<NDIM,double> > src1,
+    const Pointer<FaceData<NDIM,double> > beta,
+    const Pointer<FaceData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int i,
     const int j,
     const int k,
     const int l,
     const int m) const
 {
-    if (src2.isNull())
+    if (!src2)
     {
         const double zero = 0.0;
         pointwiseMultiply(dst,alpha,src1,zero,src2,patch,i,j,k,l);
         return;
     }
 
-    for (int axis = 0; axis < NDIM; ++axis)
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
     {
         double* const D       = dst->getPointer(axis,i);
         const int D_ghosts    = (dst->getGhostCellWidth()).max();
@@ -4336,12 +4356,12 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<NodeData<NDIM,double> >& dst,
-    const double& alpha,
-    const Pointer<NodeData<NDIM,double> >& src1,
-    const double& beta,
-    const Pointer<NodeData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<NodeData<NDIM,double> > dst,
+    const double alpha,
+    const Pointer<NodeData<NDIM,double> > src1,
+    const double beta,
+    const Pointer<NodeData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int i,
     const int j,
     const int k) const
@@ -4381,7 +4401,7 @@ PatchMathOps::pointwiseMultiply(
     }
 #endif
 
-    if (src2.isNull() || (beta == 0.0))
+    if (!src2 || (beta == 0.0))
     {
         MULTIPLY1_FC(
             D, D_ghosts,
@@ -4430,12 +4450,12 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<NodeData<NDIM,double> >& dst,
-    const Pointer<NodeData<NDIM,double> >& alpha,
-    const Pointer<NodeData<NDIM,double> >& src1,
-    const double& beta,
-    const Pointer<NodeData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<NodeData<NDIM,double> > dst,
+    const Pointer<NodeData<NDIM,double> > alpha,
+    const Pointer<NodeData<NDIM,double> > src1,
+    const double beta,
+    const Pointer<NodeData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int i,
     const int j,
     const int k,
@@ -4491,7 +4511,7 @@ PatchMathOps::pointwiseMultiply(
     }
 #endif
 
-    if (src2.isNull() || (beta == 0.0))
+    if (!src2 || (beta == 0.0))
     {
         MULTIPLY2_FC(
             D, D_ghosts,
@@ -4540,19 +4560,19 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<NodeData<NDIM,double> >& dst,
-    const Pointer<NodeData<NDIM,double> >& alpha,
-    const Pointer<NodeData<NDIM,double> >& src1,
-    const Pointer<NodeData<NDIM,double> >& beta,
-    const Pointer<NodeData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<NodeData<NDIM,double> > dst,
+    const Pointer<NodeData<NDIM,double> > alpha,
+    const Pointer<NodeData<NDIM,double> > src1,
+    const Pointer<NodeData<NDIM,double> > beta,
+    const Pointer<NodeData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int i,
     const int j,
     const int k,
     const int l,
     const int m) const
 {
-    if (src2.isNull())
+    if (!src2)
     {
         const double zero = 0.0;
         pointwiseMultiply(dst,alpha,src1,zero,src2,patch,i,j,k,l);
@@ -4656,17 +4676,17 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<SideData<NDIM,double> >& dst,
-    const double& alpha,
-    const Pointer<SideData<NDIM,double> >& src1,
-    const double& beta,
-    const Pointer<SideData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<SideData<NDIM,double> > dst,
+    const double alpha,
+    const Pointer<SideData<NDIM,double> > src1,
+    const double beta,
+    const Pointer<SideData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int i,
     const int j,
     const int k) const
 {
-    for (int axis = 0; axis < NDIM; ++axis)
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
     {
         double* const D       = dst->getPointer(axis,i);
         const int D_ghosts    = (dst->getGhostCellWidth()).max();
@@ -4703,7 +4723,7 @@ PatchMathOps::pointwiseMultiply(
         }
 #endif
 
-        if (src2.isNull() || (beta == 0.0))
+        if (!src2 || (beta == 0.0))
         {
             MULTIPLY1_FC(
                 D, D_ghosts,
@@ -4753,18 +4773,18 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<SideData<NDIM,double> >& dst,
-    const Pointer<SideData<NDIM,double> >& alpha,
-    const Pointer<SideData<NDIM,double> >& src1,
-    const double& beta,
-    const Pointer<SideData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<SideData<NDIM,double> > dst,
+    const Pointer<SideData<NDIM,double> > alpha,
+    const Pointer<SideData<NDIM,double> > src1,
+    const double beta,
+    const Pointer<SideData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int i,
     const int j,
     const int k,
     const int l) const
 {
-    for (int axis = 0; axis < NDIM; ++axis)
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
     {
         double* const D       = dst->getPointer(axis,i);
         const int D_ghosts    = (dst->getGhostCellWidth()).max();
@@ -4816,7 +4836,7 @@ PatchMathOps::pointwiseMultiply(
         }
 #endif
 
-        if (src2.isNull() || (beta == 0.0))
+        if (!src2 || (beta == 0.0))
         {
             MULTIPLY2_FC(
                 D, D_ghosts,
@@ -4866,26 +4886,26 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseMultiply(
-    Pointer<SideData<NDIM,double> >& dst,
-    const Pointer<SideData<NDIM,double> >& alpha,
-    const Pointer<SideData<NDIM,double> >& src1,
-    const Pointer<SideData<NDIM,double> >& beta,
-    const Pointer<SideData<NDIM,double> >& src2,
-    const Pointer<Patch<NDIM> >& patch,
+    Pointer<SideData<NDIM,double> > dst,
+    const Pointer<SideData<NDIM,double> > alpha,
+    const Pointer<SideData<NDIM,double> > src1,
+    const Pointer<SideData<NDIM,double> > beta,
+    const Pointer<SideData<NDIM,double> > src2,
+    const Pointer<Patch<NDIM> > patch,
     const int i,
     const int j,
     const int k,
     const int l,
     const int m) const
 {
-    if (src2.isNull())
+    if (!src2)
     {
         const double zero = 0.0;
         pointwiseMultiply(dst,alpha,src1,zero,src2,patch,i,j,k,l);
         return;
     }
 
-    for (int axis = 0; axis < NDIM; ++axis)
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
     {
         double* const D       = dst->getPointer(axis,i);
         const int D_ghosts    = (dst->getGhostCellWidth()).max();
@@ -4985,9 +5005,9 @@ PatchMathOps::pointwiseMultiply(
 
 void
 PatchMathOps::pointwiseL1Norm(
-    Pointer<CellData<NDIM,double> >& dst,
-    const Pointer<CellData<NDIM,double> >& src,
-    const Pointer<Patch<NDIM> >& patch) const
+    Pointer<CellData<NDIM,double> > dst,
+    const Pointer<CellData<NDIM,double> > src,
+    const Pointer<Patch<NDIM> > patch) const
 {
     double* const U       = dst->getPointer();
     const int U_ghosts    = (dst->getGhostCellWidth()).max();
@@ -5045,9 +5065,9 @@ PatchMathOps::pointwiseL1Norm(
 
 void
 PatchMathOps::pointwiseL2Norm(
-    Pointer<CellData<NDIM,double> >& dst,
-    const Pointer<CellData<NDIM,double> >& src,
-    const Pointer<Patch<NDIM> >& patch) const
+    Pointer<CellData<NDIM,double> > dst,
+    const Pointer<CellData<NDIM,double> > src,
+    const Pointer<Patch<NDIM> > patch) const
 {
     double* const U       = dst->getPointer();
     const int U_ghosts    = (dst->getGhostCellWidth()).max();
@@ -5105,9 +5125,9 @@ PatchMathOps::pointwiseL2Norm(
 
 void
 PatchMathOps::pointwiseMaxNorm(
-    Pointer<CellData<NDIM,double> >& dst,
-    const Pointer<CellData<NDIM,double> >& src,
-    const Pointer<Patch<NDIM> >& patch) const
+    Pointer<CellData<NDIM,double> > dst,
+    const Pointer<CellData<NDIM,double> > src,
+    const Pointer<Patch<NDIM> > patch) const
 {
     double* const U       = dst->getPointer();
     const int U_ghosts    = (dst->getGhostCellWidth()).max();
@@ -5165,9 +5185,9 @@ PatchMathOps::pointwiseMaxNorm(
 
 void
 PatchMathOps::pointwiseL1Norm(
-    Pointer<NodeData<NDIM,double> >& dst,
-    const Pointer<NodeData<NDIM,double> >& src,
-    const Pointer<Patch<NDIM> >& patch) const
+    Pointer<NodeData<NDIM,double> > dst,
+    const Pointer<NodeData<NDIM,double> > src,
+    const Pointer<Patch<NDIM> > patch) const
 {
     double* const U       = dst->getPointer();
     const int U_ghosts    = (dst->getGhostCellWidth()).max();
@@ -5226,9 +5246,9 @@ PatchMathOps::pointwiseL1Norm(
 
 void
 PatchMathOps::pointwiseL2Norm(
-    Pointer<NodeData<NDIM,double> >& dst,
-    const Pointer<NodeData<NDIM,double> >& src,
-    const Pointer<Patch<NDIM> >& patch) const
+    Pointer<NodeData<NDIM,double> > dst,
+    const Pointer<NodeData<NDIM,double> > src,
+    const Pointer<Patch<NDIM> > patch) const
 {
     double* const U       = dst->getPointer();
     const int U_ghosts    = (dst->getGhostCellWidth()).max();
@@ -5287,9 +5307,9 @@ PatchMathOps::pointwiseL2Norm(
 
 void
 PatchMathOps::pointwiseMaxNorm(
-    Pointer<NodeData<NDIM,double> >& dst,
-    const Pointer<NodeData<NDIM,double> >& src,
-    const Pointer<Patch<NDIM> >& patch) const
+    Pointer<NodeData<NDIM,double> > dst,
+    const Pointer<NodeData<NDIM,double> > src,
+    const Pointer<Patch<NDIM> > patch) const
 {
     double* const U       = dst->getPointer();
     const int U_ghosts    = (dst->getGhostCellWidth()).max();
@@ -5353,10 +5373,5 @@ PatchMathOps::pointwiseMaxNorm(
 //////////////////////////////////////////////////////////////////////////////
 
 }// namespace IBTK
-
-/////////////////////// TEMPLATE INSTANTIATION ///////////////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBTK::PatchMathOps>;
 
 //////////////////////////////////////////////////////////////////////////////

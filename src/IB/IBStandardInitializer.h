@@ -1,7 +1,7 @@
 // Filename: IBStandardInitializer.h
 // Created on 22 Nov 2006 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -35,9 +35,17 @@
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
+#ifndef included_IBAMR_prefix_config
+#include <IBAMR_prefix_config.h>
+#define included_IBAMR_prefix_config
+#endif
+
+// IBAMR INCLUDES
+#include <ibamr/IBRodForceSpec.h>
+
 // IBTK INCLUDES
-#include <ibtk/LNodeInitStrategy.h>
-#include <ibtk/LagSiloDataWriter.h>
+#include <ibtk/LInitStrategy.h>
+#include <ibtk/LSiloDataWriter.h>
 #include <ibtk/Streamable.h>
 
 // C++ STDLIB INCLUDES
@@ -49,7 +57,7 @@
 namespace IBAMR
 {
 /*!
- * \brief Class IBStandardInitializer is a concrete LNodeInitStrategy that
+ * \brief Class IBStandardInitializer is a concrete LInitStrategy that
  * initializes the configuration of one or more Lagrangian structures from input
  * files.
  *
@@ -64,21 +72,21 @@ namespace IBAMR
  * Vertex input files end with the extension <TT>".vertex"</TT> and have the
  * following format for two-dimensional models:
  \verbatim
- N                   # number of vertices in the file
- x_0       y_0       # (x,y)-coordinates of vertex 0
- x_1       y_1       # (x,y)-coordinates of vertex 1
+ N           # number of vertices in the file
+ x_0   y_0   # (x,y)-coordinates of vertex 0
+ x_1   y_1   # (x,y)-coordinates of vertex 1
+ x_2   y_2   # (x,y)-coordinates of vertex 2
  ...
- x_{N-1}   y_{N-1}   # (x,y)-coordinates of vertex N-1
  \endverbatim
  *
  * Vertex input files end with the extension <TT>".vertex"</TT> and have the
  * following format for three-dimensional models:
  \verbatim
- N                             # number of vertices in the file
- x_0       y_0       z_0       # (x,y,z)-coordinates of vertex 0
- x_1       y_1       z_1       # (x,y,z)-coordinates of vertex 1
+ N                 # number of vertices in the file
+ x_0   y_0   z_0   # (x,y,z)-coordinates of vertex 0
+ x_1   y_1   z_1   # (x,y,z)-coordinates of vertex 1
+ x_2   y_2   z_2   # (x,y,z)-coordinates of vertex 2
  ...
- x_{N-1}   y_{N-1}   z_{N-1}   # (x,y,z)-coordinates of vertex N-1
  \endverbatim
  *
  * <HR>
@@ -103,8 +111,53 @@ namespace IBAMR
  * 0.0 and the force function index will be set to \a 0.  This corresponds to a
  * linear spring with zero rest length.
  *
- * \note Spring specifications are used by class LagSiloDataWriter to construct
+ * \note Spring specifications are used by class LSiloDataWriter to construct
  * unstructured mesh representations of the Lagrangian structures.
+ * Consequently, even if your structure does not have any springs, it may be
+ * worthwhile to generate a spring input file with all spring constants set to
+ * \a 0.0.
+ *
+ * \note \a min(i,j) is always used as the "master" node index when constructing
+ * the corresponding IBSpringForceSpec object.
+ *
+ * \see IBSpringForceGen
+ * \see IBSpringForceSpec
+ *
+ * <HR>
+ *
+ * <B>Crosslink spring file format</B>
+ *
+ * Crosslink spring ("x-spring") input files end with the extension
+ * <TT>".xspring"</TT> and have the following format:
+ \verbatim
+ M                                            # number of links in the file
+ i_0   j_0   kappa_0   length_0   fcn_idx_0   # first vertex index, second vertex index, spring constant, rest length, spring function index
+ i_1   j_1   kappa_1   length_1   fcn_idx_1
+ i_2   j_2   kappa_2   length_2   fcn_idx_2
+ ...
+ \endverbatim
+ *
+ * \note Unlike standard spring files, in which all indices are required to
+ * refer to points within a particular structure, x-spring files may connect
+ * points from different structures.  Consequently, the node indices in an
+ * x-spring file must be \em global indices.  Notice that global indices are
+ * determined by the order in which the structures are specified in the input
+ * file.  Changes in the order in which structures are specified necessarily
+ * change the global indexing scheme.
+ *
+ * \note Crosslink springs may connect only structures assigned to the \em same
+ * level of the locally refined grid.
+ *
+ * \note There is no restriction on the number of x-springs that may be
+ * associated with any particular node of the Lagrangian mesh.
+ *
+ * \note The rest length and force function index are \em optional values.  If
+ * they are not provided, then by default the rest length will be set to the
+ * value \a 0.0 and the force function index will be set to \a 0.  This
+ * corresponds to a linear spring with zero rest length.
+ *
+ * \note Crosslink spring specifications are used by class LSiloDataWriter to
+ * construct unstructured mesh representations of the Lagrangian structures.
  * Consequently, even if your structure does not have any springs, it may be
  * worthwhile to generate a spring input file with all spring constants set to
  * \a 0.0.
@@ -124,8 +177,8 @@ namespace IBAMR
  \verbatim
  M                           # number of beams in the file
  i_0   j_0   k_0   kappa_0   # first vertex index, second vertex index, third vertex index, bending rigidity
- i_1   j_1   k_1   kappa_1   # first vertex index, second vertex index, third vertex index, bending rigidity
- i_2   j_2   k_2   kappa_2   # first vertex index, second vertex index, third vertex index, bending rigidity
+ i_1   j_1   k_1   kappa_1
+ i_2   j_2   k_2   kappa_2
  ...
  \endverbatim
  *
@@ -150,9 +203,9 @@ namespace IBAMR
  * format:
  \verbatim
  M                                                                                          # number of rods in the file
- i_0   j_0   ds_0   a1_0   a2_0   a3_0   b1_0   b2_0   b3_0   kappa1_0   kappa2_0   tau_0   # first  vertex index, second vertex index, material parameters
- i_1   j_1   ds_1   a1_1   a2_1   a3_1   b1_1   b2_1   b3_1   kappa1_1   kappa2_1   tau_1   # second vertex index, second vertex index, material parameters
- i_2   j_2   ds_2   a1_2   a2_2   a3_2   b1_2   b2_2   b3_2   kappa1_2   kappa2_2   tau_2   # third  vertex index, second vertex index, material parameters
+ i_0   j_0   ds_0   a1_0   a2_0   a3_0   b1_0   b2_0   b3_0   kappa1_0   kappa2_0   tau_0   # first vertex index, second vertex index, material parameters
+ i_1   j_1   ds_1   a1_1   a2_1   a3_1   b1_1   b2_1   b3_1   kappa1_1   kappa2_1   tau_1
+ i_2   j_2   ds_2   a1_2   a2_2   a3_2   b1_2   b2_2   b3_2   kappa1_2   kappa2_2   tau_2
  ...
  \endverbatim
  *
@@ -344,7 +397,7 @@ namespace IBAMR
  \endverbatim
 */
 class IBStandardInitializer
-    : public IBTK::LNodeInitStrategy
+    : public IBTK::LInitStrategy
 {
 public:
     /*!
@@ -357,15 +410,14 @@ public:
     /*!
      * \brief Destructor.
      */
-    virtual
     ~IBStandardInitializer();
 
     /*!
      * \brief Register a Silo data writer with the IB initializer object.
      */
     void
-    registerLagSiloDataWriter(
-        SAMRAI::tbox::Pointer<IBTK::LagSiloDataWriter> silo_writer);
+    registerLSiloDataWriter(
+        SAMRAI::tbox::Pointer<IBTK::LSiloDataWriter> silo_writer);
 
     /*!
      * \brief Determine whether there are any Lagrangian nodes on the specified
@@ -374,93 +426,93 @@ public:
      * \return A boolean value indicating whether Lagrangian data is associated
      * with the given level in the patch hierarchy.
      */
-    virtual bool
+    bool
     getLevelHasLagrangianData(
-        const int level_number,
-        const bool can_be_refined) const;
+        int level_number,
+        bool can_be_refined) const;
 
     /*!
      * \brief Determine the number of local nodes on the specified patch level.
      *
      * \return The number of local nodes on the specified level.
      */
-    virtual int
+    unsigned int
     computeLocalNodeCountOnPatchLevel(
-        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        const int level_number,
-        const double init_data_time,
-        const bool can_be_refined,
-        const bool initial_time);
+        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        int level_number,
+        double init_data_time,
+        bool can_be_refined,
+        bool initial_time);
 
     /*!
      * \brief Initialize the structure indexing information on the patch level.
      */
-    virtual void
+    void
     initializeStructureIndexingOnPatchLevel(
         std::map<int,std::string>& strct_id_to_strct_name_map,
         std::map<int,std::pair<int,int> >& strct_id_to_lag_idx_range_map,
-        const int level_number,
-        const double init_data_time,
-        const bool can_be_refined,
-        const bool initial_time,
-        IBTK::LDataManager* const lag_manager);
+        int level_number,
+        double init_data_time,
+        bool can_be_refined,
+        bool initial_time,
+        IBTK::LDataManager* l_data_manager);
 
     /*!
-     * \brief Initialize the LNodeIndex and LNodeLevel data needed to specify
-     * the configuration of the curvilinear mesh on the patch level.
+     * \brief Initialize the LNode and LData data needed to specify the
+     * configuration of the curvilinear mesh on the patch level.
      *
      * \return The number of local nodes initialized on the patch level.
      */
-    virtual int
+    unsigned int
     initializeDataOnPatchLevel(
-        const int lag_node_index_idx,
-        const int global_index_offset,
-        const int local_index_offset,
-        SAMRAI::tbox::Pointer<IBTK::LNodeLevelData>& X_data,
-        SAMRAI::tbox::Pointer<IBTK::LNodeLevelData>& U_data,
-        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        const int level_number,
-        const double init_data_time,
-        const bool can_be_refined,
-        const bool initial_time,
-        IBTK::LDataManager* const lag_manager);
+        int lag_node_index_idx,
+        unsigned int global_index_offset,
+        unsigned int local_index_offset,
+        SAMRAI::tbox::Pointer<IBTK::LData> X_data,
+        SAMRAI::tbox::Pointer<IBTK::LData> U_data,
+        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        int level_number,
+        double init_data_time,
+        bool can_be_refined,
+        bool initial_time,
+        IBTK::LDataManager* l_data_manager);
 
     /*!
-     * \brief Initialize the LNodeLevel data needed to specify the mass and
-     * spring constant data required by the penalty IB method.
+     * \brief Initialize the LData needed to specify the mass and spring
+     * constant data required by the penalty IB method.
      *
      * \return The number of local nodes initialized on the patch level.
      */
-    virtual int
+    unsigned int
     initializeMassDataOnPatchLevel(
-        const int global_index_offset,
-        const int local_index_offset,
-        SAMRAI::tbox::Pointer<IBTK::LNodeLevelData>& M_data,
-        SAMRAI::tbox::Pointer<IBTK::LNodeLevelData>& K_data,
-        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        const int level_number,
-        const double init_data_time,
-        const bool can_be_refined,
-        const bool initial_time,
-        IBTK::LDataManager* const lag_manager);
+        unsigned int global_index_offset,
+        unsigned int local_index_offset,
+        SAMRAI::tbox::Pointer<IBTK::LData> M_data,
+        SAMRAI::tbox::Pointer<IBTK::LData> K_data,
+        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        int level_number,
+        double init_data_time,
+        bool can_be_refined,
+        bool initial_time,
+        IBTK::LDataManager* l_data_manager);
 
     /*!
-     * \brief Initialize the LNodeLevel data needed to specify director vectors
+     * \brief Initialize the LNode data needed to specify director vectors
      * required by some material models.
      *
      * \return The number of local nodes initialized on the patch level.
      */
-    virtual int
+    unsigned int
     initializeDirectorDataOnPatchLevel(
-        const int global_index_offset,
-        const int local_index_offset,
-        SAMRAI::tbox::Pointer<IBTK::LNodeLevelData>& D_data,
-        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        const int level_number,
-        const double init_data_time,
-        const bool can_be_refined,
-        const bool initial_time,
-        IBTK::LDataManager* const lag_manager);
+        unsigned int global_index_offset,
+        unsigned int local_index_offset,
+        SAMRAI::tbox::Pointer<IBTK::LData> D_data,
+        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        int level_number,
+        double init_data_time,
+        bool can_be_refined,
+        bool initial_time,
+        IBTK::LDataManager* l_data_manager);
 
     /*!
      * \brief Tag cells for initial refinement.
@@ -471,12 +523,12 @@ public:
      * that will reside in any yet-to-be-constructed level(s) of the patch
      * hierarchy.
      */
-    virtual void
+    void
     tagCellsForInitialRefinement(
-        const SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
-        const int level_number,
-        const double error_data_time,
-        const int tag_index);
+        SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > hierarchy,
+        int level_number,
+        double error_data_time,
+        int tag_index);
 
 protected:
 
@@ -517,68 +569,90 @@ private:
      * grid.
      */
     void
-    initializeLagSiloDataWriter(
-        const int level_number);
+    initializeLSiloDataWriter(
+        int level_number);
 
     /*!
      * \brief Read the vertex data from one or more input files.
      */
     void
-    readVertexFiles();
+    readVertexFiles(
+        const std::string& extension);
 
     /*!
      * \brief Read the spring data from one or more input files.
      */
     void
-    readSpringFiles();
+    readSpringFiles(
+        const std::string& file_extension,
+        bool input_uses_global_idxs);
+
+    /*!
+     * \brief Read the crosslink spring ("x-spring") data from one or more input
+     * files.
+     */
+    void
+    readXSpringFiles(
+        const std::string& file_extension,
+        bool input_uses_global_idxs);
 
     /*!
      * \brief Read the beam data from one or more input files.
      */
     void
-    readBeamFiles();
+    readBeamFiles(
+        const std::string& file_extension,
+        bool input_uses_global_idxs);
 
     /*!
      * \brief Read the rod data from one or more input files.
      */
     void
-    readRodFiles();
+    readRodFiles(
+        const std::string& file_extension,
+        bool input_uses_global_idxs);
 
     /*!
      * \brief Read the target point data from one or more input files.
      */
     void
-    readTargetPointFiles();
+    readTargetPointFiles(
+        const std::string& file_extension);
 
     /*!
      * \brief Read the anchor point data from one or more input files.
      */
     void
-    readAnchorPointFiles();
+    readAnchorPointFiles(
+        const std::string& file_extension);
 
     /*!
      * \brief Read the boundary mass data from one or more input files.
      */
     void
-    readBoundaryMassFiles();
+    readBoundaryMassFiles(
+        const std::string& file_extension);
 
     /*!
      * \brief Read the director data from one or more input files.
      */
     void
-    readDirectorFiles();
+    readDirectorFiles(
+        const std::string& file_extension);
 
     /*!
      * \brief Read the instrumentation data from one or more input files.
      */
     void
-    readInstrumentationFiles();
+    readInstrumentationFiles(
+        const std::string& file_extension);
 
     /*!
      * \brief Read the source/sink data from one or more input files.
      */
     void
-    readSourceFiles();
+    readSourceFiles(
+        const std::string& file_extension);
 
     /*!
      * \brief Determine the indices of any vertices initially located within the
@@ -587,9 +661,9 @@ private:
     void
     getPatchVertices(
         std::vector<std::pair<int,int> >& point_indices,
-        const SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
-        const int level_number,
-        const bool can_be_refined) const;
+        SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
+        int level_number,
+        bool can_be_refined) const;
 
     /*!
      * \return The canonical Lagrangian index of the specified vertex.
@@ -597,15 +671,15 @@ private:
     int
     getCanonicalLagrangianIndex(
         const std::pair<int,int>& point_index,
-        const int level_number) const;
+        int level_number) const;
 
     /*!
      * \return The initial position of the specified vertex.
      */
-    std::vector<double>
+    blitz::TinyVector<double,NDIM>
     getVertexPosn(
         const std::pair<int,int>& point_index,
-        const int level_number) const;
+        int level_number) const;
 
     /*!
      * \return The target point specifications associated with a particular
@@ -615,7 +689,7 @@ private:
     const TargetSpec&
     getVertexTargetSpec(
         const std::pair<int,int>& point_index,
-        const int level_number) const;
+        int level_number) const;
 
     /*!
      * \return The anchor point specifications associated with a particular
@@ -625,7 +699,7 @@ private:
     const AnchorSpec&
     getVertexAnchorSpec(
         const std::pair<int,int>& point_index,
-        const int level_number) const;
+        int level_number) const;
 
     /*!
      * \return The massive boundary point specifications associated with a
@@ -635,7 +709,7 @@ private:
     const BdryMassSpec&
     getVertexBdryMassSpec(
         const std::pair<int,int>& point_index,
-        const int level_number) const;
+        int level_number) const;
 
     /*!
      * \return The directors associated with a particular node.
@@ -643,7 +717,7 @@ private:
     const std::vector<double>&
     getVertexDirectors(
         const std::pair<int,int>& point_index,
-        const int level_number) const;
+        int level_number) const;
 
     /*!
      * \return The instrumentation indices associated with a particular node (or
@@ -653,7 +727,7 @@ private:
     std::pair<int,int>
     getVertexInstrumentationIndices(
         const std::pair<int,int>& point_index,
-        const int level_number) const;
+        int level_number) const;
 
     /*!
      * \return The source indices associated with a particular node (or -1 if
@@ -662,7 +736,7 @@ private:
     int
     getVertexSourceIndices(
         const std::pair<int,int>& point_index,
-        const int level_number) const;
+        int level_number) const;
 
     /*!
      * \return The specification objects associated with the specified vertex.
@@ -670,8 +744,8 @@ private:
     std::vector<SAMRAI::tbox::Pointer<IBTK::Streamable> >
     initializeSpecs(
         const std::pair<int,int>& point_index,
-        const int global_index_offset,
-        const int level_number) const;
+        unsigned int global_index_offset,
+        int level_number) const;
 
     /*!
      * Read input values, indicated above, from given database.
@@ -706,7 +780,7 @@ private:
     /*
      * An (optional) Lagrangian Silo data writer.
      */
-    SAMRAI::tbox::Pointer<IBTK::LagSiloDataWriter> d_silo_writer;
+    SAMRAI::tbox::Pointer<IBTK::LSiloDataWriter> d_silo_writer;
 
     /*
      * The base filenames of the structures are used to generate unique names
@@ -727,13 +801,13 @@ private:
      * input files, i.e., X_final = scale*(X_initial + shift).
      */
     double d_length_scale_factor;
-    std::vector<double> d_posn_shift;
+    blitz::TinyVector<double,NDIM> d_posn_shift;
 
     /*
      * Vertex information.
      */
     std::vector<std::vector<int> > d_num_vertex, d_vertex_offset;
-    std::vector<std::vector<std::vector<double> > > d_vertex_posn;
+    std::vector<std::vector<std::vector<blitz::TinyVector<double,NDIM> > > > d_vertex_posn;
 
     /*
      * Edge data structures.
@@ -760,9 +834,8 @@ private:
 
     struct SpringSpec
     {
-        double stiffness, rest_length;
+        std::vector<double> parameters;
         int force_fcn_idx;
-        int subdomain_idx;
     };
     std::vector<std::vector<std::map<Edge,SpringSpec,EdgeComp> > > d_spring_spec_data;
 
@@ -775,8 +848,28 @@ private:
     std::vector<std::vector<bool> > d_using_uniform_spring_force_fcn_idx;
     std::vector<std::vector<int> > d_uniform_spring_force_fcn_idx;
 
-    std::vector<std::vector<bool> > d_using_uniform_spring_subdomain_idx;
-    std::vector<std::vector<int> > d_uniform_spring_subdomain_idx;
+    /*
+     * Crosslink spring ("x-spring") information.
+     */
+    std::vector<std::vector<bool> > d_enable_xsprings;
+
+    std::vector<std::vector<std::multimap<int,Edge> > > d_xspring_edge_map;
+
+    struct XSpringSpec
+    {
+        std::vector<double> parameters;
+        int force_fcn_idx;
+    };
+    std::vector<std::vector<std::map<Edge,XSpringSpec,EdgeComp> > > d_xspring_spec_data;
+
+    std::vector<std::vector<bool> > d_using_uniform_xspring_stiffness;
+    std::vector<std::vector<double> > d_uniform_xspring_stiffness;
+
+    std::vector<std::vector<bool> > d_using_uniform_xspring_rest_length;
+    std::vector<std::vector<double> > d_uniform_xspring_rest_length;
+
+    std::vector<std::vector<bool> > d_using_uniform_xspring_force_fcn_idx;
+    std::vector<std::vector<int> > d_uniform_xspring_force_fcn_idx;
 
     /*
      * Beam information.
@@ -787,8 +880,7 @@ private:
     {
         std::pair<int,int> neighbor_idxs;
         double bend_rigidity;
-        std::vector<double> curvature;
-        int subdomain_idx;
+        blitz::TinyVector<double,NDIM> curvature;
     };
     std::vector<std::vector<std::multimap<int,BeamSpec> > > d_beam_spec_data;
 
@@ -796,10 +888,7 @@ private:
     std::vector<std::vector<double> > d_uniform_beam_bend_rigidity;
 
     std::vector<std::vector<bool> > d_using_uniform_beam_curvature;
-    std::vector<std::vector<std::vector<double> > > d_uniform_beam_curvature;
-
-    std::vector<std::vector<bool> > d_using_uniform_beam_subdomain_idx;
-    std::vector<std::vector<int> > d_uniform_beam_subdomain_idx;
+    std::vector<std::vector<blitz::TinyVector<double,NDIM> > > d_uniform_beam_curvature;
 
     /*
      * Rod information.
@@ -810,16 +899,12 @@ private:
 
     struct RodSpec
     {
-        std::vector<double> properties;
-        int subdomain_idx;
+        blitz::TinyVector<double,IBRodForceSpec::NUM_MATERIAL_PARAMS> properties;
     };
     std::vector<std::vector<std::map<Edge,RodSpec,EdgeComp> > > d_rod_spec_data;
 
     std::vector<std::vector<bool> > d_using_uniform_rod_properties;
-    std::vector<std::vector<std::vector<double> > > d_uniform_rod_properties;
-
-    std::vector<std::vector<bool> > d_using_uniform_rod_subdomain_idx;
-    std::vector<std::vector<int> > d_uniform_rod_subdomain_idx;
+    std::vector<std::vector<blitz::TinyVector<double,IBRodForceSpec::NUM_MATERIAL_PARAMS> > > d_uniform_rod_properties;
 
     /*
      * Target point information.
@@ -829,7 +914,6 @@ private:
     struct TargetSpec
     {
         double stiffness, damping;
-        int subdomain_idx;
     };
     std::vector<std::vector<std::vector<TargetSpec> > > d_target_spec_data;
 
@@ -839,9 +923,6 @@ private:
     std::vector<std::vector<bool> > d_using_uniform_target_damping;
     std::vector<std::vector<double> > d_uniform_target_damping;
 
-    std::vector<std::vector<bool> > d_using_uniform_target_subdomain_idx;
-    std::vector<std::vector<int> > d_uniform_target_subdomain_idx;
-
     /*
      * Anchor point information.
      */
@@ -850,12 +931,8 @@ private:
     struct AnchorSpec
     {
         bool is_anchor_point;
-        int subdomain_idx;
     };
     std::vector<std::vector<std::vector<AnchorSpec> > > d_anchor_spec_data;
-
-    std::vector<std::vector<bool> > d_using_uniform_anchor_subdomain_idx;
-    std::vector<std::vector<int> > d_uniform_anchor_subdomain_idx;
 
     /*
      * Mass information for the pIB method.
@@ -895,7 +972,7 @@ private:
      * Data required to specify connectivity information for visualization
      * purposes.
      */
-    std::vector<int> d_global_index_offset;
+    std::vector<unsigned int> d_global_index_offset;
 };
 }// namespace IBAMR
 

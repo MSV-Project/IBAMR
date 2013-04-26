@@ -1,7 +1,7 @@
 // Filename: muParserCartGridFunction.h
 // Created on 24 Aug 2007 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,9 @@
 #include <CartesianGridGeometry.h>
 #include <tbox/Database.h>
 
+// BLITZ++ INCLUDES
+#include <blitz/tinyvec2.h>
+
 // C++ STDLIB INCLUDES
 #include <map>
 #include <vector>
@@ -60,7 +63,7 @@ namespace IBTK
  * double precision values on standard SAMRAI SAMRAI::hier::PatchData objects.
  */
 class muParserCartGridFunction
-    : public virtual CartGridFunction
+    : public CartGridFunction
 {
 public:
     /*!
@@ -72,9 +75,8 @@ public:
         SAMRAI::tbox::Pointer<SAMRAI::geom::CartesianGridGeometry<NDIM> > grid_geom);
 
     /*!
-     * \brief Empty virtual destructor.
+     * \brief Empty destructor.
      */
-    virtual
     ~muParserCartGridFunction();
 
     /*!
@@ -86,19 +88,19 @@ public:
      * \brief Indicates whether the concrete CartGridFunction object is
      * time-dependent.
      */
-    virtual bool
+    bool
     isTimeDependent() const;
 
     /*!
      * \brief Virtual function to evaluate the function on the patch interior.
      */
-    virtual void
+    void
     setDataOnPatch(
-        const int data_idx,
+        int data_idx,
         SAMRAI::tbox::Pointer<SAMRAI::hier::Variable<NDIM> > var,
         SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
-        const double data_time,
-        const bool initial_time=false,
+        double data_time,
+        bool initial_time=false,
         SAMRAI::tbox::Pointer<SAMRAI::hier::PatchLevel<NDIM> > level=SAMRAI::tbox::Pointer<SAMRAI::hier::PatchLevel<NDIM> >(NULL));
 
     //\}
@@ -161,7 +163,7 @@ private:
      * Time and position variables.
      */
     double d_parser_time;
-    double d_parser_posn[NDIM];
+    blitz::TinyVector<double,NDIM> d_parser_posn;
 };
 }// namespace IBTK
 

@@ -69,7 +69,7 @@ set(INCLUDE_TEMPLATE_IMPLEMENTATION 1)
 configure_file(${CMAKE_CURRENT_BINARY_DIR}/SAMRAI_config.h.in
   ${CMAKE_CURRENT_BINARY_DIR}/include/SAMRAI_config.h)
 
-include(${M4})
+include(${FortranM4Parser})
 
 # FindMPI
 find_package(MPI)
@@ -116,9 +116,10 @@ set(FortranM4_SRCS
   source/apputils/boundary/appu_cartbdry2d.m4
 )
 
-set(M4ARGS "")
-set(F_EXT ".f")
-add_m4_sources(samrai_fortran_SRCS "" .f ${FortranM4_SRCS})
+ParseM4Sources(
+  OutputFiles2D
+  FileExt ".f"
+  InputFiles ${FortranM4_SRCS} )
 
 set(samrai_solvers_inlined_SRCS
   source/solvers/vectors/SAMRAIVectorReal.C

@@ -1,7 +1,7 @@
 // Filename: VecCellCoarsenAdapter.C
 // Created on 09 Apr 2010 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -78,7 +78,7 @@ VecCellCoarsenAdapter::findCoarsenOperator(
     const std::string &op_name) const
 {
     const Pointer<VecCellVariable<double> > cast_var(var);
-    if (!cast_var.isNull() && (op_name == getOperatorName()))
+    if (cast_var && (op_name == getOperatorName()))
     {
         return true;
     }
@@ -118,8 +118,8 @@ VecCellCoarsenAdapter::coarsen(
     Pointer<VecCellData<double> > dst_data = coarse.getPatchData(dst_component);
     Pointer<VecCellData<double> > src_data = fine  .getPatchData(src_component);
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!dst_data.isNull());
-    TBOX_ASSERT(!src_data.isNull());
+    TBOX_ASSERT(dst_data);
+    TBOX_ASSERT(src_data);
 #endif
     // Create "dummy" patches.
     Patch<NDIM> coarse_cell(coarse.getBox(), coarse.getPatchDescriptor());

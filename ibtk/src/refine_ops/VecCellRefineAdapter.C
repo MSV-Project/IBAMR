@@ -1,7 +1,7 @@
 // Filename: VecCellRefineAdapter.C
 // Created on 09 Apr 2010 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -78,7 +78,7 @@ VecCellRefineAdapter::findRefineOperator(
     const std::string &op_name) const
 {
     const Pointer<VecCellVariable<double> > cast_var(var);
-    if (!cast_var.isNull() && (op_name == getOperatorName()))
+    if (cast_var && (op_name == getOperatorName()))
     {
         return true;
     }
@@ -118,8 +118,8 @@ VecCellRefineAdapter::refine(
     Pointer<VecCellData<double> > dst_data = fine  .getPatchData(dst_component);
     Pointer<VecCellData<double> > src_data = coarse.getPatchData(src_component);
 #ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!dst_data.isNull());
-    TBOX_ASSERT(!src_data.isNull());
+    TBOX_ASSERT(dst_data);
+    TBOX_ASSERT(src_data);
 #endif
     // Create "dummy" patches.
     Patch<NDIM> fine_cell(fine.getBox(), fine.getPatchDescriptor());

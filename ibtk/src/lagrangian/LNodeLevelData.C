@@ -1,7 +1,7 @@
-// Filename: LNodeLevelData.C
+// Filename: LData.C
 // Created on 17 Apr 2004 by Boyce Griffith
 //
-// Copyright (c) 2002-2010, Boyce Griffith
+// Copyright (c) 2002-2013, Boyce Griffith
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "LNodeLevelData.h"
+#include "LData.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
@@ -45,7 +45,6 @@
 #endif
 
 // IBTK INCLUDES
-#include <ibtk/LDataManager.h>
 #include <ibtk/namespaces.h>
 
 /////////////////////////////// NAMESPACE ////////////////////////////////////
@@ -56,96 +55,30 @@ namespace IBTK
 
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
-LNodeLevelData::~LNodeLevelData()
-{
-    if (d_in_local_form) restoreLocalFormVec();
-    const int ierr = VecDestroy(d_global_vec);  IBTK_CHKERRQ(ierr);
-    return;
-}// ~LNodeLevelData
-
-LNodeLevelData&
-LNodeLevelData::operator=(
-    const LNodeLevelData& that)
-{
-    if (that.d_in_local_form)
-    {
-        TBOX_ERROR("LNodeLevelData operator=():\n" <<
-                   "  operator=() source object must NOT be in local form." << std::endl);
-    }
-    if (this == &that) return *this;  // check for self-assignment
-
-    int ierr;
-    restoreLocalFormVec();
-    ierr = VecDestroy(d_global_vec);                        IBTK_CHKERRQ(ierr);
-    ierr = VecDuplicate(that.d_global_vec, &d_global_vec);  IBTK_CHKERRQ(ierr);
-    ierr = VecCopy(that.d_global_vec, d_global_vec);        IBTK_CHKERRQ(ierr);
-
-    d_name = that.d_name;
-    d_depth = that.d_depth;
-    d_nonlocal_petsc_indices = that.d_nonlocal_petsc_indices;
-    d_local_vec = NULL;
-    d_in_local_form = false;
-    d_local_vec_array = NULL;
-    d_extracted_local_array = false;
-    return *this;
-}// operator=
-
-void
-LNodeLevelData::putToDatabase(
-    Pointer<Database> db)
-{
-#ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(!db.isNull());
-#endif
-    const bool restore_local_vec = !d_in_local_form;
-    const bool restore_local_array = !d_extracted_local_array;
-
-    const int num_local_nodes = getLocalNodeCount();
-    const double* const local_form_array = getLocalFormArray();
-    const int n_nonlocal_indices = d_nonlocal_petsc_indices.size();
-
-    db->putString("d_name", d_name);
-    db->putInteger("d_depth", d_depth);
-    db->putInteger("num_local_nodes", num_local_nodes);
-    db->putInteger("n_nonlocal_indices", n_nonlocal_indices);
-    if (n_nonlocal_indices > 0)
-    {
-        db->putIntegerArray("d_nonlocal_petsc_indices",
-                            d_nonlocal_petsc_indices.empty() ? NULL : &d_nonlocal_petsc_indices[0],
-                            n_nonlocal_indices);
-    }
-    if (d_depth*num_local_nodes + n_nonlocal_indices > 0)
-    {
-        db->putDoubleArray("vals", local_form_array,
-                           d_depth*num_local_nodes + n_nonlocal_indices);
-    }
-    if (restore_local_array) restoreLocalFormArray();
-    if (restore_local_vec  ) restoreLocalFormVec();
-    return;
-}// putToDatabase
-
-/////////////////////////////// PROTECTED ////////////////////////////////////
-
-LNodeLevelData::LNodeLevelData(
+LData::LData(
     const std::string& name,
-    const int num_local_nodes,
-    const int depth,
+    const unsigned int num_local_nodes,
+    const unsigned int depth,
     const std::vector<int>& nonlocal_petsc_indices)
     : d_name(name),
+      d_global_node_count(0),
+      d_local_node_count(0),
+      d_ghost_node_count(0),
       d_depth(depth),
       d_nonlocal_petsc_indices(nonlocal_petsc_indices),
       d_global_vec(NULL),
-      d_local_vec(NULL),
-      d_in_local_form(false),
-      d_local_vec_array(NULL),
-      d_extracted_local_array(false)
+      d_managing_petsc_vec(true),
+      d_array(NULL),
+      d_blitz_array(),
+      d_blitz_local_array(),
+      d_blitz_vec_array(),
+      d_blitz_local_vec_array(),
+      d_ghosted_local_vec(NULL),
+      d_ghosted_local_array(NULL),
+      d_blitz_ghosted_local_array(),
+      d_blitz_vec_ghosted_local_array()
 {
-#ifdef DEBUG_CHECK_ASSERTIONS
-    TBOX_ASSERT(num_local_nodes >= 0);
-    TBOX_ASSERT(depth > 0);
-#endif
-    // Create the PETSc Vec which actually provides the storage for the
-    // Lagrangian data.
+    // Create the PETSc Vec that provides storage for the Lagrangian data.
     int ierr;
     if (d_depth == 1)
     {
@@ -165,36 +98,98 @@ LNodeLevelData::LNodeLevelData(
             d_nonlocal_petsc_indices.empty() ? NULL : &d_nonlocal_petsc_indices[0],
             &d_global_vec);  IBTK_CHKERRQ(ierr);
     }
-    ierr = VecSetBlockSize(d_global_vec, d_depth);  IBTK_CHKERRQ(ierr);
-
+    int global_node_count;
+    ierr = VecGetSize(d_global_vec, &global_node_count);  IBTK_CHKERRQ(ierr);
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(global_node_count >= 0);
+#endif
+    d_global_node_count = global_node_count;
+    d_global_node_count /= d_depth;
+    d_local_node_count = num_local_nodes;
+    d_ghost_node_count = d_nonlocal_petsc_indices.size();
     return;
-}// LNodeLevelData
+}// LData
 
-LNodeLevelData::LNodeLevelData(
+LData::LData(
+    const std::string& name,
+    Vec vec,
+    const std::vector<int>& nonlocal_petsc_indices,
+    const bool manage_petsc_vec)
+    : d_name(name),
+      d_global_node_count(0),
+      d_local_node_count(0),
+      d_ghost_node_count(0),
+      d_depth(0),
+      d_nonlocal_petsc_indices(nonlocal_petsc_indices),
+      d_global_vec(vec),
+      d_managing_petsc_vec(manage_petsc_vec),
+      d_array(NULL),
+      d_blitz_array(),
+      d_blitz_local_array(),
+      d_blitz_vec_array(),
+      d_blitz_local_vec_array(),
+      d_ghosted_local_vec(NULL),
+      d_ghosted_local_array(NULL),
+      d_blitz_ghosted_local_array(),
+      d_blitz_vec_ghosted_local_array()
+{
+    int ierr;
+    int depth;
+    ierr = VecGetBlockSize(d_global_vec, &depth);  IBTK_CHKERRQ(ierr);
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(depth >= 0);
+#endif
+    d_depth = depth;
+    int global_node_count;
+    ierr = VecGetSize(d_global_vec, &global_node_count);  IBTK_CHKERRQ(ierr);
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(global_node_count >= 0);
+#endif
+    d_global_node_count = global_node_count;
+    d_global_node_count /= d_depth;
+    int local_node_count;
+    ierr = VecGetLocalSize(d_global_vec, &local_node_count);  IBTK_CHKERRQ(ierr);
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(local_node_count >= 0);
+#endif
+    d_local_node_count = local_node_count;
+    d_local_node_count /= d_depth;
+    d_ghost_node_count = d_nonlocal_petsc_indices.size();
+    return;
+}// LData
+
+LData::LData(
     Pointer<Database> db)
     : d_name(db->getString("d_name")),
+      d_global_node_count(0),
+      d_local_node_count(0),
+      d_ghost_node_count(0),
       d_depth(db->getInteger("d_depth")),
       d_nonlocal_petsc_indices(),
       d_global_vec(NULL),
-      d_local_vec(NULL),
-      d_in_local_form(false),
-      d_local_vec_array(NULL),
-      d_extracted_local_array(false)
+      d_array(NULL),
+      d_blitz_array(),
+      d_blitz_local_array(),
+      d_blitz_vec_array(),
+      d_blitz_local_vec_array(),
+      d_ghosted_local_vec(NULL),
+      d_ghosted_local_array(NULL),
+      d_blitz_ghosted_local_array(),
+      d_blitz_vec_ghosted_local_array()
 {
     int num_local_nodes = db->getInteger("num_local_nodes");
-    int n_nonlocal_indices = db->getInteger("n_nonlocal_indices");
-    d_nonlocal_petsc_indices.resize(n_nonlocal_indices);
-    if (n_nonlocal_indices > 0)
+    int num_ghost_nodes = db->getInteger("num_ghost_nodes");
+    d_nonlocal_petsc_indices.resize(num_ghost_nodes);
+    if (num_ghost_nodes > 0)
     {
         db->getIntegerArray("d_nonlocal_petsc_indices",
                             d_nonlocal_petsc_indices.empty() ? NULL : &d_nonlocal_petsc_indices[0],
-                            n_nonlocal_indices);
+                            num_ghost_nodes);
     }
 
     // Create the PETSc Vec which actually provides the storage for the
     // Lagrangian data.
     int ierr;
-
     if (d_depth == 1)
     {
         ierr = VecCreateGhost(PETSC_COMM_WORLD,
@@ -213,68 +208,110 @@ LNodeLevelData::LNodeLevelData(
                                    &d_global_vec);
         IBTK_CHKERRQ(ierr);
     }
-
-    ierr = VecSetBlockSize(d_global_vec, d_depth);  IBTK_CHKERRQ(ierr);
+    int global_node_count;
+    ierr = VecGetSize(d_global_vec, &global_node_count);  IBTK_CHKERRQ(ierr);
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(global_node_count >= 0);
+#endif
+    d_global_node_count = global_node_count;
+    d_global_node_count /= d_depth;
+    d_local_node_count = num_local_nodes;
+    d_ghost_node_count = d_nonlocal_petsc_indices.size();
 
     // Extract the values from the database.
-    double* local_form_array = getLocalFormArray();
-    if (d_depth*num_local_nodes + n_nonlocal_indices > 0)
+    double* ghosted_local_vec_array = getGhostedLocalFormVecArray()->data();
+    if (num_local_nodes + num_ghost_nodes > 0)
     {
-        db->getDoubleArray("vals", local_form_array,
-                           d_depth*num_local_nodes + n_nonlocal_indices);
+        db->getDoubleArray("vals", ghosted_local_vec_array, d_depth*(num_local_nodes+num_ghost_nodes));
     }
-    restoreLocalFormVec();
+    restoreArrays();
     return;
-}// LNodeLevelData
+}// LData
 
-LNodeLevelData::LNodeLevelData(
-    const LNodeLevelData& from)
-    : d_name(from.d_name),
-      d_depth(from.d_depth),
-      d_nonlocal_petsc_indices(from.d_nonlocal_petsc_indices),
-      d_global_vec(NULL),
-      d_local_vec(NULL),
-      d_in_local_form(false),
-      d_local_vec_array(NULL),
-      d_extracted_local_array(false)
+LData::~LData()
 {
-    if (from.d_in_local_form)
+    restoreArrays();
+    if (d_managing_petsc_vec)
     {
-        TBOX_ERROR("LNodeLevelData copy constructor:\n" <<
-                   "  copy constructor source object must NOT be in local form." << std::endl);
+        const int ierr = VecDestroy(&d_global_vec);  IBTK_CHKERRQ(ierr);
     }
-
-    int ierr;
-    ierr = VecDuplicate(from.d_global_vec, &d_global_vec);  IBTK_CHKERRQ(ierr);
-    ierr = VecCopy(from.d_global_vec, d_global_vec);        IBTK_CHKERRQ(ierr);
-
     return;
-}// LNodeLevelData
+}// ~LData
 
 void
-LNodeLevelData::resetData(
-    Vec& new_global_vec,
-    const std::vector<int>& new_nonlocal_petsc_indices)
+LData::resetData(
+    Vec vec,
+    const std::vector<int>& nonlocal_petsc_indices,
+    const bool manage_petsc_vec)
 {
-    if (d_in_local_form)
+    restoreArrays();
+    int ierr;
+    if (d_managing_petsc_vec)
     {
-        TBOX_ERROR("LNodeLevelData::resetData()\n" <<
-                   "  object must NOT be in local form." << std::endl);
+        ierr = VecDestroy(&d_global_vec);  IBTK_CHKERRQ(ierr);
     }
-    d_global_vec = new_global_vec;
-    d_nonlocal_petsc_indices = new_nonlocal_petsc_indices;
+
+    // Take ownership of new Vec
+    d_global_vec = vec;
+    d_managing_petsc_vec = manage_petsc_vec;
+
+    int depth;
+    ierr = VecGetBlockSize(d_global_vec, &depth);  IBTK_CHKERRQ(ierr);
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(depth >= 0);
+#endif
+    d_depth = depth;
+    int global_node_count;
+    ierr = VecGetSize(d_global_vec, &global_node_count);  IBTK_CHKERRQ(ierr);
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(global_node_count >= 0);
+#endif
+    d_global_node_count = global_node_count;
+    d_global_node_count /= d_depth;
+    int local_node_count;
+    ierr = VecGetLocalSize(d_global_vec, &local_node_count);  IBTK_CHKERRQ(ierr);
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(local_node_count >= 0);
+#endif
+    d_local_node_count = local_node_count;
+    d_local_node_count /= d_depth;
+    d_nonlocal_petsc_indices = nonlocal_petsc_indices;
+    d_ghost_node_count = d_nonlocal_petsc_indices.size();
     return;
 }// resetData
+
+void
+LData::putToDatabase(
+    Pointer<Database> db)
+{
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(db);
+#endif
+    const int num_local_nodes = getLocalNodeCount();
+    const int num_ghost_nodes = d_nonlocal_petsc_indices.size();
+    db->putString("d_name", d_name);
+    db->putInteger("d_depth", d_depth);
+    db->putInteger("num_local_nodes", num_local_nodes);
+    db->putInteger("num_ghost_nodes", num_ghost_nodes);
+    if (num_ghost_nodes > 0)
+    {
+        db->putIntegerArray("d_nonlocal_petsc_indices", &d_nonlocal_petsc_indices[0], num_ghost_nodes);
+    }
+    const double* const ghosted_local_vec_array = getGhostedLocalFormVecArray()->data();
+    if (num_local_nodes + num_ghost_nodes > 0)
+    {
+        db->putDoubleArray("vals", ghosted_local_vec_array, d_depth*(num_local_nodes+num_ghost_nodes));
+    }
+    restoreArrays();
+    return;
+}// putToDatabase
+
+/////////////////////////////// PROTECTED ////////////////////////////////////
 
 /////////////////////////////// PRIVATE //////////////////////////////////////
 
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBTK
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBTK::LNodeLevelData>;
 
 //////////////////////////////////////////////////////////////////////////////
