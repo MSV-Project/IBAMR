@@ -63,7 +63,7 @@ public:
         bool homogeneous_bc=false);
 
     /*!
-     * \brief Virtual empty destructor.
+     * \brief Empty virtual destructor.
      */
     virtual
     ~GeneralOperator();

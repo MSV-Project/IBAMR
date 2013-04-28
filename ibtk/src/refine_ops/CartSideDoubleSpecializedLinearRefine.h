@@ -46,7 +46,7 @@ namespace IBTK
  * \brief Class CartSideDoubleSpecializedLinearRefine is a concrete
  * SAMRAI::xfer::RefineOperator object that prolongs side-centered double
  * precision patch data via linear interpolation in the normal direction and
- * constant interpolatioon in the tangential direction.
+ * MC-limited piecewise-linear interpolation in the tangential direction.
  */
 class CartSideDoubleSpecializedLinearRefine
     : public SAMRAI::xfer::RefineOperator<NDIM>
@@ -58,9 +58,8 @@ public:
     CartSideDoubleSpecializedLinearRefine();
 
     /*!
-     * \brief Virtual destructor.
+     * \brief Destructor.
      */
-    virtual
     ~CartSideDoubleSpecializedLinearRefine();
 
     /*!
@@ -72,7 +71,7 @@ public:
      * Return true if the refining operation matches the variable and name
      * string identifier request; false, otherwise.
      */
-    virtual bool
+    bool
     findRefineOperator(
         const SAMRAI::tbox::Pointer<SAMRAI::hier::Variable<NDIM> >& var,
         const std::string& op_name) const;
@@ -80,7 +79,7 @@ public:
     /*!
      * Return name string identifier of the refining operation.
      */
-    virtual const std::string&
+    const std::string&
     getOperatorName() const;
 
     /*!
@@ -89,7 +88,7 @@ public:
      * operators with lower priority will be performed before those with higher
      * priority.
      */
-    virtual int
+    int
     getOperatorPriority() const;
 
     /*!
@@ -98,7 +97,7 @@ public:
      * sufficient ghost cell data surrounding the interior to satisfy the
      * stencil width requirements for each refining operator.
      */
-    virtual SAMRAI::hier::IntVector<NDIM>
+    SAMRAI::hier::IntVector<NDIM>
     getStencilWidth() const;
 
     /*!
@@ -108,12 +107,12 @@ public:
      * is guaranteed to contain sufficient data for the stencil width of the
      * refining operator.
      */
-    virtual void
+    void
     refine(
         SAMRAI::hier::Patch<NDIM>& fine,
         const SAMRAI::hier::Patch<NDIM>& coarse,
-        const int dst_component,
-        const int src_component,
+        int dst_component,
+        int src_component,
         const SAMRAI::hier::Box<NDIM>& fine_box,
         const SAMRAI::hier::IntVector<NDIM>& ratio) const;
 

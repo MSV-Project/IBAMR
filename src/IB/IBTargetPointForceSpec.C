@@ -45,7 +45,6 @@
 #endif
 
 // IBAMR INCLUDES
-#include <ibamr/IBTargetPointForceSpecFactory.h>
 #include <ibamr/namespaces.h>
 
 // IBTK INCLUDES
@@ -60,8 +59,7 @@ namespace IBAMR
 {
 /////////////////////////////// STATIC ///////////////////////////////////////
 
-bool IBTargetPointForceSpec::s_registered_factory = false;
-int  IBTargetPointForceSpec::s_class_id = -1;
+int IBTargetPointForceSpec::STREAMABLE_CLASS_ID = StreamableManager::getUnregisteredID();
 
 void
 IBTargetPointForceSpec::registerWithStreamableManager()
@@ -71,14 +69,12 @@ IBTargetPointForceSpec::registerWithStreamableManager()
     // all processes employ the same class ID for the IBTargetPointForceSpec
     // object.
     SAMRAI_MPI::barrier();
-    if (!s_registered_factory)
+    if (!getIsRegisteredWithStreamableManager())
     {
 #ifdef DEBUG_CHECK_ASSERTIONS
-        TBOX_ASSERT(s_class_id == -1);
+        TBOX_ASSERT(STREAMABLE_CLASS_ID == StreamableManager::getUnregisteredID());
 #endif
-        s_class_id = StreamableManager::getManager()->registerFactory(
-            new IBTargetPointForceSpecFactory());
-        s_registered_factory = true;
+        STREAMABLE_CLASS_ID = StreamableManager::getManager()->registerFactory(new IBTargetPointForceSpecFactory());
     }
     SAMRAI_MPI::barrier();
     return;
@@ -93,10 +89,5 @@ IBTargetPointForceSpec::registerWithStreamableManager()
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBAMR
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBAMR::IBTargetPointForceSpec>;
 
 //////////////////////////////////////////////////////////////////////////////

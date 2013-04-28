@@ -45,7 +45,6 @@
 #endif
 
 // IBAMR INCLUDES
-#include <ibamr/IBInstrumentationSpecFactory.h>
 #include <ibamr/namespaces.h>
 
 // IBTK INCLUDES
@@ -60,8 +59,7 @@ namespace IBAMR
 {
 /////////////////////////////// STATIC ///////////////////////////////////////
 
-bool IBInstrumentationSpec::s_registered_factory = false;
-int  IBInstrumentationSpec::s_class_id = -1;
+int IBInstrumentationSpec::STREAMABLE_CLASS_ID = StreamableManager::getUnregisteredID();
 
 std::vector<std::string> IBInstrumentationSpec::s_instrument_names;
 
@@ -73,14 +71,12 @@ IBInstrumentationSpec::registerWithStreamableManager()
     // all processes employ the same class ID for the IBInstrumentationSpec
     // object.
     SAMRAI_MPI::barrier();
-    if (!s_registered_factory)
+    if (!getIsRegisteredWithStreamableManager())
     {
 #ifdef DEBUG_CHECK_ASSERTIONS
-        TBOX_ASSERT(s_class_id == -1);
+        TBOX_ASSERT(STREAMABLE_CLASS_ID == StreamableManager::getUnregisteredID());
 #endif
-        s_class_id = StreamableManager::getManager()->registerFactory(
-            new IBInstrumentationSpecFactory());
-        s_registered_factory = true;
+        STREAMABLE_CLASS_ID = StreamableManager::getManager()->registerFactory(new IBInstrumentationSpecFactory());
     }
     SAMRAI_MPI::barrier();
     return;
@@ -103,10 +99,5 @@ IBInstrumentationSpec::setInstrumentNames(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBAMR
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBAMR::IBInstrumentationSpec>;
 
 //////////////////////////////////////////////////////////////////////////////

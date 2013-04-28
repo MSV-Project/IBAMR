@@ -69,6 +69,7 @@ set(INCLUDE_TEMPLATE_IMPLEMENTATION 1)
 configure_file(${CMAKE_CURRENT_BINARY_DIR}/SAMRAI_config.h.in
   ${CMAKE_CURRENT_BINARY_DIR}/include/SAMRAI_config.h)
 
+find_program(M4_EXECUTABLE m4)
 include(${FortranM4Parser})
 
 # FindMPI
@@ -117,7 +118,7 @@ set(FortranM4_SRCS
 )
 
 ParseM4Sources(
-  OutputFiles2D
+  samrai_fortran_SRCS
   FileExt ".f"
   InputFiles ${FortranM4_SRCS} )
 

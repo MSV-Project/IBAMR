@@ -30,7 +30,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include "IBInstrumentationSpecFactory.h"
+#include "IBInstrumentationSpec.h"
 
 /////////////////////////////// INCLUDES /////////////////////////////////////
 
@@ -45,7 +45,6 @@
 #endif
 
 // IBAMR INCLUDES
-#include <ibamr/IBInstrumentationSpec.h>
 #include <ibamr/namespaces.h>
 
 // IBTK INCLUDES
@@ -55,50 +54,44 @@
 
 namespace IBAMR
 {
-/////////////////////////////// STATIC ///////////////////////////////////////
-
-int IBInstrumentationSpecFactory::s_class_id = -1;
-
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
-IBInstrumentationSpecFactory::IBInstrumentationSpecFactory()
+IBInstrumentationSpec::Factory::Factory()
 {
     setStreamableClassID(StreamableManager::getUnregisteredID());
     return;
-}// IBInstrumentationSpecFactory
+}// Factory
 
-IBInstrumentationSpecFactory::~IBInstrumentationSpecFactory()
+IBInstrumentationSpec::Factory::~Factory()
 {
     // intentionally blank
     return;
-}// ~IBInstrumentationSpecFactory
+}// ~Factory
 
 int
-IBInstrumentationSpecFactory::getStreamableClassID() const
+IBInstrumentationSpec::Factory::getStreamableClassID() const
 {
-    return s_class_id;
+    return STREAMABLE_CLASS_ID;
 }// getStreamableClassID
 
 void
-IBInstrumentationSpecFactory::setStreamableClassID(
+IBInstrumentationSpec::Factory::setStreamableClassID(
     const int class_id)
 {
-    s_class_id = class_id;
+    STREAMABLE_CLASS_ID = class_id;
     return;
 }// setStreamableClassID
 
 Pointer<Streamable>
-IBInstrumentationSpecFactory::unpackStream(
+IBInstrumentationSpec::Factory::unpackStream(
     AbstractStream& stream,
-    const IntVector<NDIM>& offset)
+    const IntVector<NDIM>& /*offset*/)
 {
-    int master_idx;
-    stream.unpack(&master_idx,1);
-    int meter_idx;
-    stream.unpack(&meter_idx,1);
-    int node_idx;
-    stream.unpack(&node_idx,1);
-    return new IBInstrumentationSpec(master_idx,meter_idx,node_idx);
+    Pointer<IBInstrumentationSpec> ret_val = new IBInstrumentationSpec();
+    stream.unpack(&ret_val->d_master_idx,1);
+    stream.unpack(&ret_val->d_meter_idx,1);
+    stream.unpack(&ret_val->d_node_idx,1);
+    return ret_val;
 }// unpackStream
 
 /////////////////////////////// PROTECTED ////////////////////////////////////
@@ -108,10 +101,5 @@ IBInstrumentationSpecFactory::unpackStream(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 } // namespace IBAMR
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBAMR::IBInstrumentationSpecFactory>;
 
 //////////////////////////////////////////////////////////////////////////////

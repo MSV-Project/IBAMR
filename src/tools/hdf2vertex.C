@@ -38,7 +38,8 @@
 #include <string>
 #include <vector>
 
-#include <H5LT.h>
+#include <hdf5.h>
+#include <hdf5_hl.h>
 
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
@@ -171,7 +172,7 @@ main(
     // input file.
     for (int k = 0; k < num_vertex; ++k)
     {
-        for (int d = 0; d < NDIM; ++d)
+        for (unsigned int d = 0; d < NDIM; ++d)
         {
             file_stream.setf(ios_base::scientific);
             file_stream.precision(16);
@@ -199,7 +200,5 @@ main(
 /////////////////////////////// PRIVATE //////////////////////////////////////
 
 /////////////////////////////// NAMESPACE ////////////////////////////////////
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
 
 //////////////////////////////////////////////////////////////////////////////

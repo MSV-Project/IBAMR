@@ -5,13 +5,14 @@ set(kit_SRCS cf_interface/CartCellDoubleLinearCFInterpolation.C
   cf_interface/CoarseFineBoundaryRefinePatchStrategy.C
   cf_interface/CartSideDoubleQuadraticCFInterpolation.C
   cf_interface/CartCellDoubleQuadraticCFInterpolation.C
+  physical_boundary/StaggeredPhysicalBoundaryHelper.C
   physical_boundary/muParserRobinBcCoefs.C
   physical_boundary/CartCellRobinPhysBdryOp.C
   physical_boundary/CartExtrapPhysBdryOp.C
+  physical_boundary/RobinPhysBdryPatchStrategy.C
   physical_boundary/CartSideRobinPhysBdryOp.C
   physical_boundary/ExtendedRobinBcCoefStrategy.C
   physical_boundary/PhysicalBoundaryUtilities.C
-  physical_boundary/TimeDependentLocationIndexRobinBcCoefs.C
   HierarchyGhostCellInterpolation.C
   )
 

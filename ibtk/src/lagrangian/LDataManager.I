@@ -46,6 +46,121 @@ namespace IBTK
 {
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
+inline const SAMRAI::hier::IntVector<NDIM>&
+LDataManager::getGhostCellWidth() const
+{
+    return d_ghost_width;
+}// getGhostCellWidth
+
+inline const std::string&
+LDataManager::getInterpWeightingFunction() const
+{
+    return d_interp_weighting_fcn;
+}// getInterpWeightingFunction
+
+inline const std::string&
+LDataManager::getSpreadWeightingFunction() const
+{
+    return d_spread_weighting_fcn;
+}// getSpreadWeightingFunction
+
+inline bool
+LDataManager::levelContainsLagrangianData(
+    const int level_number) const
+{
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(level_number >= 0);
+#endif
+    if (!(d_coarsest_ln <= level_number &&
+          d_finest_ln   >= level_number))
+    {
+        return false;
+    }
+    else
+    {
+        return d_level_contains_lag_data[level_number];
+    }
+}// levelContainsLagrangianData
+
+inline unsigned int
+LDataManager::getNumberOfNodes(
+    const int level_number) const
+{
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(level_number >= 0);
+    TBOX_ASSERT(d_coarsest_ln <= level_number &&
+                d_finest_ln   >= level_number);
+#endif
+    return d_num_nodes[level_number];
+}// getNumberOfNodes
+
+inline unsigned int
+LDataManager::getNumberOfLocalNodes(
+    const int level_number) const
+{
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(level_number >= 0);
+    TBOX_ASSERT(d_coarsest_ln <= level_number &&
+                d_finest_ln   >= level_number);
+#endif
+    return d_local_lag_indices[level_number].size();
+}// getNumberOfLocalNodes
+
+inline unsigned int
+LDataManager::getGlobalNodeOffset(
+    const int level_number) const
+{
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(level_number >= 0);
+    TBOX_ASSERT(d_coarsest_ln <= level_number &&
+                d_finest_ln   >= level_number);
+#endif
+    return d_node_offset[level_number];
+}// getGlobalNodeOffset
+
+inline SAMRAI::tbox::Pointer<LMesh>
+LDataManager::getLMesh(
+    const int level_number) const
+{
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(level_number >= 0);
+    TBOX_ASSERT(d_coarsest_ln <= level_number && d_finest_ln >= level_number);
+#endif
+    return d_lag_mesh[level_number];
+}// getLMesh
+
+inline SAMRAI::tbox::Pointer<LData>
+LDataManager::getLData(
+    const std::string& quantity_name,
+    const int level_number) const
+{
+#ifdef DEBUG_CHECK_ASSERTIONS
+    TBOX_ASSERT(d_lag_mesh_data[level_number].find(quantity_name) != d_lag_mesh_data[level_number].end());
+    TBOX_ASSERT(level_number >= 0);
+    TBOX_ASSERT(d_coarsest_ln <= level_number && d_finest_ln >= level_number);
+    TBOX_ASSERT(d_lag_mesh_data[level_number].count(quantity_name) > 0);
+#endif
+    return d_lag_mesh_data[level_number].find(quantity_name)->second;
+}// getLData
+
+inline int
+LDataManager::getLNodePatchDescriptorIndex() const
+{
+    return d_lag_node_index_current_idx;
+}// getLNodePatchDescriptorIndex
+
+inline int
+LDataManager::getWorkloadPatchDescriptorIndex() const
+{
+    return d_workload_idx;
+}// getWorkloadPatchDescriptorIndex
+
+inline int
+LDataManager::getNodeCountPatchDescriptorIndex() const
+{
+    return d_node_count_idx;
+}// getNodeCountPatchDescriptorIndex
+
 inline std::vector<std::string>
 LDataManager::getLagrangianStructureNames(
     const int level_number) const
@@ -57,7 +172,7 @@ LDataManager::getLagrangianStructureNames(
     std::vector<std::string> ret_val;
     for (std::map<int,std::string>::const_iterator cit(d_strct_id_to_strct_name_map[level_number].begin()); cit != d_strct_id_to_strct_name_map[level_number].end(); ++cit)
     {
-        ret_val.push_back((*cit).second);
+        ret_val.push_back(cit->second);
     }
     return ret_val;
 }// getLagrangianStructureNames
@@ -73,7 +188,7 @@ LDataManager::getLagrangianStructureIDs(
     std::vector<int> ret_val;
     for (std::map<std::string,int>::const_iterator cit(d_strct_name_to_strct_id_map[level_number].begin()); cit != d_strct_name_to_strct_id_map[level_number].end(); ++cit)
     {
-        ret_val.push_back((*cit).second);
+        ret_val.push_back(cit->second);
     }
     return ret_val;
 }// getLagrangianStructureIDs
@@ -89,7 +204,7 @@ LDataManager::getLagrangianStructureID(
 #endif
     std::map<int,int>::const_iterator cit = d_last_lag_idx_to_strct_id_map[level_number].lower_bound(lagrangian_index);
     if (UNLIKELY(cit == d_last_lag_idx_to_strct_id_map[level_number].end())) return -1;
-    const int strct_id = (*cit).second;
+    const int strct_id = cit->second;
 #ifdef DEBUG_CHECK_ASSERTIONS
     const std::pair<int,int>& idx_range = getLagrangianStructureIndexRange(strct_id, level_number);
     TBOX_ASSERT(idx_range.first <= lagrangian_index && lagrangian_index < idx_range.second);
@@ -108,7 +223,7 @@ LDataManager::getLagrangianStructureID(
 #endif
     std::map<std::string,int>::const_iterator cit = d_strct_name_to_strct_id_map[level_number].find(structure_name);
     if (UNLIKELY(cit == d_strct_name_to_strct_id_map[level_number].end())) return -1;
-    return (*cit).second;
+    return cit->second;
 }// getLagrangianStructureID
 
 inline std::string
@@ -122,7 +237,7 @@ LDataManager::getLagrangianStructureName(
 #endif
     std::map<int,std::string>::const_iterator cit = d_strct_id_to_strct_name_map[level_number].find(structure_id);
     if (UNLIKELY(cit == d_strct_id_to_strct_name_map[level_number].end())) return std::string("UNKNOWN");
-    return (*cit).second;
+    return cit->second;
 }// getLagrangianStructureName
 
 inline std::pair<int,int>
@@ -136,7 +251,7 @@ LDataManager::getLagrangianStructureIndexRange(
 #endif
     std::map<int,std::pair<int,int> >::const_iterator cit = d_strct_id_to_lag_idx_range_map[level_number].find(structure_id);
     if (UNLIKELY(cit == d_strct_id_to_lag_idx_range_map[level_number].end())) return std::make_pair(-1,-1);
-    return (*cit).second;
+    return cit->second;
 }// getLagrangianStructureIndexRange
 
 inline bool

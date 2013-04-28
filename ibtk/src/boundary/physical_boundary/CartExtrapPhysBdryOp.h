@@ -80,7 +80,7 @@ public:
      * \param extrap_type       Type of extrapolation to perform: \p "CONSTANT" specifies constant extrapolation, \p "LINEAR" specifies linear extrapolation, and \p "QUADRATIC" specifies quadratic extrapolation.
      */
     CartExtrapPhysBdryOp(
-        const int patch_data_index,
+        int patch_data_index,
         const std::string& extrap_type="CONSTANT");
 
     /*!
@@ -104,9 +104,8 @@ public:
         const std::string& extrap_type="CONSTANT");
 
     /*!
-     * \brief Virtual destructor.
+     * \brief Destructor.
      */
-    virtual
     ~CartExtrapPhysBdryOp();
 
     /*!
@@ -114,7 +113,7 @@ public:
      */
     void
     setPatchDataIndex(
-        const int patch_data_index);
+        int patch_data_index);
 
     /*!
      * \brief Reset the patch data indices operated upon by this class.
@@ -155,10 +154,10 @@ public:
      * \param fill_time            Double simulation time for boundary filling.
      * \param ghost_width_to_fill  Integer vector describing maximum ghost width to fill over all registered scratch components.
      */
-    virtual void
+    void
     setPhysicalBoundaryConditions(
         SAMRAI::hier::Patch<NDIM>& patch,
-        const double fill_time,
+        double fill_time,
         const SAMRAI::hier::IntVector<NDIM>& ghost_width_to_fill);
 
     /*!
@@ -168,7 +167,7 @@ public:
      *
      * Presently, the refine operator stencil width is zero.
      */
-    virtual SAMRAI::hier::IntVector<NDIM>
+    SAMRAI::hier::IntVector<NDIM>
     getRefineOpStencilWidth() const;
 
     /*!
@@ -188,7 +187,7 @@ public:
      * \param fine_box  Box region on fine patch into which data is refined.
      * \param ratio     Integer vector containing ratio relating index space between coarse and fine patches.
      */
-    virtual void
+    void
     preprocessRefine(
         SAMRAI::hier::Patch<NDIM>& fine,
         const SAMRAI::hier::Patch<NDIM>& coarse,
@@ -212,7 +211,7 @@ public:
      * \param fine_box  Box region on fine patch into which data is refined.
      * \param ratio     Integer vector containing ratio relating index space between coarse and fine patches.
      */
-    virtual void
+    void
     postprocessRefine(
         SAMRAI::hier::Patch<NDIM>& fine,
         const SAMRAI::hier::Patch<NDIM>& coarse,
@@ -254,7 +253,6 @@ private:
     void
     setPhysicalBoundaryConditions_cell(
         SAMRAI::hier::Patch<NDIM>& patch,
-        const double fill_time,
         const std::vector<std::pair<SAMRAI::hier::Box<NDIM>,std::pair<int,int> > >& bdry_fill_boxes);
 
     /*!
@@ -264,7 +262,6 @@ private:
     void
     setPhysicalBoundaryConditions_vec_cell(
         SAMRAI::hier::Patch<NDIM>& patch,
-        const double fill_time,
         const std::vector<std::pair<SAMRAI::hier::Box<NDIM>,std::pair<int,int> > >& bdry_fill_boxes);
 
     /*!
@@ -274,7 +271,6 @@ private:
     void
     setPhysicalBoundaryConditions_face(
         SAMRAI::hier::Patch<NDIM>& patch,
-        const double fill_time,
         const std::vector<std::pair<SAMRAI::hier::Box<NDIM>,std::pair<int,int> > >& bdry_fill_boxes);
 
     /*!
@@ -284,7 +280,6 @@ private:
     void
     setPhysicalBoundaryConditions_node(
         SAMRAI::hier::Patch<NDIM>& patch,
-        const double fill_time,
         const std::vector<std::pair<SAMRAI::hier::Box<NDIM>,std::pair<int,int> > >& bdry_fill_boxes);
 
     /*!
@@ -294,7 +289,6 @@ private:
     void
     setPhysicalBoundaryConditions_side(
         SAMRAI::hier::Patch<NDIM>& patch,
-        const double fill_time,
         const std::vector<std::pair<SAMRAI::hier::Box<NDIM>,std::pair<int,int> > >& bdry_fill_boxes);
 
     /*

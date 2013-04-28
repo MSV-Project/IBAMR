@@ -47,9 +47,6 @@ function( ParseM4Sources _VarOut)
 
   RequiredVariables(FunctionName "ParseM4Sources" KeyList PMS_FileExt PMS_InputFiles)
 
-#   if(PMS_M4args)
-#     string(REPLACE ";" " " PMS_M4args "${PMS_M4args}")
-#   endif()
   set( outfiles )
   foreach( f ${PMS_InputFiles} )
     # first we might need to make the input file absolute
@@ -57,14 +54,14 @@ function( ParseM4Sources _VarOut)
     if(NOT EXISTS ${f})
       message(FATAL_ERROR "Non existent file: ${f}")
     endif()
+
     # get the relative path of the file to the current source dir
     file( RELATIVE_PATH rf "${CMAKE_CURRENT_SOURCE_DIR}" "${f}" )
+    
     # strip the .m4 off the end if present and prepend the current binary dir
     get_filename_component( file_ext ${f} EXT )
     string( REGEX REPLACE "\\${file_ext}$" "${PMS_FileExt}"  of "${CMAKE_CURRENT_BINARY_DIR}/${rf}" )
-
-    # append the output file to the list of outputs
-    list( APPEND outfiles "${of}" )
+    
     # create the output directory if it doesn't exist
     get_filename_component( d "${of}" PATH )
     if( NOT IS_DIRECTORY "${d}" )
@@ -72,18 +69,32 @@ function( ParseM4Sources _VarOut)
     endif()
 
     # now add the custom command to generate the output file
-    get_filename_component(file_path ${f} PATH)
-#     message("f = ${f}")
-#     message("of = ${of}")
-    add_custom_command( OUTPUT "${of}"
-      COMMAND ${M4_EXECUTABLE} ARGS ${PMS_M4args} ${f} > ${of}
-      DEPENDS ${f}
-      WORKING_DIRECTORY ${file_path} VERBATIM
-      )
-#     if(NOT EXISTS ${of})
-#       message("command = ${M4_EXECUTABLE} ${PMS_M4args} ${f} > ${of}")
-#       message(FATAL_ERROR "M4 failed to parse the file: ${f}")
-#     endif()
+    get_filename_component(working_dir ${f} PATH)
+    set(command ${M4_EXECUTABLE} ${PMS_M4args} ${f})
+    execute_process(COMMAND ${command} 
+      RESULT_VARIABLE result 
+      OUTPUT_VARIABLE out
+      ERROR_VARIABLE error 
+      WORKING_DIRECTORY ${working_dir} )
+    if(result)
+      set(msg "Command failed: ${result}\n")
+      foreach(arg IN LISTS command)
+	set(msg "${msg} '${arg}'")
+      endforeach()
+      message(FATAL_ERROR "${msg}")
+    else()
+      message(STATUS "Generating Output: ${of}")
+#       if(EXISTS ${of})
+#         file(REMOVE ${of})
+#       endif()
+      file(WRITE ${of} ${out})
+    endif()
+    if(NOT EXISTS ${of})
+      message(FATAL_ERROR "M4 failed to parse the file: ${f}")
+    endif()
+
+    # append the output file to the list of outputs
+    list( APPEND outfiles "${of}" )
   endforeach( f )
   # set the output list in the calling scope
   set( ${_VarOut} ${outfiles} PARENT_SCOPE )

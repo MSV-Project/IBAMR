@@ -2,7 +2,8 @@ set(KIT coarsen_ops)
 set(UKIT COARSEN_OPS)
 
 
-set(kit_SRCS LagMarkerCoarsen.C
+set(kit_SRCS
+  LMarkerCoarsen.C
   VecCellCoarsenAdapter.C
   CartCellDoubleCubicCoarsen.C
   CartSideDoubleCubicCoarsen.C

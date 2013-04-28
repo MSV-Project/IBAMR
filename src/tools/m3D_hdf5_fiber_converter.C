@@ -48,6 +48,8 @@
 #include <hdf5_hl.h>
 #endif
 
+#include <blitz/array.h>
+
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 using namespace std;
@@ -77,7 +79,7 @@ build_local_cart_block(
         os << setw(7) << fiber_number << " " << setw(7) << nelem_tot << " = FIBER POINTS\n";
         for (int k = 0; k < nelem_tot; ++k)
         {
-            for (int d = 0; d < NDIM; ++d)
+            for (unsigned int d = 0; d < NDIM; ++d)
             {
                 os << setw(7) << fixed << setprecision(3) << X[NDIM*k+d] << " ";
             }
@@ -88,12 +90,12 @@ build_local_cart_block(
     {
         // Output a 2D sheet of fibers.
         int fiber_counter = 0;
-        for (int d0 = 0; d0 < NDIM; ++d0)
+        for (unsigned int d0 = 0; d0 < NDIM; ++d0)
         {
             if (nelem[d0] > 1)
             {
                 // Find the other nontrivial dimension.
-                for (int d1 = 0; d1 < NDIM; ++d1)
+                for (unsigned int d1 = 0; d1 < NDIM; ++d1)
                 {
                     if (d1 != d0 && nelem[d1] > 1)
                     {
@@ -112,12 +114,12 @@ build_local_cart_block(
                                     end_of_fiber = true;
                                 }
 
-                                int idx[NDIM] = {0 , 0 , 0};
+                                blitz::TinyVector<int,NDIM> idx(0 , 0 , 0);
                                 idx[d0] = j;
                                 idx[d1] = k;
                                 const int offset = idx[0] + idx[1]*nelem[0] + idx[2]*nelem[0]*nelem[1];
 
-                                for (int d = 0; d < NDIM; ++d)
+                                for (unsigned int d = 0; d < NDIM; ++d)
                                 {
                                     os << setw(7) << fixed << setprecision(3) << X[NDIM*offset+d] << " ";
                                 }
@@ -138,7 +140,7 @@ build_local_cart_block(
         int fiber_counter = 0;
 
         // Loop over all pairs of dimensions.
-        for (int d0 = 0; d0 < NDIM; ++d0)
+        for (unsigned int d0 = 0; d0 < NDIM; ++d0)
         {
             const int d1 = (d0+1)%NDIM;
             const int d2 = (d1+1)%NDIM;
@@ -167,13 +169,13 @@ build_local_cart_block(
                             end_of_fiber = true;
                         }
 
-                        int idx[NDIM] = {0 , 0 , 0};
+                        blitz::TinyVector<int,NDIM> idx(0 , 0 , 0);
                         idx[d0] = i;
                         idx[d1] = j;
                         idx[d2] = k;
                         const int offset = idx[0] + idx[1]*nelem[0] + idx[2]*nelem[0]*nelem[1];
 
-                        for (int d = 0; d < NDIM; ++d)
+                        for (unsigned int d = 0; d < NDIM; ++d)
                         {
                             os << setw(7) << fixed << setprecision(3) << X[NDIM*offset+d] << " ";
                         }

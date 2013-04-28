@@ -215,3 +215,7 @@ file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/testBuiltinPrefetch.cxx)
 
 configure_file(${IBAMR_MODULE_PATH}/IBAMR_config.h.in
   ${CMAKE_CURRENT_BINARY_DIR}/include/IBAMR_config.h @ONLY)
+
+set(PROJECT_NAME_PREFIX ${PROJECT_NAME}_)
+configure_file(${IBAMR_MODULE_PATH}/IBAMR_config.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/include/IBAMR_prefix_config.h @ONLY)

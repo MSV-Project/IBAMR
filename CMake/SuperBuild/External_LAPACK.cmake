@@ -90,7 +90,7 @@ if(NOT DEFINED LAPACK_DIR)
 else()
   # The project is provided using LAPACK_DIR, nevertheless since other project may depend on LAPACK,
   # let's add an 'empty' one
-  msvMacroEmptyExternalProject(${proj} "${LAPACK_DEPENDENCIES}")
+  EmptyExternalProject(${proj} "${LAPACK_DEPENDENCIES}")
 endif()
 
 list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DLAPACK_DIR:PATH=${LAPACK_DIR})

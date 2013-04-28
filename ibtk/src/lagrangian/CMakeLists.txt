@@ -3,20 +3,26 @@ set(UKIT LAGRANGIAN)
 
 
 set(kit_SRCS FEDataManager.C
-  LDataManager.C
-  LNodeIndexData.C
-  LNodeIndexDataFactory.C
-  LNodeIndexIterator.C
+  LSiloDataWriter.C
+  LSetDataIterator.C
+  LNode.C
+  LSetDataFactory.C
+  LMarker.C
   LNodeIndex.C
-  LNodeIndexSet.C
-  LNodeIndexTransaction.C
-  LNodeIndexVariable.C
-  LNodeInitStrategy.C
-  LNodeLevelData.C
-  LagM3DDataWriter.C
-  LagMarker.C
-  LagSiloDataWriter.C
+  LIndexSetDataFactory.C
+  LTransaction.C
+  LIndexSetVariable.C
+  LSetData.C
+  LSetVariable.C
+  LM3DDataWriter.C
   LEInteractor.C
+  LMesh.C
+  LDataManager.C
+  LData.C
+  FEDataManager.C
+  LInitStrategy.C
+  LSet.C
+  LIndexSetData.C
 )
 
 

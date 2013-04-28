@@ -21,12 +21,11 @@ set(BLITZ_FOUND FALSE)
 include(FindPackageHandleStandardArgs)
 include(GetPrerequisites)
 
-find_path(BLITZ_HEADER_PATH blitz.h
+find_path(BLITZ_HEADER_PATH blitz/blitz.h
         HINTS ${BLITZ_DIR}
-        PATH_SUFFIXES include/blitz Inc)
+        PATH_SUFFIXES include Inc)
 
 set(BLITZ_INCLUDE_PATH_WORK ${BLITZ_HEADER_PATH})
-
 set(BLITZ_LIB "BLITZ_LIB-NOTFOUND" CACHE FILEPATH "Cleared" FORCE)
 find_library(BLITZ_LIB
   NAMES         blitz

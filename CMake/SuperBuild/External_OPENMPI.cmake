@@ -111,7 +111,7 @@ if(NOT DEFINED OPENMPI_DIR)
   set(${proj}_DIR ${ep_install_dir})
 
 else()
-  msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
+  EmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
 set(MPI_CXX_COMPILER ${ep_install_dir}/bin/mpicxx CACHE INTERNAL "" FORCE)

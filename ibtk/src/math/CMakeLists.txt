@@ -2,23 +2,26 @@ set(KIT math)
 set(UKIT MATH)
 
 
-set(kit_SRCS PETScMatUtilities.C
+set(kit_SRCS
+  PETScMatUtilities.C
   PatchVecCellDataBasicOps.C
   HierarchyVecCellDataOpsReal.C
   PatchMathOps.C
+  PoissonUtilities.C
   HierarchyMathOps.C
   PETScVecUtilities.C
   PatchVecCellDataOpsReal.C
 )
 
-set(FortranSRCS fortran/miscmath3d.f.m4
-  fortran/div3d.f.m4
+set(FortranSRCS   
   fortran/flux3d.f.m4
   fortran/interp3d.f.m4
-  fortran/laplace3d.f.m4
   fortran/grad3d.f.m4
+  fortran/miscmath3d.f.m4
   fortran/graddetect3d.f.m4
-  fortran/curl3d.f.m4)
+  fortran/curl3d.f.m4
+  fortran/div3d.f.m4
+  fortran/laplace3d.f.m4)
 
 ParseM4Sources(
   OutputFiles3D
@@ -33,14 +36,14 @@ set(kit_SRCS3D
 
 set(FortranSRCS
   fortran/laplace2d.f.m4
-  fortran/div2d.f.m4
-  fortran/graddetect2d.f.m4
-  fortran/curl2d.f.m4
   fortran/vclaplace2d.f.m4
+  fortran/div2d.f.m4
+  fortran/interp2d.f.m4
+  fortran/curl2d.f.m4
+  fortran/graddetect2d.f.m4
   fortran/miscmath2d.f.m4
-  fortran/flux2d.f.m4
   fortran/grad2d.f.m4
-  fortran/interp2d.f.m4)
+  fortran/flux2d.f.m4)
 
 ParseM4Sources(
   OutputFiles2D

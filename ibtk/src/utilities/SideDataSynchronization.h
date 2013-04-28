@@ -53,7 +53,7 @@ namespace IBTK
  * "synchronize" side-centered values defined at patch boundaries.
  */
 class SideDataSynchronization
-    : public virtual SAMRAI::tbox::DescribedClass
+    : public SAMRAI::tbox::DescribedClass
 {
 public:
     /*!
@@ -71,7 +71,7 @@ public:
          */
         inline
         SynchronizationTransactionComponent(
-            const int data_idx=-1,
+            int data_idx=-1,
             const std::string& coarsen_op_name="NONE")
             : d_data_idx(data_idx),
               d_coarsen_op_name(coarsen_op_name)
@@ -138,7 +138,6 @@ public:
     /*!
      * \brief Destructor.
      */
-    virtual
     ~SideDataSynchronization();
 
     /*!
@@ -185,7 +184,7 @@ public:
      */
     void
     synchronizeData(
-        const double& fill_time);
+        double fill_time);
 
 protected:
 

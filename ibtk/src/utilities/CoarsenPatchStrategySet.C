@@ -118,9 +118,4 @@ CoarsenPatchStrategySet::postprocessCoarsen(
 
 }// namespace IBTK
 
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBTK::CoarsenPatchStrategySet>;
-
 //////////////////////////////////////////////////////////////////////////////

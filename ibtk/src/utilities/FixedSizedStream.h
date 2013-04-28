@@ -71,19 +71,18 @@ public:
      * Create a message stream of the specified size in bytes.
      */
     FixedSizedStream(
-        const int bytes);
+        int bytes);
 
     /*!
      * Create a message stream with the specified buffer.
      */
     FixedSizedStream(
-        const void* const buffer,
-        const int bytes);
+        const void* buffer,
+        int bytes);
 
     /*!
-     * Virtual destructor for a message stream.
+     * Destructor for a message stream.
      */
-    virtual
     ~FixedSizedStream();
 
     /*!
@@ -116,7 +115,7 @@ public:
      */
     void
     setCurrentIndex(
-        const int index);
+        int index);
 
     /*!
      * Reset the index to the beginning of the buffer.  This is the same as
@@ -135,32 +134,32 @@ public:
     /*!
      * Pack a single bool into the message stream.
      */
-    virtual SAMRAI::tbox::AbstractStream&
+    SAMRAI::tbox::AbstractStream&
     operator<<(
         const bool& data);
 
     /*!
      * Remove a single bool from the message stream.
      */
-    virtual SAMRAI::tbox::AbstractStream&
+    SAMRAI::tbox::AbstractStream&
     operator>>(
         bool& data);
 
     /*!
      * Pack an array of bools into the message stream.
      */
-    virtual void
+    void
     pack(
         const bool* data,
-        const int n=1);
+        int n=1);
 
     /*!
      * Remove an array of bools from the message stream.
      */
-    virtual void
+    void
     unpack(
         bool* data,
-        const int n=1);
+        int n=1);
 
     //\}
 
@@ -174,32 +173,32 @@ public:
     /*!
      * Pack a single char into the message stream.
      */
-    virtual SAMRAI::tbox::AbstractStream&
+    SAMRAI::tbox::AbstractStream&
     operator<<(
         const char& data);
 
     /*!
      * Remove a single char from the message stream.
      */
-    virtual SAMRAI::tbox::AbstractStream&
+    SAMRAI::tbox::AbstractStream&
     operator>>(
         char& data);
 
     /*!
      * Pack an array of chars into the message stream.
      */
-    virtual void
+    void
     pack(
         const char* data,
-        const int n=1);
+        int n=1);
 
     /*!
      * Remove an array of chars from the message stream.
      */
-    virtual void
+    void
     unpack(
         char* data,
-        const int n=1);
+        int n=1);
 
     //\}
 
@@ -213,32 +212,32 @@ public:
     /*!
      * Pack a single double complex into the message stream.
      */
-    virtual SAMRAI::tbox::AbstractStream&
+    SAMRAI::tbox::AbstractStream&
     operator<<(
         const dcomplex& data);
 
     /*!
      * Remove a single double complex from the message stream.
      */
-    virtual SAMRAI::tbox::AbstractStream&
+    SAMRAI::tbox::AbstractStream&
     operator>>(
         dcomplex& data);
 
     /*!
      * Pack an array of double complex into the message stream.
      */
-    virtual void
+    void
     pack(
         const dcomplex* data,
-        const int n=1);
+        int n=1);
 
     /*!
      * Remove an array of double complex from the message stream.
      */
-    virtual void
+    void
     unpack(
         dcomplex* data,
-        const int n=1);
+        int n=1);
 
     //\}
 
@@ -252,32 +251,32 @@ public:
     /*!
      * Pack a single double into the message stream.
      */
-    virtual SAMRAI::tbox::AbstractStream&
+    SAMRAI::tbox::AbstractStream&
     operator<<(
         const double& data);
 
     /*!
      * Remove a single double from the message stream.
      */
-    virtual SAMRAI::tbox::AbstractStream&
+    SAMRAI::tbox::AbstractStream&
     operator>>(
         double& data);
 
     /*!
      * Pack an array of doubles into the message stream.
      */
-    virtual void
+    void
     pack(
         const double* data,
-        const int n=1);
+        int n=1);
 
     /*!
      * Remove an array of doubles from the message stream.
      */
-    virtual void
+    void
     unpack(
         double* data,
-        const int n=1);
+        int n=1);
 
     //\}
 
@@ -291,32 +290,32 @@ public:
     /*!
      * Pack a single float into the message stream.
      */
-    virtual SAMRAI::tbox::AbstractStream&
+    SAMRAI::tbox::AbstractStream&
     operator<<(
         const float& data);
 
     /*!
      * Remove a single float from the message stream.
      */
-    virtual SAMRAI::tbox::AbstractStream&
+    SAMRAI::tbox::AbstractStream&
     operator>>(
         float& data);
 
     /*!
      * Pack an array of floats into the message stream.
      */
-    virtual void
+    void
     pack(
         const float* data,
-        const int n=1);
+        int n=1);
 
     /*!
      * Remove an array of floats from the message stream.
      */
-    virtual void
+    void
     unpack(
         float* data,
-        const int n=1);
+        int n=1);
 
     //\}
 
@@ -330,32 +329,32 @@ public:
     /*!
      * Pack a single integer into the message stream.
      */
-    virtual SAMRAI::tbox::AbstractStream&
+    SAMRAI::tbox::AbstractStream&
     operator<<(
         const int& data);
 
     /*!
      * Remove a single integer from the message stream.
      */
-    virtual SAMRAI::tbox::AbstractStream&
+    SAMRAI::tbox::AbstractStream&
     operator>>(
         int& data);
 
     /*!
      * Pack an array of integers into the message stream.
      */
-    virtual void
+    void
     pack(
         const int* data,
-        const int n=1);
+        int n=1);
 
     /*!
      * Remove an array of integers from the message stream.
      */
-    virtual void
+    void
     unpack(
         int* data,
-        const int n=1);
+        int n=1);
 
     //\}
 
@@ -398,7 +397,7 @@ private:
      */
     void*
     getPointerAndAdvanceCursor(
-        const int bytes);
+        int bytes);
 
     /*!
      * \brief Pack the specified data to the buffer.
@@ -406,8 +405,8 @@ private:
     template<typename T>
     void
     __pack(
-        const T* const m_data,
-        unsigned m_bytes);
+        const T* m_data,
+        unsigned int m_bytes);
 
     /*!
      * \brief Unpack the specified data from the buffer.
@@ -415,8 +414,8 @@ private:
     template<typename T>
     void
     __unpack(
-        T* const m_data,
-        unsigned m_bytes);
+        T* m_data,
+        unsigned int m_bytes);
 
     /*
      * The size of the buffer.

@@ -114,7 +114,7 @@ if(NOT DEFINED HYPRE_DIR)
   set(${proj}_DIR ${ep_install_dir})
 
 else()
-  msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
+  EmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
 list(APPEND IBAMR_SUPERBUILD_EP_ARGS

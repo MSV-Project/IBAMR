@@ -3,9 +3,6 @@ set(UKIT UTILITIES)
 
 
 set(kit_SRCS
-  FESystemDataCache.C
-  IndexSet.C
-  LagMarkerUtilities.C
   StreamableFactory.C
   SideSynchCopyFillPattern.C
   muParserCartGridFunction.C
@@ -14,10 +11,12 @@ set(kit_SRCS
   RefinePatchStrategySet.C
   StandardTagAndInitStrategySet.C
   FaceDataSynchronization.C
+  LMarkerUtilities.C
   CopyToRootTransaction.C
   Streamable.C
   FaceSynchCopyFillPattern.C
   NodeDataSynchronization.C
+  CartGridFunctionSet.C
   NormOps.C
   AppInitializer.C
   ParallelSet.C
@@ -36,8 +35,6 @@ set(kit_SRCS
   CellNoCornersFillPattern.C
   CartGridFunction.C
   HierarchyIntegrator.C
-  PETScMatOps.C
-  PETScVecOps.C
 )
 
 set(kit_SRCS2D ${kit_SRCS})

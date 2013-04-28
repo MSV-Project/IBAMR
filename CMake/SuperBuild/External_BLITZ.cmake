@@ -69,10 +69,11 @@ if(NOT DEFINED BLITZ_DIR)
 
   ExternalProject_Add(${proj}
     SOURCE_DIR ${IBAMR_BINARY_DIR}/SuperBuild/${proj}
-    BINARY_DIR ${IBAMR_BINARY_DIR}/SuperBuild/${proj}
+    BINARY_DIR ${IBAMR_BINARY_DIR}/SuperBuild/${proj}-build
     PREFIX CMake/${proj}${ep_suffix}
-    HG_REPOSITORY ${BLITZ_HG_URL}
-    HG_TAG ${BLITZ_HG_TAG}
+    URL ${BLITZ_URL}
+#     HG_REPOSITORY ${BLITZ_HG_URL}
+#     HG_TAG ${BLITZ_HG_TAG}
     UPDATE_COMMAND ""
     INSTALL_COMMAND make install
     PATCH_COMMAND ${Blitz_PATCH_COMMAND}
@@ -107,7 +108,7 @@ if(NOT DEFINED BLITZ_DIR)
   set(${proj}_DIR ${IBAMR_BINARY_DIR}/SuperBuild/${proj}-build)
 
 else()
-  msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
+  EmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
 list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DBLITZ_DIR:PATH=${BLITZ_DIR})

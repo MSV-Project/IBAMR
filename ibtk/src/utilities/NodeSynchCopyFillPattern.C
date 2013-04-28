@@ -55,7 +55,7 @@ static const std::string PATTERN_NAME = "NODE_SYNCH_COPY_FILL_PATTERN";
 /////////////////////////////// PUBLIC ///////////////////////////////////////
 
 NodeSynchCopyFillPattern::NodeSynchCopyFillPattern(
-    const int axis)
+    const unsigned int axis)
     : d_stencil_width(1),
       d_axis(axis)
 {
@@ -73,7 +73,7 @@ Pointer<BoxOverlap<NDIM> >
 NodeSynchCopyFillPattern::calculateOverlap(
     const BoxGeometry<NDIM>& dst_geometry,
     const BoxGeometry<NDIM>& src_geometry,
-    const Box<NDIM>& dst_patch_box,
+    const Box<NDIM>& /*dst_patch_box*/,
     const Box<NDIM>& src_mask,
     const bool overwrite_interior,
     const IntVector<NDIM>& src_offset) const
@@ -91,7 +91,7 @@ NodeSynchCopyFillPattern::calculateOverlap(
 #endif
     BoxList<NDIM> dst_boxes;
     bool skip = false;
-    for (int d = 0; d < NDIM && !skip; ++d)
+    for (unsigned int d = 0; d < NDIM && !skip; ++d)
     {
         if (d != d_axis)
         {
@@ -135,10 +135,5 @@ NodeSynchCopyFillPattern::getPatternName() const
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBTK::NodeSynchCopyFillPattern>;
 
 //////////////////////////////////////////////////////////////////////////////

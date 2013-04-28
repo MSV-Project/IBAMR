@@ -2,49 +2,46 @@ set(KIT IB)
 set(UKIT IB)
 
 set(kit_SRCS
-  IBAnchorPointSpec.C
-  IBAnchorPointSpecFactory.C
-  IBBeamForceSpecFactory.C
-  IBBeamForceGen.C
-  IBBeamForceSpec.C
-  IBDataPostProcessor.C
-  IBEulerianForceFunction.C
-  IBEulerianSourceFunction.C
-  IBFEHierarchyIntegrator.C
-  IBHDF5Initializer.C
-  IBHierarchyIntegrator.C
-  IBImplicitHierarchyIntegrator.C
-  IBImplicitJacobian.C
-  IBImplicitModHelmholtzOperator.C
-  IBImplicitModHelmholtzPETScLevelSolver.C
-  IBImplicitOperator.C
-  IBImplicitSFROperator.C
-  IBImplicitSJROperator.C
-  IBInstrumentPanel.C
-  IBInstrumentationSpec.C
-  IBInstrumentationSpecFactory.C
-  IBKirchhoffRodForceGen.C
-  IBLagrangianForceStrategy.C
-  IBLagrangianForceStrategySet.C
-  IBLagrangianSourceStrategy.C
-  IBMovingTargetPointForceGen.C
-  IBMovingTargetPointForceSpec.C
-  IBMovingTargetPointForceSpecFactory.C
-  IBRodForceSpec.C
-  IBRodForceSpecFactory.C
-  IBSourceSpec.C
-  IBSourceSpecFactory.C
-  IBSpringForceGen.C
-  IBSpringForceSpec.C
-  IBSpringForceSpecFactory.C
-  IBStaggeredHierarchyIntegrator.C
-  IBStandardForceGen.C
-  IBStandardInitializer.C
   IBStandardSourceGen.C
-  IBTargetPointForceSpec.C
-  IBTargetPointForceGen.C
+  IBKirchhoffRodForceGen.C
+  IBSpringForceSpec.C
+  SimplifiedIBFEMethod.C
+  MaterialPointSpecFactory.C
+  IBRodForceSpec.C
+  IBStandardInitializer.C
+  MaterialPointSpec.C
+  IBLagrangianForceStrategySet.C
+  IMPMethod.C
+  IBImplicitStaggeredPETScLevelSolver.C
+  IBHierarchyIntegrator.C
+  IBRodForceSpecFactory.C
+  GeneralizedIBMethod.C
+  IBMethod.C
+  IMPInitializer.C
+  IBBeamForceSpecFactory.C
+  IBInstrumentPanel.C
+  IBImplicitStaggeredHierarchyIntegrator.C
+  IBAnchorPointSpecFactory.C
+  IBSourceSpec.C
   IBMethodPostProcessStrategy.C
+  IBTargetPointForceSpec.C
+  IBAnchorPointSpec.C
+  IBEulerianForceFunction.C
+  IBStrategySet.C
+  IBSourceSpecFactory.C
+  IBStandardForceGen.C
+  IBLagrangianForceStrategy.C
+  IBLagrangianSourceStrategy.C
+  IBInstrumentationSpecFactory.C
+  IBEulerianSourceFunction.C
+  IBFEMethod.C
+  IBBeamForceSpec.C
+  IBExplicitHierarchyIntegrator.C
+  PenaltyIBMethod.C
+  IBInstrumentationSpec.C
   IBTargetPointForceSpecFactory.C
+  IBStrategy.C
+  IBSpringForceSpecFactory.C
   )
 
 set(kit_SRCS2D

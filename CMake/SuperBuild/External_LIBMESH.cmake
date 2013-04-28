@@ -120,7 +120,7 @@ if(NOT DEFINED LIBMESH_DIR)
   set(${proj}_DIR ${IBAMR_BINARY_DIR}/SuperBuild/${proj}/libmesh)
 
 else()
-  msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
+  EmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
 list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DLIBMESH_DIR:PATH=${LIBMESH_DIR})

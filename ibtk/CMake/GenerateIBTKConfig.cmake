@@ -125,3 +125,7 @@ file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/testBuiltinPrefetch.cxx)
 
 configure_file(${IBTK_MODULE_PATH}/IBTK_config.h.in
   ${CMAKE_CURRENT_BINARY_DIR}/include/IBTK_config.h @ONLY)
+
+set(PROJECT_NAME_PREFIX ${PROJECT_NAME}_)
+configure_file(${IBTK_MODULE_PATH}/IBTK_config.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/include/IBTK_prefix_config.h @ONLY)

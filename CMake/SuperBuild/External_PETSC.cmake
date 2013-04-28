@@ -102,7 +102,7 @@ if(NOT DEFINED PETSC_DIR)
     set(${proj}_ARCH build)
 
 else()
-  msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
+  EmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
 list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DPETSC_DIR:PATH=${PETSC_DIR})

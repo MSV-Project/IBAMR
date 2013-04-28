@@ -91,16 +91,6 @@ set(INCLUDE_PATHS)
 
 CheckExternalProjectDependency(IBAMR)
 
-# list(REMOVE_DUPLICATES EXTERNAL_LIBRARIES)
-# list(REMOVE_DUPLICATES INCLUDE_PATHS)
-# list(REMOVE_DUPLICATES LIBRARY_PATHS)
-# set(IBAMR_EXTERNAL_LIBRARIES ${IBAMR_EXTERNAL_LIBRARIES} ${EXTERNAL_LIBRARIES}
-#   CACHE INTERNAL "IBAMR external libraries.")
-# set(IBAMR_INCLUDE_PATH ${IBAMR_INCLUDE_PATH} ${INCLUDE_PATHS}
-#   CACHE INTERNAL "IBAMR include paths.")
-# set(IBAMR_LIBRARY_PATH ${IBAMR_LIBRARY_PATH} ${LIBRARY_PATHS}
-#   CACHE INTERNAL "IBAMR library paths.")
-
 #-----------------------------------------------------------------------------
 # Makes sure ${IBAMR_BINARY_DIR}/bin and ${IBAMR_BINARY_DIR}/lib exists
 #-----------------------------------------------------------------------------

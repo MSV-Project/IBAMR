@@ -65,7 +65,6 @@ public:
      */
     PatchVecCellDataOpsReal();
 
-    virtual
     ~PatchVecCellDataOpsReal<TYPE>();
 
     /*!
@@ -84,8 +83,8 @@ public:
     void
     swapData(
         SAMRAI::tbox::Pointer<SAMRAI::hier::Patch<NDIM> > patch,
-        const int data1_id,
-        const int data2_id) const;
+        int data1_id,
+        int data2_id) const;
 
     /*!
      * Print data entries over given box to given output stream.

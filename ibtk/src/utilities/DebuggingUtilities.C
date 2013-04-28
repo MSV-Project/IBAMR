@@ -124,7 +124,7 @@ DebuggingUtilities::checkFaceDataForNaNs(
             Pointer<Patch<NDIM> > patch = level->getPatch(patch_num);
             Pointer<FaceData<NDIM,double> > patch_data = patch->getPatchData(patch_data_idx);
             const Box<NDIM>& data_box = interior_only ? patch_data->getBox() : patch_data->getGhostBox();
-            for (int axis = 0; axis < NDIM; ++axis)
+            for (unsigned int axis = 0; axis < NDIM; ++axis)
             {
                 for (Box<NDIM>::Iterator it(FaceGeometry<NDIM>::toFaceBox(data_box,axis)); it; it++)
                 {
@@ -227,7 +227,7 @@ DebuggingUtilities::checkSideDataForNaNs(
             Pointer<Patch<NDIM> > patch = level->getPatch(patch_num);
             Pointer<SideData<NDIM,double> > patch_data = patch->getPatchData(patch_data_idx);
             const Box<NDIM>& data_box = interior_only ? patch_data->getBox() : patch_data->getGhostBox();
-            for (int axis = 0; axis < NDIM; ++axis)
+            for (unsigned int axis = 0; axis < NDIM; ++axis)
             {
                 for (Box<NDIM>::Iterator it(SideGeometry<NDIM>::toSideBox(data_box,axis)); it; it++)
                 {
@@ -292,7 +292,7 @@ DebuggingUtilities::saveCellData(
 
                     const std::string patch_filename = truncated_dirname + '/' + filename + '_' + Utilities::levelToString(ln) + '_' + Utilities::patchToString(patch_num);
                     std::ofstream of(patch_filename.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
-                    for (int d = 0 ; d < NDIM; ++d)
+                    for (unsigned int d = 0; d < NDIM; ++d)
                     {
                         of.write(reinterpret_cast<const char*>(&patch_box.lower()(d)),sizeof(int));
                         of.write(reinterpret_cast<const char*>(&patch_box.upper()(d)),sizeof(int));
@@ -348,14 +348,14 @@ DebuggingUtilities::saveFaceData(
 
                     const std::string patch_filename = truncated_dirname + '/' + filename + '_' + Utilities::levelToString(ln) + '_' + Utilities::patchToString(patch_num);
                     std::ofstream of(patch_filename.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
-                    for (int d = 0 ; d < NDIM; ++d)
+                    for (unsigned int d = 0; d < NDIM; ++d)
                     {
                         of.write(reinterpret_cast<const char*>(&patch_box.lower()(d)),sizeof(int));
                         of.write(reinterpret_cast<const char*>(&patch_box.upper()(d)),sizeof(int));
                     }
                     const int depth = data->getDepth();
                     of.write(reinterpret_cast<const char*>(&depth),sizeof(int));
-                    for (int face = 0; face < NDIM; ++face)
+                    for (unsigned int face = 0; face < NDIM; ++face)
                     {
                         for (int d = 0; d < depth; ++d)
                         {
@@ -407,7 +407,7 @@ DebuggingUtilities::saveNodeData(
 
                     const std::string patch_filename = truncated_dirname + '/' + filename + '_' + Utilities::levelToString(ln) + '_' + Utilities::patchToString(patch_num);
                     std::ofstream of(patch_filename.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
-                    for (int d = 0 ; d < NDIM; ++d)
+                    for (unsigned int d = 0; d < NDIM; ++d)
                     {
                         of.write(reinterpret_cast<const char*>(&patch_box.lower()(d)),sizeof(int));
                         of.write(reinterpret_cast<const char*>(&patch_box.upper()(d)),sizeof(int));
@@ -463,14 +463,14 @@ DebuggingUtilities::saveSideData(
 
                     const std::string patch_filename = truncated_dirname + '/' + filename + '_' + Utilities::levelToString(ln) + '_' + Utilities::patchToString(patch_num);
                     std::ofstream of(patch_filename.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
-                    for (int d = 0 ; d < NDIM; ++d)
+                    for (unsigned int d = 0; d < NDIM; ++d)
                     {
                         of.write(reinterpret_cast<const char*>(&patch_box.lower()(d)),sizeof(int));
                         of.write(reinterpret_cast<const char*>(&patch_box.upper()(d)),sizeof(int));
                     }
                     const int depth = data->getDepth();
                     of.write(reinterpret_cast<const char*>(&depth),sizeof(int));
-                    for (int side = 0; side < NDIM; ++side)
+                    for (unsigned int side = 0; side < NDIM; ++side)
                     {
                         for (int d = 0; d < depth; ++d)
                         {
@@ -492,7 +492,7 @@ DebuggingUtilities::saveSideData(
 
 void
 DebuggingUtilities::saveLagrangianData(
-    const Pointer<LNodeLevelData> lag_data,
+    const Pointer<LData> lag_data,
     const bool save_ghost_nodes,
     const std::string& filename,
     const std::string& dirname)
@@ -504,6 +504,7 @@ DebuggingUtilities::saveLagrangianData(
     }
     Utilities::recursiveMkdir(truncated_dirname);
 
+    const blitz::Array<double,2>& array_data = *lag_data->getGhostedLocalFormVecArray();
     const int rank = SAMRAI_MPI::getRank();
     const int nodes = SAMRAI_MPI::getNodes();
     for (int n = 0; n < nodes; ++n)
@@ -520,18 +521,18 @@ DebuggingUtilities::saveLagrangianData(
             {
                 for (int d = 0; d < depth; ++d)
                 {
-                    of.write(reinterpret_cast<const char*>(&(*lag_data)(i,d)),sizeof(double));
+                    of.write(reinterpret_cast<const char*>(&(array_data(i,d))),sizeof(double));
                 }
             }
             if (save_ghost_nodes)
             {
-                const int num_nonlocal_nodes = lag_data->getLocalGhostNodeCount();
-                of.write(reinterpret_cast<const char*>(&num_nonlocal_nodes),sizeof(int));
-                for (int i = 0; i < num_nonlocal_nodes; ++i)
+                const int num_ghost_nodes = lag_data->getGhostNodeCount();
+                of.write(reinterpret_cast<const char*>(&num_ghost_nodes),sizeof(int));
+                for (int i = 0; i < num_ghost_nodes; ++i)
                 {
                     for (int d = 0; d < depth; ++d)
                     {
-                        of.write(reinterpret_cast<const char*>(&(*lag_data)(i+num_local_nodes,d)),sizeof(double));
+                        of.write(reinterpret_cast<const char*>(&(array_data(i+num_local_nodes,d))),sizeof(double));
                     }
                 }
             }
@@ -539,6 +540,7 @@ DebuggingUtilities::saveLagrangianData(
         }
         SAMRAI_MPI::barrier();
     }
+    lag_data->restoreArrays();
     return;
 }// saveLagrangianData
 
@@ -549,7 +551,5 @@ DebuggingUtilities::saveLagrangianData(
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
 
 //////////////////////////////////////////////////////////////////////////////

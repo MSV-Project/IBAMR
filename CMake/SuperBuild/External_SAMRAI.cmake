@@ -9,7 +9,7 @@
 #
 # NOTICE
 #
-# This work was produced at the University of California, Lawrence Livermore
+# SAMRAI was produced at the University of California, Lawrence Livermore
 # National Laboratory (UC LLNL) under contract no. W-7405-ENG-48 (Contract 48)
 # between the U.S. Department of Energy (DOE) and The Regents of the University
 # of California (University) for the operation of UC LLNL. The rights of the
@@ -17,9 +17,9 @@
 # agreed upon by the DOE and University as allowed under DOE Acquisition Letter
 # 97-1.
 #
-# DISCLAIMER
+# NOTICE: DISCLAIMER
 #
-# This work was prepared as an account of work sponsored by an agency of the
+# SAMRAI was prepared as an account of work sponsored by an agency of the
 # United States Government. Neither the United States Government nor the
 # University of California nor any of their employees, makes any warranty,
 # express or implied, or assumes any liability or responsibility for the
@@ -119,7 +119,7 @@ if(NOT DEFINED SAMRAI_DIR)
   set(${proj}_DIR ${IBAMR_BINARY_DIR}/${proj}-build)
 
 else()
-  msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
+  EmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
 list(APPEND IBAMR_SUPERBUILD_EP_ARGS

@@ -51,7 +51,7 @@ namespace IBTK
  * all edges.
  */
 class SideNoCornersFillPattern
-    : public virtual SAMRAI::xfer::VariableFillPattern<NDIM>
+    : public SAMRAI::xfer::VariableFillPattern<NDIM>
 {
 public:
     /*!
@@ -61,14 +61,14 @@ public:
      * include_edges_on_src_level have no effect for 2D problems.
      */
     SideNoCornersFillPattern(
-        const int stencil_width,
-        const bool include_edges_on_dst_level,
-        const bool include_edges_on_src_level);
+        int stencil_width,
+        bool include_dst_patch_box,
+        bool include_edges_on_dst_level,
+        bool include_edges_on_src_level);
 
     /*!
      * \brief Destructor
      */
-    virtual
     ~SideNoCornersFillPattern();
 
     /*!
@@ -87,13 +87,13 @@ public:
      *
      * \return                    pointer to the calculated overlap object
      */
-    virtual SAMRAI::tbox::Pointer<SAMRAI::hier::BoxOverlap<NDIM> >
+    SAMRAI::tbox::Pointer<SAMRAI::hier::BoxOverlap<NDIM> >
     calculateOverlap(
         const SAMRAI::hier::BoxGeometry<NDIM>& dst_geometry,
         const SAMRAI::hier::BoxGeometry<NDIM>& src_geometry,
         const SAMRAI::hier::Box<NDIM>& dst_patch_box,
         const SAMRAI::hier::Box<NDIM>& src_mask,
-        const bool overwrite_interior,
+        bool overwrite_interior,
         const SAMRAI::hier::IntVector<NDIM>& src_offset) const;
 
     /*!
@@ -114,34 +114,34 @@ public:
      *
      * \return                    pointer to the calculated overlap object
      */
-    virtual SAMRAI::tbox::Pointer<SAMRAI::hier::BoxOverlap<NDIM> >
-    calculateOverlap(
+    SAMRAI::tbox::Pointer<SAMRAI::hier::BoxOverlap<NDIM> >
+    calculateOverlapOnLevel(
         const SAMRAI::hier::BoxGeometry<NDIM>& dst_geometry,
         const SAMRAI::hier::BoxGeometry<NDIM>& src_geometry,
         const SAMRAI::hier::Box<NDIM>& dst_patch_box,
         const SAMRAI::hier::Box<NDIM>& src_mask,
-        const bool overwrite_interior,
+        bool overwrite_interior,
         const SAMRAI::hier::IntVector<NDIM>& src_offset,
-        const int dst_level_num,
-        const int src_level_num) const;
+        int dst_level_num,
+        int src_level_num) const;
 
     /*!
      * Set the target patch level number for the variable fill pattern.
      */
-    virtual void
+    void
     setTargetPatchLevelNumber(
-        const int level_num);
+        int level_num);
 
     /*!
      * Returns the stencil width.
      */
-    virtual SAMRAI::hier::IntVector<NDIM>&
+    SAMRAI::hier::IntVector<NDIM>&
     getStencilWidth();
 
     /*!
      * Returns a string name identifier "SIDE_NO_CORNERS_FILL_PATTERN".
      */
-    virtual const std::string&
+    const std::string&
     getPatternName() const;
 
 private:
@@ -176,6 +176,7 @@ private:
         const SideNoCornersFillPattern& that);
 
     SAMRAI::hier::IntVector<NDIM> d_stencil_width;
+    const bool d_include_dst_patch_box;
     const bool d_include_edges_on_dst_level;
     const bool d_include_edges_on_src_level;
     int d_target_level_num;

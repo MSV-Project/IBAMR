@@ -1,32 +1,48 @@
 set(KIT navier_stokes)
 
 set(kit_SRCS
-  CCHierarchyProjector.C
-  HierarchyProjector.C
-  INSCoefs.C
-  INSHierarchyIntegrator.C
-  INSIntermediateVelocityBcCoef.C
-  INSProblemCoefs.C
-  INSProjectionBcCoef.C
-  INSStaggeredBlockFactorizationPreconditioner.C
-  INSStaggeredBoxRelaxationFACOperator.C
-  INSStaggeredCenteredConvectiveOperator.C
   INSStaggeredHierarchyIntegrator.C
-  INSStaggeredIntermediateVelocityBcCoef.C
-  INSStaggeredPhysicalBoundaryHelper.C
-  INSStaggeredPPMConvectiveOperator.C
-  INSStaggeredPressureBcCoef.C
-  INSStaggeredProjectionBcCoef.C
-  INSStaggeredProjectionPreconditioner.C
-  INSStaggeredStokesOperator.C
-  INSStaggeredVCStokesOperator.C
+  INSIntermediateVelocityBcCoef.C
+  StaggeredStokesPETScVecUtilities.C
+  StaggeredStokesProjectionPreconditioner.C
   INSStaggeredVelocityBcCoef.C
+  StaggeredStokesSolver.C
+  INSStaggeredPressureBcCoef.C
+  INSStaggeredStochasticForcing.C
+  INSHierarchyIntegrator.C
+  StaggeredStokesBlockPreconditioner.C
+  StaggeredStokesBlockFactorizationPreconditioner.C
+  StaggeredStokesPhysicalBoundaryHelper.C
+  INSStaggeredUpwindConvectiveOperator.C
+  INSStaggeredPPMConvectiveOperator.C
+  StaggeredStokesPETScLevelSolver.C
+  StaggeredStokesFACPreconditioner.C
+  INSCollocatedConvectiveOperatorManager.C
+  INSCollocatedCenteredConvectiveOperator.C
+  StaggeredStokesBoxRelaxationFACOperator.C
+  StaggeredStokesPETScMatUtilities.C
+  StaggeredStokesSolverManager.C
+  KrylovLinearSolverStaggeredStokesSolverInterface.C
+  StaggeredStokesOpenBoundaryStabilizer.C
+  StaggeredStokesFACPreconditionerStrategy.C
+  StokesBcCoefStrategy.C
+  PETScKrylovStaggeredStokesSolver.C
+  SpongeLayerForceFunction.C
+  INSCollocatedHierarchyIntegrator.C
+  INSProjectionBcCoef.C
+  StaggeredStokesOperator.C
+  INSCollocatedPPMConvectiveOperator.C
+  INSStaggeredCenteredConvectiveOperator.C
+  INSStaggeredConvectiveOperatorManager.C
+  StokesSpecifications.C
+  INSStaggeredStabilizedPPMConvectiveOperator.C
   )
 
 set(FortranSRCS
   fortran/navier_stokes_staggered_helpers3d.f.m4
   fortran/navier_stokes_bdryop3d.f.m4
   fortran/navier_stokes_divsource3d.f.m4
+  fortran/navier_stokes_stochastic_forcing3d.f.m4
   fortran/navier_stokes_staggered_derivatives3d.f.m4
   fortran/navier_stokes_stabledt3d.f.m4 )
 
@@ -46,6 +62,7 @@ set(FortranSRCS
   fortran/navier_stokes_staggered_helpers2d.f.m4
   fortran/navier_stokes_staggered_derivatives2d.f.m4
   fortran/navier_stokes_bdryop2d.f.m4
+  fortran/navier_stokes_stochastic_forcing2d.f.m4
   fortran/navier_stokes_divsource2d.f.m4 )
 
 ParseM4Sources(

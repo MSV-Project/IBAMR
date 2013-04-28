@@ -37,6 +37,7 @@
 
 // IBTK INCLUDES
 #include <ibtk/Streamable.h>
+#include <ibtk/StreamableFactory.h>
 
 // SAMRAI INCLUDES
 #include <tbox/AbstractStream.h>
@@ -76,67 +77,21 @@ public:
     getIsRegisteredWithStreamableManager();
 
     /*!
-     * \brief Set the number of internal sources and sinks on the specified
-     * level of the patch hierarchy.
+     * The unique class ID for this object type assigned by the
+     * IBTK::StreamableManager.
      */
-    static void
-    setNumSources(
-        const int ln,
-        const int num_sources);
-
-    /*!
-     * \brief Get the number of internal sources and sinks on the specified
-     * level of the patch hierarchy.
-     */
-    static int
-    getNumSources(
-        const int ln);
-
-    /*!
-     * \brief Set the names of the internal sources and sinks on the specified
-     * level of the patch hierarchy.
-     */
-    static void
-    setSourceNames(
-        const int ln,
-        const std::vector<std::string>& names);
-
-    /*!
-     * \brief Get the names of the internal sources and sinks on the specified
-     * level of the patch hierarchy.
-     */
-    static const std::vector<std::string>&
-    getSourceNames(
-        const int ln);
-
-    /*!
-     * \brief Set the sizes of the internal sources and sinks on the specified
-     * level of the patch hierarchy.
-     */
-    static void
-    setSourceRadii(
-        const int ln,
-        const std::vector<double>& radii);
-
-    /*!
-     * \brief Get the sizes of the internal sources and sinks on the specified
-     * level of the patch hierarchy.
-     */
-    static const std::vector<double>&
-    getSourceRadii(
-        const int ln);
+    static int STREAMABLE_CLASS_ID;
 
     /*!
      * \brief Default constructor.
      */
     IBSourceSpec(
-        const int master_idx=-1,
-        const int source_idx=-1);
+        int master_idx=-1,
+        int source_idx=-1);
 
     /*!
-     * \brief Virtual destructor.
+     * \brief Destructor.
      */
-    virtual
     ~IBSourceSpec();
 
     /*!
@@ -170,20 +125,20 @@ public:
      * IBTK::StreamableFactory object used by the IBTK::StreamableManager to
      * extract Streamable objects from data streams.
      */
-    virtual int
+    int
     getStreamableClassID() const;
 
     /*!
      * \brief Return an upper bound on the amount of space required to pack the
      * object to a buffer.
      */
-    virtual size_t
+    size_t
     getDataStreamSize() const;
 
     /*!
      * \brief Pack data into the output stream.
      */
-    virtual void
+    void
     packStream(
         SAMRAI::tbox::AbstractStream& stream);
 
@@ -212,36 +167,81 @@ private:
         const IBSourceSpec& that);
 
     /*!
-     * Indicates whether the factory has been registered with the
-     * IBTK::StreamableManager.
-     */
-    static bool s_registered_factory;
-
-    /*!
-     * The class ID for this object type assigned by the
-     * IBTK::StreamableManager.
-     */
-    static int s_class_id;
-
-    /*!
-     * The numbers of sources/sinks on each level of the patch hierarchy.
-     */
-    static std::vector<int> s_num_sources;
-
-    /*!
-     * The names of the sources and sinks.
-     */
-    static std::vector<std::vector<std::string> > s_source_names;
-
-    /*!
-     * The sizes of the sources and sinks.
-     */
-    static std::vector<std::vector<double> > s_source_radii;
-
-    /*!
      * Data required to define the source.
      */
     int d_master_idx, d_source_idx;
+
+    /*!
+     * \brief A factory class to rebuild IBSourceSpec objects from
+     * SAMRAI::tbox::AbstractStream data streams.
+     */
+    class Factory
+        : public IBTK::StreamableFactory
+    {
+    public:
+        /*!
+         * \brief Destructor.
+         */
+        ~Factory();
+
+        /*!
+         * \brief Return the unique identifier used to specify the
+         * IBTK::StreamableFactory object used by the IBTK::StreamableManager to
+         * extract IBSourceSpec objects from data streams.
+         */
+        int
+        getStreamableClassID() const;
+
+        /*!
+         * \brief Set the unique identifier used to specify the
+         * IBTK::StreamableFactory object used by the IBTK::StreamableManager to
+         * extract IBSourceSpec objects from data streams.
+         */
+        void
+        setStreamableClassID(
+            int class_id);
+
+        /*!
+         * \brief Build an IBSourceSpec object by unpacking data from the
+         * data stream.
+         */
+        SAMRAI::tbox::Pointer<IBTK::Streamable>
+        unpackStream(
+            SAMRAI::tbox::AbstractStream& stream,
+            const SAMRAI::hier::IntVector<NDIM>& offset);
+
+    private:
+        /*!
+         * \brief Default constructor.
+         */
+        Factory();
+
+        /*!
+         * \brief Copy constructor.
+         *
+         * \note This constructor is not implemented and should not be used.
+         *
+         * \param from The value to copy to this object.
+         */
+        Factory(
+            const Factory& from);
+
+        /*!
+         * \brief Assignment operator.
+         *
+         * \note This operator is not implemented and should not be used.
+         *
+         * \param that The value to assign to this object.
+         *
+         * \return A reference to this object.
+         */
+        Factory&
+        operator=(
+            const Factory& that);
+
+        friend class IBSourceSpec;
+    };
+    typedef IBSourceSpec::Factory IBSourceSpecFactory;
 };
 }// namespace IBAMR
 

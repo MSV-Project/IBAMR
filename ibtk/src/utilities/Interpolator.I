@@ -69,7 +69,7 @@ Interpolator::Interpolator(
 {
     d_x.reserve(d_y.size());
     d_x.push_back(x_first);
-    for (unsigned k = 1; k < d_y.size(); ++k)
+    for (unsigned int k = 1; k < d_y.size(); ++k)
     {
         d_x.push_back(d_x.back()+x_step);
     }
@@ -85,17 +85,17 @@ Interpolator::~Interpolator()
 
 inline double
 Interpolator::operator()(
-    const double& x) const
+    double x) const
 {
     std::vector<double>::const_iterator x_it = std::lower_bound(d_x.begin(), d_x.end(), x);
     if (UNLIKELY(x_it == d_x.begin())) return d_x.front();
     if (UNLIKELY(x_it == d_x.end())) return d_x.back();
 
     const double x_up = *x_it;
-    const double y_up = *(d_y.begin() + int(x_it-d_x.begin()));
+    const double y_up = *(d_y.begin() + static_cast<int>(x_it-d_x.begin()));
     --x_it;
     const double x_lo = *x_it;
-    const double y_lo = *(d_y.begin() + int(x_it-d_x.begin()));
+    const double y_lo = *(d_y.begin() + static_cast<int>(x_it-d_x.begin()));
 
     return y_lo + (y_up-y_lo)*(x-x_lo)/(x_up-x_lo);
 }// operator()

@@ -29,13 +29,13 @@ set(HDF5_INCLUDE_PATH_WORK ${HDF5_HEADER_PATH})
 
 set(HDF5_LIB "HDF5_LIB-NOTFOUND" CACHE FILEPATH "Cleared" FORCE)
 find_library(HDF5_LIB0
-  NAMES         hdf5
+  NAMES         hdf5 hdf5_debug
   HINTS         ${HDF5_DIR}
   PATH_SUFFIXES lib lib/${MS_HDF5_ARCH_DIR} Lib Lib/${MS_HDF5_ARCH_DIR})
 set(HDF5_LIBRARIES_WORK ${HDF5_LIB0})
 
 find_library(HDF5_LIB1
-  NAMES         hdf5_hl
+  NAMES         hdf5_hl hdf5_hl_debug
   HINTS         ${HDF5_DIR}
   PATH_SUFFIXES lib lib/${MS_HDF5_ARCH_DIR} Lib Lib/${MS_HDF5_ARCH_DIR})
 
@@ -44,7 +44,6 @@ set(HDF5_LIBRARIES_WORK ${HDF5_LIB1} ${HDF5_LIB0})
 set(HDF5_INCLUDE_PATH  ${HDF5_INCLUDE_PATH_WORK} CACHE STRING "QD include path" FORCE)
 set(HDF5_LIBRARIES ${HDF5_LIBRARIES_WORK} CACHE STRING "QD library to link against" FORCE)
 set(HDF5_COMPILE_FLAGS "-L${HDF5_DIR}/lib" CACHE STRING "QD compilation flags" FORCE)
-# set(HDF5_LINK_FLAGS -lHYPRE CACHE STRING "Hypre linking flags" FORCE)
 
 # finally set a found variable
 if (HDF5_INCLUDE_PATH AND HDF5_LIBRARIES)

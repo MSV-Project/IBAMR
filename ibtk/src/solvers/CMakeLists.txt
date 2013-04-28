@@ -8,25 +8,33 @@ set(kit_SRCS
   wrappers/PETScSNESJacobianJOWrapper.C
   wrappers/PETScPCLSWrapper.C
   wrappers/PETScMatLOWrapper.C
+  impls/CCPoissonPointRelaxationFACOperator.C
   impls/BJacobiPreconditioner.C
   impls/PETScMultiVec.C
-  impls/DiagonalScalingPreconditioner.C
-  impls/CCDivGradHypreLevelSolver.C
+  impls/PoissonFACPreconditionerStrategy.C
+  impls/KrylovLinearSolverManager.C
+  impls/CCPoissonSolverManager.C
   impls/PETScKrylovLinearSolver.C
   impls/PETScNewtonKrylovSolver.C
+  impls/PoissonSolver.C
+  impls/PETScLevelSolver.C
   impls/SCPoissonPETScLevelSolver.C
+  impls/SCPoissonSolverManager.C
   impls/CCLaplaceOperator.C
-  impls/CCLaplaceOperator2.C
-  impls/DiagonalScalingOperator.C
   impls/SCPoissonHypreLevelSolver.C
-  impls/CCDivGradOperator.C
-  impls/CCPoissonFACOperator.C
+  impls/NewtonKrylovSolverManager.C
+  impls/LaplaceOperator.C
+  impls/PoissonFACPreconditioner.C
   impls/PETScMFFDJacobianOperator.C
   impls/CCPoissonHypreLevelSolver.C
   impls/CCPoissonPETScLevelSolver.C
   impls/FACPreconditioner.C
+  impls/SCPoissonPointRelaxationFACOperator.C
   impls/SCLaplaceOperator.C
   impls/BGaussSeidelPreconditioner.C
+  impls/PETScKrylovPoissonSolver.C
+  impls/KrylovLinearSolverPoissonSolverInterface.C
+  interfaces/GeneralSolver.C
   interfaces/LinearSolver.C
   interfaces/LinearOperator.C
   interfaces/KrylovLinearSolver.C
@@ -34,8 +42,8 @@ set(kit_SRCS
   interfaces/JacobianOperator.C
   interfaces/NewtonKrylovSolver.C
   interfaces/FACPreconditionerStrategy.C
-
 )
+
 ParseM4Sources(
   OutputFiles3D
   FileExt ".f"

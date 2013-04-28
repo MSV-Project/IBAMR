@@ -51,7 +51,7 @@ namespace IBTK
  * arbitrary data items in parallel.
  */
 class ParallelMap
-    : public virtual SAMRAI::tbox::DescribedClass
+    : public SAMRAI::tbox::DescribedClass
 {
 public:
     /*!
@@ -96,8 +96,8 @@ public:
      */
     void
     addItem(
-        const int key,
-        const SAMRAI::tbox::Pointer<Streamable>& item);
+        int key,
+        SAMRAI::tbox::Pointer<Streamable> item);
 
     /*!
      * \brief Remove an item from the map.
@@ -112,7 +112,7 @@ public:
      */
     void
     removeItem(
-        const int key);
+        int key);
 
     /*!
      * \brief Communicate data to (re-)initialize the map.

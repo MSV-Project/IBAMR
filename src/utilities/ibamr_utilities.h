@@ -46,7 +46,7 @@
             task;                                                \
             done = true;                                         \
         }                                                        \
-    } while (0)
+    } while (0);
 
 #define IBAMR_DEPRECATED_FUNCTION1(deprecated_function_name)            \
     IBAMR_DO_ONCE({                                                     \
@@ -90,6 +90,23 @@
                                << std::endl;                            \
         });
 
+namespace IBAMR
+{
+static const bool ENABLE_TIMERS = true;
+}
+
+#define IBAMR_TIMER_START(timer)                                 \
+    do                                                           \
+    {                                                            \
+        if (IBAMR::ENABLE_TIMERS) timer->start();                \
+    } while (0);
+
+#define IBAMR_TIMER_STOP(timer)                                  \
+    do                                                           \
+    {                                                            \
+        if (IBAMR::ENABLE_TIMERS) timer->stop();                 \
+    } while (0);
+
 /////////////////////////////// FUNCTION DEFINITIONS /////////////////////////
 
 namespace std
@@ -105,7 +122,7 @@ struct less<SAMRAI::tbox::Pointer<T> >
             return k1.getPointer() < k2.getPointer();
         }
 };
-};
+}
 
 //////////////////////////////////////////////////////////////////////////////
 

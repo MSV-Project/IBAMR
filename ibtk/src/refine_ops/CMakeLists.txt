@@ -2,14 +2,14 @@ set(KIT refine_ops)
 set(UKIT REFINE_OPS)
 
 
-set(kit_SRCS CartCellDoubleBoundsPreservingConservativeLinearRefine.C
-  LagMarkerRefine.C
+set(kit_SRCS
+  CartCellDoubleBoundsPreservingConservativeLinearRefine.C
+  LMarkerRefine.C
   CartSideDoubleSpecializedConstantRefine.C
   CartCellDoubleQuadraticRefine.C
   CartSideDoubleSpecializedLinearRefine.C
   VecCellRefineAdapter.C
   CartSideDoubleDivPreservingRefine.C
-
 )
 
 set(FortranSRCS fortran/divpreservingrefine3d.f.m4

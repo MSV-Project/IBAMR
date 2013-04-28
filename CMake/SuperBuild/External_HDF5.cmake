@@ -93,7 +93,7 @@ if(NOT DEFINED HDF5_DIR)
   set(${proj}_DIR ${IBAMR_BINARY_DIR}/SuperBuild)
 
 else()
-  msvMacroEmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
+  EmptyExternalProject(${proj} "${proj_DEPENDENCIES}")
 endif()
 
 list(APPEND IBAMR_SUPERBUILD_EP_ARGS -DHDF5_DIR:PATH=${HDF5_DIR})

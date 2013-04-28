@@ -35,6 +35,7 @@ option(IBAMR_BUILD_2D_LIBRARY "Build the optional 2D libraries." OFF)
 # Single or multiple (default) library build (needs CMake >= 2.8.8)
 # --------------------------------------------------------------------------
 option(IBAMR_BUILD_SINGLE_LIBRARY "Build IBAMR single library" OFF)
+mark_as_advanced(IBAMR_BUILD_SINGLE_LIBRARY)
 
 #----------------------------------------------------------------------------
 # Superbuild Option - Enabled by default
@@ -65,7 +66,7 @@ set(IBTK_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ibtk" CACHE PATH "Path to IBTK.
 
 #-----------------------------------------------------------------------------
 # Superbuild script
-#
+#-----------------------------------------------------------------------------
 if(IBAMR_SUPERBUILD)
   include(SuperBuild)
   return()
@@ -105,8 +106,8 @@ include(ParseM4Sources)
 # ----------------------------------------------------------------------------
 set(IBAMR_INCLUDE_DIRS
   ${IBTK_INCLUDE_PATH}
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_BINARY_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_BINARY_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/src/utilities)
 
@@ -267,6 +268,7 @@ list(APPEND dirs
     advect
     IB
     fortran
+    utilities
 #     solid_mechanics
     )
 
@@ -291,8 +293,6 @@ set(IBAMR_LIBRARIES
   ${IBTK_LIBRARIES}
   ${IBTK_EXTERNAL_LIBRARIES}
   CACHE INTERNAL "IBAMR library." FORCE )
-
-add_subdirectory(src/tools)
 
 # --------------------------------------------------------------------------
 # Single or multiple (default) library build (needs CMake > 2.8.8)
@@ -322,6 +322,8 @@ if(IBAMR_BUILD_SINGLE_LIBRARY)
 else(IBAMR_BUILD_SINGLE_LIBRARY)
   message(STATUS "Single library build is disabled.")
 endif(IBAMR_BUILD_SINGLE_LIBRARY)
+
+add_subdirectory(src/tools)
 
 # --------------------------------------------------------------------------
 # Export all targets created

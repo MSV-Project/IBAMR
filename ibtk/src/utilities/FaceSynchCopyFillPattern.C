@@ -71,7 +71,7 @@ Pointer<BoxOverlap<NDIM> >
 FaceSynchCopyFillPattern::calculateOverlap(
     const BoxGeometry<NDIM>& dst_geometry,
     const BoxGeometry<NDIM>& src_geometry,
-    const Box<NDIM>& dst_patch_box,
+    const Box<NDIM>& /*dst_patch_box*/,
     const Box<NDIM>& src_mask,
     const bool overwrite_interior,
     const IntVector<NDIM>& src_offset) const
@@ -88,10 +88,10 @@ FaceSynchCopyFillPattern::calculateOverlap(
     TBOX_ASSERT(t_dst_geometry);
 #endif
     BoxList<NDIM> dst_boxes[NDIM];
-    for (int axis = 0; axis < NDIM; ++axis)
+    for (unsigned int axis = 0; axis < NDIM; ++axis)
     {
         bool skip = false;
-        for (int d = 0; d < NDIM && !skip; ++d)
+        for (unsigned int d = 0; d < NDIM && !skip; ++d)
         {
             if (d != axis)
             {
@@ -136,10 +136,5 @@ FaceSynchCopyFillPattern::getPatternName() const
 /////////////////////////////// NAMESPACE ////////////////////////////////////
 
 }// namespace IBTK
-
-/////////////////////////////// TEMPLATE INSTANTIATION ///////////////////////
-
-#include <tbox/Pointer.C>
-template class Pointer<IBTK::FaceSynchCopyFillPattern>;
 
 //////////////////////////////////////////////////////////////////////////////
