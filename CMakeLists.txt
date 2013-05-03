@@ -186,10 +186,47 @@ if(NOT IBAMR_INSTALL_DOC_DIR)
 endif()
 
 #-----------------------------------------------------------------------------
+# Testing
+#
+option(BUILD_TESTING "Test the project" ON)
+if(BUILD_TESTING)
+  enable_testing()
+  include(CTest)
+  set(CPP_TEST_PATH ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
+  # DashBoard
+  configure_file(
+    ${IBAMR_SOURCE_DIR}/CTestConfig.cmake
+    ${IBAMR_BINARY_DIR}/CTestConfig.cmake
+    COPYONLY)
+
+  # Configuration for the CMake-generated test driver
+  set(CMAKE_TESTDRIVER_EXTRA_INCLUDES "
+#include <stdexcept>
+#if defined(WIN32)
+#  pragma warning(disable : 4996)
+#endif")
+  set(CMAKE_TESTDRIVER_BEFORE_TESTMAIN "
+  try
+    {")
+  set(CMAKE_TESTDRIVER_AFTER_TESTMAIN "
+    }
+  catch( std::exception & e )
+    {
+    fprintf(stderr, \"Test driver caught exception: [%s]\\n\", e.what());
+    return EXIT_FAILURE;
+    }
+  catch( ... )
+    {
+    printf(\"Exception caught by the test driver\\n\");
+    return EXIT_FAILURE;
+    }")
+endif()
+
+#-----------------------------------------------------------------------------
 # Documentation
 #
-option(DOCUMENTATION_TARGET_IN_ALL
-  "Include the custom target for building documentation in 'all'" OFF)
+option(DOCUMENTATION_TARGET_IN_ALL "Include the custom target for building documentation in 'all'" OFF)
 mark_as_advanced(DOCUMENTATION_TARGET_IN_ALL)
 
 set(DOCUMENTATION_ARCHIVES_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -199,7 +236,23 @@ mark_as_advanced(DOCUMENTATION_ARCHIVES_OUTPUT_DIRECTORY)
 #-----------------------------------------------------------------------------
 # Attempt to discover Doxygen so that DOXYGEN_EXECUTABLE is set to an appropriate default value
 #
-find_package(Doxygen QUIET)
+FIND_PACKAGE(Doxygen QUIET)
+
+#-----------------------------------------------------------------------------
+# Coverage
+#
+option(WITH_COVERAGE "Enable/Disable coverage" OFF)
+
+#-----------------------------------------------------------------------------
+# Set coverage Flags
+#
+if(WITH_COVERAGE)
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(coverage_flags "-g -fprofile-arcs -ftest-coverage -O0 -DNDEBUG")
+    set(COVERAGE_CXX_FLAGS ${coverage_flags})
+    set(COVERAGE_C_FLAGS ${coverage_flags})
+  endif()
+endif()
 
 #-----------------------------------------------------------------------------
 # Additional CXX/C Flags
@@ -344,7 +397,6 @@ include(GenerateIBAMRConfig)
 # --------------------------------------------------------------------------
 # add testing
 # --------------------------------------------------------------------------
-include(CTest)
 if(BUILD_TESTING)
     add_subdirectory(examples)
 endif()
