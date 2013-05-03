@@ -344,7 +344,7 @@ include(GenerateIBAMRConfig)
 # --------------------------------------------------------------------------
 # add testing
 # --------------------------------------------------------------------------
-# include(CTest)
+include(CTest)
 if(BUILD_TESTING)
     add_subdirectory(examples)
 endif()
