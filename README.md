@@ -30,7 +30,7 @@ Getting Started
         $ mkdir ibamr-debug # Create out of source directory to build IBAMR
         $ cd ibamr-debug
         $ cmake source_directory # Generate necesary cmake files to build IBAMR
-        $ ccmake source_directory # Customize buil by specifying variables
+        $ ccmake source_directory # Customize build by specifying variables
 Source code documentation for IBAMR is available on-line. Source code documentation is also available for the IBTK support library. File format documentation is also available on-line.
 
 Guidelines on how to [contribute to the IBAMR](https://code.google.com/p/ibamr/wiki/IBAMR_Development) project.
