@@ -353,7 +353,7 @@ set(IBAMR_LIBRARIES
 # --------------------------------------------------------------------------
 if(IBAMR_BUILD_SINGLE_LIBRARY)
   message(STATUS "Single library build is enabled.")
-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lib.C
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lib.cpp
     "// Dummy file needed to link sublibraries.")
   set(IBAMR_LIBRARY_TARGETS3D)
   foreach(lib ${IBAMR_LIBRARIES3D})
@@ -364,12 +364,12 @@ if(IBAMR_BUILD_SINGLE_LIBRARY)
     foreach(lib ${IBAMR_LIBRARIES2D})
       list(APPEND IBAMR_LIBRARY_TARGETS2D $<TARGET_OBJECTS:${lib}>)
     endforeach()
-    add_library(ibamr2D ${CMAKE_CURRENT_BINARY_DIR}/lib.C
+    add_library(ibamr2D ${CMAKE_CURRENT_BINARY_DIR}/lib.cpp
       ${IBAMR_LIBRARY_TARGETS2D})
     add_dependencies(ibamr2D IBTK)
     set(IBAMR_LIBRARIES2D ibamr2D)
   endif(IBAMR_BUILD_2D_LIBRARY)
-  add_library(ibamr3D ${CMAKE_CURRENT_BINARY_DIR}/lib.C
+  add_library(ibamr3D ${CMAKE_CURRENT_BINARY_DIR}/lib.cpp
     ${IBAMR_LIBRARY_TARGETS3D})
   add_dependencies(ibamr3D IBTK)
   set(IBAMR_LIBRARIES3D ibamr3D)

@@ -3,13 +3,13 @@ set(UKIT REFINE_OPS)
 
 
 set(kit_SRCS
-  CartCellDoubleBoundsPreservingConservativeLinearRefine.C
-  LMarkerRefine.C
-  CartSideDoubleSpecializedConstantRefine.C
-  CartCellDoubleQuadraticRefine.C
-  CartSideDoubleSpecializedLinearRefine.C
-  VecCellRefineAdapter.C
-  CartSideDoubleDivPreservingRefine.C
+  CartCellDoubleBoundsPreservingConservativeLinearRefine.cpp
+  LMarkerRefine.cpp
+  CartSideDoubleSpecializedConstantRefine.cpp
+  CartCellDoubleQuadraticRefine.cpp
+  CartSideDoubleSpecializedLinearRefine.cpp
+  VecCellRefineAdapter.cpp
+  CartSideDoubleDivPreservingRefine.cpp
 )
 
 set(FortranSRCS fortran/divpreservingrefine3d.f.m4

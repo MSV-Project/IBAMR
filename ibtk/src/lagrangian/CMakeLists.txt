@@ -2,27 +2,27 @@ set(KIT lagrangian)
 set(UKIT LAGRANGIAN)
 
 
-set(kit_SRCS FEDataManager.C
-  LSiloDataWriter.C
-  LSetDataIterator.C
-  LNode.C
-  LSetDataFactory.C
-  LMarker.C
-  LNodeIndex.C
-  LIndexSetDataFactory.C
-  LTransaction.C
-  LIndexSetVariable.C
-  LSetData.C
-  LSetVariable.C
-  LM3DDataWriter.C
-  LEInteractor.C
-  LMesh.C
-  LDataManager.C
-  LData.C
-  FEDataManager.C
-  LInitStrategy.C
-  LSet.C
-  LIndexSetData.C
+set(kit_SRCS FEDataManager.cpp
+  LSiloDataWriter.cpp
+  LSetDataIterator.cpp
+  LNode.cpp
+  LSetDataFactory.cpp
+  LMarker.cpp
+  LNodeIndex.cpp
+  LIndexSetDataFactory.cpp
+  LTransaction.cpp
+  LIndexSetVariable.cpp
+  LSetData.cpp
+  LSetVariable.cpp
+  LM3DDataWriter.cpp
+  LEInteractor.cpp
+  LMesh.cpp
+  LDataManager.cpp
+  LData.cpp
+  FEDataManager.cpp
+  LInitStrategy.cpp
+  LSet.cpp
+  LIndexSetData.cpp
 )
 
 

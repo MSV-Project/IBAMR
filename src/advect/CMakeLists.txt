@@ -1,8 +1,8 @@
 set(KIT advect)
 
 set(kit_SRCS
-  AdvectorExplicitPredictorStrategy.C
-  AdvectorPredictorCorrectorHyperbolicPatchOps.C
+  AdvectorExplicitPredictorStrategy.cpp
+  AdvectorPredictorCorrectorHyperbolicPatchOps.cpp
   )
 
 set(FortranSRCS

@@ -403,7 +403,7 @@ set(IBTK_LIBRARIES ${IBTK_LIBRARIES3D} ${IBTK_LIBRARIES2D} CACHE INTERNAL "IBTK 
 # --------------------------------------------------------------------------
 if(IBTK_BUILD_SINGLE_LIBRARY)
   message(STATUS "Single library build is enabled.")
-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lib.C
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/lib.cpp
     "// Dummy file needed to link sublibraries.")
   set(IBTK_LIBRARY_TARGETS3D)
   foreach(lib ${IBTK_LIBRARIES3D})
@@ -414,11 +414,11 @@ if(IBTK_BUILD_SINGLE_LIBRARY)
     foreach(lib ${IBTK_LIBRARIES2D})
       list(APPEND IBTK_LIBRARY_TARGETS2D $<TARGET_OBJECTS:${lib}>)
     endforeach()
-    add_library(ibtk2D ${CMAKE_CURRENT_BINARY_DIR}/lib.C
+    add_library(ibtk2D ${CMAKE_CURRENT_BINARY_DIR}/lib.cpp
       ${IBTK_LIBRARY_TARGETS2D})
     set(IBTK_LIBRARIES2D ibtk2D)
   endif()
-  add_library(ibtk3D ${CMAKE_CURRENT_BINARY_DIR}/lib.C
+  add_library(ibtk3D ${CMAKE_CURRENT_BINARY_DIR}/lib.cpp
     ${IBTK_LIBRARY_TARGETS3D})
   set(IBTK_LIBRARIES3D ibtk3D)
 else()

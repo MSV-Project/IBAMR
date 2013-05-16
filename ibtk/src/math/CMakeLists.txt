@@ -3,14 +3,14 @@ set(UKIT MATH)
 
 
 set(kit_SRCS
-  PETScMatUtilities.C
-  PatchVecCellDataBasicOps.C
-  HierarchyVecCellDataOpsReal.C
-  PatchMathOps.C
-  PoissonUtilities.C
-  HierarchyMathOps.C
-  PETScVecUtilities.C
-  PatchVecCellDataOpsReal.C
+  PETScMatUtilities.cpp
+  PatchVecCellDataBasicOps.cpp
+  HierarchyVecCellDataOpsReal.cpp
+  PatchMathOps.cpp
+  PoissonUtilities.cpp
+  HierarchyMathOps.cpp
+  PETScVecUtilities.cpp
+  PatchVecCellDataOpsReal.cpp
 )
 
 set(FortranSRCS   

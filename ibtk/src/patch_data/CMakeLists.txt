@@ -3,9 +3,9 @@ set(UKIT PATCH_DATA)
 
 
 set(kit_SRCS 
-  VecCellVariable.C
-  VecCellDataFactory.C
-  VecCellData.C
+  VecCellVariable.cpp
+  VecCellDataFactory.cpp
+  VecCellData.cpp
 )
 
 set(kit_SRCS2D ${kit_SRCS}

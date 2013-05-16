@@ -1,19 +1,19 @@
 set(KIT boundary)
 set(UKIT BOUNDARY)
 
-set(kit_SRCS cf_interface/CartCellDoubleLinearCFInterpolation.C
-  cf_interface/CoarseFineBoundaryRefinePatchStrategy.C
-  cf_interface/CartSideDoubleQuadraticCFInterpolation.C
-  cf_interface/CartCellDoubleQuadraticCFInterpolation.C
-  physical_boundary/StaggeredPhysicalBoundaryHelper.C
-  physical_boundary/muParserRobinBcCoefs.C
-  physical_boundary/CartCellRobinPhysBdryOp.C
-  physical_boundary/CartExtrapPhysBdryOp.C
-  physical_boundary/RobinPhysBdryPatchStrategy.C
-  physical_boundary/CartSideRobinPhysBdryOp.C
-  physical_boundary/ExtendedRobinBcCoefStrategy.C
-  physical_boundary/PhysicalBoundaryUtilities.C
-  HierarchyGhostCellInterpolation.C
+set(kit_SRCS cf_interface/CartCellDoubleLinearCFInterpolation.cpp
+  cf_interface/CoarseFineBoundaryRefinePatchStrategy.cpp
+  cf_interface/CartSideDoubleQuadraticCFInterpolation.cpp
+  cf_interface/CartCellDoubleQuadraticCFInterpolation.cpp
+  physical_boundary/StaggeredPhysicalBoundaryHelper.cpp
+  physical_boundary/muParserRobinBcCoefs.cpp
+  physical_boundary/CartCellRobinPhysBdryOp.cpp
+  physical_boundary/CartExtrapPhysBdryOp.cpp
+  physical_boundary/RobinPhysBdryPatchStrategy.cpp
+  physical_boundary/CartSideRobinPhysBdryOp.cpp
+  physical_boundary/ExtendedRobinBcCoefStrategy.cpp
+  physical_boundary/PhysicalBoundaryUtilities.cpp
+  HierarchyGhostCellInterpolation.cpp
   )
 
 ParseM4Sources(

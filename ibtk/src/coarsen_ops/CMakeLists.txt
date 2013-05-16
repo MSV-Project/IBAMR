@@ -3,10 +3,10 @@ set(UKIT COARSEN_OPS)
 
 
 set(kit_SRCS
-  LMarkerCoarsen.C
-  VecCellCoarsenAdapter.C
-  CartCellDoubleCubicCoarsen.C
-  CartSideDoubleCubicCoarsen.C
+  LMarkerCoarsen.cpp
+  VecCellCoarsenAdapter.cpp
+  CartCellDoubleCubicCoarsen.cpp
+  CartSideDoubleCubicCoarsen.cpp
 )
 
 ParseM4Sources(

@@ -1,15 +1,15 @@
 set(KIT adv_diff)
 
 set(kit_SRCS
-  AdvDiffSemiImplicitHierarchyIntegrator.C
-  AdvDiffCenteredConvectiveOperator.C
-  AdvDiffConvectiveOperatorManager.C
-  AdvDiffPPMConvectiveOperator.C
-  AdvDiffHierarchyIntegrator.C
-  AdvDiffStochasticForcing.C
-  AdvDiffPredictorCorrectorHyperbolicPatchOps.C
-  AdvDiffPhysicalBoundaryUtilities.C
-  AdvDiffPredictorCorrectorHierarchyIntegrator.C
+  AdvDiffSemiImplicitHierarchyIntegrator.cpp
+  AdvDiffCenteredConvectiveOperator.cpp
+  AdvDiffConvectiveOperatorManager.cpp
+  AdvDiffPPMConvectiveOperator.cpp
+  AdvDiffHierarchyIntegrator.cpp
+  AdvDiffStochasticForcing.cpp
+  AdvDiffPredictorCorrectorHyperbolicPatchOps.cpp
+  AdvDiffPhysicalBoundaryUtilities.cpp
+  AdvDiffPredictorCorrectorHierarchyIntegrator.cpp
   )
 
 ParseM4Sources(

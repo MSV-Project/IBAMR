@@ -1,7 +1,7 @@
 set(KIT solid_mechanics)
 
 set(kit_SRCS 
-  ExplicitFEMechanicsSolver.C
+  ExplicitFEMechanicsSolver.cpp
   )
   
 set(kit_SRCS3D 

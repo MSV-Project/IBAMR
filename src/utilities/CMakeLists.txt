@@ -1,8 +1,8 @@
 set(KIT utilities)
 
 set(kit_SRCS
-  ConvectiveOperator.C
-  RNG.C
+  ConvectiveOperator.cpp
+  RNG.cpp
   )
 
 
